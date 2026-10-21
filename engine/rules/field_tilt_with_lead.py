@@ -8,7 +8,7 @@ Fires when, over the claim's scope:
   * it was trailing for at least MIN_TRAILING_SHARE of its final-third passes, and
   * its box entries are <= MAX_ENTRY_SHARE of its final-third passes.
 A dominant side (level or ahead, or getting into the box) does not fire.
-Action: context (publish with the box-entry count beside the tilt).
+Action: context. REQUIRES box_entries in params (the sentence must say how few got into the box).
 """
 from engine import metrics as M
 from engine.tables import score_diff
@@ -19,6 +19,7 @@ RULE_ID = "field_tilt_with_lead"
 MIN_TILT = 0.60
 MIN_TRAILING_SHARE = 0.5
 MAX_ENTRY_SHARE = 0.15
+REQUIRES = ("box_entries",)
 
 
 def check(claim, ctx):

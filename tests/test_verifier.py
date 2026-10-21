@@ -138,16 +138,25 @@ def test_every_rule_is_registered_once():
 def test_field_tilt_with_lead_fires_on_nor_in_showcase(data):
     _, sc, gt = data
     w = gt["showcase"]["traps"]["field_tilt_while_leading"]["window_sec"]
-    c = claim_on(sc, "field_tilt", team("t_nor"), scope="window", window=tuple(w))
-    v = verdict(c, sc)
-    assert v.status == "published_with_context" and "field_tilt_with_lead" in v.rule_ids
+    raw = claim_on(sc, "field_tilt", team("t_nor"), scope="window", window=tuple(w))
+    v = verdict(raw, sc)        # "NOR have 76% field tilt" on its own: blocked, told to add box entries
+    assert v.status == "blocked" and "field_tilt_with_lead" in v.rule_ids
     assert v.context_note == "field_tilt.trailing_vs_deep_block"
+    assert v.revision_hint == {"field_tilt_with_lead": ["box_entries"]}
+    assert verify(raw, sc)["verification"]["revision_hint"] == {"field_tilt_with_lead": ["box_entries"]}
+    ok = claim_on(sc, "field_tilt", team("t_nor"), scope="window", window=tuple(w),
+                  param_values=("amount", "box_entries", "team_f3_passes"))
+    v = verdict(ok, sc)
+    assert v.status == "published_with_context" and v.rule_ids == ["field_tilt_with_lead"] and not v.revision_hint
 
 
 def test_shot_spam_fires_on_nor_in_showcase(data):
     _, sc, _ = data
     v = verdict(claim_on(sc, "xg", team("t_nor")), sc)
-    assert "shot_spam" in v.rule_ids and v.status == "published_with_context"
+    assert "shot_spam" in v.rule_ids and v.status == "blocked"
+    assert v.revision_hint == {"shot_spam": ["shots", "xg_per_shot"]}
+    v = verdict(claim_on(sc, "xg", team("t_nor"), param_values=("amount", "shots", "xg_per_shot")), sc)
+    assert v.rule_ids == ["shot_spam"] and v.status == "published_with_context"
 
 
 def test_set_piece_inflation_fires_on_corner_specialist(data):
@@ -176,7 +185,9 @@ def test_small_sample_xg_fires_on_short_window(data):
 def test_ppda_alone_fires_without_press_intensity_and_not_with_it(data):
     season, _, _ = data
     c = build_claim(season, "ppda", "season", team("t_cal"), template_key="ppda.stat", param_values=("amount",))
-    assert verdict(c, season).rule_ids == ["ppda_alone"]
+    v = verdict(c, season)
+    assert v.rule_ids == ["ppda_alone"] and v.status == "blocked"
+    assert v.revision_hint == {"ppda_alone": ["press_intensity"]}
     c2 = build_claim(season, "ppda", "season", team("t_cal"), template_key="ppda.stat",
                      params={"with_press_intensity": True}, param_values=("amount", "press_intensity"))
     assert verdict(c2, season).status == "published"

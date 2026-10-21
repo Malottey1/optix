@@ -275,6 +275,21 @@ def chances_created(events, passes, team_id=None, player_id=None, window=None, s
                                     open_play_ids=tuple(op), set_piece_ids=tuple(sp)))
 
 
+def chances_by_player(events, passes, team_id=None, window=None, state=None) -> MetricResult:
+    """Key passes per player, highest first (same definition as chances_created).
+
+    Value: list of (player_id, count) sorted by count desc then id. Evidence: all key passes.
+    Known limits: as chances_created; open play and set pieces are counted together.
+    """
+    per = defaultdict(list)
+    for e in _acting(events, team_id, window, state, "pass"):
+        if passes[e["event_id"]]["is_key_pass"]:
+            per[e["player_id"]].append(e["event_id"])
+    ranked = sorted(((p, len(v)) for p, v in per.items()), key=lambda t: (-t[1], t[0]))
+    ids = [i for v in per.values() for i in v]
+    return MetricResult(ranked, tuple(ids), len(ids))
+
+
 # ---------- defending / style ----------
 
 def ball_won_height(events, team_id, window=None, state=None) -> MetricResult:

@@ -133,6 +133,12 @@ Context rules (one module each in `engine/rules/`, thresholds documented in the 
 | small_sample_xg | xg / npxg, match/window | < 8 shots | context, xg.small_sample |
 | ppda_alone | ppda | press_intensity not in supporting_values | context, ppda.read_with_press_intensity |
 
+A fired **context** rule also names the params the sentence must carry (`REQUIRES`): field_tilt_with_lead
+box_entries; shot_spam shots and xg_per_shot; set_piece_inflation open_play; wide_forward_passes
+pass_quality_ratio; small_sample_xg shots; ppda_alone press_intensity. With them in params the claim
+is `published_with_context`; without them it is `blocked` and `verification.revision_hint` lists
+the missing params (the Analyst's revision loop, docs/ARCHITECTURE.md).
+
 Full-league precision/recall is in docs/PROGRESS.md (Step 5); every rule fires on <= 5% of non-trap
 cases.
 

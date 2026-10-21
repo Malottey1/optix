@@ -112,3 +112,14 @@ def test_insight_example_rendered_text_carries_every_numeric_param():
             found = re.findall(r"\d+(?:\.\d+)?", text)
             for n in nums:
                 assert str(n) in found, (n, text)
+
+
+def test_revision_hint_lists_param_names(claim, claim_validator):
+    c = claim
+    c["verification"] = {"status": "blocked", "attempt": 1, "rule_ids": ["field_tilt_with_lead"],
+                         "revision_hint": {"field_tilt_with_lead": ["box_entries"]}}
+    assert not list(claim_validator.iter_errors(c))
+    c["verification"]["revision_hint"] = {"field_tilt_with_lead": []}
+    assert list(claim_validator.iter_errors(c))
+    c["verification"]["revision_hint"] = {"field_tilt_with_lead": "box_entries"}
+    assert list(claim_validator.iter_errors(c))

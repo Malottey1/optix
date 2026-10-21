@@ -10,8 +10,9 @@ Fact check
     * every number in params must equal value.amount or a supporting value
       (contracts.checks.check_param_numbers), else value_mismatch.
 Context check
-    every rule in engine/rules/ that applies; a fired "block" rule blocks, a fired "context" rule
-    publishes with context.
+    every rule in engine/rules/ that applies; a fired "block" rule blocks; a fired "context" rule
+    publishes with context when the claim's params carry the rule's REQUIRES, else it blocks and
+    verification.revision_hint names the params to add.
 Status: blocked (fact fail or block rule) / published_with_context / published.
 The input claim is never modified; verify() returns a new claim with `verification` filled in.
 """
@@ -47,6 +48,10 @@ class Verdict:
     context_note: str | None
     problems: list = field(default_factory=list)
     rule_results: list = field(default_factory=list)
+    revision_hint: dict = field(default_factory=dict)     # rule_id -> params the claim must add
+
+
+_RULE_MODULES = {r.RULE_ID: r for r in RULES}
 
 
 def _events_by_id(ds):
@@ -116,6 +121,7 @@ def verify(claim: dict, ds: Dataset, now: datetime | None = None) -> dict:
         "context_check": v.context_check,
         "rule_ids": v.rule_ids,
         "context_note": v.context_note,
+        **({"revision_hint": v.revision_hint} if v.revision_hint else {}),
         "attempt": attempt,
         "verified_at": (now or datetime.now(timezone.utc)).isoformat(timespec="seconds"),
     }
@@ -131,11 +137,15 @@ def verdict(claim: dict, ds: Dataset) -> Verdict:
     ctx = Context(ds, scope, vals, tid)
     results = [r for r in (rule.check(claim, ctx) for rule in RULES) if r is not None]
     fired = [r for r in results if r.fired]
-    blocks = [r for r in fired if r.action == "block"]
+    params = claim.get("params") or {}
+    requires = {r.rule_id: list(_RULE_MODULES[r.rule_id].REQUIRES) for r in fired if r.action == "context"}
+    hint = {rid: [k for k in keys if k not in params] for rid, keys in requires.items()}
+    hint = {rid: keys for rid, keys in hint.items() if keys}
+    blocks = [r for r in fired if r.action == "block" or r.rule_id in hint]
     contexts = [r for r in fired if r.action == "context"]
     ids = [r.rule_id for r in fired]
     if blocks:
-        return Verdict("blocked", "pass", actual, "misleading", ids, blocks[0].note, problems, results)
+        return Verdict("blocked", "pass", actual, "misleading", ids, blocks[0].note, problems, results, hint)
     if contexts:
         return Verdict("published_with_context", "pass", actual, "misleading", ids, contexts[0].note,
                        problems, results)

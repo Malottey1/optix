@@ -100,6 +100,26 @@ Branch: `overnight`. Started 2026-10-21 07:08 local.
   evidence scanned from the team's matches only, no in-scope set for season claims).
 - Tests: 90 passed by default; slow 11.
 
+### Step 6. Agents
+- agents/: messages.py (typed handoffs), state.py (per-match MatchState with rolling counters and a
+  view of ingested events), log.py (structured JSON logs), ingest.py, analyst.py, verifier_agent.py,
+  narrative.py + templates/en.json (analyst and casual per template_key), personalization.py,
+  orchestrator.py. Handoffs documented in docs/ARCHITECTURE.md.
+- Context rules now declare REQUIRES; a fired context rule whose params are missing blocks the claim
+  with `verification.revision_hint` (contract change: schema, docs/contracts.md, test). The Analyst
+  revises by rule and re-verifies with attempt + 1.
+- Showcase stream: 36 published claims in 0.6 s, none dropped. NOR's raw field tilt claim is blocked
+  by field_tilt_with_lead (attempt 1) and republished with context at attempt 2: "NOR hold 65.4% field
+  tilt while chasing the game, but only 8 of 70 final-third passes reached the box."
+- engine: `metrics.chances_by_player`; rhythm claims carry `minutes`; territorial_stress claims carry
+  box_entries.
+- tests/test_agents.py (13): ingest dedup/missing fields, stream with duplicates publishes the same,
+  blocked -> revised -> published_with_context with the log sequence, every trap's strategy used,
+  every published claim schema-valid and backed only by past events, causal dropped, tampered claim
+  recomputed, Verifier sees only ingested events, templates contain no hard-coded numbers, number
+  guard, personalization modes.
+- Tests: 104 passed by default; slow 11.
+
 ## Decisions
 - Showcase seed search starts from a recorded offset (`SHOWCASE_SEARCH_START = {2026: 4547}`) because
   a search from 0 with the 10% margin takes ~2 minutes and every test fixture regenerates the data.
@@ -153,6 +173,21 @@ Branch: `overnight`. Started 2026-10-21 07:08 local.
 - shot_spam precision is 0.26 at match level, kept: the 32 "false positives" are unplanted teams that
   really did take 10+ shots with >= 75% at xG <= 0.08 in that match, which is exactly what the chip
   says. The non-trap rate (5%) is within the limit.
+
+- Context rules block when the sentence lacks the context (REQUIRES missing) rather than only
+  attaching a chip. Reason: the step 6 example ("raw NOR 71% field tilt claim blocked by
+  field_tilt_with_lead and republished with a context note") needs a block, and a sentence that
+  states the shallow number alone is the misleading thing. A chip alone would leave the headline
+  misleading. The step 5 tests now assert both halves (raw -> blocked with hint; with context ->
+  published_with_context).
+- ppda_alone checks press_intensity in params (what the sentence shows), not supporting_values.
+- The Analyst's first attempts are plain on purpose so the revision loop is visible and tested; in
+  production it could ask for the context up front, with the same result.
+- In-match verification uses the match dataset restricted to ingested events (a new Dataset view
+  when events arrived), so caches keyed on the dataset are rebuilt per view; xT grid and league
+  pass-quality share are cached on the season baseline, which views share.
+- The Analyst's trigger thresholds (tilt >= 60%, xT added >= 0.025, momentum swing >= 40, pass
+  milestones 50/75, cooldowns) are editorial choices for a readable feed, documented in analyst.py.
 
 ## Surprises
 

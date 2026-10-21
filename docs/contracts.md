@@ -38,6 +38,10 @@ events -> Analyst (deterministic metrics)
 2. A claim with no evidence IDs cannot be verified (rule `missing_evidence`).
 3. `causal` claims are always blocked (rule `causal_claim`). Descriptive changes are allowed.
 4. Status `published_with_context` means true but misleading on its own: the insight carries a `context_chip` showing the shallow standard stat, muted, beside the honest one.
+   A context rule also names the params the sentence must carry (e.g. `box_entries` beside field
+   tilt). If they are missing, the claim is `blocked` and `verification.revision_hint` lists them
+   (`{"field_tilt_with_lead": ["box_entries"]}`); the Analyst rebuilds the claim with them and
+   re-verifies with `attempt` + 1.
 5. Translation happens after verification. The number guard checks that every numeric param still appears in each translated string.
 6. Coordinates are a 0-100 by 0-100 pitch from the **attacking team's point of view**.
 7. Team codes are fictional.

@@ -425,6 +425,17 @@
           ],
           "description": "Machine-readable key for the caveat to attach (not prose), e.g. 'field_tilt.trailing_vs_deep_block'."
         },
+        "revision_hint": {
+          "type": "object",
+          "description": "When a context rule fired but the claim's params lack the context it needs: rule_id -> the param names to add (e.g. {'field_tilt_with_lead': ['box_entries']}). The Analyst rebuilds the claim with them and re-verifies (attempt + 1).",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          }
+        },
         "attempt": {
           "type": "integer",
           "minimum": 1,

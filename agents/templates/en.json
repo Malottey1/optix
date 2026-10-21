@@ -1,0 +1,66 @@
+{
+  "matchup.weak_flank": {
+    "analyst": "{attacker} send {attack_share}% of final-third entries down the {lane_label} (league {league_share}%), and {defender} let {concede_completion}% of entries there succeed (league {league_completion}%).",
+    "casual": "Watch the {lane_label}: {attacker} attack it {attack_share}% of the time (most teams {league_share}%), and {concede_completion}% of attacks there work against {defender} (usually {league_completion}%)."
+  },
+  "field_tilt.stat": {
+    "analyst": "{team} hold {amount}% field tilt in this spell.",
+    "casual": "{team} are camped in the opposition half: {amount}% of the final-third passing is theirs."
+  },
+  "field_tilt.trailing_vs_deep_block": {
+    "analyst": "{team} hold {amount}% field tilt while chasing the game, but only {box_entries} of {team_f3_passes} final-third passes reached the box.",
+    "casual": "{team} have the ball up the pitch ({amount}% of final-third passes) but just {box_entries} of {team_f3_passes} got into the box."
+  },
+  "xg.stat": {
+    "analyst": "{team} have {amount} xG so far.",
+    "casual": "{team}'s chances add up to {amount} expected goals so far."
+  },
+  "xg.volume_vs_value": {
+    "analyst": "{team}: {amount} xG from {shots} shots, {xg_per_shot} xG per shot, mostly low-quality attempts.",
+    "casual": "{team} have taken {shots} shots, but most were long shots: {amount} expected goals in all, {xg_per_shot} per shot."
+  },
+  "xg.small_sample": {
+    "analyst": "{team} have {amount} xG from only {shots} shots, too few to read much into.",
+    "casual": "{team}'s {shots} shots are worth {amount} expected goals, but that is too few shots to judge."
+  },
+  "chances_created.stat": {
+    "analyst": "{player} ({team}) has created {amount} chances.",
+    "casual": "{player} has set up {amount} chances for {team}."
+  },
+  "chances_created.split": {
+    "analyst": "{player} ({team}) has created {amount} chances: {set_piece} from set pieces, {open_play} in open play.",
+    "casual": "{player} has set up {amount} chances, but {set_piece} came from set pieces and only {open_play} in open play."
+  },
+  "forward_passes.stat": {
+    "analyst": "{player} ({team}) has completed {amount} forward passes.",
+    "casual": "{player} keeps moving {team} forward: {amount} forward passes so far."
+  },
+  "forward_passes.wide_low_threat": {
+    "analyst": "{player} ({team}): {amount} forward passes, mostly wide; pass quality {pass_quality_ratio}x the league rate into central danger zones.",
+    "casual": "{player} plays plenty of forward passes ({amount}), but mostly out wide, finding dangerous central areas at {pass_quality_ratio} times the league rate."
+  },
+  "ppda.stat": {
+    "analyst": "{team} allow {amount} opponent passes per defensive action (PPDA).",
+    "casual": "{team} let opponents make {amount} passes before winning the ball back."
+  },
+  "ppda.with_press_intensity": {
+    "analyst": "{team}: PPDA {amount}, with {press_intensity} pressure events per opponent pass.",
+    "casual": "{team} press {press_intensity} times per opponent pass, letting them make {amount} passes per ball won."
+  },
+  "momentum.shift": {
+    "analyst": "Momentum swings to {team}: {amount} on the tug-of-war scale, from {momentum_before} at the start of the spell.",
+    "casual": "{team} have taken over: the momentum meter reads {amount}, up from {momentum_before}."
+  },
+  "rhythm.wave": {
+    "analyst": "Rhythm over the last {minutes} minutes: {amount} possession changes per minute.",
+    "casual": "The ball has changed hands {amount} times a minute over the last {minutes} minutes."
+  },
+  "xt_added.threat_pass": {
+    "analyst": "{player} ({team}) plays a pass adding {amount} expected threat.",
+    "casual": "Dangerous pass from {player}: it made a goal more likely by {amount} on the threat scale."
+  },
+  "milestone.pass_count": {
+    "analyst": "{player} ({team}) reaches {amount} completed passes in this match.",
+    "casual": "{player} has now completed {amount} passes for {team} in this match."
+  }
+}

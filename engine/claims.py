@@ -27,7 +27,7 @@ SUPPORT_DP = {"xg_per_shot": 3, "cluster_xg": 2, "open_play_xa": 2, "set_piece_x
 INT_KEYS = {"shots", "low_xg_shots", "team_f3_passes", "opponent_f3_passes", "box_entries", "open_play",
             "set_piece", "passes_allowed", "defensive_actions", "cluster_start_sec", "cluster_end_sec",
             "spell_events", "spell_start_sec", "concede_sample_size", "completion_attempts", "wide_count",
-            "pass_count"}
+            "pass_count", "minutes"}
 MAX_EVIDENCE = 15
 
 
@@ -149,7 +149,7 @@ def _territorial(sc, subject, params):
     r = F.territorial_stress(sc.events, tid)
     best = r.detail["spells"][0] if r.detail["spells"] else None
     vals = dict(amount=r.value, spell_events=best["n_events"] if best else 0,
-                spell_start_sec=best["start_sec"] if best else 0)
+                spell_start_sec=best["start_sec"] if best else 0, box_entries=M.box_entries(sc.events, tid).value)
     return vals, lambda e: e["team_id"] == tid and e["event_type"] in F.ON_BALL and e["x_start"] >= 50
 
 
@@ -174,7 +174,7 @@ def _rhythm(sc, subject, params):
     end_minute = sc.window[1] // 60 if sc.window else None
     full = match_events(sc.ds)[sc.match_id]
     r = F.rhythm(full, end_minute=end_minute)
-    vals = dict(amount=sum(r.value) / len(r.value))
+    vals = dict(amount=sum(r.value) / len(r.value), minutes=len(r.value))
     return vals, lambda e: e["event_type"] == "possession_change"
 
 

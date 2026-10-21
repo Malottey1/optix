@@ -2,7 +2,7 @@
 
 Applies to: metric xg or npxg, subject a team. Fires when the subject has at least MIN_SHOTS shots
 in scope, at least MIN_LOW_SHARE of them have xG <= LOW_XG, and mean xG per shot <= MAX_MEAN_XG.
-Action: context (publish with xG per shot beside the total).
+Action: context. REQUIRES shots and xg_per_shot in params.
 """
 from . import RuleResult
 
@@ -11,6 +11,7 @@ MIN_SHOTS = 10
 LOW_XG = 0.08
 MIN_LOW_SHARE = 0.75
 MAX_MEAN_XG = 0.07
+REQUIRES = ("shots", "xg_per_shot")
 
 
 def check(claim, ctx):

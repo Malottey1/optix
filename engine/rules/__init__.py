@@ -5,6 +5,11 @@ RuleResult saying whether it fired. A fired rule's `action` is "context" (true b
 its own: publish with a context chip) or "block" (never publish). `note` is a machine-readable
 context_note key, never prose. Thresholds live in each module and are documented there.
 
+A context rule also declares REQUIRES: the params the sentence must carry for the claim to be
+honest with the context shown (e.g. box entries beside field tilt). A fired context rule whose
+REQUIRES are missing from params blocks the claim; the Verifier returns them as a revision hint so
+the Analyst can rebuild the claim with that context.
+
 ctx is a verifier.Context: the dataset, the claim's resolved scope, the recomputed (unrounded)
 values and the subject's team id.
 """

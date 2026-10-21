@@ -2,12 +2,13 @@
 
 Applies to: metric xg or npxg with scope match or window. Fires when the subject has fewer than
 MIN_SHOTS shots in scope: a single big chance can dominate the total. Season claims do not fire.
-Action: context (show the shot count beside the xG).
+Action: context. REQUIRES shots in params.
 """
 from . import RuleResult
 
 RULE_ID = "small_sample_xg"
 MIN_SHOTS = 8
+REQUIRES = ("shots",)
 
 
 def check(claim, ctx):

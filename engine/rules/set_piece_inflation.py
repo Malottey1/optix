@@ -2,13 +2,15 @@
 
 A set-piece taker racks up key passes from corners without open-play creativity.
 Applies to: metric chances_created. Fires when at least MIN_CHANCES chances are in scope and the
-set-piece share is >= MIN_SET_PIECE_SHARE. Action: context (show open-play chances beside the total).
+set-piece share is >= MIN_SET_PIECE_SHARE. Action: context.
+REQUIRES open_play in params (open-play chances beside the total).
 """
 from . import RuleResult
 
 RULE_ID = "set_piece_inflation"
 MIN_CHANCES = 4
 MIN_SET_PIECE_SHARE = 0.5
+REQUIRES = ("open_play",)
 
 
 def check(claim, ctx):

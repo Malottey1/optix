@@ -80,6 +80,7 @@ def test_passing_metrics():
     assert M.forward_passes_by_player(b.rows, H).value[0] == ("p1", 2)
     cc = M.chances_created(b.rows, b.passes, H, "p2")
     assert (cc.value, cc.detail["open_play"], cc.detail["set_piece"]) == (2, 1, 1)
+    assert M.chances_by_player(b.rows, b.passes, H).value == [("p2", 2)]
     # directness excludes the set piece: 3 forward of 4 open-play passes
     assert M.directness(b.rows, H).value == pytest.approx(3 / 4)
 

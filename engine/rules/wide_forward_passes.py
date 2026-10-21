@@ -3,7 +3,7 @@
 Applies to: metric forward_passes, subject a player. Fires when at least MIN_PASSES forward passes
 are in scope, at least MIN_WIDE_SHARE end on a flank and the pass quality ratio (share into
 high-threat central cells vs the league) is <= MAX_QUALITY_RATIO.
-Action: context (show pass quality beside the count).
+Action: context. REQUIRES pass_quality_ratio in params.
 """
 from . import RuleResult
 
@@ -11,6 +11,7 @@ RULE_ID = "wide_forward_passes"
 MIN_PASSES = 15
 MIN_WIDE_SHARE = 0.70
 MAX_QUALITY_RATIO = 0.5
+REQUIRES = ("pass_quality_ratio",)
 
 
 def check(claim, ctx):
