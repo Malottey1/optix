@@ -242,6 +242,10 @@ COMPUTE = {
     "milestone_count": _milestone,
     "zone_mismatch": _zone_mismatch,
 }
+# evidence shown first when a claim cites only MAX_EVIDENCE events: the events that carry the point
+EVIDENCE_FIRST = {
+    "field_tilt": lambda e: in_box(e["x_end"], e["y_end"]),          # box entries, then other passes
+}
 UNITS = {"field_tilt": "percent", "xg": "xg", "npxg": "xg", "chances_created": "count", "forward_passes": "count",
          "ppda": "ratio", "shot_cluster_score": "count", "territorial_stress": "seconds", "momentum": "score_0_100",
          "rhythm_index": "per_min", "xt_added": "xt", "milestone_count": "count", "zone_mismatch": "percent"}
@@ -282,7 +286,11 @@ def build_claim(ds: Dataset, metric: str, scope: str, subject: dict, *, claim_ty
     # a season claim's evidence all comes from the subject team's matches (evidence predicates
     # require the team or player), so scan only those
     source = team_events(ds, team_id) if scope == "season" and team_id and metric != "zone_mismatch" else sc.events
-    ev = [e["event_id"] for e in source if pred(e)]
+    matched = [e for e in source if pred(e)]
+    if metric in EVIDENCE_FIRST:
+        first = EVIDENCE_FIRST[metric]
+        matched = [e for e in matched if first(e)] + [e for e in matched if not first(e)]
+    ev = [e["event_id"] for e in matched]
     rendered = {"attempt": attempt}
     p_out = dict(extra_params or {})
     for k in param_values:

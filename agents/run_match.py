@@ -2,7 +2,8 @@
 
     python -m agents.run_match --match m_showcase --out out/insights.jsonl
 
-Also writes, next to --out: claims.jsonl (every verification attempt of every published claim) and
+Also writes, next to --out: claims.jsonl (every verification attempt of every published claim),
+timeline.json (teams, players, goals and the engine's per-minute momentum, for the dashboard) and
 agent_log.jsonl (structured logs). Data: --data (match directory, default data/showcase) with the
 season baseline from --season (default data/generated).
 """
@@ -13,7 +14,9 @@ import json
 import statistics
 from pathlib import Path
 
-from engine.tables import load
+from engine import flow as F
+from engine import threat as T
+from engine.tables import load, match_events
 
 from .log import AgentLog
 from .narrative import languages as available_languages
@@ -25,6 +28,25 @@ def write_jsonl(path: Path, rows):
     with path.open("w", encoding="utf-8", newline="\n") as f:
         for r in rows:
             f.write(json.dumps(r, ensure_ascii=False, sort_keys=True) + "\n")
+
+
+def timeline(ds, match_id) -> dict:
+    """Match furniture for the dashboard. Every number is copied from the events or computed by
+    engine.flow.momentum (home team's sign, one value per minute)."""
+    m = ds.matches[match_id]
+    evs = match_events(ds)[match_id]
+    team = {tid: {"id": tid, "code": t["code"], "name": t["name"]} for tid, t in ds.teams.items()
+            if tid in (m["home_team_id"], m["away_team_id"])}
+    mom = F.momentum(evs, ds.shots, T.xt_grid(ds), m["home_team_id"], m["away_team_id"]).value
+    goals = [{"event_id": e["event_id"], "clock_sec": e["clock_sec"], "team": ds.code(e["team_id"]),
+              "player_id": e["player_id"], "score_home": e["score_home"] + (e["team_id"] == m["home_team_id"]),
+              "score_away": e["score_away"] + (e["team_id"] == m["away_team_id"])}
+             for e in evs if e["event_type"] == "shot" and e["outcome"] == "goal"]
+    players = {pid: {"name": p["name"], "team": ds.code(p["team_id"]), "shirt": p["shirt"]}
+               for pid, p in ds.players.items() if p["team_id"] in team}
+    return {"match_id": match_id, "home": team[m["home_team_id"]], "away": team[m["away_team_id"]],
+            "duration_sec": evs[-1]["clock_sec"], "momentum": [[t, round(v, 1)] for t, v in mom],
+            "goals": goals, "players": players}
 
 
 def main(argv=None):
@@ -45,6 +67,8 @@ def main(argv=None):
     insights = stream.run()
     write_jsonl(out, insights)
     write_jsonl(out.parent / "claims.jsonl", stream.attempts())
+    (out.parent / "timeline.json").write_text(json.dumps(timeline(ds, a.match), ensure_ascii=False, sort_keys=True),
+                                              encoding="utf-8")
     lat = [i["clock"]["emitted_latency_ms"] for i in insights]
     blocked = sum(1 for x in stream.attempts() if x["claim"]["verification"]["status"] == "blocked")
     print(f"{len(insights)} insights -> {out} ({blocked} blocked attempts revised, "
