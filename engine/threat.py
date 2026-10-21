@@ -98,12 +98,23 @@ def high_threat_cells(grid, quantile: float = 0.75) -> set:
     return out
 
 
-def pass_quality_ratio(events, grid, player_id, baseline_events=None, team_id=None) -> MetricResult:
+def league_forward_share(ds: Dataset) -> float | None:
+    """pass_quality_ratio's league share on ds's baseline, cached like the grid."""
+    b = baseline_of(ds)
+    key = ("share", id(b))
+    if key not in _GRIDS:
+        _GRIDS[key] = (b, pass_quality_ratio(b.events, xt_grid(ds), None).detail["league_share"])
+    return _GRIDS[key][1]
+
+
+def pass_quality_ratio(events, grid, player_id, baseline_events=None, team_id=None,
+                       league_share: float | None = None) -> MetricResult:
     """Share of a player's completed forward passes (x gain >= 8) that end in a high-threat
     central zone, divided by the same share for every player in the baseline.
 
     Inputs: events with the player's passes; grid; player_id; baseline_events (default: events);
-    team_id optional (narrows the scan).
+    team_id optional (narrows the scan); league_share, when given, replaces the baseline scan
+    (league_forward_share caches it).
     Value: ratio (1.0 = league average; 0.2 = a fifth as often as the league). detail: player
     share, league share, counts. Evidence: the player's forward passes that DID reach those zones,
     then the ones that did not.
@@ -119,12 +130,15 @@ def pass_quality_ratio(events, grid, player_id, baseline_events=None, team_id=No
 
     mine = list(forward(events, player_id))
     good = [e for e in mine if cell(e["x_end"], e["y_end"]) in hot]
-    lg = list(forward(baseline_events if baseline_events is not None else events, None))
-    lg_good = sum(1 for e in lg if cell(e["x_end"], e["y_end"]) in hot)
+    if league_share is None:
+        lg = list(forward(baseline_events if baseline_events is not None else events, None))
+        lg_good = sum(1 for e in lg if cell(e["x_end"], e["y_end"]) in hot)
+        league_share = lg_good / len(lg) if lg else None
     share = len(good) / len(mine) if mine else None
-    lg_share = lg_good / len(lg) if lg else None
+    lg_share = league_share
     ratio = share / lg_share if share is not None and lg_share else None
-    bad = [e for e in mine if e not in good]
+    good_ids = {e["event_id"] for e in good}
+    bad = [e for e in mine if e["event_id"] not in good_ids]
     return MetricResult(ratio, tuple(e["event_id"] for e in good + bad), len(mine),
                         detail=dict(player_share=share, league_share=lg_share,
                                     high_threat=len(good), forward=len(mine)))

@@ -13,6 +13,8 @@ Pure, stdlib-only Python over the CSV tables. It never imports the generator and
 | `matchup.py` | `lane_matchup` (attacker share lift + defender completion lift per lane, with intervals and confidence) and `matchup_claim` (pending claim object) |
 | `threat.py` | xT: 12x8 possession-value grid fitted on the season (`xt_grid`), `xt_added` per pass, `pass_quality_ratio` (share of forward passes into high-threat central cells vs league) |
 | `flow.py` | `xa_split` (open play vs set piece), `territorial_stress`, `shot_clusters`, `rhythm` (per-minute series), `momentum` (decayed xT + xG tug of war), `milestones` (within-dataset only) |
+| `claims.py` | `compute` (recompute registry: metric -> values + evidence predicate) and `build_claim` (pending claim objects) |
+| `verifier.py` | fact check and context check on claim objects; rules in `rules/` |
 | `report.py` | `python -m engine.report --team AUR --opponent NOR [--data DIR] [--season-baseline DIR] [--json]` |
 
 ## Reading the numbers: effect size first, z only for ranking
@@ -102,6 +104,37 @@ with a pressing one.
   0.27-2.28. His forward passes go into the channel, not into high-threat central cells.
 - Corner specialist NOR_11: open-play xA per chance created 0.035, second lowest of the 20 players with
   15+ chances (median about 0.07); his set-piece xA (1.67) exceeds his open-play xA (1.27).
+
+## Verifier
+
+`verify(claim, ds)` returns a copy with `verification` filled in; `verdict` gives the same as a
+dataclass with the per-rule details.
+
+Fact check (on the claim object only):
+1. evidence_event_ids non-empty and all known, else **missing_evidence**;
+2. each evidence event satisfies the metric's evidence predicate (e.g. a field tilt claim's evidence
+   are the subject's completed final-third passes) and lies inside the claim's match/window, else
+   **missing_evidence**;
+3. value.amount and every supporting_values entry recomputed from scope + subject + params within half
+   the last rounding step, else **value_mismatch**;
+4. every number in params equals value.amount or a supporting value, else **value_mismatch**.
+
+Context rules (one module each in `engine/rules/`, thresholds documented in the module):
+
+| rule | applies to | fires when | action, context_note |
+|---|---|---|---|
+| causal_claim | claim_type causal | always | block, causal.not_supported_by_event_data |
+| causal_red_card | a claim mentioning a red card (metric, template_key or params) | it is causal (claim_type causal, or template_key with caused/because/due_to/cost) | block, red_card.descriptive_only |
+| single_match_fatigue | fatigue.* on a match/window scope | always | block, fatigue.single_match_not_supported |
+| field_tilt_with_lead | field_tilt / territorial_stress, team, match/window | tilt >= 60%, trailing for >= 50% of its final-third passes, box entries <= 15% of them | context, field_tilt.trailing_vs_deep_block |
+| shot_spam | xg / npxg, team | >= 10 shots, >= 75% with xG <= 0.08, mean <= 0.07 | context, xg.volume_of_low_quality_shots |
+| set_piece_inflation | chances_created | >= 4 chances, >= 50% from set pieces | context, chances_created.mostly_set_pieces |
+| wide_forward_passes | forward_passes, player | >= 15, >= 70% wide, pass_quality_ratio <= 0.5 | context, forward_passes.wide_low_threat |
+| small_sample_xg | xg / npxg, match/window | < 8 shots | context, xg.small_sample |
+| ppda_alone | ppda | press_intensity not in supporting_values | context, ppda.read_with_press_intensity |
+
+Full-league precision/recall is in docs/PROGRESS.md (Step 5); every rule fires on <= 5% of non-trap
+cases.
 
 ## Known gaps
 

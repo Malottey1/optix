@@ -74,6 +74,32 @@ Branch: `overnight`. Started 2026-10-21 07:08 local.
   cut, so a mostly-zero grid made every central cell "high threat".
 - Tests: 70 passed by default; slow 10.
 
+### Step 5. Verifier
+- engine/claims.py: per-metric recompute registry (`compute`) and `build_claim` (pending claim objects
+  with value, supporting_values, evidence, scope, game state). The Verifier and the Analyst share it.
+- engine/verifier.py: fact check (evidence exists, each ID satisfies the metric definition and lies in
+  scope, value and every supporting value recomputed within half a rounding step, params numbers
+  backed) then context check (engine/rules/, 9 modules). Status published / published_with_context /
+  blocked, rule_ids, context_note key, attempt number.
+- matchup_claim now carries `defender_id` so the Verifier can recompute it.
+- tests/test_verifier.py (20 tests): honest, tampered amount, tampered supporting value, unbacked param
+  number, unknown, wrong-team and out-of-window evidence; every rule fires where the showcase plants
+  it; nothing fires on CAL level/ahead windows with tilt >= 60%, on high tilt with box entries > 15%,
+  or on CAL's top passer and CAL's shots.
+- tests/test_verifier_full.py (slow) on the full league:
+
+  | rule | TP | FN | FP | TN | recall | precision | non-trap fire rate |
+  |---|---|---|---|---|---|---|---|
+  | shot_spam (match, trap team trailing >= 45 min) | 11 | 13 | 32 | 614 | 0.46 | 0.26 | 5.0% |
+  | field_tilt_with_lead (match, vs sit-deep, trailing >= 45 min) | 20 | 17 | 12 | 634 | 0.54 | 0.62 | 1.9% |
+  | set_piece_inflation (season, players >= 4 chances) | 4 | 0 | 0 | 195 | 1.00 | 1.00 | 0% |
+  | wide_forward_passes (season, players >= 15 fwd passes) | 4 | 0 | 0 | 216 | 1.00 | 1.00 | 0% |
+
+  Every rule is under the 10% non-trap limit, so none was retuned.
+- Speed: season player claims went from 0.45 s to 0.1 s (cached league share for pass_quality_ratio,
+  evidence scanned from the team's matches only, no in-scope set for season claims).
+- Tests: 90 passed by default; slow 11.
+
 ## Decisions
 - Showcase seed search starts from a recorded offset (`SHOWCASE_SEARCH_START = {2026: 4547}`) because
   a search from 0 with the 10% margin takes ~2 minutes and every test fixture regenerates the data.
@@ -117,6 +143,16 @@ Branch: `overnight`. Started 2026-10-21 07:08 local.
 - Failed passes get 0 xT added (not minus the start value): losing the ball is reported separately.
 - Momentum = 100 x (home - away) / (home + away) of exponentially decayed (half-life 5 min) positive
   xT added plus shot xG.
+
+- Verifier: the fact check recomputes from the claim object's scope, subject and params, never from
+  text. A claim may fire several rules; the context_note is the first blocking rule's (else the first
+  context rule's). Rule order: blocking rules first.
+- Precision/recall cases for match-level rules only count a trap team's match as positive when the
+  game state the trap needs happened (trailing >= 45 minutes); other trap-team matches are excluded
+  from both counts.
+- shot_spam precision is 0.26 at match level, kept: the 32 "false positives" are unplanted teams that
+  really did take 10+ shots with >= 75% at xG <= 0.08 in that match, which is exactly what the chip
+  says. The non-trap rate (5%) is within the limit.
 
 ## Surprises
 

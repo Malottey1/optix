@@ -164,7 +164,7 @@ def matchup_claim(ds: Dataset, attacker_id: str, defender_id: str, match_id: str
         "supporting_values": supporting,
         "template_key": "matchup.weak_flank" if top["lane"] in WIDE_LANES else "matchup.weak_lane",
         "params": {
-            "attacker": a, "defender": d, "lane": top["lane"],
+            "attacker": a, "defender": d, "lane": top["lane"], "defender_id": defender_id,
             "attack_share": amount, "league_share": base,
             "concede_completion": supporting["concede_completion"],
             "league_completion": supporting["league_completion"],
