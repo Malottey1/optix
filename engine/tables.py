@@ -32,6 +32,7 @@ class Dataset:
     events: list          # event rows in file order (chronological within a match), + home_team_id
     passes: dict          # event_id -> pass row
     shots: dict           # event_id -> shot row
+    label: str = ""       # dataset label (directory name), recorded in claims' baseline_source
 
     def team_by_code(self, code: str) -> str:
         for tid, t in self.teams.items():
@@ -69,7 +70,7 @@ def load(directory: str | Path) -> Dataset:
         events.append(e)
     passes = {r["event_id"]: _convert(r, _PASS_FLOATS, _PASS_INTS) for r in _read(d / "passes.csv")}
     shots = {r["event_id"]: _convert(r, _SHOT_FLOATS, _SHOT_INTS) for r in _read(d / "shots.csv")}
-    return Dataset(teams, players, matches, events, passes, shots)
+    return Dataset(teams, players, matches, events, passes, shots, label=d.name)
 
 
 def score_diff(event: dict, team_id: str) -> int:

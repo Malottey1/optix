@@ -1,22 +1,35 @@
 {
-  "claim_id": "clm_0001",
-  "match_id": "m_demo_01",
+  "claim_id": "clm_matchup_AUR_NOR_left_flank",
+  "scope": "season",
+  "match_id": "m_showcase",
   "claim_type": "matchup",
   "metric": "zone_mismatch",
-  "subject": { "kind": "team", "id": "team_aur", "team_code": "AUR" },
+  "subject": { "kind": "team", "id": "t_aur", "team_code": "AUR" },
   "value": {
-    "amount": 38.0,
+    "amount": 38.3,
     "unit": "percent",
-    "baseline": 29.0,
+    "baseline": 22.9,
     "baseline_kind": "league_avg",
-    "z_score": 1.9,
-    "sample_size": 34
+    "baseline_source": { "kind": "season", "n": 3398, "dataset": "small" },
+    "interval": { "low": 34.9, "high": 41.7, "level": 0.95 },
+    "effect_pp": 15.4,
+    "confidence": "high",
+    "z_score": 10.2,
+    "sample_size": 779
   },
   "zone": { "lane": "left_flank", "third": "attacking" },
-  "window": { "from_sec": 0, "to_sec": 0 },
   "game_state": { "score_diff_for_subject": 0, "bracket": "level" },
-  "evidence_event_ids": ["e_000412", "e_000977", "e_001530"],
+  "evidence_event_ids": ["m_003_e00022", "m_003_e00394", "m_002_e00198"],
+  "supporting_values": {
+    "baseline_share": 22.9,
+    "concede_share": 28.8,
+    "concede_effect_pp": 5.9,
+    "mismatch_pp": 21.3
+  },
   "template_key": "matchup.weak_flank",
-  "params": { "attacker": "AUR", "defender": "NOR", "attack_share": 38, "concede_share": 41 },
+  "params": {
+    "attacker": "AUR", "defender": "NOR", "lane": "left_flank",
+    "attack_share": 38.3, "league_share": 22.9, "concede_share": 28.8
+  },
   "verification": { "status": "pending", "attempt": 1 }
 }

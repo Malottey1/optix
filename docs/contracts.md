@@ -22,7 +22,19 @@ events -> Analyst (deterministic metrics)
 
 ## Rules the schemas enforce
 
-1. A claim has no prose, only a metric, value, window, game state, evidence IDs, and a `template_key` + `params`.
+1. A claim has no prose, only a scope, metric, value, game state, evidence IDs, supporting values, and a `template_key` + `params`.
+   - `scope` is `season` (aggregate over the dataset so far, e.g. a pre-match preview: no window),
+     `match` (one whole match) or `window` (a time window in one match). `match` and `window` require
+     `match_id` and `window`; a season claim has no fake 0-0 window.
+   - `value` carries `amount`, `unit`, `baseline`, `baseline_source` (`season` or `league` plus its n and
+     dataset label), `interval` (95%, Wilson for shares), `effect_pp` (lift vs baseline in percentage
+     points) and `confidence` (`low`/`medium`/`high`, see docs/engine.md). `z_score` is optional and is an
+     internal ranking signal only, never a measure of size or certainty.
+   - `supporting_values` holds every other named number the claim relies on (e.g. `concede_share`,
+     `mismatch_pp`, `baseline_share`). The Verifier recomputes each one.
+   - **Every number in `params` must equal `value.amount` or an entry in `supporting_values`.** JSON
+     Schema cannot express this, so `contracts.checks.check_param_numbers(claim)` enforces it (tests
+     and the Verifier call it).
 2. A claim with no evidence IDs cannot be verified (rule `missing_evidence`).
 3. `causal` claims are always blocked (rule `causal_claim`). Descriptive changes are allowed.
 4. Status `published_with_context` means true but misleading on its own: the insight carries a `context_chip` showing the shallow standard stat, muted, beside the honest one.

@@ -243,3 +243,15 @@ def test_engine_runs_on_the_showcase_match(generated, claim_validator):
     claim = matchup_claim(sc, sc.team_by_code("AUR"), sc.team_by_code("NOR"), match_id="m_showcase")
     assert claim is not None and not list(claim_validator.iter_errors(claim))
     assert claim["match_id"] == "m_showcase"
+
+
+def test_matchup_claim_uses_season_scope_and_backed_params(ds):
+    from contracts.checks import check_param_numbers
+    claim = matchup_claim(ds, tid(ds, "AUR"), tid(ds, "NOR"))
+    assert claim["scope"] == "season" and "window" not in claim
+    assert check_param_numbers(claim) == []
+    v = claim["value"]
+    assert v["interval"]["low"] < v["amount"] < v["interval"]["high"]
+    assert v["effect_pp"] == pytest.approx(v["amount"] - v["baseline"], abs=0.11)
+    assert v["confidence"] == "high"
+    assert v["baseline_source"]["kind"] == "season" and v["baseline_source"]["n"] > v["sample_size"]

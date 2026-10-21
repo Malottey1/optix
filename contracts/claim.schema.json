@@ -7,131 +7,465 @@
   "additionalProperties": false,
   "required": [
     "claim_id",
-    "match_id",
+    "scope",
     "claim_type",
     "metric",
     "subject",
     "value",
-    "window",
     "game_state",
     "evidence_event_ids",
     "verification"
   ],
   "properties": {
-    "claim_id": { "type": "string", "description": "Unique id, stable across retries." },
-    "match_id": { "type": "string" },
+    "claim_id": {
+      "type": "string",
+      "description": "Unique id, stable across retries."
+    },
+    "scope": {
+      "type": "string",
+      "enum": [
+        "season",
+        "match",
+        "window"
+      ],
+      "description": "What the claim is about. 'season': aggregate over the dataset so far (e.g. a pre-match preview), no window. 'match': one whole match. 'window': a time window inside one match. 'window' and 'match' require match_id and window."
+    },
+    "match_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "The match the claim is about (scope match/window), or the match a season claim previews (optional)."
+    },
     "claim_type": {
       "type": "string",
-      "enum": ["stat", "comparison", "trend", "matchup", "milestone", "descriptive_change", "causal"],
+      "enum": [
+        "stat",
+        "comparison",
+        "trend",
+        "matchup",
+        "milestone",
+        "descriptive_change",
+        "causal"
+      ],
       "description": "'causal' claims are always blocked by the Verifier (rule causal_claim); the type exists so they can be detected and rejected."
     },
     "metric": {
       "type": "string",
       "enum": [
-        "xg", "npxg", "open_play_xa", "xt_added", "pass_quality_ratio",
-        "field_tilt", "ppda", "territorial_stress", "shot_cluster_score",
-        "possession_pct", "momentum", "rhythm_index", "zone_mismatch",
-        "chances_created", "forward_passes", "passes_completed",
-        "ball_speed", "shot_speed", "possession_changes_per_min",
-        "red_card_segment_delta", "milestone_count"
+        "xg",
+        "npxg",
+        "open_play_xa",
+        "xt_added",
+        "pass_quality_ratio",
+        "field_tilt",
+        "ppda",
+        "territorial_stress",
+        "shot_cluster_score",
+        "possession_pct",
+        "momentum",
+        "rhythm_index",
+        "zone_mismatch",
+        "chances_created",
+        "forward_passes",
+        "passes_completed",
+        "ball_speed",
+        "shot_speed",
+        "possession_changes_per_min",
+        "red_card_segment_delta",
+        "milestone_count"
       ]
     },
     "subject": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["kind", "id"],
+      "required": [
+        "kind",
+        "id"
+      ],
       "properties": {
-        "kind": { "type": "string", "enum": ["team", "player", "match", "zone"] },
-        "id": { "type": "string" },
-        "team_code": { "type": "string", "description": "Fictional 3-letter team code." }
+        "kind": {
+          "type": "string",
+          "enum": [
+            "team",
+            "player",
+            "match",
+            "zone"
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "team_code": {
+          "type": "string",
+          "description": "Fictional 3-letter team code."
+        }
       }
     },
     "value": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["amount", "unit"],
+      "required": [
+        "amount",
+        "unit"
+      ],
       "properties": {
-        "amount": { "type": "number" },
-        "unit": { "type": "string", "enum": ["count", "ratio", "percent", "xg", "xt", "seconds", "per_min", "per_10min", "m_per_s", "score_0_100"] },
-        "baseline": { "type": ["number", "null"], "description": "League, role or own-baseline value used for comparison." },
-        "baseline_kind": { "type": ["string", "null"], "enum": ["league_avg", "role_baseline", "own_season", "same_game_state", "same_minute", null] },
-        "z_score": { "type": ["number", "null"] },
-        "sample_size": { "type": "integer", "minimum": 0 }
+        "amount": {
+          "type": "number"
+        },
+        "unit": {
+          "type": "string",
+          "enum": [
+            "count",
+            "ratio",
+            "percent",
+            "xg",
+            "xt",
+            "seconds",
+            "per_min",
+            "per_10min",
+            "m_per_s",
+            "score_0_100"
+          ]
+        },
+        "baseline": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "League, role or own-baseline value used for comparison."
+        },
+        "baseline_kind": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "league_avg",
+            "role_baseline",
+            "own_season",
+            "same_game_state",
+            "same_minute",
+            null
+          ]
+        },
+        "z_score": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "Optional. Internal ranking signal only (a sampling z grows with sample size); never shown as a measure of size or certainty. Use effect_pp, interval and confidence for that."
+        },
+        "sample_size": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "interval": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": false,
+          "required": [
+            "low",
+            "high"
+          ],
+          "description": "Uncertainty interval for amount, in the same unit (95% Wilson interval for shares).",
+          "properties": {
+            "low": {
+              "type": "number"
+            },
+            "high": {
+              "type": "number"
+            },
+            "level": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "exclusiveMaximum": 1
+            }
+          }
+        },
+        "effect_pp": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "Lift of amount over baseline in percentage points (percent and ratio units)."
+        },
+        "confidence": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            null
+          ],
+          "description": "From sample size and interval width; see docs/engine.md."
+        },
+        "baseline_source": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "n"
+          ],
+          "description": "Where the baseline comes from. 'season': this dataset's season (single-match analyses always use the season, never the match itself). 'league': league-wide pooled average.",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": [
+                "season",
+                "league"
+              ]
+            },
+            "n": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Sample size of the baseline."
+            },
+            "dataset": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Dataset label, e.g. 'small' or 'full'."
+            }
+          }
+        }
       }
     },
     "zone": {
-      "type": ["object", "null"],
+      "type": [
+        "object",
+        "null"
+      ],
       "description": "Pitch zone, always from the attacking team's point of view.",
       "additionalProperties": false,
       "properties": {
-        "lane": { "type": "string", "enum": ["left_flank", "left_half_space", "center", "right_half_space", "right_flank"] },
-        "third": { "type": "string", "enum": ["defensive", "middle", "attacking"] }
+        "lane": {
+          "type": "string",
+          "enum": [
+            "left_flank",
+            "left_half_space",
+            "center",
+            "right_half_space",
+            "right_flank"
+          ]
+        },
+        "third": {
+          "type": "string",
+          "enum": [
+            "defensive",
+            "middle",
+            "attacking"
+          ]
+        }
       }
     },
     "window": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["from_sec", "to_sec"],
-      "description": "Match clock in seconds from kickoff of the first half (second half starts at 2700).",
+      "required": [
+        "from_sec",
+        "to_sec"
+      ],
+      "description": "Match clock in seconds from kickoff of the first half (second half starts at 2700). Required for scope 'match' (the whole match) and 'window'; omitted for scope 'season'.",
       "properties": {
-        "from_sec": { "type": "integer", "minimum": 0 },
-        "to_sec": { "type": "integer", "minimum": 0 }
+        "from_sec": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to_sec": {
+          "type": "integer",
+          "minimum": 0
+        }
       }
     },
     "game_state": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["score_diff_for_subject", "bracket"],
+      "required": [
+        "score_diff_for_subject",
+        "bracket"
+      ],
       "properties": {
-        "score_diff_for_subject": { "type": "integer" },
-        "bracket": { "type": "string", "enum": ["leading_2plus", "leading_1", "level", "trailing_1", "trailing_2plus"] },
-        "red_cards_for": { "type": "integer", "minimum": 0, "default": 0 },
-        "red_cards_against": { "type": "integer", "minimum": 0, "default": 0 }
+        "score_diff_for_subject": {
+          "type": "integer"
+        },
+        "bracket": {
+          "type": "string",
+          "enum": [
+            "leading_2plus",
+            "leading_1",
+            "level",
+            "trailing_1",
+            "trailing_2plus"
+          ]
+        },
+        "red_cards_for": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0
+        },
+        "red_cards_against": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0
+        }
       }
     },
     "evidence_event_ids": {
       "type": "array",
-      "items": { "type": "string" },
+      "items": {
+        "type": "string"
+      },
       "minItems": 1,
       "description": "Event IDs that prove the claim. A claim without evidence cannot be verified and is blocked."
     },
+    "supporting_values": {
+      "type": "object",
+      "description": "Named numbers the claim relies on besides value.amount (e.g. concede_share, mismatch_score, baseline_share). The Verifier recomputes every one from the evidence.",
+      "additionalProperties": {
+        "type": "number"
+      }
+    },
     "template_key": {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "description": "Key of the sentence template the Narrative agent should fill, e.g. 'matchup.weak_flank'. Text is generated from template_key + params, never from free invention."
     },
     "params": {
       "type": "object",
-      "description": "Named values the template may use (team codes, player ids, percentages). Every number here must equal a number in value or the evidence.",
-      "additionalProperties": { "type": ["string", "number", "boolean", "null"] }
+      "description": "Named values the template may use (team codes, lanes, numbers). Every NUMBER in params must equal value.amount or an entry in supporting_values (checked by contracts.checks.check_param_numbers; JSON Schema cannot express it).",
+      "additionalProperties": {
+        "type": [
+          "string",
+          "number",
+          "boolean",
+          "null"
+        ]
+      }
     },
     "verification": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["status"],
+      "required": [
+        "status"
+      ],
       "properties": {
         "status": {
           "type": "string",
-          "enum": ["pending", "published", "published_with_context", "blocked"]
+          "enum": [
+            "pending",
+            "published",
+            "published_with_context",
+            "blocked"
+          ]
         },
-        "fact_check": { "type": ["string", "null"], "enum": ["pass", "fail", null] },
-        "actual_value": { "type": ["number", "null"], "description": "Value recomputed by the Verifier from the event log." },
-        "context_check": { "type": ["string", "null"], "enum": ["ok", "misleading", null] },
+        "fact_check": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "pass",
+            "fail",
+            null
+          ]
+        },
+        "actual_value": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "Value recomputed by the Verifier from the event log."
+        },
+        "context_check": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "ok",
+            "misleading",
+            null
+          ]
+        },
         "rule_ids": {
           "type": "array",
           "items": {
             "type": "string",
             "enum": [
-              "field_tilt_with_lead", "shot_spam", "set_piece_inflation",
-              "wide_forward_passes", "small_sample_xg", "ppda_alone",
-              "causal_claim", "causal_red_card", "single_match_fatigue",
-              "missing_evidence", "value_mismatch"
+              "field_tilt_with_lead",
+              "shot_spam",
+              "set_piece_inflation",
+              "wide_forward_passes",
+              "small_sample_xg",
+              "ppda_alone",
+              "causal_claim",
+              "causal_red_card",
+              "single_match_fatigue",
+              "missing_evidence",
+              "value_mismatch"
             ]
           }
         },
-        "context_note": { "type": ["string", "null"], "description": "Machine-readable key for the caveat to attach (not prose), e.g. 'field_tilt.trailing_vs_deep_block'." },
-        "attempt": { "type": "integer", "minimum": 1, "description": "Rewrite attempt number. A blocked claim may be revised by the Narrative/Analyst agents and re-verified." },
-        "verified_at": { "type": ["string", "null"], "format": "date-time" }
+        "context_note": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Machine-readable key for the caveat to attach (not prose), e.g. 'field_tilt.trailing_vs_deep_block'."
+        },
+        "attempt": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Rewrite attempt number. A blocked claim may be revised by the Narrative/Analyst agents and re-verified."
+        },
+        "verified_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        }
       }
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "scope": {
+            "enum": [
+              "match",
+              "window"
+            ]
+          }
+        },
+        "required": [
+          "scope"
+        ]
+      },
+      "then": {
+        "required": [
+          "match_id",
+          "window"
+        ],
+        "properties": {
+          "match_id": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  ]
 }

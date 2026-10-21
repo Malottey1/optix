@@ -79,6 +79,7 @@ def league_baseline(ds: Dataset, bracket: str) -> dict:
         rs = [team_metric(ds, tid, name, bracket) for tid in ds.teams]
         total = sum(r.value for r in rs)
         out[name] = {l: sum(r.detail["lanes"][l] for r in rs) / total if total else None for l in LANES}
+        out[name + "_n"] = total
     return out
 
 

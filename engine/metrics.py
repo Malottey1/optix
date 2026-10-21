@@ -447,3 +447,41 @@ def z_mean(m: float | None, m0: float | None, sd0: float | None, n: int) -> floa
     if m is None or m0 is None or not sd0 or n == 0:
         return None
     return (m - m0) / (sd0 / math.sqrt(n))
+
+
+def wilson_interval(hits: int, n: int, z: float = 1.96) -> tuple[float, float] | None:
+    """95% Wilson score interval for a share hits/n. Stays inside [0, 1] and behaves at small n,
+    unlike the normal approximation."""
+    if n == 0:
+        return None
+    p = hits / n
+    denom = 1 + z * z / n
+    centre = (p + z * z / (2 * n)) / denom
+    half = z * math.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / denom
+    return max(0.0, centre - half), min(1.0, centre + half)
+
+
+# Confidence labels for a share compared with a baseline share (see docs/engine.md):
+#   high   n >= 200, interval half-width <= 5 pp, and the interval excludes the baseline
+#   medium n >= 50 and the interval excludes the baseline
+#   low    anything else (small sample, or the baseline sits inside the interval)
+CONF_HIGH_N, CONF_HIGH_HALF_WIDTH, CONF_MEDIUM_N = 200, 0.05, 50
+
+
+def share_confidence(hits: int, n: int, baseline: float | None) -> str:
+    iv = wilson_interval(hits, n)
+    if iv is None or baseline is None:
+        return "low"
+    excludes = baseline < iv[0] or baseline > iv[1]
+    if n >= CONF_HIGH_N and (iv[1] - iv[0]) / 2 <= CONF_HIGH_HALF_WIDTH and excludes:
+        return "high"
+    if n >= CONF_MEDIUM_N and excludes:
+        return "medium"
+    return "low"
+
+
+CONFIDENCE_ORDER = ("low", "medium", "high")
+
+
+def min_confidence(*labels: str) -> str:
+    return min(labels, key=CONFIDENCE_ORDER.index)

@@ -21,6 +21,10 @@ def _f(v, nd=3):
     return "-" if v is None else f"{v:.{nd}f}"
 
 
+def _pp(v):
+    return "-" if v is None else f"{v:+.1f}"
+
+
 def _z(v):
     return "-" if v is None else f"{v:+.1f}"
 
@@ -55,16 +59,20 @@ def shift_lines(ds, team_id) -> list[str]:
     return out
 
 
-def matchup_lines(ds, attacker_id, defender_id) -> list[str]:
-    m = lane_matchup(ds, attacker_id, defender_id)
+def matchup_lines(ds, attacker_id, defender_id, baseline_ds=None) -> list[str]:
+    m = lane_matchup(ds, attacker_id, defender_id, baseline_ds=baseline_ds)
     a, d = ds.code(attacker_id), ds.code(defender_id)
     out = [f"== {a} attack vs {d} defence, final-third entries by lane (attacker point of view) ==",
-           f"  sample: {a} entries n={m['n_attack']}, entries conceded by {d} n={m['n_concede']}",
-           f"  {'lane':18s}{'attack':>8s}{'concede':>9s}{'league':>8s}{'att z':>8s}{'con z':>8s}{'mismatch':>10s}"]
+           f"  sample: {a} entries n={m['n_attack']}, entries conceded by {d} n={m['n_concede']}, "
+           f"baseline {m['baseline_label']} n={m['n_baseline']}",
+           f"  {'lane':18s}{'attack % [95% CI]':>22s}{'concede % [95% CI]':>22s}{'league %':>10s}"
+           f"{'att pp':>8s}{'con pp':>8s}{'mismatch pp':>13s}{'confidence':>12s}"]
     for lane in LANES:
         v = m["lanes"][lane]
-        out.append(f"  {lane:18s}{_f(v['attack_share']):>8s}{_f(v['concede_share']):>9s}{_f(v['league_share']):>8s}"
-                   f"{_z(v['attack_z']):>8s}{_z(v['concede_z']):>8s}{_z(v['mismatch']):>10s}")
+        ci = lambda s, iv: "-" if s is None else f"{100 * s:.1f} [{100 * iv[0]:.1f}-{100 * iv[1]:.1f}]"
+        out.append(f"  {lane:18s}{ci(v['attack_share'], v['attack_interval']):>22s}"
+                   f"{ci(v['concede_share'], v['concede_interval']):>22s}{100 * v['league_share']:>10.1f}"
+                   f"{_pp(v['attack_pp']):>8s}{_pp(v['concede_pp']):>8s}{_pp(v['mismatch_pp']):>13s}{v['confidence']:>12s}")
     top = m["top"]
     out.append(f"  top mismatch: {top['lane']} ({len(top['evidence_event_ids'])} evidence events)" if top
                else "  top mismatch: none (no lane where both sides lean the same way)")
