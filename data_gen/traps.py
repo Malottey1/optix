@@ -36,22 +36,33 @@ def lead_window(events, leader_id, other_id):
     return (start, events[-1]["clock_sec"]) if start is not None else None
 
 
-def field_tilt_trap(events, leader_id, chaser_id, min_len=1500):
-    w = lead_window(events, leader_id, chaser_id)
-    if not w or w[1] - w[0] < min_len:
-        return None
-    s, t = w
+def field_tilt_spell(events, window, chaser_id, min_f3=100, min_tilt=0.68, max_entry_share=0.15):
+    """Field-tilt trap test on one time window (start_sec, end_sec] for the chasing team.
+
+    Fires only when all three hold: the chaser has most of the final-third passes (tilt), enough
+    volume to mean something, AND few of those passes enter the box. The last gate is what
+    separates "pinned back by a deep block" from genuine dominance: a dominant side also has high
+    tilt but keeps getting into the box, so it must not fire.
+    """
+    s, t = window
     f3 = [e for e in events if _ok_pass(e) and s < e["clock_sec"] <= t and e["x_start"] >= FINAL_THIRD_X]
     chaser = [e for e in f3 if e["team_id"] == chaser_id]
     tilt = len(chaser) / max(1, len(f3))
     entries = [e for e in chaser if in_box(e["x_end"], e["y_end"]) and not in_box(e["x_start"], e["y_start"])]
     perimeter = [e for e in chaser if not in_box(e["x_end"], e["y_end"])]
-    shots = [e for e in events if e["event_type"] == "shot" and e["team_id"] == chaser_id
-             and s < e["clock_sec"] <= t]
     return dict(window_sec=[s, t], chaser_field_tilt=round(tilt, 3), chaser_f3_passes=len(chaser),
                 chaser_box_entries=len(entries), chaser_perimeter_passes=len(perimeter),
                 evidence_event_ids=[e["event_id"] for e in perimeter[:12]] + [e["event_id"] for e in entries[:3]],
-                passed=bool(tilt >= 0.68 and len(chaser) >= 100 and len(entries) <= 0.15 * len(chaser)))
+                passed=bool(tilt >= min_tilt and len(chaser) >= min_f3
+                            and len(entries) <= max_entry_share * len(chaser)))
+
+
+def field_tilt_trap(events, leader_id, chaser_id, min_len=1500):
+    """The trap over the leader's first lead spell, if it lasts at least `min_len` seconds."""
+    w = lead_window(events, leader_id, chaser_id)
+    if not w or w[1] - w[0] < min_len:
+        return None
+    return field_tilt_spell(events, w, chaser_id)
 
 
 def shot_spam_trap(events, shots, team_id, low_xg=0.08):

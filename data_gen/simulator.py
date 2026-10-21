@@ -1,7 +1,8 @@
 """Match simulator: possession sequences driven by each team's hidden style seed.
 
 Traps are NOT patched in afterwards. They emerge from behaviour rules:
-  * a team that leads drops deep (`sit_deep`), cedes the final third and counters;
+  * a team that leads drops deep on a share of its possessions set by `sit_deep`, cedes the final
+    third and counters; a trailing team pushes harder as time runs out;
   * the chasing team circulates around the block and, if it has `shot_spam`, shoots from range;
   * a `wide_forward` player sends forward passes to his flank and rarely crosses;
   * a set-piece taker delivers every corner, so his "chances created" come from dead balls.
@@ -19,6 +20,12 @@ from .config import (FINAL_THIRD_X, FIRST, FORMATION, LANE_CENTERS, LANES, LAST,
 
 MATCH_SECONDS = 5400
 HALF_SECONDS = 2700
+# Behaviour parameters tuned against data_gen/calibration.py (season-level targets).
+HOME_EDGE = 0.03         # added to the home side's `att` (crowd, familiarity): more completed passes
+HOME_CHANCES = 1.08      # home side's chance-creation multiplier on top of attacking_output
+CHASE_URGENCY = 0.8      # trailing side: extra shot appetite and box-entry success, ramps up late
+SHOT_RATE_BOX = 0.066    # per-action chance of shooting from inside the box (others scale with it)
+BLOCK_BOX = 0.45         # how much a deep block (x its sit_deep) cuts box-entry pass success
 
 
 @dataclass
@@ -39,7 +46,8 @@ class Player:
     trap_flag: str = ""
 
 
-def build_players(rng: random.Random, team: TeamSpec) -> list[Player]:
+def build_players(rng: random.Random, team: TeamSpec, overrides: dict | None = None) -> list[Player]:
+    """Eleven players for `team`. `overrides` (keyed like PLAYER_TRAITS) is applied last."""
     from .config import PLAYER_TRAITS
     used = set()
     out = []
@@ -50,7 +58,8 @@ def build_players(rng: random.Random, team: TeamSpec) -> list[Player]:
                 used.add(nm)
                 break
         p = Player(f"{team.code}_{shirt:02d}", team.team_id, nm, shirt, pos, role, hx, hy)
-        for k, v in PLAYER_TRAITS.get((team.code, role), {}).items():
+        traits = {**PLAYER_TRAITS.get((team.code, role), {}), **(overrides or {}).get((team.code, role), {})}
+        for k, v in traits.items():
             setattr(p, k, v)
         out.append(p)
     return out
@@ -98,6 +107,17 @@ class MatchSim:
     def other(self, tid: str) -> str:
         return self.away_id if tid == self.home_id else self.home_id
 
+    def att(self, tid: str) -> float:
+        """Attacking strength used for pass/cross success: team `att` plus the home edge."""
+        return self.teams[tid].att + (HOME_EDGE if tid == self.home_id else 0.0)
+
+    def urgency(self, tid: str) -> float:
+        """Game-state multiplier on shot appetite and box-entry success: a trailing side commits
+        more as time runs out."""
+        if self.score[tid] >= self.score[self.other(tid)]:
+            return 1.0
+        return 1.0 + CHASE_URGENCY * self.clock / MATCH_SECONDS
+
     def deep(self, tid: str) -> float:
         """How deep `tid` sits right now: only once it leads, and not in the first 10 minutes."""
         lead = self.score[tid] - self.score[self.other(tid)]
@@ -133,20 +153,24 @@ class MatchSim:
         self.clock += team.tempo * self.rng.uniform(0.7, 1.35) * factor
 
     # ---------- shots ----------
-    def shot_prob(self, t: TeamSpec, x, y, opp_deep, pattern) -> float:
+    def shot_prob(self, tid: str, x, y, opp_deep) -> float:
+        """Chance of shooting from (x, y). Volume scales with `attacking_output`, the home side's
+        chance edge and game state; it never depends on how deep the shooting team itself sits."""
+        t = self.teams[tid]
         if x < 62:
             return 0.0
         if in_box(x, y):
-            p = 0.09
+            p = SHOT_RATE_BOX
         elif x >= 72:
-            p = 0.020
+            p = SHOT_RATE_BOX * 0.22
         else:
-            p = 0.006
+            p = SHOT_RATE_BOX * 0.067
         if not in_box(x, y):
             spam = 1 + 4 * t.shot_spam * (1.0 if opp_deep > 0 else 0.15)
             p *= spam
         if abs(y - 50) > 25:
             p *= 0.5
+        p *= t.attacking_output * self.urgency(tid) * (HOME_CHANCES if tid == self.home_id else 1.0)
         return min(p, 0.45)
 
     def take_shot(self, tid, shooter: Player, x, y, header, pattern, assist_eid, pressed, seq_idx):
@@ -218,7 +242,7 @@ class MatchSim:
             is_forward=int(xe - xs >= 8), is_progressive=int(xe - xs >= 10),
             is_key_pass=0, xa=0.0)
 
-    def pass_success(self, t, o, opp_deep, pressed, xs, ys, xe, ye, clearance=False, pattern="open_play"):
+    def pass_success(self, tid, o, opp_deep, pressed, xs, ys, xe, ye, clearance=False, pattern="open_play"):
         dm = math.hypot((xe - xs) * PITCH_LEN_M / 100, (ye - ys) * PITCH_WID_M / 100)
         p = 0.96 - 0.006 * dm
         if clearance:
@@ -227,12 +251,12 @@ class MatchSim:
             p -= 0.12
         if pressed:
             p -= 0.10
-        p += 0.18 * (t.att - o.dfn)
+        p += 0.18 * (self.att(tid) - o.dfn)
         lane = lane_of(ye)
         if o.weak_lane and lane == o.weak_lane:
             p += 0.06 + (0.03 if xe >= FINAL_THIRD_X else 0)
         if in_box(xe, ye):
-            p *= (1 - 0.65 * opp_deep)
+            p *= (1 - BLOCK_BOX * opp_deep) * self.urgency(tid) * self.teams[tid].attacking_output
         elif opp_deep > 0 and not pressed and xe >= FINAL_THIRD_X:
             p += 0.04
         return max(0.30, min(0.97, p))
@@ -249,16 +273,19 @@ class MatchSim:
             pass
         idx = 0
         n_steps = 0
+        # A leader protects its lead on a share of its possessions set by `sit_deep`; on the rest it
+        # plays normally.
+        protect = rng.random() < self.deep(tid)
         while self.clock < MATCH_SECONDS and n_steps < 90:
             n_steps += 1
-            prot, opp_deep = self.deep(tid), self.deep(o_id)
+            opp_deep = self.deep(o_id)
             pressed = rng.random() < 0.6 * o.press * (1 - opp_deep) * (0.25 + 0.75 * (1 - x / 100))
             if pressed:
                 d = self.pick(o_id, 100 - x, 100 - y, skip_gk=True, scale=14)
                 self.emit(o_id, d.player_id, "pressure", 100 - x, 100 - y, outcome="applied",
                           seq=self.seq_id, idx=idx)
             # shot?
-            if rng.random() < self.shot_prob(t, x, y, opp_deep, pattern):
+            if rng.random() < self.shot_prob(tid, x, y, opp_deep):
                 self.tick(t, 0.5)
                 res = self.take_shot(tid, holder, x, y, False, pattern, st.get("last_pass"),
                                      pressed, idx)
@@ -269,9 +296,9 @@ class MatchSim:
             ptype, clearance = "short", False
             if pattern == "counter" and idx < 2:
                 mode = "forward"; dx_lo, dx_hi = 14, 26; ptype = "long_ball" if x < 50 else "through_ball"
-            elif prot > 0 and n_steps >= 4 and in_final:
+            elif protect and n_steps >= 4 and in_final:
                 mode = "waste"           # leader runs the clock, gives the ball back
-            elif prot > 0 and n_steps >= 4:
+            elif protect and n_steps >= 4:
                 mode = "forward"; dx_lo, dx_hi = 28, 45; clearance = True; ptype = "long_ball"
             elif in_final and wide and rng.random() < 0.22 * holder.cross_mult:
                 mode = "cross"; dx_lo = dx_hi = 0
@@ -281,7 +308,7 @@ class MatchSim:
                     fwd_p *= (1 - 0.85 * opp_deep)
                 if holder.wide_forward:
                     fwd_p = max(fwd_p, 0.8)      # the volume passer always plays it forward
-                if prot > 0:
+                if protect:
                     fwd_p = max(fwd_p, 0.7)
                 if opp_deep > 0.5 and 45 <= x < FINAL_THIRD_X:
                     fwd_p = max(fwd_p, 0.6)      # chasing a low block: push up
@@ -313,11 +340,11 @@ class MatchSim:
                 if in_final and opp_deep > 0:
                     xe = min(xe, 82.0)
             recv = self.pick(tid, xe, ye, exclude=holder)
-            p_succ = self.pass_success(t, o, opp_deep, pressed, x, y, xe, ye, clearance, pattern)
+            p_succ = self.pass_success(tid, o, opp_deep, pressed, x, y, xe, ye, clearance, pattern)
             if mode == "waste":
                 p_succ = 0.30
             if mode == "cross":
-                p_succ = 0.28 + 0.10 * (o.weak_lane == lane_of(y)) + 0.18 * (t.att - o.dfn)
+                p_succ = 0.28 + 0.10 * (o.weak_lane == lane_of(y)) + 0.18 * (self.att(tid) - o.dfn)
                 p_succ *= (1 - 0.4 * opp_deep)
             self.tick(t, 0.6 if pattern == "counter" else 1.0)
             ok = rng.random() < p_succ
@@ -385,7 +412,7 @@ class MatchSim:
         ys = 0.0 if rng.random() < 0.5 else 100.0
         xe, ye = rng.uniform(90, 95), 50 + rng.gauss(0, 8)
         recv = self.pick(tid, xe, ye, exclude=taker)
-        p_succ = 0.42 + 0.15 * (taker.set_piece_taker) + 0.1 * (t.att - self.teams[o_id].dfn)
+        p_succ = 0.42 + 0.15 * (taker.set_piece_taker) + 0.1 * (self.att(tid) - self.teams[o_id].dfn)
         ok = rng.random() < p_succ
         eid = self.emit(tid, taker.player_id, "pass", 100, ys, xe, ye,
                         outcome="success" if ok else "fail", pattern="set_piece", seq=self.seq_id, idx=0)

@@ -2,6 +2,80 @@
   "season": "2026-27",
   "generator_seed": 2026,
   "n_matches": 40,
+  "expected": {
+    "home_win_share": {
+      "target": 0.38,
+      "tolerance": [
+        0.23,
+        0.53
+      ],
+      "unit": "share of matches",
+      "definition": "matches won by the home team / matches"
+    },
+    "draw_share": {
+      "target": 0.3,
+      "tolerance": [
+        0.15,
+        0.45
+      ],
+      "unit": "share of matches",
+      "definition": "drawn matches / matches"
+    },
+    "away_win_share": {
+      "target": 0.32,
+      "tolerance": [
+        0.17,
+        0.47
+      ],
+      "unit": "share of matches",
+      "definition": "matches won by the away team / matches"
+    },
+    "goals_per_match": {
+      "target": 2.7,
+      "tolerance": [
+        2.2,
+        3.2
+      ],
+      "unit": "goals",
+      "definition": "mean of home_score + away_score"
+    },
+    "one_goal_or_less_share": {
+      "target": 0.7,
+      "tolerance": [
+        0.55,
+        0.85
+      ],
+      "unit": "share of matches",
+      "definition": "matches with |home_score - away_score| <= 1 / matches"
+    },
+    "shots_per_match": {
+      "target": 24.0,
+      "tolerance": [
+        22.0,
+        26.0
+      ],
+      "unit": "shots",
+      "definition": "rows in shots.csv / matches (both teams)"
+    },
+    "corners_per_match": {
+      "target": 10.5,
+      "tolerance": [
+        8.0,
+        13.0
+      ],
+      "unit": "corners",
+      "definition": "passes with pass_type == corner / matches (both teams)"
+    }
+  },
+  "measured": {
+    "home_win_share": 0.475,
+    "draw_share": 0.3,
+    "away_win_share": 0.225,
+    "goals_per_match": 2.7,
+    "one_goal_or_less_share": 0.725,
+    "shots_per_match": 23.9,
+    "corners_per_match": 11.225
+  },
   "pitch_frame": "x 0-100 toward the opponent goal; every event is in the acting team's attacking frame",
   "teams": {
     "AUR": {
@@ -79,118 +153,130 @@
   },
   "showcase": {
     "match_id": "m_showcase",
-    "sim_seed": 20260022,
-    "seeds_tried": 23,
+    "sim_seed": 20260080,
+    "seeds_tried": 81,
     "home": "t_aur",
     "away": "t_nor",
     "scripted": "AUR scores their first chance of quality after minute 10",
+    "player_overrides": {
+      "NOR:right_winger": {
+        "usage": 3.8
+      }
+    },
     "score": [
       2,
-      0
+      1
     ],
     "traps": {
       "field_tilt_while_leading": {
         "window_sec": [
-          1183,
-          5404
+          99,
+          3245
         ],
-        "chaser_field_tilt": 0.691,
-        "chaser_f3_passes": 150,
-        "chaser_box_entries": 6,
-        "chaser_perimeter_passes": 144,
+        "chaser_field_tilt": 0.819,
+        "chaser_f3_passes": 131,
+        "chaser_box_entries": 11,
+        "chaser_perimeter_passes": 119,
         "evidence_event_ids": [
-          "m_showcase_e00341",
-          "m_showcase_e00643",
-          "m_showcase_e00644",
-          "m_showcase_e00670",
-          "m_showcase_e00769",
-          "m_showcase_e00770",
-          "m_showcase_e00771",
-          "m_showcase_e00772",
-          "m_showcase_e00829",
-          "m_showcase_e00830",
-          "m_showcase_e00831",
-          "m_showcase_e00832",
-          "m_showcase_e00781",
-          "m_showcase_e00783",
-          "m_showcase_e00872"
+          "m_showcase_e00048",
+          "m_showcase_e00087",
+          "m_showcase_e00088",
+          "m_showcase_e00102",
+          "m_showcase_e00104",
+          "m_showcase_e00105",
+          "m_showcase_e00106",
+          "m_showcase_e00108",
+          "m_showcase_e00142",
+          "m_showcase_e00143",
+          "m_showcase_e00179",
+          "m_showcase_e00180",
+          "m_showcase_e00090",
+          "m_showcase_e00107",
+          "m_showcase_e00109"
         ],
         "passed": true
       },
       "shot_spam": {
-        "shots": 14,
-        "low_xg_shots": 13,
-        "mean_xg": 0.032,
-        "total_xg": 0.44,
+        "shots": 26,
+        "low_xg_shots": 20,
+        "mean_xg": 0.053,
+        "total_xg": 1.37,
         "evidence_event_ids": [
-          "m_showcase_e00782",
-          "m_showcase_e00784",
-          "m_showcase_e00871",
-          "m_showcase_e00873",
-          "m_showcase_e00912",
-          "m_showcase_e00978",
-          "m_showcase_e01040",
-          "m_showcase_e01053",
-          "m_showcase_e01063",
-          "m_showcase_e01080",
-          "m_showcase_e01088",
-          "m_showcase_e01099",
-          "m_showcase_e01429"
+          "m_showcase_e00091",
+          "m_showcase_e00253",
+          "m_showcase_e00262",
+          "m_showcase_e00286",
+          "m_showcase_e00313",
+          "m_showcase_e00315",
+          "m_showcase_e00321",
+          "m_showcase_e00386",
+          "m_showcase_e00388",
+          "m_showcase_e00456",
+          "m_showcase_e00474",
+          "m_showcase_e00520",
+          "m_showcase_e00602",
+          "m_showcase_e00695",
+          "m_showcase_e00720",
+          "m_showcase_e00862",
+          "m_showcase_e00945",
+          "m_showcase_e00958",
+          "m_showcase_e00975",
+          "m_showcase_e01102"
         ],
         "passed": true
       },
       "volume_passer": {
-        "forward_passes": 30,
+        "forward_passes": 50,
         "rank_in_match": 1,
-        "wide_share": 0.8,
+        "wide_share": 0.86,
         "evidence_event_ids": [
-          "m_showcase_e00052",
-          "m_showcase_e00115",
-          "m_showcase_e00120",
-          "m_showcase_e00238",
-          "m_showcase_e00258",
-          "m_showcase_e00385",
-          "m_showcase_e00432",
-          "m_showcase_e00435",
-          "m_showcase_e00522",
-          "m_showcase_e00537",
-          "m_showcase_e00767",
-          "m_showcase_e00829",
-          "m_showcase_e00900",
-          "m_showcase_e00910",
-          "m_showcase_e00964"
+          "m_showcase_e00035",
+          "m_showcase_e00048",
+          "m_showcase_e00077",
+          "m_showcase_e00101",
+          "m_showcase_e00138",
+          "m_showcase_e00140",
+          "m_showcase_e00172",
+          "m_showcase_e00205",
+          "m_showcase_e00211",
+          "m_showcase_e00230",
+          "m_showcase_e00242",
+          "m_showcase_e00281",
+          "m_showcase_e00361",
+          "m_showcase_e00383",
+          "m_showcase_e00385"
         ],
         "passed": true
       },
       "corner_specialist": {
-        "chances_created": 5,
-        "from_corners": 4,
+        "chances_created": 7,
+        "from_corners": 6,
         "open_play": 1,
         "evidence_event_ids": [
-          "m_showcase_e00781",
-          "m_showcase_e00783",
-          "m_showcase_e00872",
-          "m_showcase_e01270"
+          "m_showcase_e00090",
+          "m_showcase_e00314",
+          "m_showcase_e00387",
+          "m_showcase_e00696",
+          "m_showcase_e00698",
+          "m_showcase_e00957"
         ],
         "passed": true
       },
       "one_flank_vs_weak_lane": {
-        "entries_into_final_third": 33,
-        "left_side_share": 0.697,
+        "entries_into_final_third": 28,
+        "left_side_share": 0.571,
         "defender_weak_lane": "left_flank",
         "evidence_event_ids": [
-          "m_showcase_e00002",
-          "m_showcase_e00206",
-          "m_showcase_e00246",
-          "m_showcase_e00367",
-          "m_showcase_e00390",
-          "m_showcase_e00443",
-          "m_showcase_e00461",
-          "m_showcase_e00633",
-          "m_showcase_e00695",
-          "m_showcase_e00738",
-          "m_showcase_e00806",
-          "m_showcase_e00985"
+          "m_showcase_e00163",
+          "m_showcase_e00541",
+          "m_showcase_e00776",
+          "m_showcase_e00820",
+          "m_showcase_e00894",
+          "m_showcase_e01001",
+          "m_showcase_e01153",
+          "m_showcase_e01179",
+          "m_showcase_e01268",
+          "m_showcase_e01369"
         ],
         "passed": true
       }

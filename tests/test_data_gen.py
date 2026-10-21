@@ -4,14 +4,19 @@ These tests double as the future contract for the engine: whatever it computes m
 same signals recorded in ground_truth.json.
 """
 import csv
+import dataclasses
 import json
+import random
 from collections import Counter, defaultdict
+from itertools import permutations
 from pathlib import Path
 
 import pytest
 
-from data_gen.config import FINAL_THIRD_X, TEAMS, in_box, lane_of
-from data_gen.generate import main
+from data_gen import calibration, traps
+from data_gen.config import FINAL_THIRD_X, TEAM_BY_ID, TEAMS, in_box, lane_of
+from data_gen.generate import main, make_players, simulate
+from data_gen.simulator import MatchSim, build_players
 
 SEED = 2026
 
@@ -145,7 +150,7 @@ def test_style_seeds_are_recoverable_season_wide(season):
     assert nor_left > lg_left
 
 
-def test_volume_passer_is_a_league_leader_who_goes_wide(season):
+def test_volume_passer_is_a_top_forward_passer_who_goes_wide(season):
     ev = {e["event_id"]: e for e in season["events"]}
     fwd, wide = Counter(), Counter()
     for p in season["passes"]:
@@ -155,7 +160,12 @@ def test_volume_passer_is_a_league_leader_who_goes_wide(season):
             if lane_of(float(e["y_end"])) in ("left_flank", "right_flank"):
                 wide[p["passer_id"]] += 1
     pid = next(p["player_id"] for p in season["players"] if p["trap_flag"] == "volume_passer")
-    assert fwd.most_common(1)[0][0] == pid
+    ranked = fwd.most_common()
+    rank = [k for k, _ in ranked].index(pid) + 1
+    assert rank <= 3
+    # realistic, not obvious: near the top of the league, not a runaway leader
+    best_other = next(v for k, v in ranked if k != pid)
+    assert fwd[pid] < 1.25 * best_other
     others = [wide[k] / v for k, v in fwd.items() if k != pid]
     assert wide[pid] / fwd[pid] >= 0.8
     assert sum(others) / len(others) < 0.5
@@ -211,3 +221,178 @@ def test_showcase_and_ground_truth_have_no_real_names(data):
     text = (root / "showcase" / "teams.csv").read_text() + (root / "showcase" / "ground_truth.json").read_text()
     for real in ("Arsenal", "Chelsea", "Liverpool", "Manchester", "Tottenham", "Premier League"):
         assert real not in text
+
+
+# ---------- calibration ----------
+
+def season_rows(season):
+    return calibration.season_stats(season["matches"], season["shots"], season["passes"])
+
+
+def test_season_meets_calibration_targets(season):
+    results = calibration.check(season_rows(season))
+    failed = {k: r for k, r in results.items() if not r["passed"]}
+    assert not failed, failed
+
+
+def test_ground_truth_records_expected_targets(data):
+    root, gt = data
+    assert set(gt["expected"]) == set(calibration.TARGETS)
+    for k, t in calibration.TARGETS.items():
+        assert gt["expected"][k]["tolerance"] == [t["lo"], t["hi"]]
+        assert t["lo"] <= t["target"] <= t["hi"]
+    on_disk = json.loads((root / "season" / "ground_truth.json").read_text())
+    assert on_disk["expected"] == gt["expected"]
+    assert on_disk["measured"] == pytest.approx(season_rows_from_disk(root / "season"), abs=1e-3)
+
+
+def season_rows_from_disk(d):
+    return calibration.season_stats(read(d / "matches.csv"), read(d / "shots.csv"), read(d / "passes.csv"))
+
+
+def test_calibration_is_not_a_lucky_seed():
+    """Mean over several other seeds sits near each target, so the tuning is not fitted to seed 2026.
+    Band: half the single-season tolerance on each side of the target."""
+    seeds = range(1, 6)
+    totals = Counter()
+    for seed in seeds:
+        players = make_players(seed)
+        pairs = []
+        for rnd in range(2):
+            block = list(permutations([t.team_id for t in TEAMS], 2))
+            random.Random(seed + rnd).shuffle(block)
+            pairs += block
+        sims = [simulate(seed * 1000 + i, f"m_{i:03d}", h, a, players) for i, (h, a) in enumerate(pairs)]
+        st = calibration.season_stats(
+            [dict(home_score=s.score[s.home_id], away_score=s.score[s.away_id]) for s in sims],
+            [x for s in sims for x in s.shots], [p for s in sims for p in s.passes.values()])
+        for k, v in st.items():
+            totals[k] += v / len(seeds)
+    for k, t in calibration.TARGETS.items():
+        band = (t["hi"] - t["lo"]) / 4
+        assert abs(totals[k] - t["target"]) <= band, (k, round(totals[k], 3))
+
+
+# ---------- attacking output is independent of the defensive block ----------
+
+def test_attacking_output_drives_goals_independently_of_sit_deep():
+    """Two clones with identical strength (att, dfn) and identical sit_deep, differing only in
+    attacking_output, must score clearly different numbers of goals against the same opponent."""
+    base = TEAM_BY_ID["t_ves"]
+    hi = dataclasses.replace(base, team_id="t_xhi", code="XHI", attacking_output=1.4)
+    lo = dataclasses.replace(base, team_id="t_xlo", code="XLO", attacking_output=0.7)
+    opp = TEAM_BY_ID["t_har"]
+    rng = random.Random(7)
+    players = {t.team_id: build_players(rng, t) for t in (hi, lo, opp)}
+    goals = Counter()
+    n = 30
+    for spec in (hi, lo):
+        for i in range(n):
+            home, away = (spec, opp) if i % 2 == 0 else (opp, spec)
+            sim = MatchSim(random.Random(1000 + i), f"m_x{i}", home, away, players)
+            sim.run()
+            goals[spec.team_id] += sim.score[spec.team_id]
+    gpm_hi, gpm_lo = goals["t_xhi"] / n, goals["t_xlo"] / n
+    assert hi.att == lo.att and hi.dfn == lo.dfn and hi.sit_deep == lo.sit_deep
+    assert gpm_hi >= 1.5 * gpm_lo and gpm_hi - gpm_lo >= 0.5, (gpm_hi, gpm_lo)
+
+
+# ---------- field-tilt detector: false-positive control ----------
+
+def _spells(events, team_id):
+    """(start, end, goal difference for team_id) for each spell between goals."""
+    out, start, diff = [], 0, 0
+    for e in events:
+        if e["event_type"] == "shot" and e["outcome"] == "goal":
+            out.append((start, int(e["clock_sec"]), diff))
+            start = int(e["clock_sec"])
+            diff += 1 if e["team_id"] == team_id else -1
+    out.append((start, int(events[-1]["clock_sec"]), diff))
+    return out
+
+
+def _typed(events):
+    num = ("clock_sec", "x_start", "y_start", "x_end", "y_end")
+    return [{**e, **{k: (float(e[k]) if e[k] != "" else None) for k in num}} for e in events]
+
+
+def test_field_tilt_does_not_fire_on_cal_dominance(season):
+    """CAL is a high press team that is genuinely dominant. Its high final-third-share spells while
+    level or ahead (no deep block to chase) clear the tilt and volume gates but must not fire,
+    because CAL keeps getting into the box."""
+    by_match = defaultdict(list)
+    for e in season["events"]:
+        by_match[e["match_id"]].append(e)
+    high = []
+    for evs in by_match.values():
+        if "t_cal" not in {evs[0]["team_id"], evs[0]["opponent_team_id"]}:
+            continue
+        evs = _typed(evs)
+        for s, t, diff in _spells(evs, "t_cal"):
+            if diff < 0 or t - s < 1200:
+                continue
+            r = traps.field_tilt_spell(evs, (s, t), "t_cal")
+            if r["chaser_field_tilt"] >= 0.68 and r["chaser_f3_passes"] >= 100:
+                high.append(r)
+    assert len(high) >= 2, "control is vacuous: CAL never had a high-tilt spell"
+    for r in high:
+        assert not r["passed"], r
+        assert r["chaser_box_entries"] > 0.15 * r["chaser_f3_passes"]
+
+
+def _synthetic_spell(n_f3=120, n_entries=5, n_opp=30):
+    """Hand-built events: the chaser plays n_f3 final-third passes, n_entries of them into the box."""
+    ev, k = [], 0
+    for i in range(n_f3):
+        into_box = i < n_entries
+        ev.append(dict(event_id=f"e{k}", event_type="pass", outcome="success", team_id="t_a",
+                       clock_sec=10 + i, x_start=75.0, y_start=10.0,
+                       x_end=90.0 if into_box else 78.0, y_end=50.0 if into_box else 12.0))
+        k += 1
+    for i in range(n_opp):
+        ev.append(dict(event_id=f"e{k}", event_type="pass", outcome="success", team_id="t_b",
+                       clock_sec=10 + i, x_start=70.0, y_start=50.0, x_end=72.0, y_end=50.0))
+        k += 1
+    return ev
+
+
+def test_field_tilt_fires_only_when_box_entries_are_low():
+    low = traps.field_tilt_spell(_synthetic_spell(n_entries=5), (0, 5400), "t_a")
+    assert low["chaser_field_tilt"] >= 0.68 and low["chaser_f3_passes"] >= 100
+    assert low["passed"]
+    # same tilt and volume; only the share of passes entering the box changes
+    high = traps.field_tilt_spell(_synthetic_spell(n_entries=30), (0, 5400), "t_a")
+    assert high["chaser_field_tilt"] == low["chaser_field_tilt"]
+    assert high["chaser_f3_passes"] == low["chaser_f3_passes"]
+    assert not high["passed"]
+
+
+def test_field_tilt_firings_in_the_season_all_have_low_box_entries(season):
+    """Across every lead spell in the season: fired -> few box entries; high tilt and volume but
+    not fired -> many box entries. The box-entry gate is what decides."""
+    by_match = defaultdict(list)
+    for e in season["events"]:
+        by_match[e["match_id"]].append(e)
+    fired = 0
+    for evs in by_match.values():
+        evs = _typed(evs)
+        a, b = evs[0]["team_id"], evs[0]["opponent_team_id"]
+        for leader, chaser in ((a, b), (b, a)):
+            r = traps.field_tilt_trap(evs, leader, chaser)
+            if r and r["passed"]:
+                fired += 1
+                assert r["chaser_box_entries"] <= 0.15 * r["chaser_f3_passes"]
+            elif r and r["chaser_field_tilt"] >= 0.68 and r["chaser_f3_passes"] >= 100:
+                assert r["chaser_box_entries"] > 0.15 * r["chaser_f3_passes"]
+    assert fired >= 1, "the trap should also occur naturally outside the showcase"
+
+
+def test_showcase_keeps_the_strong_volume_passer(data):
+    root, gt = data
+    vp = gt["showcase"]["traps"]["volume_passer"]
+    assert vp["passed"] and vp["rank_in_match"] == 1
+    sc_usage = {p["player_id"]: float(p["usage"]) for p in read(root / "showcase" / "players.csv")}
+    season_usage = {p["player_id"]: float(p["usage"]) for p in read(root / "season" / "players.csv")}
+    pid = next(k for k, v in gt["planted_players"].items() if v["trap"] == "volume_passer")
+    assert sc_usage[pid] > season_usage[pid]
+    assert {k: v for k, v in sc_usage.items() if k != pid} == {k: v for k, v in season_usage.items() if k != pid}

@@ -42,22 +42,24 @@ class TeamSpec:
     press: float               # 0-1, how hard it presses when out of possession
     tempo: float               # seconds per action
     directness: float          # 0-1 chance a pass is forward
-    sit_deep: float            # 0-1, how deep it drops once it leads
+    sit_deep: float            # 0-1, how deep it drops once it leads (defensive block only)
+    attacking_output: float    # chance-creation volume around 1.0, independent of sit_deep
     counter: float             # 0-1, chance a won ball becomes a fast counter
     shot_spam: float           # 0-1, tendency to shoot from distance vs a deep block
 
 
 TEAMS = [
+    # lane_weights, weak_lane, att, dfn, press, tempo, directness, sit_deep, attacking_output, counter, shot_spam
     TeamSpec("t_aur", "AUR", "Aurelia Rovers", "left-heavy counter, protects a lead by sitting deep",
-             (0.38, 0.22, 0.20, 0.12, 0.08), None, 1.05, 1.00, 0.40, 4.0, 0.62, 0.85, 0.50, 0.0),
+             (0.38, 0.22, 0.20, 0.12, 0.08), None, 1.05, 1.00, 0.40, 4.0, 0.62, 0.85, 0.90, 0.50, 0.0),
     TeamSpec("t_nor", "NOR", "Northgate Town", "slow possession, soft against attacks down the attacker's left, shoots from range when chasing",
-             (0.15, 0.22, 0.26, 0.22, 0.15), "left_flank", 1.06, 0.97, 0.30, 6.0, 0.35, 0.15, 0.15, 0.8),
+             (0.15, 0.22, 0.26, 0.22, 0.15), "left_flank", 1.06, 0.97, 0.30, 6.0, 0.35, 0.15, 1.50, 0.15, 0.8),
     TeamSpec("t_cal", "CAL", "Calder Athletic", "high press, central play",
-             (0.10, 0.20, 0.40, 0.20, 0.10), None, 1.00, 1.00, 0.85, 4.5, 0.55, 0.30, 0.50, 0.0),
+             (0.10, 0.20, 0.40, 0.20, 0.10), None, 1.00, 1.00, 0.85, 4.5, 0.55, 0.30, 0.90, 0.50, 0.0),
     TeamSpec("t_ves", "VES", "Veston United", "wing play down both flanks",
-             (0.30, 0.15, 0.10, 0.15, 0.30), None, 1.03, 1.00, 0.50, 5.0, 0.50, 0.40, 0.30, 0.0),
+             (0.30, 0.15, 0.10, 0.15, 0.30), None, 1.03, 1.00, 0.50, 5.0, 0.50, 0.40, 1.25, 0.30, 0.0),
     TeamSpec("t_har", "HAR", "Harbor Wanderers", "direct long-ball, shoots early and often",
-             (0.20, 0.20, 0.20, 0.20, 0.20), "right_flank", 0.97, 0.95, 0.45, 3.8, 0.80, 0.50, 0.45, 0.5),
+             (0.20, 0.20, 0.20, 0.20, 0.20), "right_flank", 0.97, 0.95, 0.45, 3.8, 0.80, 0.50, 0.85, 0.45, 0.5),
 ]
 TEAM_BY_ID = {t.team_id: t for t in TEAMS}
 
@@ -78,13 +80,22 @@ FORMATION = [
 
 # Planted player traits keyed by (team code, role).
 PLAYER_TRAITS = {
-    # NOR right winger: huge pass volume, forward passes almost all end wide, rarely crosses.
-    ("NOR", "right_winger"): dict(usage=3.8, cross_mult=0.15, wide_forward=True,
+    # NOR right winger: high pass volume (a top-3 forward passer season-wide, not a runaway
+    # leader), forward passes almost all end wide, rarely crosses.
+    ("NOR", "right_winger"): dict(usage=2.3, cross_mult=0.15, wide_forward=True,
                                   trap_flag="volume_passer"),
-    # NOR left winger: takes every corner, little open-play creativity.
-    ("NOR", "left_winger"): dict(usage=0.8, set_piece_taker=True, trap_flag="corner_specialist"),
+    # NOR left winger: takes every corner, little open-play creativity (rarely on the ball, rarely
+    # crosses), so his chances created stay corner-led even though NOR now creates more overall.
+    ("NOR", "left_winger"): dict(usage=0.4, cross_mult=0.5, set_piece_taker=True,
+                                 trap_flag="corner_specialist"),
     ("AUR", "striker"): dict(finishing=1.15),
     ("CAL", "striker"): dict(finishing=1.10),
+}
+
+# Applied on top of PLAYER_TRAITS for the showcase match only, so the demo shows the strong,
+# unmistakable version of a trap while the season keeps the realistic one.
+SHOWCASE_PLAYER_TRAITS = {
+    ("NOR", "right_winger"): dict(usage=3.8),
 }
 
 FIRST = ["Tomas", "Idris", "Lukas", "Kofi", "Mateo", "Jonas", "Ravi", "Emil", "Nico", "Sami",

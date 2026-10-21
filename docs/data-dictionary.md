@@ -17,7 +17,12 @@ Final third: x >= 66.7. Box: x >= 84 and 22 <= y <= 78. Match clock in seconds, 
 
 ## Tables
 
-**teams.csv** team_id, code, name, style_seed (hidden ground truth), lane_weights, weak_lane, att, dfn, press, tempo, directness, sit_deep, counter, shot_spam
+**teams.csv** team_id, code, name, style_seed (hidden ground truth), lane_weights, weak_lane, att, dfn, press, tempo, directness, sit_deep, attacking_output, counter, shot_spam
+
+`sit_deep` (0-1) is the defensive block only: the share of possessions a leading team spends protecting
+the lead, and how hard its block is to enter. `attacking_output` (around 1.0) is chance-creation volume
+(shot appetite and box-entry success), set independently, so a team's goal output is not derived from
+how deep it sits.
 
 **players.csv** player_id, team_id, name, shirt, position, role, home_x, home_y, finishing, usage, set_piece_taker, trap_flag
 
@@ -41,6 +46,8 @@ off_target), xg, shot_speed_kmh
 
 **ground_truth.json** each team's planted style, planted player traps, and for the showcase match the
 measured trap evidence with event IDs. Tests and, later, the engine's own checks compare against it.
+Also `expected` (season calibration targets with tolerances, from `data_gen/calibration.py`) and
+`measured` (the same metrics on this season), plus `showcase.player_overrides`.
 
 ## The teams (fictional)
 
@@ -58,9 +65,28 @@ measured trap evidence with event IDs. Tests and, later, the engine's own checks
 |---|---|---|
 | Field tilt while leading | AUR leads, NOR chases (any match; strongest in the showcase) | the chaser holds ~70% of final-third passes but makes very few box entries |
 | Shot spam | NOR when chasing a deep block | a dozen-plus shots at ~0.03 xG each |
-| Volume passer | NOR_07 (right winger) | most forward passes in the league, ~90% ending on the flanks |
+| Volume passer | NOR_07 (right winger) | season: a top-3 forward passer (not a runaway leader), ~90% ending on the flanks; showcase: the strong version, clear leader in the match |
 | Corner specialist | NOR_11 (left winger) | most of his chances created come from corners |
 | One-flank attack vs weak side | AUR attack vs NOR defence | AUR sends ~60% of entries down its left; NOR is soft on exactly that side |
+
+## Calibration
+
+The simulator is tuned to season-level targets written down before tuning (`data_gen/calibration.py`,
+also in `ground_truth.json` under `expected`): home/draw/away 38/30/32% (+-15 points), 2.7 goals per
+match (2.2-3.2), 70% of matches decided by one goal or fewer (+-15), 22-26 shots and 8-13 corners per
+match. Tolerances are wide because a season is 40 matches. Tuning changes behaviour parameters only
+(shot rates, home edge, game-state effects, team `attacking_output`), never scores or events. Streak rules
+and scoreline caps are deliberately not targets: they come from tiny samples.
+
+Game-state behaviour: a leader protects its lead on a share of possessions equal to its `sit_deep`;
+a trailing side's shot appetite and box-entry success ramp up as time runs out; the home side gets a
+small passing edge and a few more chances.
+
+## Showcase overrides
+
+The showcase match uses the season simulator and players, with `SHOWCASE_PLAYER_TRAITS` applied on
+top (currently NOR_07's usage), so the demo shows the unmistakable version of a trap while the
+season keeps the realistic one. The overrides are listed in `ground_truth.json`.
 
 ## What is deliberately not in the data
 
@@ -72,4 +98,9 @@ later additions. Ball and shot speed are generated as event attributes.
 Traps are emergent from behaviour rules, not patched in afterwards: a leading team drops deep, cedes the
 final third and counters; the chasing team circulates around the block; a `wide_forward` player sends
 forward passes to his flank; a set-piece taker delivers every corner. The showcase match uses the same
-simulator with one scripted early goal, then searches seeds until all five traps appear in the one match.
+simulator (plus the showcase overrides above) with one scripted early goal, then searches seeds until all
+five traps appear in the one match.
+
+The field-tilt detector fires only when the chaser's box entries are low (<= 15% of its final-third
+passes). A genuinely dominant side such as CAL also holds most of the final third but keeps entering
+the box, so its spells while level or ahead do not fire (tested as a false-positive control).

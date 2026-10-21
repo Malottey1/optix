@@ -16,7 +16,8 @@ from itertools import permutations
 from pathlib import Path
 
 from . import traps
-from .config import TEAMS, TEAM_BY_ID
+from . import calibration
+from .config import SHOWCASE_PLAYER_TRAITS, TEAMS, TEAM_BY_ID
 from .simulator import MatchSim, build_players
 
 SEASON = "2026-27"
@@ -31,7 +32,7 @@ PASS_COLS = ["event_id", "match_id", "passer_id", "recipient_player_id", "pass_d
 SHOT_COLS = ["event_id", "match_id", "team_id", "player_id", "shot_distance_m", "shot_angle_rad",
              "shot_type", "assist_event_id", "is_big_chance", "shot_result", "xg", "shot_speed_kmh"]
 TEAM_COLS = ["team_id", "code", "name", "style_seed", "lane_weights", "weak_lane", "att", "dfn",
-             "press", "tempo", "directness", "sit_deep", "counter", "shot_spam"]
+             "press", "tempo", "directness", "sit_deep", "attacking_output", "counter", "shot_spam"]
 PLAYER_COLS = ["player_id", "team_id", "name", "shirt", "position", "role", "home_x", "home_y",
                "finishing", "usage", "set_piece_taker", "trap_flag"]
 MATCH_COLS = ["match_id", "season", "matchweek", "date", "home_team_id", "away_team_id",
@@ -46,9 +47,10 @@ def write_csv(path: Path, cols, rows):
         w.writerows(rows)
 
 
-def make_players(seed: int):
+def make_players(seed: int, overrides: dict | None = None):
+    """Same seed gives the same names and roles; `overrides` only changes trait values."""
     rng = random.Random(seed)
-    return {t.team_id: build_players(rng, t) for t in TEAMS}
+    return {t.team_id: build_players(rng, t, overrides) for t in TEAMS}
 
 
 def simulate(seed: int, match_id: str, home_id: str, away_id: str, players, force_goal=None):
@@ -124,11 +126,19 @@ def main(seed: int, out: Path, showcase_out: Path):
         weeks.append(i // 2 + 1)
     write_dataset(out, sims, players, weeks)
 
-    sc_sim, checks, sc_seed, tries = build_showcase(seed, players)
-    write_dataset(showcase_out, [sc_sim], players, [1])
+    sc_players = make_players(seed, SHOWCASE_PLAYER_TRAITS)
+    sc_sim, checks, sc_seed, tries = build_showcase(seed, sc_players)
+    write_dataset(showcase_out, [sc_sim], sc_players, [1])
+
+    stats = calibration.season_stats(
+        [dict(home_score=s.score[s.home_id], away_score=s.score[s.away_id]) for s in sims],
+        [x for s in sims for x in s.shots], [p for s in sims for p in s.passes.values()])
 
     gt = dict(
         season=SEASON, generator_seed=seed, n_matches=len(sims),
+        expected={k: dict(target=t["target"], tolerance=[t["lo"], t["hi"]], unit=t["unit"],
+                          definition=t["definition"]) for k, t in calibration.TARGETS.items()},
+        measured={k: round(v, 3) for k, v in stats.items()},
         pitch_frame="x 0-100 toward the opponent goal; every event is in the acting team's attacking frame",
         teams={t.code: dict(team_id=t.team_id, style_seed=t.style_seed, lane_weights=t.lane_weights,
                             weak_lane_attacker_pov=t.weak_lane) for t in TEAMS},
@@ -136,6 +146,7 @@ def main(seed: int, out: Path, showcase_out: Path):
                          for ps in players.values() for p in ps if p.trap_flag},
         showcase=dict(match_id=SHOWCASE_ID, sim_seed=sc_seed, seeds_tried=tries, home="t_aur", away="t_nor",
                       scripted="AUR scores their first chance of quality after minute 10",
+                      player_overrides={f"{c}:{r}": v for (c, r), v in SHOWCASE_PLAYER_TRAITS.items()},
                       score=[sc_sim.score["t_aur"], sc_sim.score["t_nor"]], traps=checks),
     )
     for d in (out, showcase_out):

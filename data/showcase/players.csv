@@ -18,7 +18,7 @@ NOR_02,t_nor,Dario Rossi,2,DF,right_back,28,88,1.0,1.0,0,
 NOR_06,t_nor,Luca Varga,6,MF,defensive_mid,40,50,1.0,1.0,0,
 NOR_08,t_nor,Oskar Varga,8,MF,central_mid_l,50,35,1.0,1.0,0,
 NOR_10,t_nor,Mika Bauer,10,MF,central_mid_r,50,65,1.0,1.0,0,
-NOR_11,t_nor,Sami Adeyemi,11,FW,left_winger,72,12,1.0,0.8,1,corner_specialist
+NOR_11,t_nor,Sami Adeyemi,11,FW,left_winger,72,12,1.0,0.4,1,corner_specialist
 NOR_07,t_nor,Anders Moreau,7,FW,right_winger,72,88,1.0,3.8,0,volume_passer
 NOR_09,t_nor,Theo Adeyemi,9,FW,striker,85,50,1.0,1.0,0,
 CAL_01,t_cal,Tomas Duarte,1,GK,goalkeeper,5,50,1.0,1.0,0,
