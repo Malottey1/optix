@@ -11,6 +11,8 @@ Pure, stdlib-only Python over the CSV tables. It never imports the generator and
 | `metrics.py` | metric functions; each returns `MetricResult(value, evidence_event_ids, sample_size, sd, detail)` and documents definition, inputs and known limits |
 | `profiles.py` | `team_style_profile(ds, team, bracket)` against the league average in the same bracket; `bracket_shift` for own-bracket changes |
 | `matchup.py` | `lane_matchup` (attacker share lift + defender completion lift per lane, with intervals and confidence) and `matchup_claim` (pending claim object) |
+| `threat.py` | xT: 12x8 possession-value grid fitted on the season (`xt_grid`), `xt_added` per pass, `pass_quality_ratio` (share of forward passes into high-threat central cells vs league) |
+| `flow.py` | `xa_split` (open play vs set piece), `territorial_stress`, `shot_clusters`, `rhythm` (per-minute series), `momentum` (decayed xT + xG tug of war), `milestones` (within-dataset only) |
 | `report.py` | `python -m engine.report --team AUR --opponent NOR [--data DIR] [--season-baseline DIR] [--json]` |
 
 ## Reading the numbers: effect size first, z only for ranking
@@ -93,6 +95,13 @@ CAL is the planted high-press team. On this data:
 The Verifier rule `ppda_alone` refers to this: a pressing claim backed only by PPDA (or ball-won
 height) is context-flagged, because on event data like this it can rank a non-pressing team level
 with a pressing one.
+
+## Step 4 metrics on the planted traps
+
+- Volume passer NOR_07: pass_quality_ratio 0.19 (league 1.0); the other top-25 forward passers range
+  0.27-2.28. His forward passes go into the channel, not into high-threat central cells.
+- Corner specialist NOR_11: open-play xA per chance created 0.035, second lowest of the 20 players with
+  15+ chances (median about 0.07); his set-piece xA (1.67) exceeds his open-play xA (1.27).
 
 ## Known gaps
 

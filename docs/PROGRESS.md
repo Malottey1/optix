@@ -61,6 +61,19 @@ Branch: `overnight`. Started 2026-10-21 07:08 local.
 - docs/engine.md explains why ball-won height and PPDA mislead for CAL; the ppda_alone rule refers to it.
 - Tests: 54 passed by default; slow 10.
 
+### Step 4. Remaining metrics
+- engine/threat.py: xT grid (12x8, value = xG that possessions from a cell go on to produce, fitted on
+  the baseline season, sparse cells borrow their column mean), xt_added per completed pass,
+  pass_quality_ratio, threat_passes.
+- engine/flow.py: xa_split, territorial_stress, shot_clusters, rhythm (15-value series), momentum,
+  milestones (first goal in the dataset, 25/50/75/100 completed passes in a match).
+- tests/test_engine_fixtures.py: every metric (old and new) on hand-built events with hand-worked
+  answers, plus trap checks: NOR_07 pass_quality_ratio 0.19 (< 0.35), NOR_11 open-play xA per chance
+  < 0.6 x league median.
+- Bug found by a fixture and fixed: high_threat_cells counted every cell tied at the 75th-percentile
+  cut, so a mostly-zero grid made every central cell "high threat".
+- Tests: 70 passed by default; slow 10.
+
 ## Decisions
 - Showcase seed search starts from a recorded offset (`SHOWCASE_SEARCH_START = {2026: 4547}`) because
   a search from 0 with the 10% margin takes ~2 minutes and every test fixture regenerates the data.
@@ -98,6 +111,12 @@ Branch: `overnight`. Started 2026-10-21 07:08 local.
 - Soft-lane threshold 6 pp (observed lift) with the stated recoverable true effect 5 pp: at 5 pp
   observed, ESF (center, +5.5) and JPH (left_flank, +4.9) would have been false positives on the
   full league.
+
+- xT is a possession-value model (xG produced by the rest of the possession), not the iterative
+  Markov xT; it is simpler, needs no transition matrix, and matches the step's description.
+- Failed passes get 0 xT added (not minus the start value): losing the ball is reported separately.
+- Momentum = 100 x (home - away) / (home + away) of exponentially decayed (half-life 5 min) positive
+  xT added plus shot xG.
 
 ## Surprises
 
