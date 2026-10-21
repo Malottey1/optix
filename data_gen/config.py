@@ -1,0 +1,94 @@
+"""Fictional teams, their hidden style seeds, and the players that carry planted traps.
+
+Pitch frame (used by every table): x runs 0-100 toward the opponent goal, y runs 0-100 across
+the pitch. Every event is stored in the ACTING team's attacking frame, so "left_flank" always
+means the left of the team that is attacking. A defender's weak side is therefore also stored
+from the attacker's point of view (the mirror gotcha): "weak_lane = left_flank" means attackers
+coming down THEIR left find this team's defence soft.
+
+All teams and players are fictional. No real clubs, badges or people.
+"""
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+LANES = ["left_flank", "left_half_space", "center", "right_half_space", "right_flank"]
+LANE_CENTERS = [10, 30, 50, 70, 90]
+PITCH_LEN_M = 105.0
+PITCH_WID_M = 68.0
+FINAL_THIRD_X = 66.7
+BOX_X = 84.0
+BOX_Y = (22.0, 78.0)
+
+
+def lane_of(y: float) -> str:
+    return LANES[max(0, min(int(y // 20), 4))]
+
+
+def in_box(x: float, y: float) -> bool:
+    return x >= BOX_X and BOX_Y[0] <= y <= BOX_Y[1]
+
+
+@dataclass(frozen=True)
+class TeamSpec:
+    team_id: str
+    code: str
+    name: str
+    style_seed: str            # hidden ground truth, used to generate AND to test recovery
+    lane_weights: tuple        # where forward passes are sent (attacker POV), sums to 1
+    weak_lane: str | None      # lane (attacker POV) where this team's DEFENCE is soft
+    att: float                 # attacking strength around 1.0
+    dfn: float                 # defensive strength around 1.0
+    press: float               # 0-1, how hard it presses when out of possession
+    tempo: float               # seconds per action
+    directness: float          # 0-1 chance a pass is forward
+    sit_deep: float            # 0-1, how deep it drops once it leads
+    counter: float             # 0-1, chance a won ball becomes a fast counter
+    shot_spam: float           # 0-1, tendency to shoot from distance vs a deep block
+
+
+TEAMS = [
+    TeamSpec("t_aur", "AUR", "Aurelia Rovers", "left-heavy counter, protects a lead by sitting deep",
+             (0.38, 0.22, 0.20, 0.12, 0.08), None, 1.05, 1.00, 0.40, 4.0, 0.62, 0.85, 0.50, 0.0),
+    TeamSpec("t_nor", "NOR", "Northgate Town", "slow possession, soft against attacks down the attacker's left, shoots from range when chasing",
+             (0.15, 0.22, 0.26, 0.22, 0.15), "left_flank", 1.06, 0.97, 0.30, 6.0, 0.35, 0.15, 0.15, 0.8),
+    TeamSpec("t_cal", "CAL", "Calder Athletic", "high press, central play",
+             (0.10, 0.20, 0.40, 0.20, 0.10), None, 1.00, 1.00, 0.85, 4.5, 0.55, 0.30, 0.50, 0.0),
+    TeamSpec("t_ves", "VES", "Veston United", "wing play down both flanks",
+             (0.30, 0.15, 0.10, 0.15, 0.30), None, 1.03, 1.00, 0.50, 5.0, 0.50, 0.40, 0.30, 0.0),
+    TeamSpec("t_har", "HAR", "Harbor Wanderers", "direct long-ball, shoots early and often",
+             (0.20, 0.20, 0.20, 0.20, 0.20), "right_flank", 0.97, 0.95, 0.45, 3.8, 0.80, 0.50, 0.45, 0.5),
+]
+TEAM_BY_ID = {t.team_id: t for t in TEAMS}
+
+# position, role, home x, home y (own attacking frame), shirt
+FORMATION = [
+    ("GK", "goalkeeper", 5, 50, 1),
+    ("DF", "left_back", 28, 12, 3),
+    ("DF", "centre_back_l", 22, 38, 5),
+    ("DF", "centre_back_r", 22, 62, 4),
+    ("DF", "right_back", 28, 88, 2),
+    ("MF", "defensive_mid", 40, 50, 6),
+    ("MF", "central_mid_l", 50, 35, 8),
+    ("MF", "central_mid_r", 50, 65, 10),
+    ("FW", "left_winger", 72, 12, 11),
+    ("FW", "right_winger", 72, 88, 7),
+    ("FW", "striker", 85, 50, 9),
+]
+
+# Planted player traits keyed by (team code, role).
+PLAYER_TRAITS = {
+    # NOR right winger: huge pass volume, forward passes almost all end wide, rarely crosses.
+    ("NOR", "right_winger"): dict(usage=3.8, cross_mult=0.15, wide_forward=True,
+                                  trap_flag="volume_passer"),
+    # NOR left winger: takes every corner, little open-play creativity.
+    ("NOR", "left_winger"): dict(usage=0.8, set_piece_taker=True, trap_flag="corner_specialist"),
+    ("AUR", "striker"): dict(finishing=1.15),
+    ("CAL", "striker"): dict(finishing=1.10),
+}
+
+FIRST = ["Tomas", "Idris", "Lukas", "Kofi", "Mateo", "Jonas", "Ravi", "Emil", "Nico", "Sami",
+         "Oskar", "Dario", "Felix", "Hugo", "Anders", "Kwame", "Luca", "Mika", "Theo", "Yusuf"]
+LAST = ["Brandt", "Okoye", "Varga", "Lindqvist", "Moreau", "Haddad", "Petrov", "Santos", "Novak",
+        "Adeyemi", "Keller", "Duarte", "Rossi", "Mensah", "Larsen", "Costa", "Ivanov", "Bauer",
+        "Nakamura", "Quinn"]

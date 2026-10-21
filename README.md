@@ -7,7 +7,7 @@ Optix is a multi-agent engine that turns synthetic football event data into live
 - **Fact check:** does the event log support the claim?
 - **Context check:** is it true but misleading given game state, sample size or metric limits? (For example, high field tilt from a team that is trailing and passing around a deep block.)
 
-> Status: early scaffold. Contracts are defined; data generator, engine and agents are next.
+> Status: contracts and the synthetic data generator are done (40 matches, five fictional teams, planted traps, one showcase match). Engine, agents and dashboard are next.
 
 ## Who it is for
 
@@ -43,7 +43,16 @@ docs/        design notes
 tests/       tests
 ```
 
-See `docs/contracts.md` for how the claim object and insight stream fit together, and `CLAUDE.md` for project rules.
+See `docs/contracts.md` for how the claim object and insight stream fit together, `docs/data-dictionary.md` for the synthetic data, and `CLAUDE.md` for project rules.
+
+## Quick start
+
+```bash
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements-dev.txt
+python -m data_gen.generate --seed 2026   # writes data/generated and data/showcase
+python -m pytest -q
+```
 
 ## License
 
