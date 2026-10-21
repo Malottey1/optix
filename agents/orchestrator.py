@@ -33,6 +33,10 @@ class Orchestrator:
         self.narrative = NarrativeAgent(self.log, languages)
         self.on_published = on_published        # callback(Published, trigger_event) for streaming
 
+    def prepare(self):
+        """Pre-match work (season preview, season baselines); run() calls it if nobody did."""
+        self.analyst.prepare(self.state)
+
     def feed(self, rows) -> list:
         """Ingest a batch of raw rows; return what got published because of them."""
         clean, _ = self.ingest.process(rows, self.state)

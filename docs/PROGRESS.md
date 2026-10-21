@@ -120,6 +120,22 @@ Branch: `overnight`. Started 2026-10-21 07:08 local.
   guard, personalization modes.
 - Tests: 104 passed by default; slow 11.
 
+### Step 7. Insight stream
+- agents/insights.py: Published claim -> insight (schema-valid); final insight_type follows what the
+  Verifier found (field_tilt_with_lead -> perimeter_lock, shot_spam / wide_forward_passes ->
+  volume_vs_value, set_piece_inflation -> set_piece_inflation); context_chip when published_with_context;
+  payload numbers only from the claim, points only from evidence events, series from engine.flow.
+- agents/stream.py: InsightStream feeds one event at a time and measures latency from receiving the
+  triggering event to the built insight. Pre-match work (season preview, baselines) runs in prepare().
+- `python -m agents.run_match --match m_showcase --out out/insights.jsonl` writes insights.jsonl,
+  claims.jsonl (every attempt, for the blocked-then-rewritten view) and agent_log.jsonl. out/ is
+  git-ignored.
+- Showcase: 34 insights, 12 blocked attempts revised, 0 dropped; latency median 4 ms, max 25 ms;
+  slowest single event 16 ms.
+- tests/test_stream.py (7): schema, order, chip iff with-context, numbers and points traced to the
+  claim, planted traps reach the stream, latency < 1 s, runner outputs.
+- Tests: 111 passed by default; slow 11.
+
 ## Decisions
 - Showcase seed search starts from a recorded offset (`SHOWCASE_SEARCH_START = {2026: 4547}`) because
   a search from 0 with the 10% margin takes ~2 minutes and every test fixture regenerates the data.
@@ -188,6 +204,11 @@ Branch: `overnight`. Started 2026-10-21 07:08 local.
   pass-quality share are cached on the season baseline, which views share.
 - The Analyst's trigger thresholds (tilt >= 60%, xT added >= 0.025, momentum swing >= 40, pass
   milestones 50/75, cooldowns) are editorial choices for a readable feed, documented in analyst.py.
+
+- The season preview (matchup) is computed before kickoff and emitted on the first event; its first
+  run at kickoff cost 385 ms, which is pre-match work, not live latency.
+- The preview insight's points are season events (its evidence), so the dashboard can draw them
+  without loading the season.
 
 ## Surprises
 

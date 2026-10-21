@@ -5,7 +5,8 @@ engine.matchup.matchup_claim) over the events ingested so far. Its own logic is 
 (checkpoints, thresholds on engine values, cooldowns) and revision strategies.
 
 Triggers (deterministic, in match clock):
-  * kickoff: season matchup preview for each direction (attacker lane vs defender completion);
+  * kickoff: season matchup preview for each direction (attacker lane vs defender completion),
+    computed in prepare() before the first event;
   * every CHECKPOINT_SEC: each team's field tilt over the last TILT_WINDOW_SEC when >= MIN_TILT
     (once per team per TILT_COOLDOWN_SEC);
   * at half time and full time: each team's xG so far (>= MIN_SHOTS_FOR_XG shots), top chance
@@ -74,6 +75,13 @@ class AnalystAgent:
         self._next_rhythm = RHYTHM_EVERY_SEC
         self._half_done = False
         self._kicked_off = False
+        self._pre_match: list | None = None
+
+    def prepare(self, state) -> None:
+        """Pre-match work, before the first event: the season preview claims and the season
+        baselines every later claim reuses (xT grid, league pass-quality share)."""
+        T.league_forward_share(self.ds)
+        self._pre_match = self._preview({"event_id": "", "clock_sec": 0}, state)
 
     # ---------- triggers ----------
 
@@ -83,7 +91,11 @@ class AnalystAgent:
         t = e["clock_sec"]
         if not self._kicked_off:
             self._kicked_off = True
-            out += self._preview(e, state)
+            if self._pre_match is None:
+                self.prepare(state)
+            for p in self._pre_match:          # published at kickoff, triggered by the first event
+                p.trigger_event_id, p.trigger_clock = e["event_id"], e["clock_sec"]
+            out += self._pre_match
         if e["event_type"] == "shot":
             state.shots[e["team_id"]] += 1
         if e["event_type"] == "pass" and e["outcome"] == "success":

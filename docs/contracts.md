@@ -54,10 +54,10 @@ Seconds from first-half kickoff. Second half starts at 2700.
 
 | insight_type | payload uses |
 |---|---|
-| `matchup_mismatch` | `metrics`: attack share and defense concession share for the zone; `focus` on the zone |
-| `perimeter_lock` | `points`: passes outside the box; `metrics`: passes outside vs entries into the box |
+| `matchup_mismatch` | `metrics`: attack share, league share, defender completion and league completion for the lane (+ `lane`); `focus` on the lane; `points`: season entries into the lane (evidence) |
+| `perimeter_lock` | `points`: final-third passes (`kind` pass or box_entry); `metrics`: field tilt, final-third passes, box entries |
 | `threat_pass` | `points`: one pass with `value` = xT added |
-| `momentum_shift` | `metrics`: momentum value per team, score and game state shown beside it |
+| `momentum_shift` | `metrics`: momentum now and at the start of the spell (subject's sign); `series`: last 15 per-minute values |
 | `turning_point` | `points`: trigger event; `metrics`: momentum before and after |
 | `rhythm_wave` | `series`: 15 values, one per minute |
 | `volume_vs_value` | `metrics`: standard stat vs honest stat (pairs with `context_chip`) |

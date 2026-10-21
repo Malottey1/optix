@@ -25,6 +25,13 @@ BOX_X = 84.0                                    # penalty box: x >= 84 and 22 <=
 BOX_Y = (22.0, 78.0)
 
 
+def lane_bounds(lane: str) -> tuple[float, float]:
+    """(y_min, y_max) of a lane, attacker POV."""
+    i = LANES.index(lane)
+    edges = (0.0,) + LANE_EDGES + (100.0,)
+    return edges[i], edges[i + 1]
+
+
 def lane_of(y: float) -> str:
     """Lane of a y coordinate (attacker POV). y = 100 falls in right_flank."""
     for name, edge in zip(LANES, LANE_EDGES):
