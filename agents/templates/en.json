@@ -1,4 +1,13 @@
 {
+  "_labels": {
+    "lane": {
+      "left_flank": "left flank",
+      "left_half_space": "left half-space",
+      "center": "centre",
+      "right_half_space": "right half-space",
+      "right_flank": "right flank"
+    }
+  },
   "matchup.weak_flank": {
     "analyst": "{attacker} send {attack_share}% of final-third entries down the {lane_label} (league {league_share}%), and {defender} let {concede_completion}% of entries there succeed (league {league_completion}%).",
     "casual": "Watch the {lane_label}: {attacker} attack it {attack_share}% of the time (most teams {league_share}%), and {concede_completion}% of attacks there work against {defender} (usually {league_completion}%)."

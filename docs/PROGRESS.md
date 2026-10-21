@@ -136,6 +136,27 @@ Branch: `overnight`. Started 2026-10-21 07:08 local.
   claim, planted traps reach the stream, latency < 1 s, runner outputs.
 - Tests: 111 passed by default; slow 11.
 
+### Step 8. Translation and personalization
+- Hand-written Spanish and French for all 16 template keys (both tones), agents/templates/es.json and
+  fr.json, plus translated lane labels (`_labels`). Rendering happens in the Narrative agent, only for
+  verified claims, for every configured language.
+- Number guard per language: numbers are written in the language's own form (decimal comma in es/fr)
+  and every numeric param must appear in every rendered string, with no other number allowed.
+- Personalization modes: analyst/casual, language (falls back to en), favorite club (marked and first
+  at the same clock), player focus, single metric. CLI: `python -m agents.personalize --mode casual
+  --lang es --player NOR_07`.
+- Same moment, two tones (45:00, NOR trailing):
+  - analyst: "NOR hold 65.4% field tilt while chasing the game, but only 8 of 70 final-third passes
+    reached the box."
+  - casual: "NOR have the ball up the pitch (65.4% of final-third passes) but just 8 of 70 got into
+    the box."
+  - casual, fr: "NOR a le ballon haut (65,4 % des passes dans le dernier tiers), mais seulement 8 sur
+    70 sont entrées dans la surface."
+- tests/test_translation.py (11): same keys and placeholders in all languages, every rendered string in
+  the showcase stream passes the guard in its language, decimal comma and labels, the guard catches a
+  changed number, no translation before verification, each personalization mode, CLI.
+- Tests: 122 passed by default; slow 11.
+
 ## Decisions
 - Showcase seed search starts from a recorded offset (`SHOWCASE_SEARCH_START = {2026: 4547}`) because
   a search from 0 with the 10% margin takes ~2 minutes and every test fixture regenerates the data.
@@ -210,6 +231,10 @@ Branch: `overnight`. Started 2026-10-21 07:08 local.
 - The preview insight's points are season events (its evidence), so the dashboard can draw them
   without loading the season.
 
+- Spanish and French write decimals with a comma ("65,4 %"); the number guard compares numbers in
+  each language's written form, so "1.1" in a French sentence counts as a wrong number.
+- Translations avoid gendered wording for players (no pronouns), so they hold for any player.
+
 ## Surprises
 
 - ESF (possession, shot_spam 0.8) shows LOWER low-xG share than the league over all minutes; the spam only
@@ -220,6 +245,11 @@ Branch: `overnight`. Started 2026-10-21 07:08 local.
   preview claim is left_flank.
 
 ## Needs human review
+- The Spanish and French templates are my own translations; a native speaker should review the
+  football register (e.g. "field tilt" is kept as a loan term in es/fr analyst mode).
+- When a volume passer has no forward pass into a central danger zone, the sentence reads "pass
+  quality 0x the league rate". True, but a "none of them" phrasing would read better; it needs a
+  template variant chosen on a value, which I did not add.
 - The original code `NOR` is also a common abbreviation of a real club's name. CLAUDE.md forbids real
   trademarks; a 3-letter code is probably fine, but I did not rename an existing team (that would change
   the small league and the showcase). Worth a human decision.

@@ -60,8 +60,6 @@ STRATEGY = {"field_tilt_with_lead": "add_game_state", "shot_spam": "add_shot_qua
             "small_sample_xg": "add_sample_size", "set_piece_inflation": "split_open_play_set_piece",
             "wide_forward_passes": "add_pass_quality", "ppda_alone": "add_press_intensity"}
 NOT_REVISABLE = {"causal_claim", "causal_red_card", "single_match_fatigue"}
-LANE_LABEL = {"left_flank": "left flank", "left_half_space": "left half-space", "center": "centre",
-              "right_half_space": "right half-space", "right_flank": "right flank"}
 
 
 class AnalystAgent:
@@ -167,7 +165,6 @@ class AnalystAgent:
             if c is None:
                 continue
             c["claim_id"] = f"clm_{state.match_id}_preview_{self.ds.code(att)}_{self.ds.code(dfn)}_a1"
-            c["params"]["lane_label"] = LANE_LABEL[c["params"]["lane"]]
             out.append(ClaimProposal(c, "matchup_mismatch", e["event_id"], e["clock_sec"], dataset="season",
                                      meta={"lane": c["params"]["lane"], "attacker_id": att, "defender_id": dfn}))
             self.log(self.name, "proposed", match_id=state.match_id, clock_sec=e["clock_sec"], claim_id=c["claim_id"],

@@ -1,0 +1,75 @@
+{
+  "_labels": {
+    "lane": {
+      "left_flank": "flanc gauche",
+      "left_half_space": "demi-espace gauche",
+      "center": "centre",
+      "right_half_space": "demi-espace droit",
+      "right_flank": "flanc droit"
+    }
+  },
+  "matchup.weak_flank": {
+    "analyst": "{attacker} envoie {attack_share} % de ses entrées dans le dernier tiers par le {lane_label} (moyenne de la ligue {league_share} %), et {defender} laisse réussir {concede_completion} % des entrées de ce côté (ligue {league_completion} %).",
+    "casual": "Attention au {lane_label} : {attacker} y attaque {attack_share} % du temps (la plupart des équipes {league_share} %), et {concede_completion} % de ces attaques réussissent contre {defender} (d'habitude {league_completion} %)."
+  },
+  "field_tilt.stat": {
+    "analyst": "{team} détient {amount} % de domination territoriale (field tilt) sur cette période.",
+    "casual": "{team} campe dans le camp adverse : {amount} % des passes dans le dernier tiers sont les siennes."
+  },
+  "field_tilt.trailing_vs_deep_block": {
+    "analyst": "{team} détient {amount} % de field tilt en étant mené, mais seulement {box_entries} de ses {team_f3_passes} passes dans le dernier tiers ont atteint la surface.",
+    "casual": "{team} a le ballon haut ({amount} % des passes dans le dernier tiers), mais seulement {box_entries} sur {team_f3_passes} sont entrées dans la surface."
+  },
+  "xg.stat": {
+    "analyst": "{team} totalise {amount} xG pour l'instant.",
+    "casual": "Les occasions de {team} valent {amount} buts attendus pour l'instant."
+  },
+  "xg.volume_vs_value": {
+    "analyst": "{team} : {amount} xG sur {shots} tirs, {xg_per_shot} xG par tir, surtout des tentatives de faible qualité.",
+    "casual": "{team} a tenté {shots} tirs, mais surtout de loin : {amount} buts attendus au total, {xg_per_shot} par tir."
+  },
+  "xg.small_sample": {
+    "analyst": "{team} totalise {amount} xG sur seulement {shots} tirs, trop peu pour en tirer des conclusions.",
+    "casual": "Les {shots} tirs de {team} valent {amount} buts attendus, mais c'est trop peu pour juger."
+  },
+  "chances_created.stat": {
+    "analyst": "{player} ({team}) a créé {amount} occasions.",
+    "casual": "{player} a offert {amount} occasions à {team}."
+  },
+  "chances_created.split": {
+    "analyst": "{player} ({team}) a créé {amount} occasions : {set_piece} sur coup de pied arrêté, {open_play} dans le jeu.",
+    "casual": "{player} a offert {amount} occasions, mais {set_piece} sont venues de coups de pied arrêtés et seulement {open_play} dans le jeu."
+  },
+  "forward_passes.stat": {
+    "analyst": "{player} ({team}) a réussi {amount} passes vers l'avant.",
+    "casual": "{player} fait avancer {team} : {amount} passes vers l'avant pour l'instant."
+  },
+  "forward_passes.wide_low_threat": {
+    "analyst": "{player} ({team}) : {amount} passes vers l'avant, surtout sur les côtés ; qualité de passe {pass_quality_ratio}x celle de la ligue vers les zones centrales dangereuses.",
+    "casual": "{player} joue beaucoup de passes vers l'avant ({amount}), mais surtout sur les côtés : les zones centrales dangereuses sont trouvées {pass_quality_ratio} fois autant que la moyenne de la ligue."
+  },
+  "ppda.stat": {
+    "analyst": "{team} concède {amount} passes adverses par action défensive (PPDA).",
+    "casual": "{team} laisse l'adversaire faire {amount} passes avant de récupérer le ballon."
+  },
+  "ppda.with_press_intensity": {
+    "analyst": "{team} : PPDA {amount}, avec {press_intensity} actions de pressing par passe adverse.",
+    "casual": "{team} presse {press_intensity} fois par passe adverse et laisse faire {amount} passes par ballon récupéré."
+  },
+  "momentum.shift": {
+    "analyst": "La dynamique bascule vers {team} : {amount} sur l'échelle du bras de fer, contre {momentum_before} au début de la période.",
+    "casual": "{team} a pris le dessus : le baromètre affiche {amount}, contre {momentum_before} avant."
+  },
+  "rhythm.wave": {
+    "analyst": "Rythme sur les {minutes} dernières minutes : {amount} changements de possession par minute.",
+    "casual": "Le ballon a changé de camp {amount} fois par minute sur les {minutes} dernières minutes."
+  },
+  "xt_added.threat_pass": {
+    "analyst": "{player} ({team}) joue une passe qui ajoute {amount} de menace attendue.",
+    "casual": "Passe dangereuse de {player} : elle rapproche le but de {amount} sur l'échelle de menace."
+  },
+  "milestone.pass_count": {
+    "analyst": "{player} ({team}) atteint {amount} passes réussies dans ce match.",
+    "casual": "{player} a déjà réussi {amount} passes pour {team} dans ce match."
+  }
+}
