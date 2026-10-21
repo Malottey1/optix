@@ -153,8 +153,8 @@
   },
   "showcase": {
     "match_id": "m_showcase",
-    "sim_seed": 20260080,
-    "seeds_tried": 81,
+    "sim_seed": 20264547,
+    "seeds_tried": 4548,
     "home": "t_aur",
     "away": "t_nor",
     "scripted": "AUR scores their first chance of quality after minute 10",
@@ -170,116 +170,183 @@
     "traps": {
       "field_tilt_while_leading": {
         "window_sec": [
-          99,
-          3245
+          1329,
+          5400
         ],
-        "chaser_field_tilt": 0.819,
-        "chaser_f3_passes": 131,
-        "chaser_box_entries": 11,
-        "chaser_perimeter_passes": 119,
+        "chaser_field_tilt": 0.762,
+        "chaser_f3_passes": 147,
+        "chaser_box_entries": 14,
+        "chaser_perimeter_passes": 132,
         "evidence_event_ids": [
-          "m_showcase_e00048",
-          "m_showcase_e00087",
-          "m_showcase_e00088",
-          "m_showcase_e00102",
-          "m_showcase_e00104",
-          "m_showcase_e00105",
-          "m_showcase_e00106",
-          "m_showcase_e00108",
-          "m_showcase_e00142",
-          "m_showcase_e00143",
-          "m_showcase_e00179",
-          "m_showcase_e00180",
-          "m_showcase_e00090",
-          "m_showcase_e00107",
-          "m_showcase_e00109"
+          "m_showcase_e00368",
+          "m_showcase_e00370",
+          "m_showcase_e00371",
+          "m_showcase_e00462",
+          "m_showcase_e00463",
+          "m_showcase_e00464",
+          "m_showcase_e00465",
+          "m_showcase_e00466",
+          "m_showcase_e00467",
+          "m_showcase_e00468",
+          "m_showcase_e00469",
+          "m_showcase_e00470",
+          "m_showcase_e00369",
+          "m_showcase_e00530",
+          "m_showcase_e00532"
         ],
         "passed": true
       },
       "shot_spam": {
-        "shots": 26,
-        "low_xg_shots": 20,
-        "mean_xg": 0.053,
-        "total_xg": 1.37,
+        "shots": 19,
+        "low_xg_shots": 16,
+        "mean_xg": 0.058,
+        "total_xg": 1.1,
         "evidence_event_ids": [
-          "m_showcase_e00091",
-          "m_showcase_e00253",
-          "m_showcase_e00262",
-          "m_showcase_e00286",
-          "m_showcase_e00313",
-          "m_showcase_e00315",
-          "m_showcase_e00321",
-          "m_showcase_e00386",
-          "m_showcase_e00388",
-          "m_showcase_e00456",
-          "m_showcase_e00474",
-          "m_showcase_e00520",
-          "m_showcase_e00602",
-          "m_showcase_e00695",
-          "m_showcase_e00720",
-          "m_showcase_e00862",
-          "m_showcase_e00945",
-          "m_showcase_e00958",
-          "m_showcase_e00975",
-          "m_showcase_e01102"
+          "m_showcase_e00219",
+          "m_showcase_e00231",
+          "m_showcase_e00372",
+          "m_showcase_e00535",
+          "m_showcase_e00603",
+          "m_showcase_e00691",
+          "m_showcase_e00848",
+          "m_showcase_e00905",
+          "m_showcase_e00914",
+          "m_showcase_e01029",
+          "m_showcase_e01107",
+          "m_showcase_e01228",
+          "m_showcase_e01230",
+          "m_showcase_e01244",
+          "m_showcase_e01322",
+          "m_showcase_e01359"
         ],
         "passed": true
       },
       "volume_passer": {
-        "forward_passes": 50,
+        "forward_passes": 40,
         "rank_in_match": 1,
-        "wide_share": 0.86,
+        "wide_share": 0.925,
         "evidence_event_ids": [
-          "m_showcase_e00035",
-          "m_showcase_e00048",
-          "m_showcase_e00077",
-          "m_showcase_e00101",
-          "m_showcase_e00138",
-          "m_showcase_e00140",
-          "m_showcase_e00172",
-          "m_showcase_e00205",
-          "m_showcase_e00211",
-          "m_showcase_e00230",
-          "m_showcase_e00242",
-          "m_showcase_e00281",
-          "m_showcase_e00361",
-          "m_showcase_e00383",
-          "m_showcase_e00385"
+          "m_showcase_e00058",
+          "m_showcase_e00174",
+          "m_showcase_e00176",
+          "m_showcase_e00213",
+          "m_showcase_e00215",
+          "m_showcase_e00267",
+          "m_showcase_e00368",
+          "m_showcase_e00461",
+          "m_showcase_e00473",
+          "m_showcase_e00504",
+          "m_showcase_e00507",
+          "m_showcase_e00581",
+          "m_showcase_e00594",
+          "m_showcase_e00628",
+          "m_showcase_e00634"
         ],
         "passed": true
       },
       "corner_specialist": {
-        "chances_created": 7,
+        "chances_created": 6,
         "from_corners": 6,
-        "open_play": 1,
+        "open_play": 0,
         "evidence_event_ids": [
-          "m_showcase_e00090",
-          "m_showcase_e00314",
-          "m_showcase_e00387",
-          "m_showcase_e00696",
-          "m_showcase_e00698",
-          "m_showcase_e00957"
+          "m_showcase_e00218",
+          "m_showcase_e00230",
+          "m_showcase_e00534",
+          "m_showcase_e01028",
+          "m_showcase_e01227",
+          "m_showcase_e01229"
         ],
         "passed": true
       },
       "one_flank_vs_weak_lane": {
-        "entries_into_final_third": 28,
-        "left_side_share": 0.571,
+        "entries_into_final_third": 31,
+        "left_side_share": 0.613,
         "defender_weak_lane": "left_flank",
         "evidence_event_ids": [
-          "m_showcase_e00163",
-          "m_showcase_e00541",
-          "m_showcase_e00776",
-          "m_showcase_e00820",
-          "m_showcase_e00894",
-          "m_showcase_e01001",
-          "m_showcase_e01153",
-          "m_showcase_e01179",
-          "m_showcase_e01268",
-          "m_showcase_e01369"
+          "m_showcase_e00324",
+          "m_showcase_e00412",
+          "m_showcase_e00446",
+          "m_showcase_e00798",
+          "m_showcase_e00921",
+          "m_showcase_e01173"
         ],
         "passed": true
       }
-    }
+    },
+    "trap_margins": {
+      "field_tilt_while_leading.chaser_field_tilt": {
+        "value": 0.762,
+        "threshold": 0.68,
+        "kind": ">=",
+        "margin": 0.121
+      },
+      "field_tilt_while_leading.chaser_f3_passes": {
+        "value": 147,
+        "threshold": 100,
+        "kind": ">=",
+        "margin": 0.47
+      },
+      "field_tilt_while_leading.box_entry_share": {
+        "value": 0.095,
+        "threshold": 0.15,
+        "kind": "<=",
+        "margin": 0.365
+      },
+      "shot_spam.low_xg_shots": {
+        "value": 16,
+        "threshold": 12,
+        "kind": ">=",
+        "margin": 0.333
+      },
+      "shot_spam.low_xg_share": {
+        "value": 0.842,
+        "threshold": 0.75,
+        "kind": ">=",
+        "margin": 0.123
+      },
+      "volume_passer.forward_passes": {
+        "value": 40,
+        "threshold": 25,
+        "kind": ">=",
+        "margin": 0.6
+      },
+      "volume_passer.rank_in_match": {
+        "value": 1,
+        "threshold": 1,
+        "kind": "<=",
+        "margin": 1.0
+      },
+      "volume_passer.wide_share": {
+        "value": 0.925,
+        "threshold": 0.8,
+        "kind": ">=",
+        "margin": 0.156
+      },
+      "corner_specialist.from_corners": {
+        "value": 6,
+        "threshold": 4,
+        "kind": ">=",
+        "margin": 0.5
+      },
+      "corner_specialist.corner_vs_open_play": {
+        "value": 6,
+        "threshold": 1,
+        "kind": ">=",
+        "margin": 5.0
+      },
+      "one_flank_vs_weak_lane.entries_into_final_third": {
+        "value": 31,
+        "threshold": 10,
+        "kind": ">=",
+        "margin": 2.1
+      },
+      "one_flank_vs_weak_lane.left_side_share": {
+        "value": 0.613,
+        "threshold": 0.5,
+        "kind": ">=",
+        "margin": 0.226
+      }
+    },
+    "min_margin": 0.1
   }
 }

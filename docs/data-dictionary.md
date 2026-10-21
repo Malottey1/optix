@@ -104,3 +104,10 @@ five traps appear in the one match.
 The field-tilt detector fires only when the chaser's box entries are low (<= 15% of its final-third
 passes). A genuinely dominant side such as CAL also holds most of the final third but keeps entering
 the box, so its spells while level or ahead do not fire (tested as a false-positive control).
+
+## Showcase margins
+
+Every showcase trap threshold must be cleared by at least 10% (`SHOWCASE_MIN_MARGIN`). The margins are
+recorded in `ground_truth.json` under `showcase.trap_margins`. The seed search starts from a recorded
+offset (`SHOWCASE_SEARCH_START`) to save about two minutes per generation; a slow test re-runs the search
+from zero and checks it finds the same seed.

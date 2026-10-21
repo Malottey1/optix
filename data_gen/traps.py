@@ -115,3 +115,38 @@ def flank_attack_trap(events, attacker_id, defender_id):
     return dict(entries_into_final_third=n, left_side_share=round(share, 3), defender_weak_lane=weak,
                 evidence_event_ids=[e["event_id"] for e in f3 if lane_of(e["y_end"]) == "left_flank"][:12],
                 passed=bool(n >= 10 and share >= 0.5 and weak == "left_flank"))
+
+
+def trap_margins(checks: dict) -> dict:
+    """Relative margin by which each showcase trap clears each of its thresholds.
+
+    Returns {"trap.metric": dict(value, threshold, kind, margin)} where kind is ">=" or "<=" and
+    margin is value/threshold - 1 (for >=) or 1 - value/threshold (for <=). A margin of 0.10 means
+    the value clears its threshold by 10%.
+    """
+    ft, ss = checks["field_tilt_while_leading"], checks["shot_spam"]
+    vp, cs = checks["volume_passer"], checks["corner_specialist"]
+    fl = checks["one_flank_vs_weak_lane"]
+    rows = {
+        "field_tilt_while_leading.chaser_field_tilt": (ft["chaser_field_tilt"], 0.68, ">="),
+        "field_tilt_while_leading.chaser_f3_passes": (ft["chaser_f3_passes"], 100, ">="),
+        "field_tilt_while_leading.box_entry_share": (
+            ft["chaser_box_entries"] / max(1, ft["chaser_f3_passes"]), 0.15, "<="),
+        "shot_spam.low_xg_shots": (ss["low_xg_shots"], 12, ">="),
+        "shot_spam.low_xg_share": (ss["low_xg_shots"] / max(1, ss["shots"]), 0.75, ">="),
+        "volume_passer.forward_passes": (vp["forward_passes"], 25, ">="),
+        "volume_passer.rank_in_match": (vp["rank_in_match"] or 99, 1, "<="),
+        "volume_passer.wide_share": (vp["wide_share"], 0.8, ">="),
+        "corner_specialist.from_corners": (cs["from_corners"], 4, ">="),
+        "corner_specialist.corner_vs_open_play": (cs["from_corners"], max(1, 2 * cs["open_play"]), ">="),
+        "one_flank_vs_weak_lane.entries_into_final_third": (fl["entries_into_final_third"], 10, ">="),
+        "one_flank_vs_weak_lane.left_side_share": (fl["left_side_share"], 0.5, ">="),
+    }
+    out = {}
+    for k, (v, t, kind) in rows.items():
+        m = v / t - 1 if kind == ">=" else 1 - v / t
+        # rank is categorical: rank 1 is required exactly, so it gets full margin
+        if k == "volume_passer.rank_in_match":
+            m = 1.0 if v == 1 else -1.0
+        out[k] = dict(value=round(v, 3), threshold=t, kind=kind, margin=round(m, 3))
+    return out

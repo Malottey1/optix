@@ -1,3 +1,7 @@
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests"]
+markers = [
+    "slow: long-running tests (multi-seed calibration, full 20-team league); run with `pytest -m slow` or `pytest -m \"\"` for everything",
+]
+addopts = "-m 'not slow'"

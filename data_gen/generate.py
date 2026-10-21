@@ -42,7 +42,7 @@ MATCH_COLS = ["match_id", "season", "matchweek", "date", "home_team_id", "away_t
 def write_csv(path: Path, cols, rows):
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=cols, extrasaction="ignore")
+        w = csv.DictWriter(f, fieldnames=cols, extrasaction="ignore", lineterminator="\n")
         w.writeheader()
         w.writerows(rows)
 
@@ -78,15 +78,25 @@ def showcase_checks(sim: MatchSim, players) -> dict:
     )
 
 
-def build_showcase(seed: int, players, max_tries: int = 3000):
+SHOWCASE_MIN_MARGIN = 0.10   # every trap threshold must be cleared by at least 10%
+# Where the seed search starts, per generator seed. A full search from 0 takes ~2 minutes, so we
+# record the first offset that a search from 0 finds; tests/test_data_gen.py (slow) re-runs the
+# search from 0 and checks it lands on the same offset. Set to 0 after changing the simulator.
+SHOWCASE_SEARCH_START = {2026: 4547}
+
+
+def build_showcase(seed: int, players, max_tries: int = 6000, start: int | None = None):
     """Same simulator as the season, with a scripted early AUR goal. We then search seeds until
-    all five traps fire in the one match, so the demo match is reproducible and unedited."""
-    for k in range(max_tries):
+    all five traps fire in the one match, each threshold cleared with SHOWCASE_MIN_MARGIN, so the
+    demo match is reproducible, unedited and not balanced on a knife edge."""
+    start = SHOWCASE_SEARCH_START.get(seed, 0) if start is None else start
+    for k in range(start, start + max_tries):
         s = seed * 10_000 + k
         sim = simulate(s, SHOWCASE_ID, "t_aur", "t_nor", players,
                        force_goal=dict(team_id="t_aur", after_sec=600))
         checks = showcase_checks(sim, players)
-        if all(c and c["passed"] for c in checks.values()):
+        if (all(c and c["passed"] for c in checks.values())
+                and min(m["margin"] for m in traps.trap_margins(checks).values()) >= SHOWCASE_MIN_MARGIN):
             return sim, checks, s, k + 1
     raise RuntimeError("no seed produced all five traps; loosen thresholds or tune the simulator")
 
@@ -147,7 +157,8 @@ def main(seed: int, out: Path, showcase_out: Path):
         showcase=dict(match_id=SHOWCASE_ID, sim_seed=sc_seed, seeds_tried=tries, home="t_aur", away="t_nor",
                       scripted="AUR scores their first chance of quality after minute 10",
                       player_overrides={f"{c}:{r}": v for (c, r), v in SHOWCASE_PLAYER_TRAITS.items()},
-                      score=[sc_sim.score["t_aur"], sc_sim.score["t_nor"]], traps=checks),
+                      score=[sc_sim.score["t_aur"], sc_sim.score["t_nor"]], traps=checks,
+                      trap_margins=traps.trap_margins(checks), min_margin=SHOWCASE_MIN_MARGIN),
     )
     for d in (out, showcase_out):
         (d / "ground_truth.json").write_text(json.dumps(gt, indent=2))

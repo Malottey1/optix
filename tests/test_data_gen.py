@@ -250,6 +250,7 @@ def season_rows_from_disk(d):
     return calibration.season_stats(read(d / "matches.csv"), read(d / "shots.csv"), read(d / "passes.csv"))
 
 
+@pytest.mark.slow
 def test_calibration_is_not_a_lucky_seed():
     """Mean over several other seeds sits near each target, so the tuning is not fitted to seed 2026.
     Band: half the single-season tolerance on each side of the target."""
@@ -396,3 +397,22 @@ def test_showcase_keeps_the_strong_volume_passer(data):
     pid = next(k for k, v in gt["planted_players"].items() if v["trap"] == "volume_passer")
     assert sc_usage[pid] > season_usage[pid]
     assert {k: v for k, v in sc_usage.items() if k != pid} == {k: v for k, v in season_usage.items() if k != pid}
+
+
+def test_showcase_traps_clear_thresholds_with_margin(data):
+    _, gt = data
+    margins = traps.trap_margins(gt["showcase"]["traps"])
+    assert margins == gt["showcase"]["trap_margins"]
+    low = {k: m for k, m in margins.items() if m["margin"] < 0.10}
+    assert not low, low
+
+
+@pytest.mark.slow
+def test_showcase_search_hint_matches_a_search_from_zero():
+    """SHOWCASE_SEARCH_START only skips work: a search from 0 must find the same first seed."""
+    from data_gen.generate import SHOWCASE_SEARCH_START, build_showcase
+    from data_gen.config import SHOWCASE_PLAYER_TRAITS
+    players = make_players(SEED, SHOWCASE_PLAYER_TRAITS)
+    _, _, s_hint, _ = build_showcase(SEED, players)
+    _, _, s_zero, _ = build_showcase(SEED, players, start=0)
+    assert s_hint == s_zero == SEED * 10_000 + SHOWCASE_SEARCH_START[SEED]
