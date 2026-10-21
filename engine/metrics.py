@@ -390,6 +390,42 @@ def chances_conceded_by_lane(events, team_id, window=None, state=None) -> Metric
                         detail=dict(lanes={l: len(v) for l, v in lanes.items()}, lane_ids=lanes, no_entry=none))
 
 
+def entry_completion_by_lane(events, team_id, window=None, state=None, conceded=True) -> MetricResult:
+    """Completion rate of final-third entry passes by end lane: completed / attempted.
+
+    Definition: an attempted entry is any pass (completed or not) from x < 66.7 to x_end >= 66.7.
+    conceded=True (default) counts entries attempted BY OPPONENTS of team_id (how easily a defence
+    lets teams in down each lane); conceded=False counts team_id's own entries. Lanes are from the
+    attacker's point of view. Game state is team_id's.
+    Inputs: events; team_id; optional window, game state; conceded.
+    Value: overall completion rate. detail["lanes"]: lane -> {attempted, completed, rate};
+    detail["lane_ids"]: lane -> completed entry IDs; detail["lane_attempt_ids"]: lane -> all IDs.
+    Known limits: a failed pass's end point is where it was aimed/intercepted, so "lane" of a failed
+    entry is approximate; the rate mixes every opponent's quality (a defence that faces strong
+    attacks more often looks softer); needs a few hundred attempts per lane to see a 5-6 pp effect.
+    """
+    att = {l: [] for l in LANES}
+    done = {l: [] for l in LANES}
+    for e in events:
+        if e["event_type"] != "pass" or not _is_entry(e):
+            continue
+        if conceded:
+            if e["opponent_team_id"] != team_id or not _in_scope(e, team_id, window, state):
+                continue
+        elif e["team_id"] != team_id or not _in_scope(e, team_id, window, state):
+            continue
+        lane = lane_of(e["y_end"])
+        att[lane].append(e["event_id"])
+        if e["outcome"] == "success":
+            done[lane].append(e["event_id"])
+    n = sum(len(v) for v in att.values())
+    k = sum(len(v) for v in done.values())
+    lanes = {l: dict(attempted=len(att[l]), completed=len(done[l]),
+                     rate=len(done[l]) / len(att[l]) if att[l] else None) for l in LANES}
+    return MetricResult(k / n if n else None, tuple(i for l in LANES for i in done[l]), n,
+                        detail=dict(lanes=lanes, lane_ids=done, lane_attempt_ids=att))
+
+
 def press_intensity(events, team_id, window=None, state=None) -> MetricResult:
     """Pressure events applied per opponent pass attempted.
 
@@ -485,3 +521,30 @@ CONFIDENCE_ORDER = ("low", "medium", "high")
 
 def min_confidence(*labels: str) -> str:
     return min(labels, key=CONFIDENCE_ORDER.index)
+
+
+def mean_interval(m: float | None, sd: float | None, n: int, z: float = 1.96) -> tuple[float, float] | None:
+    """Normal-approximation 95% interval for a mean of n observations with per-observation sd."""
+    if m is None or sd is None or n == 0:
+        return None
+    half = z * sd / math.sqrt(n)
+    return m - half, m + half
+
+
+def interval_confidence(interval, baseline, n: int, rel_half_width: float | None = None) -> str:
+    """Confidence label for a mean (or any value with an interval) against a baseline:
+    high = n >= 200, interval excludes the baseline and (if given) half-width <= rel_half_width of
+    the value; medium = n >= 50 and the interval excludes the baseline; low otherwise."""
+    if interval is None or baseline is None:
+        return "low"
+    lo, hi = interval
+    excludes = baseline < lo or baseline > hi
+    narrow = True
+    if rel_half_width is not None:
+        mid = (lo + hi) / 2
+        narrow = mid != 0 and (hi - lo) / 2 <= rel_half_width * abs(mid)
+    if n >= CONF_HIGH_N and excludes and narrow:
+        return "high"
+    if n >= CONF_MEDIUM_N and excludes:
+        return "medium"
+    return "low"

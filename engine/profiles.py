@@ -1,9 +1,13 @@
 """Team style profiles per game-state bracket, each metric compared with the league average.
 
-League average = the same metric pooled over every team in the same bracket (a team is part of
-its own league average). z-scores are sampling z-scores against that average, so they grow with
-sample size: |z| >= 2 means "unlikely to be noise", not "a big difference". Read the value, the
-league value and the sample size together.
+League average = the same metric pooled over every team in the same bracket of the BASELINE
+dataset (a team is part of its own league average). The baseline is the dataset itself unless it
+was loaded with baseline="season" (single-match analyses), in which case it is the season.
+
+Each comparison reports the effect (difference from the league: percentage points for shares,
+units for means), a 95% interval (Wilson for shares, normal for means), a confidence label and
+the sample size. A sampling z-score is still included but only as an internal ranking signal:
+it grows with sample size, so it says "unlikely to be noise", not "a big difference".
 
 Brackets: "all" (every minute), "leading", "level", "trailing" (team's own point of view).
 """
@@ -12,7 +16,7 @@ from __future__ import annotations
 from functools import lru_cache
 
 from . import metrics as M
-from .tables import BRACKETS3, Dataset, team_events
+from .tables import BRACKETS3, Dataset, baseline_of, team_events
 from .zones import LANES
 
 BRACKETS = ("all",) + BRACKETS3
@@ -51,6 +55,8 @@ def team_metric(ds: Dataset, team_id: str, name: str, bracket: str) -> M.MetricR
     ev = team_events(ds, team_id)      # only the team's matches: same result, ~N/2-teams the work
     if name in SCALARS:
         return SCALARS[name][0](ev, team_id, state=st)
+    if name == "entry_completion_conceded":
+        return M.entry_completion_by_lane(ev, team_id, state=st)
     return LANE_SETS[name](ev, team_id, st)
 
 
@@ -81,12 +87,36 @@ def league_baseline(ds: Dataset, bracket: str) -> dict:
         total = sum(r.value for r in rs)
         out[name] = {l: sum(r.detail["lanes"][l] for r in rs) / total if total else None for l in LANES}
         out[name + "_n"] = total
+    rs = [team_metric(ds, tid, "entry_completion_conceded", bracket) for tid in ds.teams]
+    att = {l: sum(r.detail["lanes"][l]["attempted"] for r in rs) for l in LANES}
+    done = {l: sum(r.detail["lanes"][l]["completed"] for r in rs) for l in LANES}
+    out["entry_completion_conceded"] = {l: done[l] / att[l] if att[l] else None for l in LANES}
+    out["entry_completion_conceded_n"] = att
     return out
 
 
-def _compare(value, base, sd, n, kind):
-    z = M.z_proportion(value, base, n) if kind == "share" else M.z_mean(value, base, sd, n)
-    return dict(value=value, league=base, z=z, n=n)
+def _compare(value, base, sd, n, kind, own_sd=None):
+    """value vs league base: effect, 95% interval, confidence, n (and z for ranking only)."""
+    if kind == "share":
+        hits = round(value * n) if value is not None else 0
+        iv = M.wilson_interval(hits, n)
+        conf = M.share_confidence(hits, n, base)
+        effect = None if value is None or base is None else 100 * (value - base)
+        z = M.z_proportion(value, base, n)
+    else:
+        iv = M.mean_interval(value, own_sd, n)
+        conf = M.interval_confidence(iv, base, n)
+        effect = None if value is None or base is None else value - base
+        z = M.z_mean(value, base, sd, n)
+    return dict(value=value, league=base, effect=effect,
+                effect_unit="pp" if kind == "share" else "units", interval=iv, confidence=conf, z=z, n=n)
+
+
+def _lane_compare(hits, n, base):
+    share = hits / n if n else None
+    return dict(share=share, league=base, effect_pp=None if share is None or base is None else 100 * (share - base),
+                interval=M.wilson_interval(hits, n), confidence=M.share_confidence(hits, n, base),
+                z=M.z_proportion(share, base, n), n=n)
 
 
 def team_style_profile(ds: Dataset, team_id: str, bracket: str = "all") -> dict:
@@ -97,19 +127,25 @@ def team_style_profile(ds: Dataset, team_id: str, bracket: str = "all") -> dict:
     into the final third), entry_lanes_conceded and chance_lanes_conceded (where opponents get in,
     all from the attacker's point of view). n is the metric's own sample size (see each metric).
     """
-    base = league_baseline(ds, bracket)
-    out = dict(team_id=team_id, code=ds.code(team_id), bracket=bracket, metrics={}, lanes={})
+    bds = baseline_of(ds)
+    base = league_baseline(bds, bracket)
+    out = dict(team_id=team_id, code=ds.code(team_id), bracket=bracket, metrics={}, lanes={},
+               completion={}, baseline=dict(dataset=bds.label, is_self=bds is ds))
     for name, (_, kind, unit) in SCALARS.items():
         r = team_metric(ds, team_id, name, bracket)
         out["metrics"][name] = dict(**_compare(r.value, base[name]["value"], base[name]["sd"],
-                                               r.sample_size, kind), unit=unit)
+                                               r.sample_size, kind, r.sd), unit=unit)
     for name in LANE_SETS:
         r = team_metric(ds, team_id, name, bracket)
-        shares = _lane_shares(r)
-        out["lanes"][name] = {
-            l: dict(share=shares[l], league=base[name][l],
-                    z=M.z_proportion(shares[l], base[name][l], r.value), n=r.value)
-            for l in LANES}
+        out["lanes"][name] = {l: _lane_compare(r.detail["lanes"][l], r.value, base[name][l]) for l in LANES}
+    r = team_metric(ds, team_id, "entry_completion_conceded", bracket)
+    out["completion"]["entry_completion_conceded"] = {
+        l: dict(rate=v["rate"], league=base["entry_completion_conceded"][l],
+                attempted=v["attempted"], completed=v["completed"],
+                **{k: x for k, x in _lane_compare(v["completed"], v["attempted"],
+                                                  base["entry_completion_conceded"][l]).items()
+                   if k in ("effect_pp", "interval", "confidence", "z")})
+        for l, v in r.detail["lanes"].items()}
     return out
 
 
@@ -129,3 +165,27 @@ def bracket_shift(ds: Dataset, team_id: str, to_bracket: str = "leading", from_b
                          league_delta=lb[name]["value"] - la[name]["value"],
                          n_from=a["metrics"][name]["n"], n_to=b["metrics"][name]["n"])
     return out
+
+
+# Soft-lane rule (see docs/engine.md): a defence is soft in a lane when opponents complete entries
+# into it at least SOFT_LANE_MIN_PP above the league rate for that lane AND the lower end of the
+# team's 95% Wilson interval is above the league rate. At most one lane per team: the largest lift.
+SOFT_LANE_MIN_PP = 6.0
+
+
+def soft_lane(ds: Dataset, team_id: str, bracket: str = "all") -> dict | None:
+    """The lane (attacker point of view) where `team_id`'s defence concedes entries most easily
+    relative to the league, if it passes the soft-lane rule; else None.
+
+    Returns {lane, rate, league, effect_pp, interval, confidence, attempted, evidence_event_ids}.
+    Known limits: needs a few hundred attempts per lane (a full season). Effects below ~5 pp are
+    not recoverable at that sample size; on a single match this never fires reliably.
+    """
+    comp = team_style_profile(ds, team_id, bracket)["completion"]["entry_completion_conceded"]
+    ok = [l for l, v in comp.items() if v["effect_pp"] is not None and v["interval"] is not None
+          and v["effect_pp"] >= SOFT_LANE_MIN_PP and v["interval"][0] > v["league"]]
+    if not ok:
+        return None
+    lane = max(ok, key=lambda l: comp[l]["effect_pp"])
+    r = team_metric(ds, team_id, "entry_completion_conceded", bracket)
+    return dict(lane=lane, **comp[lane], evidence_event_ids=list(r.detail["lane_attempt_ids"][lane][:12]))

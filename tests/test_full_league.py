@@ -124,3 +124,44 @@ def test_team_traps_visible(full):
                 s = bracket_shift(ds, tid)["field_tilt"]
                 assert s["delta"] < s["league_delta"], code
     assert kinds["shot_spam"] >= 3 and kinds["sit_deep_when_leading"] >= 3 and kinds["soft_lane"] >= 5
+
+
+# Stated recoverable size: a planted soft lane whose TRUE effect (lower bound, from the generator's
+# own success probabilities) is at least this many percentage points must be recovered.
+RECOVERABLE_EFFECT_PP = 5.0
+
+
+def test_soft_lanes_recovered_above_stated_size(full):
+    from soft_lane_truth import true_soft_lane_effect
+    from engine.profiles import soft_lane
+    ds, gt, _ = full
+    should, found, false_pos, unplanted = [], [], [], []
+    for code, t in gt["teams"].items():
+        got = soft_lane(ds, t["team_id"])
+        if t["weak_lane_attacker_pov"] is None:
+            unplanted.append(code)
+            if got is not None:
+                false_pos.append(code)
+            continue
+        eff = true_soft_lane_effect(ds, t["team_id"], t["weak_lane_attacker_pov"], t["weak_strength"])
+        if eff["effect_pp_low"] >= RECOVERABLE_EFFECT_PP:
+            should.append(code)
+            if got is not None and got["lane"] == t["weak_lane_attacker_pov"]:
+                found.append(code)
+    recovery = len(found) / len(should)
+    print(f"soft lanes: {len(found)}/{len(should)} recovered (true effect >= {RECOVERABLE_EFFECT_PP} pp), "
+          f"false positives {len(false_pos)}/{len(unplanted)}")
+    assert len(should) >= 6
+    assert recovery == 1.0, (should, found)
+    assert len(false_pos) <= 0.10 * len(unplanted), false_pos
+
+
+def test_profile_and_matchup_run_on_full_league(full):
+    from engine.matchup import lane_matchup, matchup_claim
+    ds, gt, _ = full
+    codes = list(gt["teams"])
+    for a, d in zip(codes, codes[1:] + codes[:1]):
+        m = lane_matchup(ds, gt["teams"][a]["team_id"], gt["teams"][d]["team_id"])
+        assert m["n_attack"] > 0 and m["n_concede"] > 0
+    claim = matchup_claim(ds, gt["teams"]["AUR"]["team_id"], gt["teams"]["NOR"]["team_id"])
+    assert claim["zone"]["lane"] == "left_flank"

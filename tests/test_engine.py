@@ -253,5 +253,47 @@ def test_matchup_claim_uses_season_scope_and_backed_params(ds):
     v = claim["value"]
     assert v["interval"]["low"] < v["amount"] < v["interval"]["high"]
     assert v["effect_pp"] == pytest.approx(v["amount"] - v["baseline"], abs=0.11)
-    assert v["confidence"] == "high"
+    # attacker share: n=779 -> high; NOR's left-flank completion: 190 attempts (< 200) -> medium;
+    # a matchup takes the lower of the two
+    assert v["confidence"] == "medium"
+    assert claim["supporting_values"]["completion_attempts"] < 200 <= v["sample_size"]
     assert v["baseline_source"]["kind"] == "season" and v["baseline_source"]["n"] > v["sample_size"]
+
+
+def test_soft_lane_from_completion_rate_on_small_league(ds, gt):
+    from engine.profiles import SOFT_LANE_MIN_PP, soft_lane
+    nor = soft_lane(ds, tid(ds, "NOR"))
+    assert nor is not None and nor["lane"] == gt["teams"]["NOR"]["weak_lane_attacker_pov"]
+    assert nor["effect_pp"] >= SOFT_LANE_MIN_PP and nor["interval"][0] > nor["league"]
+    # no team without a planted weak lane is flagged
+    for code, t in gt["teams"].items():
+        if t["weak_lane_attacker_pov"] is None:
+            assert soft_lane(ds, t["team_id"]) is None, code
+
+
+def test_showcase_uses_season_baseline(generated, ds, claim_validator):
+    root, _ = generated
+    sc = load(root / "showcase", baseline="season", season_dir=root / "season")
+    assert sc.baseline is not None and sc.baseline.label == "season"
+    claim = matchup_claim(sc, sc.team_by_code("AUR"), sc.team_by_code("NOR"))
+    assert not list(claim_validator.iter_errors(claim))
+    src = claim["value"]["baseline_source"]
+    season_n = sum(M.final_third_entries(ds.events, None).detail["lanes"].values())
+    assert src == {"kind": "season", "n": season_n, "dataset": "season"}
+    assert claim["scope"] == "match" and claim["match_id"] == "m_showcase" and claim["window"]["from_sec"] == 0
+    # the baseline really is the season's, not the match's own
+    season_share = lane_matchup(ds, tid(ds, "AUR"), tid(ds, "NOR"))["lanes"][claim["zone"]["lane"]]["league_share"]
+    assert claim["value"]["baseline"] == round(100 * season_share, 1)
+    selfbase = matchup_claim(load(root / "showcase"), "t_aur", "t_nor")
+    assert selfbase["value"]["baseline_source"]["n"] < src["n"]
+
+
+def test_profile_and_matchup_run_on_any_league(ds):
+    """No hard-coded team ids: every pair in the small league gets a profile and a matchup."""
+    for a in ds.teams:
+        p = team_style_profile(ds, a)
+        assert p["metrics"]["press_intensity"]["interval"] is not None
+        for d in ds.teams:
+            if a != d:
+                m = lane_matchup(ds, a, d)
+                assert set(m["lanes"]) == set(zones.LANES)

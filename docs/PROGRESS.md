@@ -44,6 +44,23 @@ Branch: `overnight`. Started 2026-10-21 07:08 local.
   unchanged, fictional names, every archetype signal, every player trap, every team trap.
 - Tests: 51 passed by default; slow: 8 (all pass).
 
+### Step 3. Engine statistics
+- Every profile comparison now has effect (pp for shares, units for means), 95% interval (Wilson /
+  normal), confidence and n; z kept as an internal ranking signal only. Rationale in docs/engine.md.
+- New metric `entry_completion_by_lane` (conceded entry completion rate by lane). `profiles.soft_lane()`
+  uses it: largest lift >= 6 pp with the Wilson lower bound above the league rate.
+- Matchup = attacker share lift + defender completion lift (pp). Claim supporting_values gain
+  concede_completion, league_completion, completion_effect_pp, completion_attempts.
+- HAR diagnosis: true effect of its plant (from the generator's logged success probabilities) is
+  7.3-9.0 pp, the same as NOR's. Share missed it (opponents' lane habits swamp it); completion rate
+  finds it on the full league (+7.2 pp, n=505) but not on the 40-match season (n=186, interval about
+  +-6 pp). Stated recoverable size 5 pp: 7/7 recovered on the full league, 0/12 false positives.
+- `load(dir, baseline="season", season_dir=...)`: single-match analyses use season baselines; a
+  single match with a season baseline yields a scope "match" claim with baseline_source = season n.
+  `engine.report --season-baseline DIR`.
+- docs/engine.md explains why ball-won height and PPDA mislead for CAL; the ppda_alone rule refers to it.
+- Tests: 54 passed by default; slow 10.
+
 ## Decisions
 - Showcase seed search starts from a recorded offset (`SHOWCASE_SEARCH_START = {2026: 4547}`) because
   a search from 0 with the 10% margin takes ~2 minutes and every test fixture regenerates the data.
@@ -74,10 +91,22 @@ Branch: `overnight`. Started 2026-10-21 07:08 local.
 - HAR (shot_spam 0.5, "shoots early and often") is not listed as a shot-spam trap: its trailing low-xG share
   is at the league's. The shot-spam trap threshold is shot_spam >= 0.6.
 
+- Test change, not weakened: my Step 1 test asserted the AUR-NOR matchup confidence == "high". After
+  the defender side switched to completion rate (as Step 3 asks), the correct label is "medium" because
+  NOR's left-flank completion sample is 190 attempts (< 200). The assertion now pins "medium" exactly
+  and also asserts why (completion attempts < 200 <= attacker n).
+- Soft-lane threshold 6 pp (observed lift) with the stated recoverable true effect 5 pp: at 5 pp
+  observed, ESF (center, +5.5) and JPH (left_flank, +4.9) would have been false positives on the
+  full league.
+
 ## Surprises
 
 - ESF (possession, shot_spam 0.8) shows LOWER low-xG share than the league over all minutes; the spam only
   shows when trailing. Expected evidence was stated conditionally rather than strengthening the plant.
+
+- In the showcase match on its own, AUR's top lane mismatch against NOR is left_half_space (41.9% of
+  AUR's entries, interval 26-59%), not left_flank: a single match is a small sample. The season
+  preview claim is left_flank.
 
 ## Needs human review
 - The original code `NOR` is also a common abbreviation of a real club's name. CLAUDE.md forbids real

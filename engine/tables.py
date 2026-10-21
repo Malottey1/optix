@@ -33,6 +33,7 @@ class Dataset:
     passes: dict          # event_id -> pass row
     shots: dict           # event_id -> shot row
     label: str = ""       # dataset label (directory name), recorded in claims' baseline_source
+    baseline: "Dataset | None" = None   # dataset league baselines come from (None = this one)
 
     def team_by_code(self, code: str) -> str:
         for tid, t in self.teams.items():
@@ -57,8 +58,16 @@ def _convert(row: dict, floats=(), ints=()) -> dict:
     return row
 
 
-def load(directory: str | Path) -> Dataset:
+def load(directory: str | Path, baseline: str | None = None, season_dir: str | Path | None = None) -> Dataset:
+    """Load a data directory. baseline="season" also loads the season tables (season_dir, default
+    the sibling `generated` directory, e.g. data/generated for data/showcase) and uses them for
+    every league baseline: a single match must never be compared with itself."""
     d = Path(directory)
+    base = None
+    if baseline == "season":
+        base = load(season_dir or d.parent / "generated")
+    elif baseline not in (None, "self"):
+        raise ValueError("baseline must be None, 'self' or 'season'")
     teams = {r["team_id"]: {k: r[k] for k in TEAM_COLS} for r in _read(d / "teams.csv")}
     players = {r["player_id"]: {k: r[k] for k in PLAYER_COLS} for r in _read(d / "players.csv")}
     matches = {r["match_id"]: _convert(r, ints=_MATCH_INTS) for r in _read(d / "matches.csv")}
@@ -70,7 +79,7 @@ def load(directory: str | Path) -> Dataset:
         events.append(e)
     passes = {r["event_id"]: _convert(r, _PASS_FLOATS, _PASS_INTS) for r in _read(d / "passes.csv")}
     shots = {r["event_id"]: _convert(r, _SHOT_FLOATS, _SHOT_INTS) for r in _read(d / "shots.csv")}
-    return Dataset(teams, players, matches, events, passes, shots, label=d.name)
+    return Dataset(teams, players, matches, events, passes, shots, label=d.name, baseline=base)
 
 
 def score_diff(event: dict, team_id: str) -> int:
@@ -121,3 +130,8 @@ def team_events(ds: Dataset, team_id: str | None) -> list:
                for e in by_match.get(mid, ())]
         _INDEX[key] = (ds, evs)
     return _INDEX[key][1]
+
+
+def baseline_of(ds: Dataset) -> Dataset:
+    """The dataset league baselines come from: the season if one was attached, else ds itself."""
+    return ds.baseline if ds.baseline is not None else ds

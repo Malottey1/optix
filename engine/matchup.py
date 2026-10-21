@@ -6,13 +6,21 @@ defender's own right) are the same lane, "left_flank". Never mirror one side.
 
 Per lane:
     attack_share   share of the attacker's final-third entries that go into the lane
-    concede_share  share of the final-third entries the defender concedes that come into the lane
     league_share   share of all final-third entries in the baseline league that go into the lane
-    attack_pp / concede_pp   lift of each share over league_share, in percentage points
-    *_interval     95% Wilson interval of each share
-    mismatch_pp    attack_pp + concede_pp; a lane only counts when both lifts are positive
-    confidence     the lower of the two shares' confidence labels (metrics.share_confidence)
-    attack_z / concede_z   sampling z, kept only as an internal tie-break signal
+    attack_pp      attack_share - league_share, percentage points (the attacker's habit)
+    completion     rate at which the defender's opponents complete entry passes into the lane
+    league_completion   the league's rate for the lane
+    completion_pp  completion - league_completion, percentage points (the defender's softness;
+                   this is what recovers planted soft lanes, see docs/engine.md)
+    concede_share / concede_pp   share of entries the defender concedes into the lane, and its lift
+                   (kept for context: it mixes in every opponent's own lane habits)
+    *_interval     95% Wilson intervals
+    mismatch_pp    attack_pp + completion_pp; a lane only counts when both are positive
+    confidence     the lower of the attacker-share and the completion confidence labels
+    attack_z / completion_z   sampling z, kept only as an internal tie-break signal
+
+Baselines come from tables.baseline_of(ds): the season when a single match was loaded with
+baseline="season", never the match itself.
 
 Descriptive only: a mismatch says where the attacker's habit meets the defender's soft spot in
 past matches; it is not a prediction of what will happen.
@@ -21,7 +29,7 @@ from __future__ import annotations
 
 from .metrics import min_confidence, share_confidence, wilson_interval, z_proportion
 from .profiles import league_baseline, team_metric
-from .tables import Dataset
+from .tables import Dataset, baseline_of
 from .zones import LANES, WIDE_LANES
 
 MAX_EVIDENCE = 12
@@ -40,36 +48,41 @@ def lane_matchup(ds: Dataset, attacker_id: str, defender_id: str, bracket: str =
     the league shares come from (defaults to ds; single-match analyses pass the season).
     Returns {attacker, defender, bracket, n_attack, n_concede, n_baseline, lanes, top}.
     """
-    base_ds = baseline_ds or ds
+    base_ds = baseline_ds or baseline_of(ds)
     att = team_metric(ds, attacker_id, "entry_lanes", bracket)
     dfn = team_metric(ds, defender_id, "entry_lanes_conceded", bracket)
-    league = league_baseline(base_ds, bracket)["entry_lanes"]
-    n_base = league_baseline(base_ds, bracket)["entry_lanes_n"]
+    comp = team_metric(ds, defender_id, "entry_completion_conceded", bracket).detail["lanes"]
+    base = league_baseline(base_ds, bracket)
+    league, n_base = base["entry_lanes"], base["entry_lanes_n"]
     lanes = {}
     for lane in LANES:
         ha, hc = att.detail["lanes"][lane], dfn.detail["lanes"][lane]
         a = ha / att.value if att.value else None
         c = hc / dfn.value if dfn.value else None
-        lg = league[lane]
+        lg, lc = league[lane], base["entry_completion_conceded"][lane]
+        k, n = comp[lane]["completed"], comp[lane]["attempted"]
+        r = k / n if n else None
         ap = None if a is None else _pp(a - lg)
-        cp = None if c is None else _pp(c - lg)
+        rp = None if r is None or lc is None else _pp(r - lc)
         lanes[lane] = dict(
-            attack_share=a, concede_share=c, league_share=lg,
-            attack_interval=wilson_interval(ha, att.value), concede_interval=wilson_interval(hc, dfn.value),
-            attack_pp=ap, concede_pp=cp,
-            mismatch_pp=None if ap is None or cp is None else ap + cp,
-            confidence=min_confidence(share_confidence(ha, att.value, lg), share_confidence(hc, dfn.value, lg)),
-            attack_z=z_proportion(a, lg, att.value), concede_z=z_proportion(c, lg, dfn.value),
-            n_attack_lane=ha, n_concede_lane=hc)
+            attack_share=a, league_share=lg, attack_pp=ap, attack_interval=wilson_interval(ha, att.value),
+            completion=r, league_completion=lc, completion_pp=rp, completion_interval=wilson_interval(k, n),
+            concede_share=c, concede_pp=None if c is None else _pp(c - lg),
+            concede_interval=wilson_interval(hc, dfn.value),
+            mismatch_pp=None if ap is None or rp is None else ap + rp,
+            confidence=min_confidence(share_confidence(ha, att.value, lg), share_confidence(k, n, lc)),
+            attack_z=z_proportion(a, lg, att.value), completion_z=z_proportion(r, lc, n),
+            concede_z=z_proportion(c, lg, dfn.value),
+            n_attack_lane=ha, n_concede_lane=hc, n_completion_attempts=n)
     candidates = [l for l, v in lanes.items() if v["mismatch_pp"] is not None
-                  and v["attack_pp"] > 0 and v["concede_pp"] > 0]
+                  and v["attack_pp"] > 0 and v["completion_pp"] > 0]
     top = None
     if candidates:
-        lane = max(candidates, key=lambda l: (lanes[l]["mismatch_pp"], lanes[l]["attack_z"] + lanes[l]["concede_z"]))
+        lane = max(candidates, key=lambda l: (lanes[l]["mismatch_pp"], lanes[l]["attack_z"] + lanes[l]["completion_z"]))
         top = dict(lane=lane, **lanes[lane], evidence_event_ids=_evidence(att, dfn, lane))
     return dict(attacker=attacker_id, defender=defender_id, bracket=bracket,
                 n_attack=att.value, n_concede=dfn.value, n_baseline=n_base,
-                baseline_label=base_ds.label, lanes=lanes, top=top)
+                baseline_label=base_ds.label, baseline_is_self=base_ds is ds, lanes=lanes, top=top)
 
 
 def _evidence(att, dfn, lane) -> list:
@@ -97,8 +110,9 @@ def matchup_claim(ds: Dataset, attacker_id: str, defender_id: str, match_id: str
                   bracket: str = "all", baseline_ds: Dataset | None = None) -> dict | None:
     """The top lane mismatch as a claim object (contracts/claim.schema.json), status "pending".
 
-    Scope "season": an aggregate over `ds` (a pre-match preview), so there is no window.
-    `match_id` optionally names the match being previewed. value.amount is the attacker's lane
+    Scope "season": an aggregate over `ds` (a pre-match preview), so there is no window;
+    `match_id` optionally names the match being previewed. If `ds` is a single match loaded with a
+    season baseline, the scope is "match": the window is the whole match and match_id is that match. value.amount is the attacker's lane
     share (percent) against the baseline league share; supporting_values carries every other
     number the template uses so the Verifier can recompute it. Returns None when there is no
     mismatch to claim.
@@ -110,18 +124,25 @@ def matchup_claim(ds: Dataset, attacker_id: str, defender_id: str, match_id: str
     a, d = ds.code(attacker_id), ds.code(defender_id)
     amount, base, conc = _r1(100 * top["attack_share"]), _r1(100 * top["league_share"]), _r1(100 * top["concede_share"])
     lo, hi = top["attack_interval"]
+    single = ds.baseline is not None and len(ds.matches) == 1
+    if single:
+        match_id = next(iter(ds.matches))
     supporting = {
         "baseline_share": base,
         "concede_share": conc,
+        "concede_completion": _r1(100 * top["completion"]),
+        "league_completion": _r1(100 * top["league_completion"]),
         "attack_effect_pp": _r1(top["attack_pp"]),
-        "concede_effect_pp": _r1(top["concede_pp"]),
+        "completion_effect_pp": _r1(top["completion_pp"]),
         "mismatch_pp": _r1(top["mismatch_pp"]),
         "concede_sample_size": m["n_concede"],
+        "completion_attempts": top["n_completion_attempts"],
     }
     return {
         "claim_id": f"clm_matchup_{a}_{d}_{top['lane']}",
-        "scope": "season",
+        "scope": "match" if single else "season",
         "match_id": match_id,
+        **({"window": {"from_sec": 0, "to_sec": max(e["clock_sec"] for e in ds.events)}} if single else {}),
         "claim_type": "matchup",
         "metric": "zone_mismatch",
         "subject": {"kind": "team", "id": attacker_id, "team_code": a},
@@ -144,8 +165,9 @@ def matchup_claim(ds: Dataset, attacker_id: str, defender_id: str, match_id: str
         "template_key": "matchup.weak_flank" if top["lane"] in WIDE_LANES else "matchup.weak_lane",
         "params": {
             "attacker": a, "defender": d, "lane": top["lane"],
-            "attack_share": amount, "league_share": base, "concede_share": conc,
-            "mismatch_pp": supporting["mismatch_pp"],
+            "attack_share": amount, "league_share": base,
+            "concede_completion": supporting["concede_completion"],
+            "league_completion": supporting["league_completion"],
         },
         "verification": {"status": "pending", "attempt": 1},
     }
