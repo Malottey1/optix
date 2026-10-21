@@ -1,0 +1,143 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://honest-pitch.local/contracts/insight.schema.json",
+  "title": "Timed Insight (overlay stream item)",
+  "description": "One machine-readable item in the live insight stream. Only verified claims become insights. The stream says WHAT to show and WHEN; the frontend owns which widget draws each insight_type. Suitable for rendering as a synchronized overlay on a match feed.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "insight_id",
+    "match_id",
+    "clock",
+    "insight_type",
+    "teams",
+    "claim_id",
+    "evidence_event_ids",
+    "payload",
+    "text"
+  ],
+  "properties": {
+    "insight_id": { "type": "string" },
+    "match_id": { "type": "string" },
+    "clock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["start_sec", "duration_sec"],
+      "properties": {
+        "start_sec": { "type": "integer", "minimum": 0, "description": "Match clock when the overlay appears." },
+        "duration_sec": { "type": "integer", "minimum": 1, "description": "How long it stays on screen." },
+        "emitted_latency_ms": { "type": ["integer", "null"], "description": "Time from triggering event to emission, for latency monitoring." }
+      }
+    },
+    "insight_type": {
+      "type": "string",
+      "enum": [
+        "matchup_mismatch", "perimeter_lock", "threat_pass", "momentum_shift",
+        "turning_point", "rhythm_wave", "volume_vs_value", "set_piece_inflation",
+        "player_focus", "milestone", "red_card_segment", "pounce_sequence",
+        "underperformance_stack", "recap_line"
+      ],
+      "description": "Semantic type. The frontend maps it to a widget; the backend never names widgets."
+    },
+    "teams": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["primary"],
+      "properties": {
+        "primary": { "type": "string", "description": "Fictional team code, e.g. 'AUR'." },
+        "secondary": { "type": ["string", "null"] }
+      }
+    },
+    "player_ids": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Players the insight involves. Used by player-focus mode to filter the stream."
+    },
+    "claim_id": { "type": "string", "description": "The verified claim this insight was built from." },
+    "evidence_event_ids": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1,
+      "description": "Powers the click-to-see-evidence drawer."
+    },
+    "verification_status": {
+      "type": "string",
+      "enum": ["published", "published_with_context"],
+      "default": "published"
+    },
+    "context_chip": {
+      "type": ["object", "null"],
+      "description": "Present when status is published_with_context: the shallow standard stat shown muted beside the honest insight.",
+      "additionalProperties": false,
+      "properties": {
+        "standard_metric": { "type": "string" },
+        "standard_value": { "type": "number" },
+        "note_key": { "type": "string" }
+      }
+    },
+    "payload": {
+      "type": "object",
+      "description": "Data for the widget, shape depends on insight_type. See docs/contracts.md for per-type shapes. Coordinates use a 0-100 by 0-100 pitch, always from the attacking team's point of view (attacking toward x=100).",
+      "properties": {
+        "focus": {
+          "type": ["object", "null"],
+          "description": "Viewport hint for the Focus Pitch.",
+          "additionalProperties": false,
+          "properties": {
+            "x_min": { "type": "number" }, "x_max": { "type": "number" },
+            "y_min": { "type": "number" }, "y_max": { "type": "number" }
+          }
+        },
+        "points": {
+          "type": "array",
+          "description": "Event-based path or markers (only provable events).",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["event_id", "x", "y"],
+            "properties": {
+              "event_id": { "type": "string" },
+              "x": { "type": "number" }, "y": { "type": "number" },
+              "x_end": { "type": ["number", "null"] }, "y_end": { "type": ["number", "null"] },
+              "kind": { "type": "string" },
+              "value": { "type": ["number", "null"], "description": "e.g. xT added or xG for this event." }
+            }
+          }
+        },
+        "series": {
+          "type": "array",
+          "items": { "type": "number" },
+          "description": "e.g. rhythm waveform, one point per minute for the last 15 minutes."
+        },
+        "metrics": {
+          "type": "object",
+          "additionalProperties": { "type": ["number", "string", "null"] }
+        },
+        "confidence": { "type": ["string", "null"], "enum": ["low", "medium", "high", null] }
+      }
+    },
+    "text": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["template_key", "params", "rendered"],
+      "description": "Text is rendered from the verified claim's template_key + params. Translation happens after verification; the number guard confirms every numeric param still appears in each translation.",
+      "properties": {
+        "template_key": { "type": "string" },
+        "params": { "type": "object" },
+        "rendered": {
+          "type": "object",
+          "description": "language code -> tone -> text. Tones: 'analyst' (tactical language) and 'casual' (plain language).",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "analyst": { "type": "string" },
+              "casual": { "type": "string" }
+            }
+          }
+        },
+        "number_guard_passed": { "type": ["boolean", "null"] }
+      }
+    }
+  }
+}

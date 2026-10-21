@@ -1,0 +1,22 @@
+{
+  "claim_id": "clm_0001",
+  "match_id": "m_demo_01",
+  "claim_type": "matchup",
+  "metric": "zone_mismatch",
+  "subject": { "kind": "team", "id": "team_aur", "team_code": "AUR" },
+  "value": {
+    "amount": 38.0,
+    "unit": "percent",
+    "baseline": 29.0,
+    "baseline_kind": "league_avg",
+    "z_score": 1.9,
+    "sample_size": 34
+  },
+  "zone": { "lane": "left_flank", "third": "attacking" },
+  "window": { "from_sec": 0, "to_sec": 0 },
+  "game_state": { "score_diff_for_subject": 0, "bracket": "level" },
+  "evidence_event_ids": ["e_000412", "e_000977", "e_001530"],
+  "template_key": "matchup.weak_flank",
+  "params": { "attacker": "AUR", "defender": "NOR", "attack_share": 38, "concede_share": 41 },
+  "verification": { "status": "pending", "attempt": 1 }
+}
