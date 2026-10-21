@@ -1,6 +1,6 @@
-# Honest Pitch: project rules for Claude Code
+# Optix: project rules for Claude Code
 
-Honest Pitch is a multi-agent engine that turns **synthetic** football event data into live talking points, overlays and recaps that are both **true and not misleading**, with the evidence behind every claim. It is built for the Microsoft x Premier League "Inside the Game" hackathon (challenge: Synthetic Match Insights Engine for Premier League Studio).
+Optix is a multi-agent engine that turns **synthetic** football event data into live talking points, overlays and recaps that are both **true and not misleading**, with the evidence behind every claim. It is built for the Microsoft x Premier League "Inside the Game" hackathon (challenge: Synthetic Match Insights Engine for Premier League Studio).
 
 ## Non-negotiable rules
 

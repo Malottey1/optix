@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://honest-pitch.local/contracts/insight.schema.json",
+  "$id": "https://optix.local/contracts/insight.schema.json",
   "title": "Timed Insight (overlay stream item)",
   "description": "One machine-readable item in the live insight stream. Only verified claims become insights. The stream says WHAT to show and WHEN; the frontend owns which widget draws each insight_type. Suitable for rendering as a synchronized overlay on a match feed.",
   "type": "object",

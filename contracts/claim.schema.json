@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://honest-pitch.local/contracts/claim.schema.json",
+  "$id": "https://optix.local/contracts/claim.schema.json",
   "title": "Intermediate Claim Object",
   "description": "A language-independent statement of fact about a match. The Analyst produces it from computed metrics, the Verifier checks it against the event log, and only a verified claim may be turned into text and translated. Contains no prose.",
   "type": "object",

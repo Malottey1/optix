@@ -1,8 +1,8 @@
-# Honest Pitch
+# Optix
 
 **We explain why a match is unfolding, and we catch stats that are true but misleading.**
 
-Honest Pitch is a multi-agent engine that turns synthetic football event data into live talking points, timed overlays and recaps. Every statement is backed by evidence events and checked twice before it reaches the screen:
+Optix is a multi-agent engine that turns synthetic football event data into live talking points, timed overlays and recaps. Every statement is backed by evidence events and checked twice before it reaches the screen:
 
 - **Fact check:** does the event log support the claim?
 - **Context check:** is it true but misleading given game state, sample size or metric limits? (For example, high field tilt from a team that is trailing and passing around a deep block.)
