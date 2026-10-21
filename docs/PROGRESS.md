@@ -1,4 +1,42 @@
-# Progress log (overnight run)
+# Progress log
+
+## Realism v2 (branch `realism-v2`, from `overnight`; tag `pre-realism-v2`)
+
+Started 2026-10-21 18:24.
+
+### Stage 0. Housekeeping
+- (a) docs/realism-audit.md rewritten: only our own measurements, public-source ranges (with URLs)
+  and ranges marked "approximate". No third-party event data, numbers derived from it, or scripts
+  that fetch it remain in the repo or the working tree.
+- (b) data_gen/calibration.py: 47 range targets for the recent era (2022/23-2024/25), each with a
+  source note and a per-observation SD for a sampling allowance (2 sd / sqrt(n)). The 38/30/32
+  outcome point target is replaced by ranges (home 40-49%, draw 20-28%, away 28-36%).
+  `NOT_YET_MODELLED` lists the 27 targets the v1 generator misses on the full league (plus goal
+  dispersion, missed on the pooled small seasons); later stages remove entries.
+- Tests: 122 passed by default.
+
+### Decisions (realism v2)
+- Era for "realistic": recent seasons 2022/23-2024/25 as instructed; where those seasons differ a lot
+  (goals 2.85-3.28, yellows 3.4-5.1) the range spans them.
+- Sampling allowance instead of separate small/full tolerances: one range per target, widened by
+  2 sd / sqrt(n) for the sample size actually measured.
+- Season-shape targets (correlations across teams, points of champion and bottom team, possession SD,
+  pass-volume spread, players used) apply only to the 20-team league (`min_teams`).
+
+### Test changes (realism v2)
+- test_data_gen.py `test_season_meets_calibration_targets`, test_full_league.py
+  `test_full_league_meets_calibration`: targets are now ranges with an allowance; the tests allow
+  failures only from `calibration.NOT_YET_MODELLED` (a ratchet; tests/test_realism.py will require
+  it empty). Reason: the targets changed (Stage 0b), and v1 cannot meet the new ones until later
+  stages.
+- `test_ground_truth_records_expected_targets`: expected targets have no point value any more
+  (ranges only, never a point), so the "target inside tolerance" check became "lo < hi, source
+  recorded".
+- `test_calibration_is_not_a_lucky_seed` (slow): pools five other seeds' seasons (200 matches) and
+  checks the same targets, instead of "mean within a band around the point target" (no point targets
+  any more). It now builds the seasons without the showcase search, which made it take 6 minutes.
+
+## Overnight run (steps 0-10)
 
 Branch: `overnight`. Started 2026-10-21 07:08 local, finished about 08:30. Steps 0-10 all done.
 Nothing was cut from the priority list.

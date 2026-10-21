@@ -71,16 +71,13 @@ Also `expected` (season calibration targets with tolerances, from `data_gen/cali
 
 ## Calibration
 
-The simulator is tuned to season-level targets written down before tuning (`data_gen/calibration.py`,
-also in `ground_truth.json` under `expected`): home/draw/away 38/30/32% (+-15 points), 2.7 goals per
-match (2.2-3.2), 70% of matches decided by one goal or fewer (+-15), 22-26 shots and 8-13 corners per
-match. Tolerances are wide because a season is 40 matches. Tuning changes behaviour parameters only
-(shot rates, home edge, game-state effects, team `attacking_output`), never scores or events. Streak rules
-and scoreline caps are deliberately not targets: they come from tiny samples.
-
-Game-state behaviour: a leader protects its lead on a share of possessions equal to its `sit_deep`;
-a trailing side's shot appetite and box-entry success ramp up as time runs out; the home side gets a
-small passing edge and a few more chances.
+Targets live in `data_gen/calibration.py` (also in `ground_truth.json` under `expected`, with the
+measured values under `measured`). Era: recent Premier League seasons (2022/23-2024/25). Every target
+is a range with a source note: a public page (URL in `SOURCES`) or "approximate" (a wide
+football-knowledge range). A measured value passes inside [lo - a, hi + a], a = 2 sd / sqrt(n), so a
+40-match season gets a fair allowance; season-shape targets (table spread, cross-team correlations,
+players used) need the 20-team league. `NOT_YET_MODELLED` lists targets the generator does not meet
+yet; realism v2 empties it. Tuning changes behaviour parameters only, never scores or events.
 
 ## Showcase overrides
 

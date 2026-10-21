@@ -104,7 +104,8 @@ def build_showcase(seed: int, players, max_tries: int = 6000, start: int | None 
     raise RuntimeError("no seed produced all five traps; loosen thresholds or tune the simulator")
 
 
-def write_dataset(out: Path, sims, players, weeks, teams=None, team_cols=TEAM_COLS):
+def season_tables(sims, weeks) -> dict:
+    """The match, event, pass and shot rows of a list of simulated matches."""
     rows_e, rows_p, rows_s, rows_m = [], [], [], []
     start = date(2026, 8, 15)
     for sim, wk in zip(sims, weeks):
@@ -112,6 +113,13 @@ def write_dataset(out: Path, sims, players, weeks, teams=None, team_cols=TEAM_CO
         rows_p += list(sim.passes.values())
         rows_s += sim.shots
         rows_m.append(match_row(sim, wk, start + timedelta(days=7 * (wk - 1))))
+    return dict(matches=rows_m, events=rows_e, passes=rows_p, shots=rows_s)
+
+
+def write_dataset(out: Path, sims, players, weeks, teams=None, team_cols=TEAM_COLS):
+    """Write the tables; returns them (as written) for calibration."""
+    tables = season_tables(sims, weeks)
+    rows_e, rows_p, rows_s, rows_m = (tables[k] for k in ("events", "passes", "shots", "matches"))
     write_csv(out / "teams.csv", team_cols, [
         {**t.__dict__, "lane_weights": json.dumps(t.lane_weights)} for t in (teams or TEAMS)])
     write_csv(out / "players.csv", PLAYER_COLS, [
@@ -123,10 +131,11 @@ def write_dataset(out: Path, sims, players, weeks, teams=None, team_cols=TEAM_CO
     write_csv(out / "events.csv", EVENT_COLS, rows_e)
     write_csv(out / "passes.csv", PASS_COLS, rows_p)
     write_csv(out / "shots.csv", SHOT_COLS, rows_s)
+    return tables
 
 
-def main(seed: int, out: Path, showcase_out: Path):
-    players = make_players(seed)
+def small_season(seed: int, players):
+    """The 5-team season's simulated matches and their matchweeks."""
     sims, weeks = [], []
     # 5 teams: one home-and-away round is 20 matches; two rounds = 40 (16 per team).
     pairs = []
@@ -137,21 +146,24 @@ def main(seed: int, out: Path, showcase_out: Path):
     for i, (h, a) in enumerate(pairs):
         sims.append(simulate(seed * 1000 + i, f"m_{i + 1:03d}", h, a, players))
         weeks.append(i // 2 + 1)
-    write_dataset(out, sims, players, weeks)
+    return sims, weeks
+
+
+def main(seed: int, out: Path, showcase_out: Path):
+    players = make_players(seed)
+    sims, weeks = small_season(seed, players)
+    tables = write_dataset(out, sims, players, weeks)
 
     sc_players = make_players(seed, SHOWCASE_PLAYER_TRAITS)
     sc_sim, checks, sc_seed, tries = build_showcase(seed, sc_players)
     write_dataset(showcase_out, [sc_sim], sc_players, [1])
 
-    stats = calibration.season_stats(
-        [dict(home_score=s.score[s.home_id], away_score=s.score[s.away_id]) for s in sims],
-        [x for s in sims for x in s.shots], [p for s in sims for p in s.passes.values()])
+    stats = calibration.season_stats(tables)
 
     gt = dict(
         season=SEASON, generator_seed=seed, n_matches=len(sims),
-        expected={k: dict(target=t["target"], tolerance=[t["lo"], t["hi"]], unit=t["unit"],
-                          definition=t["definition"]) for k, t in calibration.TARGETS.items()},
-        measured={k: round(v, 3) for k, v in stats.items()},
+        expected=calibration.expected(),
+        measured=calibration.measured(stats),
         pitch_frame="x 0-100 toward the opponent goal; every event is in the acting team's attacking frame",
         teams={t.code: dict(team_id=t.team_id, style_seed=t.style_seed, lane_weights=t.lane_weights,
                             weak_lane_attacker_pov=t.weak_lane) for t in TEAMS},
@@ -180,16 +192,13 @@ def main_full(seed: int, out: Path) -> dict:
     schedule = round_robin([t.team_id for t in teams], random.Random(seed + 7))
     sims = [simulate(seed * 10_000 + i, f"m_{i + 1:03d}", h, a, players, teams_by_id=by_id)
             for i, (_, h, a) in enumerate(schedule)]
-    write_dataset(out, sims, players, [w for w, _, _ in schedule], teams, FULL_TEAM_COLS)
-    stats = calibration.season_stats(
-        [dict(home_score=s.score[s.home_id], away_score=s.score[s.away_id]) for s in sims],
-        [x for s in sims for x in s.shots], [p for s in sims for p in s.passes.values()])
+    tables = write_dataset(out, sims, players, [w for w, _, _ in schedule], teams, FULL_TEAM_COLS)
+    stats = calibration.season_stats(tables)
     gt = dict(
         season=SEASON, league="full", generator_seed=seed, n_matches=len(sims), n_teams=len(teams),
         n_events=sum(len(s.events) for s in sims),
-        expected={k: dict(target=t["target"], tolerance=[t["lo"], t["hi"]], unit=t["unit"],
-                          definition=t["definition"]) for k, t in calibration.TARGETS.items()},
-        measured={k: round(v, 3) for k, v in stats.items()},
+        expected=calibration.expected(),
+        measured=calibration.measured(stats),
         pitch_frame="x 0-100 toward the opponent goal; every event is in the acting team's attacking frame",
         teams={t.code: dict(team_id=t.team_id, archetype=t.archetype, style_seed=t.style_seed,
                             lane_weights=t.lane_weights, weak_lane_attacker_pov=t.weak_lane,
