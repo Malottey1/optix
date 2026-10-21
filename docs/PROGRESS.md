@@ -31,6 +31,19 @@ Branch: `overnight`. Started 2026-10-21 07:08 local.
   breaks ties). Report shows shares with 95% CIs, pp lifts and confidence.
 - Tests: 51 passed, 2 slow deselected.
 
+### Step 2. 20-team league
+- `--league small|full`. small is byte-identical to before (checked by sha1 on all 7 season files and
+  all 7 showcase files). full: 20 teams, 380 matches, 682,215 events, 102 MB (events.csv 77 MB,
+  passes.csv 30 MB), generated in 16-18 s.
+- New `TeamSpec` fields with defaults (`weak_strength=1.0`, `archetype=""`) so the 5 teams are unchanged.
+- Calibration on the full league, first run without tuning: home/draw/away 41.3/26.1/32.6%, 2.81 goals,
+  65.5% one-goal-or-less, 24.3 shots, 10.4 corners. All inside tolerance.
+- Engine: `tables.team_events()` indexes events by the matches a team played; profiles use it. A full-
+  league profile bracket takes ~11 s (it was ~130 s before the index).
+- Slow test `tests/test_full_league.py` (6 tests, ~60 s): totals and schedule, calibration, originals
+  unchanged, fictional names, every archetype signal, every player trap, every team trap.
+- Tests: 51 passed by default; slow: 8 (all pass).
+
 ## Decisions
 - Showcase seed search starts from a recorded offset (`SHOWCASE_SEARCH_START = {2026: 4547}`) because
   a search from 0 with the 10% margin takes ~2 minutes and every test fixture regenerates the data.
@@ -51,6 +64,22 @@ Branch: `overnight`. Started 2026-10-21 07:08 local.
   interval excludes the baseline; medium = n >= 50 and the interval excludes the baseline; else low.
   A matchup's confidence is the lower of its two sides.
 
+- Full-league team identities are fixed by `FULL_LEAGUE_TEAM_SEED` (not by --seed), so the same 20 teams
+  appear whatever match seed is used.
+- `teams.csv` for the full league has 2 extra columns (`weak_strength`, `archetype`); the small league keeps
+  its original columns so `small` stays byte-identical.
+- Expected evidence written to match what the simulator really does: shot spam is conditioned on trailing
+  (it only fires against a deep block); "sits deep when leading" is checked on field tilt only (JPH's press
+  drop equals the league's); volume passers are "team's top forward passer, league top 10%".
+- HAR (shot_spam 0.5, "shoots early and often") is not listed as a shot-spam trap: its trailing low-xG share
+  is at the league's. The shot-spam trap threshold is shot_spam >= 0.6.
+
 ## Surprises
 
+- ESF (possession, shot_spam 0.8) shows LOWER low-xG share than the league over all minutes; the spam only
+  shows when trailing. Expected evidence was stated conditionally rather than strengthening the plant.
+
 ## Needs human review
+- The original code `NOR` is also a common abbreviation of a real club's name. CLAUDE.md forbids real
+  trademarks; a 3-letter code is probably fine, but I did not rename an existing team (that would change
+  the small league and the showcase). Worth a human decision.

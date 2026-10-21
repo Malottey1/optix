@@ -46,6 +46,8 @@ class TeamSpec:
     attacking_output: float    # chance-creation volume around 1.0, independent of sit_deep
     counter: float             # 0-1, chance a won ball becomes a fast counter
     shot_spam: float           # 0-1, tendency to shoot from distance vs a deep block
+    weak_strength: float = 1.0 # scales the weak-lane bonus (1.0 = the original 5-team plant)
+    archetype: str = ""        # full league only: the archetype the team was generated from
 
 
 TEAMS = [

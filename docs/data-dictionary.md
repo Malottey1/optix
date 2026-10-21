@@ -111,3 +111,24 @@ Every showcase trap threshold must be cleared by at least 10% (`SHOWCASE_MIN_MAR
 recorded in `ground_truth.json` under `showcase.trap_margins`. The seed search starts from a recorded
 offset (`SHOWCASE_SEARCH_START`) to save about two minutes per generation; a slow test re-runs the search
 from zero and checks it finds the same seed.
+
+## Full league (`--league full`)
+
+`python -m data_gen.generate --league full` writes a 20-team league to `data/full/` (git-ignored):
+double round robin by the circle method (380 matches, 38 per team, one match per team per matchweek),
+about 680,000 events, about 100 MB, about 17 s. `--league small` (the default) is byte-identical to the
+5-team output and still writes the showcase; `full` does not touch the showcase.
+
+- The five original teams are unchanged. The 15 extra teams (`data_gen/league.py`) are drawn from six
+  archetypes (high press, low-block counter, possession build-up, direct long ball, wing play, balanced)
+  with seeded variation (`FULL_LEAGUE_TEAM_SEED`) in lane weights, att/dfn, press, tempo, directness,
+  sit_deep, attacking_output, counter and shot_spam. Names and codes are invented.
+- `teams.csv` gains two columns in the full league: `weak_strength` (scales the weak-lane bonus;
+  1.0 = NOR's original plant) and `archetype`.
+- Extra plants: volume passers GRM_07, QNT_11, KWC_07; corner specialists ESF_11, MDL_07, ASV_11; shot-spam
+  teams ESF, LMF; sit-deep-when-leading teams DCH, JPH; soft lanes OKP (right_flank, 2.5), HBC (left_flank,
+  2.0), MDL (right_half_space, 1.5), FWM (center, 1.0), RVD (left_half_space, 0.6), IRK (right_flank, 0.3).
+- `ground_truth.json` (full) lists each team's archetype and parameters, `team_traps`, `planted_players`,
+  and `expected_evidence`: what each plant should leave in the data. For example, shot spam shows only
+  while trailing (opponent sitting deep), and a volume passer is his team's top forward passer and in the
+  league's top 10% rather than the league leader.

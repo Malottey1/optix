@@ -12,7 +12,7 @@ from __future__ import annotations
 from functools import lru_cache
 
 from . import metrics as M
-from .tables import BRACKETS3, Dataset
+from .tables import BRACKETS3, Dataset, team_events
 from .zones import LANES
 
 BRACKETS = ("all",) + BRACKETS3
@@ -48,9 +48,10 @@ def _lane_shares(r: M.MetricResult) -> dict:
 @lru_cache(maxsize=None)
 def team_metric(ds: Dataset, team_id: str, name: str, bracket: str) -> M.MetricResult:
     st = _state(bracket)
+    ev = team_events(ds, team_id)      # only the team's matches: same result, ~N/2-teams the work
     if name in SCALARS:
-        return SCALARS[name][0](ds.events, team_id, state=st)
-    return LANE_SETS[name](ds.events, team_id, st)
+        return SCALARS[name][0](ev, team_id, state=st)
+    return LANE_SETS[name](ev, team_id, st)
 
 
 @lru_cache(maxsize=None)

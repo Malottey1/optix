@@ -18,6 +18,7 @@ from pathlib import Path
 from . import traps
 from . import calibration
 from .config import SHOWCASE_PLAYER_TRAITS, TEAMS, TEAM_BY_ID
+from .league import EXPECTED_EVIDENCE, EXTRA_PLAYER_TRAITS, full_teams, round_robin, team_traps
 from .simulator import MatchSim, build_players
 
 SEASON = "2026-27"
@@ -47,15 +48,17 @@ def write_csv(path: Path, cols, rows):
         w.writerows(rows)
 
 
-def make_players(seed: int, overrides: dict | None = None):
-    """Same seed gives the same names and roles; `overrides` only changes trait values."""
+def make_players(seed: int, overrides: dict | None = None, teams=None):
+    """Same seed gives the same names and roles; `overrides` only changes trait values.
+    Teams are built in order, so the first five teams get the same players in every league."""
     rng = random.Random(seed)
-    return {t.team_id: build_players(rng, t, overrides) for t in TEAMS}
+    return {t.team_id: build_players(rng, t, overrides) for t in (teams or TEAMS)}
 
 
-def simulate(seed: int, match_id: str, home_id: str, away_id: str, players, force_goal=None):
-    sim = MatchSim(random.Random(seed), match_id, TEAM_BY_ID[home_id], TEAM_BY_ID[away_id],
-                   players, force_goal)
+def simulate(seed: int, match_id: str, home_id: str, away_id: str, players, force_goal=None,
+             teams_by_id=None):
+    tb = teams_by_id or TEAM_BY_ID
+    sim = MatchSim(random.Random(seed), match_id, tb[home_id], tb[away_id], players, force_goal)
     sim.run()
     return sim
 
@@ -101,7 +104,7 @@ def build_showcase(seed: int, players, max_tries: int = 6000, start: int | None 
     raise RuntimeError("no seed produced all five traps; loosen thresholds or tune the simulator")
 
 
-def write_dataset(out: Path, sims, players, weeks):
+def write_dataset(out: Path, sims, players, weeks, teams=None, team_cols=TEAM_COLS):
     rows_e, rows_p, rows_s, rows_m = [], [], [], []
     start = date(2026, 8, 15)
     for sim, wk in zip(sims, weeks):
@@ -109,8 +112,8 @@ def write_dataset(out: Path, sims, players, weeks):
         rows_p += list(sim.passes.values())
         rows_s += sim.shots
         rows_m.append(match_row(sim, wk, start + timedelta(days=7 * (wk - 1))))
-    write_csv(out / "teams.csv", TEAM_COLS, [
-        {**t.__dict__, "lane_weights": json.dumps(t.lane_weights)} for t in TEAMS])
+    write_csv(out / "teams.csv", team_cols, [
+        {**t.__dict__, "lane_weights": json.dumps(t.lane_weights)} for t in (teams or TEAMS)])
     write_csv(out / "players.csv", PLAYER_COLS, [
         dict(player_id=p.player_id, team_id=p.team_id, name=p.name, shirt=p.shirt, position=p.position,
              role=p.role, home_x=p.hx, home_y=p.hy, finishing=p.finishing, usage=p.usage,
@@ -165,12 +168,62 @@ def main(seed: int, out: Path, showcase_out: Path):
     return gt
 
 
+FULL_TEAM_COLS = TEAM_COLS + ["weak_strength", "archetype"]
+
+
+def main_full(seed: int, out: Path) -> dict:
+    """The 20-team league: double round robin (380 matches, 38 per team). The showcase match is
+    not touched; it stays the small league's scripted match."""
+    teams = full_teams()
+    by_id = {t.team_id: t for t in teams}
+    players = make_players(seed, EXTRA_PLAYER_TRAITS, teams)
+    schedule = round_robin([t.team_id for t in teams], random.Random(seed + 7))
+    sims = [simulate(seed * 10_000 + i, f"m_{i + 1:03d}", h, a, players, teams_by_id=by_id)
+            for i, (_, h, a) in enumerate(schedule)]
+    write_dataset(out, sims, players, [w for w, _, _ in schedule], teams, FULL_TEAM_COLS)
+    stats = calibration.season_stats(
+        [dict(home_score=s.score[s.home_id], away_score=s.score[s.away_id]) for s in sims],
+        [x for s in sims for x in s.shots], [p for s in sims for p in s.passes.values()])
+    gt = dict(
+        season=SEASON, league="full", generator_seed=seed, n_matches=len(sims), n_teams=len(teams),
+        n_events=sum(len(s.events) for s in sims),
+        expected={k: dict(target=t["target"], tolerance=[t["lo"], t["hi"]], unit=t["unit"],
+                          definition=t["definition"]) for k, t in calibration.TARGETS.items()},
+        measured={k: round(v, 3) for k, v in stats.items()},
+        pitch_frame="x 0-100 toward the opponent goal; every event is in the acting team's attacking frame",
+        teams={t.code: dict(team_id=t.team_id, archetype=t.archetype, style_seed=t.style_seed,
+                            lane_weights=t.lane_weights, weak_lane_attacker_pov=t.weak_lane,
+                            weak_strength=t.weak_strength if t.weak_lane else None,
+                            press=t.press, sit_deep=t.sit_deep, shot_spam=t.shot_spam,
+                            directness=t.directness, tempo=t.tempo, counter=t.counter) for t in teams},
+        team_traps=team_traps(teams),
+        planted_players={p.player_id: dict(team=p.team_id, role=p.role, trap=p.trap_flag,
+                                           expected_evidence=EXPECTED_EVIDENCE[p.trap_flag])
+                         for ps in players.values() for p in ps if p.trap_flag},
+        expected_evidence=EXPECTED_EVIDENCE,
+    )
+    (out / "ground_truth.json").write_text(json.dumps(gt, indent=2))
+    return gt
+
+
 if __name__ == "__main__":
+    import time
     ap = argparse.ArgumentParser()
     ap.add_argument("--seed", type=int, default=2026)
-    ap.add_argument("--out", type=Path, default=Path("data/generated"))
+    ap.add_argument("--league", choices=["small", "full"], default="small",
+                    help="small: the 5-team, 40-match season (+ showcase); full: 20 teams, 380 matches")
+    ap.add_argument("--out", type=Path, default=None,
+                    help="default data/generated (small) or data/full (full)")
     ap.add_argument("--showcase-out", type=Path, default=Path("data/showcase"))
     a = ap.parse_args()
-    g = main(a.seed, a.out, a.showcase_out)
-    print(f"wrote {g['n_matches']} matches to {a.out}; showcase seed {g['showcase']['sim_seed']} "
-          f"after {g['showcase']['seeds_tried']} tries, score {g['showcase']['score']}")
+    t0 = time.perf_counter()
+    if a.league == "full":
+        out = a.out or Path("data/full")
+        g = main_full(a.seed, out)
+        print(f"wrote {g['n_matches']} matches, {g['n_teams']} teams, {g['n_events']} events to {out} "
+              f"in {time.perf_counter() - t0:.1f}s")
+    else:
+        out = a.out or Path("data/generated")
+        g = main(a.seed, out, a.showcase_out)
+        print(f"wrote {g['n_matches']} matches to {out}; showcase seed {g['showcase']['sim_seed']} "
+              f"after {g['showcase']['seeds_tried']} tries, score {g['showcase']['score']}")

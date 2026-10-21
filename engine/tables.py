@@ -93,3 +93,31 @@ def bracket5(diff: int) -> str:
 
 def bracket3(diff: int) -> str:
     return "leading" if diff > 0 else ("level" if diff == 0 else "trailing")
+
+
+_INDEX: dict = {}
+
+
+def match_events(ds: Dataset) -> dict:
+    """match_id -> that match's events in order (built once per dataset)."""
+    key = (id(ds), "match")
+    if key not in _INDEX:
+        idx: dict = {}
+        for e in ds.events:
+            idx.setdefault(e["match_id"], []).append(e)
+        _INDEX[key] = (ds, idx)          # keep ds alive so its id is not reused
+    return _INDEX[key][1]
+
+
+def team_events(ds: Dataset, team_id: str | None) -> list:
+    """Events (both teams') of every match `team_id` played, in file order; all events if None.
+    Every per-team metric only needs these, so profiles pass them instead of the whole table."""
+    if team_id is None:
+        return ds.events
+    key = (id(ds), "team", team_id)
+    if key not in _INDEX:
+        by_match = match_events(ds)
+        evs = [e for mid, m in ds.matches.items() if team_id in (m["home_team_id"], m["away_team_id"])
+               for e in by_match.get(mid, ())]
+        _INDEX[key] = (ds, evs)
+    return _INDEX[key][1]

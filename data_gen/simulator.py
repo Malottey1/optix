@@ -254,7 +254,7 @@ class MatchSim:
         p += 0.18 * (self.att(tid) - o.dfn)
         lane = lane_of(ye)
         if o.weak_lane and lane == o.weak_lane:
-            p += 0.06 + (0.03 if xe >= FINAL_THIRD_X else 0)
+            p += (0.06 + (0.03 if xe >= FINAL_THIRD_X else 0)) * o.weak_strength
         if in_box(xe, ye):
             p *= (1 - BLOCK_BOX * opp_deep) * self.urgency(tid) * self.teams[tid].attacking_output
         elif opp_deep > 0 and not pressed and xe >= FINAL_THIRD_X:
@@ -344,7 +344,7 @@ class MatchSim:
             if mode == "waste":
                 p_succ = 0.30
             if mode == "cross":
-                p_succ = 0.28 + 0.10 * (o.weak_lane == lane_of(y)) + 0.18 * (self.att(tid) - o.dfn)
+                p_succ = 0.28 + 0.10 * o.weak_strength * (o.weak_lane == lane_of(y)) + 0.18 * (self.att(tid) - o.dfn)
                 p_succ *= (1 - 0.4 * opp_deep)
             self.tick(t, 0.6 if pattern == "counter" else 1.0)
             ok = rng.random() < p_succ
