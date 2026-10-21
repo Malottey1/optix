@@ -1,6 +1,56 @@
 # Progress log (overnight run)
 
-Branch: `overnight`. Started 2026-10-21 07:08 local.
+Branch: `overnight`. Started 2026-10-21 07:08 local, finished about 08:30. Steps 0-10 all done.
+Nothing was cut from the priority list.
+
+## Summary
+
+**Built**
+- Data: a 10%-margin showcase (smallest margin +12.1%), LF CSVs and a slow marker (step 0); a 20-team,
+  380-match full league (682k events, about 17 s) with extra planted traps and their expected
+  evidence. The small league stays byte-identical (step 2).
+- Contracts: claim `scope`, `supporting_values`, interval / effect_pp / confidence / baseline_source,
+  `check_param_numbers` (step 1), and `verification.revision_hint` (step 6).
+- Engine: effect sizes with Wilson intervals and confidence labels (z only for ranking), soft lanes
+  from conceded completion rate, season baselines for single matches, and a HAR diagnosis (true
+  effect 7.3-9.0 pp, recovered on the full league; the stated recoverable size is 5 pp, with 7/7
+  recovered and 0/12 false positives) (step 3). Also xT (12x8), pass quality, xA split,
+  territorial stress, shot clusters, rhythm, momentum and milestones (step 4).
+- Verifier (step 5): fact check that recomputes value and supporting values from the claim object
+  and checks each evidence event; 9 context rules. On the full league every rule fires on 5% or
+  fewer of non-trap cases. Corner specialist and volume passer recall is 4/4 each. Match-level
+  recall is 0.46 for shot spam and 0.54 for field tilt, counting only matches where the trap's
+  game state occurred.
+- Agents (step 6): Ingest, Analyst, Verifier, Narrative, Personalization, an orchestrator, typed
+  messages, a per-match state store and structured logs. Blocked claims are revised by rule and
+  re-verified with attempt numbers.
+- Insight stream (step 7): `python -m agents.run_match`. The showcase gives 34 insights, 12 blocked
+  attempts revised, 0 dropped. Latency: median 4 ms, max 25 ms.
+- Translation and personalization (step 8): hand-written es/fr for all 16 templates; a number
+  guard per language (decimal comma); analyst/casual, favorite club, player focus, single metric.
+- Dashboard (step 9): a static app/ with feed, evidence drawer, Focus Pitch, momentum tug-of-war,
+  Perimeter Lock, standard vs honest stat, the blocked-then-rewritten strip, 3 languages,
+  light/dark and reduced motion. Headless Chromium checks show 0 console errors on 8 views;
+  screenshots are in docs/screens/.
+- Docs and hardening (step 10): ARCHITECTURE.md (Mermaid diagram, roles, data flow, handoffs,
+  requirement->code table), README with a 5-command quick start, dashboard.md. A clean clone in a
+  fresh venv ran the 5 commands, the tests passed (122 passed, 1 module skipped without
+  Playwright) and the dashboard checks were clean.
+- Tests: 122 by default plus 12 slow, all passing (slow suite 3.5 minutes).
+
+**Incomplete / not built**
+- Cut-list items were not built as features: red card segment analysis, underperformance
+  diagnosis, fatigue proxy, pounce events, ingest noise cleanup beyond dedup and missing fields.
+  Their Verifier rules exist (causal_red_card, single_match_fatigue block such claims). The
+  insight types red_card_segment, pounce_sequence, underperformance_stack and turning_point are
+  never emitted.
+- Shot clusters and territorial stress can be claimed and verified, but the Analyst has no trigger
+  for them yet.
+- npxG equals xG: the generator has no penalties.
+- Azure deployment (build order 6) was outside this run.
+
+**Decisions**: see "Decisions" below (every one is listed there, grouped by step).
+**Needs human review**: see the section at the end (4 items).
 
 ## Steps
 
@@ -171,6 +221,14 @@ Branch: `overnight`. Started 2026-10-21 07:08 local.
 - docs/dashboard.md.
 - Tests: 122 passed by default; slow 12.
 
+### Step 10. Hardening and docs
+- docs/ARCHITECTURE.md: Mermaid diagram, agent roles, data flow, handoffs, revision loop,
+  requirement->code table. README: 5-command quick start plus optional commands.
+- End-to-end from a clean clone (`git clone --branch overnight`, fresh venv, Python 3.13): generate,
+  run_match and http.server all worked (every app and data file returned 200); 122 tests passed, and
+  the dashboard check passed against the clone. Regenerating left the committed showcase unchanged.
+- Full slow suite: 12 passed in 3.5 minutes.
+
 ## Decisions
 - Showcase seed search starts from a recorded offset (`SHOWCASE_SEARCH_START = {2026: 4547}`) because
   a search from 0 with the 10% margin takes ~2 minutes and every test fixture regenerates the data.
@@ -271,6 +329,9 @@ Branch: `overnight`. Started 2026-10-21 07:08 local.
 - When a volume passer has no forward pass into a central danger zone, the sentence reads "pass
   quality 0x the league rate". True, but a "none of them" phrasing would read better; it needs a
   template variant chosen on a value, which I did not add.
+- tests/test_dashboard.py skips at import when Playwright is missing, so a default run without
+  requirements-ui.txt reports "1 skipped". Harmless, but it could move to a conftest hook if a clean
+  "0 skipped" matters.
 - The original code `NOR` is also a common abbreviation of a real club's name. CLAUDE.md forbids real
   trademarks; a 3-letter code is probably fine, but I did not rename an existing team (that would change
   the small league and the showcase). Worth a human decision.

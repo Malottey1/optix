@@ -7,7 +7,7 @@ Optix is a multi-agent engine that turns synthetic football event data into live
 - **Fact check:** does the event log support the claim?
 - **Context check:** is it true but misleading given game state, sample size or metric limits? (For example, high field tilt from a team that is trailing and passing around a deep block.)
 
-> Status: contracts and the synthetic data generator are done (40 matches, five fictional teams, planted traps, one showcase match). Engine, agents and dashboard are next.
+> Status: data generator (small and 20-team league), engine (metrics, effect sizes, xT, flow), Verifier with nine context rules, agents with a block-and-revise loop, timed insight stream in English, Spanish and French, and a static dashboard. See `docs/PROGRESS.md`.
 
 ## Who it is for
 
@@ -37,22 +37,39 @@ Fans (second-screen explanations and recaps), broadcasters and studios (trustwor
 contracts/   JSON Schemas: claim object, insight stream
 data_gen/    synthetic data generator
 engine/      metrics, style profiles, matchup, momentum, Verifier rules
-agents/      agent definitions and orchestration
-app/         dashboard
+agents/      Ingest, Analyst, Verifier, Narrative, Personalization agents; orchestrator; stream; templates
+app/         static dashboard (no build step)
+tools/       headless dashboard check
 docs/        design notes
 tests/       tests
 ```
 
 See `docs/contracts.md` for how the claim object and insight stream fit together, `docs/data-dictionary.md` for the synthetic data, and `CLAUDE.md` for project rules.
 
-## Quick start
+## Quick start (5 commands)
 
 ```bash
-python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements-dev.txt
-python -m data_gen.generate --seed 2026   # writes data/generated and data/showcase
-python -m pytest -q
+python3 -m venv .venv && source .venv/bin/activate      # 1. fresh environment (Python 3.10+)
+pip install -r requirements-dev.txt                      # 2. jsonschema + pytest, nothing else
+python -m data_gen.generate --seed 2026                  # 3. season (data/generated) + showcase match
+python -m agents.run_match --match m_showcase --out out/insights.jsonl   # 4. stream the match through the agents
+python -m http.server 8000                               # 5. then open http://localhost:8000/app/
 ```
+
+Optional:
+
+```bash
+python -m pytest -q                                      # tests (slow ones: -m slow)
+python -m engine.report --team AUR --opponent NOR        # style profiles and matchup, as text
+python -m agents.personalize --mode casual --lang es --favorite NOR   # personalized feed in the terminal
+python -m data_gen.generate --league full                # 20 teams, 380 matches (data/full, ~20 s)
+pip install -r requirements-ui.txt && python -m tools.check_dashboard # headless dashboard check + screenshots
+```
+
+What you get: `out/insights.jsonl` (timed insights, contracts/insight.schema.json), `out/claims.jsonl`
+(every verification attempt, including blocked ones), `out/timeline.json` and `out/agent_log.jsonl`
+(structured logs). Architecture: `docs/ARCHITECTURE.md`. Engine and Verifier: `docs/engine.md`.
+Dashboard: `docs/dashboard.md`.
 
 ## License
 

@@ -1,5 +1,52 @@
 # Architecture
 
+```mermaid
+flowchart LR
+  subgraph data["Synthetic data (data_gen/)"]
+    G[generator<br/>fictional teams, hidden style seeds,<br/>planted traps] --> CSV[(events / passes / shots CSV)]
+    G -.-> GT[(ground_truth.json<br/>tests only)]
+  end
+  subgraph engine["engine/ (deterministic)"]
+    T[tables loader<br/>drops hidden columns] --> M[metrics, profiles, matchup,<br/>xT, flow]
+    M --> CL[claims.build_claim<br/>claim objects]
+    CL --> V[verifier<br/>fact check + 9 context rules]
+  end
+  subgraph agents["agents/"]
+    I[Ingest] --> S[(MatchState)]
+    S --> A[Analyst]
+    A -- ClaimProposal --> VA[Verifier agent]
+    VA -- blocked + revision_hint --> A
+    VA -- published --> N[Narrative<br/>en / es / fr templates<br/>number guard]
+    N --> IB[insight builder]
+    IB --> P[Personalization]
+  end
+  CSV --> T
+  CSV --> I
+  A --> CL
+  VA --> V
+  IB --> OUT[(out/insights.jsonl<br/>claims.jsonl, timeline.json)]
+  OUT --> UI[app/ dashboard]
+  GT -. checks .-> TESTS[tests/]
+```
+
+## Data flow
+
+1. `data_gen` writes CSV tables plus `ground_truth.json` (only tests read it; `engine/` and `agents/`
+   never import `data_gen` or read ground truth; tests enforce this).
+2. `engine.tables.load` reads only observable columns. A single match is loaded with
+   `baseline="season"`, so its league comparisons use the season.
+3. The orchestrator streams the match one event at a time: Ingest dedups and drops incomplete rows,
+   the state store records the event, the Analyst's triggers fire.
+4. A trigger produces a claim object via `engine.claims.build_claim` (numbers, evidence IDs,
+   scope, game state; no prose).
+5. The Verifier recomputes the claim from the events ingested so far and runs the context rules;
+   blocked claims go back to the Analyst for revision (attempt + 1) or are dropped.
+6. Published claims are rendered from templates in three languages; the number guard checks every
+   sentence.
+7. The insight builder turns the claim into a timed insight (type, payload, context chip); the
+   dashboard maps `insight_type` to a widget and Personalization selects per viewer.
+
+
 ## Agents
 
 Plain Python classes in `agents/`, run in-process by `agents.orchestrator.Orchestrator`. No agent
@@ -51,3 +98,26 @@ Each handoff is a typed message (`agents/messages.py`) and a structured log reco
 Match and window claims are verified against `MatchState.view()`: the match dataset restricted to
 the events ingested so far. A claim can never be backed by an event the stream has not delivered.
 The season preview (scope `season`) is verified against the season baseline.
+
+## Requirement -> code
+
+| Requirement (CLAUDE.md / overnight steps) | Where | Checked by |
+|---|---|---|
+| Math first: an LLM never computes; text from templates | `engine/`, `agents/narrative.py`, `agents/templates/` | `test_agents.py::test_every_template_has_both_tones_and_only_param_numbers`, number guard tests |
+| Every insight backed by a claim object | `engine/claims.py`, `contracts/claim.schema.json` | `test_stream.py::test_every_insight_validates`, `test_agents.py::test_every_published_claim_is_valid_and_backed_by_the_past` |
+| Every params number equals value or a supporting value | `contracts/checks.py` | `test_contracts.py`, Verifier `value_mismatch` |
+| Verify before translating; guard after | `agents/orchestrator.py`, `agents/narrative.py` | `test_translation.py` |
+| Two-part Verifier, rules in engine/rules/ | `engine/verifier.py`, `engine/rules/*.py` | `test_verifier.py`, `test_verifier_full.py` (slow) |
+| No causal claims from thin data | `rules/causal_claim.py`, `rules/causal_red_card.py`, `rules/single_match_fatigue.py` | `test_verifier.py::test_causal_claims_are_always_blocked`, `test_agents.py::test_causal_claim_is_dropped_not_revised` |
+| Synthetic event data only, no tracking claims | `data_gen/`, `engine/tables.py` | `test_engine.py::test_loader_drops_hidden_generator_columns`; pitch note in the dashboard |
+| Fictional teams, no trademarks | `data_gen/config.py`, `data_gen/league.py` | `test_full_league.py` (fictional names) |
+| No predictions | Analyst triggers describe past and present only | review (no predictive metric exists) |
+| Zones from the attacker's point of view | `engine/zones.py` | `test_engine.py::test_zones_match_the_data_dictionary`, soft-lane recovery tests |
+| Contracts decouple engine and UI | `agents/insights.py` (semantic `insight_type`), `app/app.js` (widget mapping) | `test_stream.py` |
+| Engine recovers planted style seeds and traps | `engine/profiles.py`, `engine/matchup.py`, rules | `test_engine.py`, `test_full_league.py`, `test_verifier.py` |
+| Effect sizes, Wilson intervals, confidence | `engine/metrics.py`, `engine/profiles.py` | `test_engine_fixtures.py`, `test_engine.py` |
+| Season baselines for single matches | `engine/tables.py` | `test_engine.py::test_showcase_uses_season_baseline` |
+| Block -> revise -> re-verify with attempts | `agents/analyst.py` (`revise`), `verification.revision_hint` | `test_agents.py::test_raw_field_tilt_claim_blocked_then_republished_with_context` |
+| Insight stream runner and latency < 1 s | `agents/stream.py`, `agents/run_match.py` | `test_stream.py::test_latency_under_one_second` |
+| Personalization modes | `agents/personalization.py`, `agents/personalize.py` | `test_translation.py` |
+| Dashboard, no console errors | `app/`, `tools/check_dashboard.py` | `test_dashboard.py` (slow, needs Playwright) |
