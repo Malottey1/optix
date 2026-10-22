@@ -307,11 +307,12 @@ def _zone(x: float, y: float) -> int:
     return THIRDS.index(third_of(x)) * len(LANES) + LANES.index(lane_of(y))
 
 
-def _routes(ev, season, grid, pid, tid) -> list:
-    """[kind, from_zone, to_zone, passes, xt_or_xa_sum] per group. kind "fwd": the player's completed
-    forward passes (same set as forward_passes_wide_share), summed xT added (threat.value_at);
-    kind "op" / "sp": the player's key passes in open play / from set pieces (same split as
-    chances_created), summed xA from the passes table."""
+def _routes(ev, season, grid, hot, pid, tid) -> list:
+    """[kind, from_zone, to_zone, passes, xt_or_xa_sum, hot] per group. kind "fwd": the player's
+    completed forward passes (same set as forward_passes_wide_share), summed xT added
+    (threat.value_at), and how many end in a high-threat cell (the cells pass_quality_ratio
+    counts); kind "op" / "sp": the player's key passes in open play / from set pieces (same split
+    as chances_created), summed xA from the passes table."""
     groups: dict = {}
     for e in M._acting(ev, tid, etype="pass"):
         if e["player_id"] != pid:
@@ -322,11 +323,13 @@ def _routes(ev, season, grid, pid, tid) -> list:
         p = season.passes[e["event_id"]]
         if p["is_key_pass"]:
             rows.append(("sp" if p["pass_type"] == "corner" or e["play_pattern"] == "set_piece" else "op", p["xa"]))
+        in_hot = int(T.cell(e["x_end"], e["y_end"]) in hot)
         for kind, v in rows:
-            g = groups.setdefault((kind, _zone(e["x_start"], e["y_start"]), _zone(e["x_end"], e["y_end"])), [0, 0.0])
+            g = groups.setdefault((kind, _zone(e["x_start"], e["y_start"]), _zone(e["x_end"], e["y_end"])), [0, 0.0, 0])
             g[0] += 1
             g[1] += v
-    return [[k, a, b, n, round(v, 4)] for (k, a, b), (n, v) in sorted(groups.items())]
+            g[2] += in_hot
+    return [[k, a, b, n, round(v, 4), h] for (k, a, b), (n, v, h) in sorted(groups.items())]
 
 
 def visuals_section(match_ds, season, match_id, players) -> dict:
@@ -359,9 +362,10 @@ def visuals_section(match_ds, season, match_id, players) -> dict:
                               confidence=prof[k]["confidence"]) for k in STATE_METRICS}
         states[season.code(tid)] = row
     grid = T.xt_grid(season)
-    routes = {p["id"]: _routes(team_events(season, season.players[p["id"]]["team_id"]), season, grid, p["id"],
+    hot = T.high_threat_cells(grid)
+    routes = {p["id"]: _routes(team_events(season, season.players[p["id"]]["team_id"]), season, grid, hot, p["id"],
                                season.players[p["id"]]["team_id"]) for p in players}
-    return dict(shots=shots, stress=stress, rhythm=rhythm, states=states, state_min_n=M.CONF_MEDIUM_N,
+    return dict(shots=shots, stress=stress, league_hot_share=_r(T.league_forward_share(season), 4), rhythm=rhythm, states=states, state_min_n=M.CONF_MEDIUM_N,
                 routes=routes, zones=dict(thirds=list(THIRDS), lanes=list(LANES), third_x=[MIDDLE_THIRD_X, FINAL_THIRD_X]))
 
 

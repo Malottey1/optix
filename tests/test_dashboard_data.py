@@ -125,7 +125,10 @@ def test_visuals_export_is_plain_engine_output(out):
         p = players[pid]
         n = lambda kind: sum(r[3] for r in rows if r[0] == kind)
         assert (n("fwd"), n("op"), n("sp")) == (p["forward_passes"], p["chances_open_play"], p["chances_set_piece"]), pid
-        assert all(0 <= r[1] < 15 and 0 <= r[2] < 15 for r in rows)
+        assert all(0 <= r[1] < 15 and 0 <= r[2] < 15 and 0 <= r[5] <= r[3] for r in rows)
+        fwd, hot = n("fwd"), sum(r[5] for r in rows if r[0] == "fwd")
+        if fwd and p["pass_quality_ratio"] is not None:     # routes rebuild the engine's pass quality
+            assert round(hot / fwd / v["league_hot_share"], 2) == pytest.approx(p["pass_quality_ratio"], abs=0.011), pid
     assert set(v["routes"]) == set(players)
     # shots: per team, the stream's full-match xG claims count the same shots and xG
     checked = 0
@@ -158,17 +161,16 @@ def test_visuals_export_is_plain_engine_output(out):
 
 
 def test_visuals_show_the_planted_players_differently(out):
-    """The volume passer's forward passes add less threat per pass than the league's; the corner
-    specialist's chances come mostly from set pieces."""
+    """The volume passer's forward passes reach high-threat cells less often than the league's; the
+    corner specialist's chances come mostly from set pieces."""
     ui, _, _, gt = out
     routes = ui["visuals"]["routes"]
-    per_pass = lambda pid: (sum(r[4] for r in routes[pid] if r[0] == "fwd")
+    per_pass = lambda pid: (sum(r[5] for r in routes[pid] if r[0] == "fwd")
                             / max(1, sum(r[3] for r in routes[pid] if r[0] == "fwd")))
-    league = (sum(r[4] for rows in routes.values() for r in rows if r[0] == "fwd")
-              / sum(r[3] for rows in routes.values() for r in rows if r[0] == "fwd"))
+    league = ui["visuals"]["league_hot_share"]
     for pid, plant in gt["planted_players"].items():
         if plant["trap"] == "volume_passer":
-            assert per_pass(pid) < league, (pid, per_pass(pid), league)
+            assert per_pass(pid) < 0.5 * league, (pid, per_pass(pid), league)
         if plant["trap"] == "corner_specialist":
             sp = sum(r[3] for r in routes[pid] if r[0] == "sp")
             op = sum(r[3] for r in routes[pid] if r[0] == "op")
