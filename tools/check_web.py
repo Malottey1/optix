@@ -20,6 +20,7 @@ width in Chromium, save screenshots to docs/screens-v3/, and report every gate:
   * the SVG layers carry data attributes tests can read (data-event-id, data-lane, data-team,
     data-claim-id);
   * switching language never changes a number, and every sentence passes the number guard;
+  * SVG text renders at 11 px or more at phone width;
   * no forbidden word (real club names, prediction or betting language, invented statistics);
   * the page still works with storage blocked, and with reduced motion it does not autoplay;
   * replay frame times while playing (p50 / p95) and the initial JS size (gzip).
@@ -90,7 +91,7 @@ def web_sources(dist: Path) -> dict:
     for ins in src["insights"].values():
         counts = Counter(ev[i]["event_type"] for i in ins["evidence_event_ids"] if i in ev)
         src["nums"].update(float(c) for c in counts.values())
-    src["nums"].update(round(abs(float(v)), 6) for v in visual_numbers(src["ui"]))
+    src["nums"].update(round(abs(float(v)), 6) for v in visual_numbers(src["ui"], src["timeline"]["periods"]))
     return src
 
 
@@ -139,7 +140,34 @@ def stress_totals(ui) -> dict:
     return {c: sum(s[2] for s in ui["visuals"]["stress"][o]) for c in codes for o in codes if o != c}
 
 
-def visual_numbers(ui) -> set:
+def zone_of(x, y, third_x):
+    third = 2 if x >= third_x[1] else 1 if x >= third_x[0] else 0
+    return third * 5 + min(4, int(y // 20))
+
+
+def pct1(v):
+    """Math.round(v * 1000) / 10, as ZoneShift shows a share in % to 1 dp."""
+    return math.floor(v * 1000 + 0.5) / 10
+
+
+def zone_shift_numbers(ui, periods, team) -> set:
+    """V10: per half, the team's on-ball event count and share per zone (%, 1 dp); the shift in points."""
+    if len(periods) < 2:
+        return set()
+    tx = ui["visuals"]["zones"]["third_x"]
+    halves = []
+    for p in periods[:2]:
+        evs = [t for t in ui["track"] if t[3] == team and p["start_sec"] <= t[0] <= p["end_sec"]]
+        c = Counter(zone_of(t[1], t[2], tx) for t in evs)
+        halves.append((len(evs), [c[z] / len(evs) if evs else 0 for z in range(15)]))
+    out = {float(halves[0][0]), float(halves[1][0])}
+    for z in range(15):
+        a, b = halves[0][1][z], halves[1][1][z]
+        out |= {pct1(a), pct1(b), abs(pct1(b - a))}
+    return out
+
+
+def visual_numbers(ui, periods=()) -> set:
     v = ui["visuals"]
     out = set()
     for team in {s[2] for s in v["shots"]}:                 # shot panels and cards: every prefix
@@ -169,6 +197,8 @@ def visual_numbers(ui) -> set:
             out.add(js_round(r[4] / r[3], 3))
         if chances:
             out.add(js_round(sum(r[4] for r in chances) / sum(r[3] for r in chances), 3))
+    for team in {t[3] for t in ui["track"]}:                 # V10 per team and half, with the shift
+        out |= zone_shift_numbers(ui, periods, team)
     for p in ui["players"]:                                  # V8
         out |= {x for x in pizza(ui, p["id"]).values() if x is not None}
     return out
@@ -320,6 +350,15 @@ def initial_js_gzip(dist: Path) -> dict:
     return dict(files=sizes, total_kb=round(sum(sizes.values()) / 1024, 1))
 
 
+MIN_SVG_PX = 11
+SMALL_SVG_TEXT_JS = """() => [...document.querySelectorAll('svg text')]
+  .filter((t) => t.getClientRects().length && t.textContent.trim())
+  .map((t) => { const m = t.getScreenCTM();
+    return [Math.round(parseFloat(getComputedStyle(t).fontSize) * Math.hypot(m.a, m.b) * 10) / 10,
+            t.closest('[data-viz]')?.dataset.viz ?? t.closest('[id]')?.id ?? '', t.textContent.slice(0, 20)]; })
+  .filter((x) => x[0] < %d)""" % MIN_SVG_PX
+
+
 def _open(page, base, route, query=""):
     page.goto(f"{base}#/{route}" + (f"?{query}" if query else ""))
     page.wait_for_selector("body[data-ready='1']", timeout=20000)
@@ -335,6 +374,7 @@ def check_route(browser, base, route, width_name, src, screens: Path | None, axe
         overflowX: document.documentElement.scrollWidth > document.documentElement.clientWidth,
         scrollWidth: document.documentElement.scrollWidth })"""))
     r["tailwind"] = page.evaluate(TAILWIND_JS)
+    r["small_svg_text"] = page.evaluate(SMALL_SVG_TEXT_JS) if w <= 400 else []
     r["tailwind_ok"] = (r["tailwind"]["mainPadding"] == ("24px" if w >= 640 else "16px")
                         and r["tailwind"]["radius"] == "16px" and r["tailwind"]["hiddenDisplay"] == "none")
     r["overlap"] = page.evaluate(OVERLAP_JS)
@@ -537,6 +577,8 @@ def failures(report) -> list:
         f += [f"{tag}: overlapping text: {x}" for x in r["overlap"]["overlaps"]]
         if r["untraced"]:
             f.append(f"{tag}: untraced numbers {r['untraced'][:15]}")
+        if r.get("small_svg_text"):
+            f.append(f"{tag}: SVG text under {MIN_SVG_PX}px {r['small_svg_text'][:5]}")
         if r["forbidden"]:
             f.append(f"{tag}: forbidden words {r['forbidden']}")
         if r["tab"]["missing"]:
