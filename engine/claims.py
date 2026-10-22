@@ -132,7 +132,7 @@ def _ppda(sc, subject, params):
     vals = dict(amount=r.value or 0.0, passes_allowed=r.detail["passes_allowed"], defensive_actions=r.sample_size)
     if params.get("with_press_intensity"):
         vals["press_intensity"] = M.press_intensity(ev, tid).value or 0.0
-    return vals, lambda e: e["team_id"] == tid and e["event_type"] in M.BALL_WINNING and e["x_start"] >= 40
+    return vals, lambda e: e["team_id"] == tid and e["event_type"] in M.PPDA_ACTIONS and e["x_start"] >= 40
 
 
 def _shot_cluster(sc, subject, params):

@@ -63,7 +63,7 @@ TEAMS = [
              (0.10, 0.20, 0.40, 0.20, 0.10), None, 1.08, 1.06, 0.90, 4.5, 0.58, 0.30, 1.25, 0.50, 0.0,
              formation="4-3-3"),
     TeamSpec("t_ves", "VES", "Veston United", "wing play down both flanks",
-             (0.30, 0.15, 0.10, 0.15, 0.30), None, 1.03, 1.00, 0.50, 5.0, 0.50, 0.40, 1.25, 0.30, 0.0,
+             (0.34, 0.12, 0.08, 0.12, 0.34), None, 1.03, 1.00, 0.50, 5.0, 0.50, 0.40, 1.25, 0.30, 0.0,
              formation="4-2-3-1"),
     TeamSpec("t_har", "HAR", "Harbor Wanderers", "direct long-ball, shoots early and often",
              (0.20, 0.20, 0.20, 0.20, 0.20), "right_flank", 0.97, 0.95, 0.45, 3.8, 0.80, 0.50, 0.85, 0.45, 0.5,

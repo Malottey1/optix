@@ -3,7 +3,7 @@
 ```mermaid
 flowchart LR
   subgraph data["Synthetic data (data_gen/)"]
-    G[generator<br/>fictional teams, hidden style seeds,<br/>planted traps] --> CSV[(events / passes / shots CSV)]
+    G[generator<br/>fictional teams, hidden style seeds,<br/>planted traps] --> CSV[(events / passes / shots /<br/>lineups CSV)]
     G -.-> GT[(ground_truth.json<br/>tests only)]
   end
   subgraph engine["engine/ (deterministic)"]
@@ -45,6 +45,13 @@ flowchart LR
    sentence.
 7. The insight builder turns the claim into a timed insight (type, payload, context chip); the
    dashboard maps `insight_type` to a widget and Personalization selects per viewer.
+
+Match time: `clock_sec` is elapsed time and runs through stoppage time, so a match ends after 90:00.
+The Analyst's half-time summaries wait for the first-half `half_end` event, `timeline.json` carries
+each period's elapsed bounds, and the dashboard turns elapsed time into football time (45+2, 90+4).
+Substitutes, cards and fouls are ordinary events and players: no component special-cases them, and
+the evidence drawer shows a foul's fouled player and a substitution's incoming player
+(`related_player_id`).
 
 
 ## Agents

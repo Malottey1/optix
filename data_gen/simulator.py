@@ -236,9 +236,25 @@ class MatchSim:
         f = max(0.0, (reach - 0.5) / d)
         return p, _clip(lx + (x - lx) * f), _clip(ly + (y - ly) * f)
 
+    def within_reach(self, tid, player_id, x, y):
+        """(x, y) in tid's frame, pulled toward the player's last position to the edge of his reach
+        (the teleport guard) when he could not have got there. Uses no random numbers."""
+        lp = self.last.get(player_id)
+        if lp is None:
+            return x, y
+        reach = 6.0 + MAX_SPEED * (int(self.clock) - int(lp[0]))
+        lx, ly = self.absxy(tid, lp[1], lp[2])
+        d = math.hypot((x - lx) * 1.05, (y - ly) * 0.68)
+        if d <= reach:
+            return x, y
+        f = max(0.0, (reach - 0.5) / d)
+        return round(lx + (x - lx) * f, 1), round(ly + (y - ly) * f, 1)
+
     def emit(self, tid, player_id, etype, xs, ys, xe=None, ye=None, outcome="success",
              body="foot", pattern="open_play", pressed=False, idx=None, related="") -> str:
         eid = f"{self.mid}_e{len(self.events) + 1:05d}"
+        if etype in ("save", "claim") and player_id:
+            xs, ys = self.within_reach(tid, player_id, xs, ys)   # a keeper drawn off his line saves short of the spot
         c = int(self.clock)
         rel = c - int(self.h_start)
         minute = (rel // 60) + (45 if self.period == 2 else 0)
@@ -252,7 +268,7 @@ class MatchSim:
             possession_id=self.poss_id, sequence_id=self.seq_id, sequence_index=idx,
             score_home=self.score[self.home_id], score_away=self.score[self.away_id],
             related_player_id=related))
-        if player_id:
+        if player_id and etype not in ("substitution", "card"):     # off-ball paperwork has no position
             fx, fy = (xe, ye) if (xe is not None and etype == "carry") else (xs, ys)
             ax, ay = self.absxy(tid, fx, fy)
             self.last[player_id] = (self.clock, ax, ay)
@@ -380,10 +396,11 @@ class MatchSim:
                 self.emit(o_id, g.player_id, "save", 4, 50, outcome="parried")
                 return self.loose(tid, min(x, 92) - rng.uniform(0, 8), 50 + rng.gauss(0, 15), recover_own=0.4)
             self.emit(o_id, g.player_id, "save", 4, 50, outcome="held")
+            sx, sy = self.events[-1]["x_start"], self.events[-1]["y_start"]     # where he actually held it
             self.gain(o_id)
-            self.emit(o_id, g.player_id, "possession_change", 4, 50)
+            self.emit(o_id, g.player_id, "possession_change", sx, sy)
             self.run_time(rng.uniform(4, 9))
-            return dict(team=o_id, x=8, y=50, pattern="open_play", holder=g)
+            return dict(team=o_id, x=sx + 4, y=sy, pattern="open_play", holder=g)
         # off target: goal kick
         self.dead("goal_kick")
         return self.restart(o_id, "goal_kick")
@@ -431,11 +448,13 @@ class MatchSim:
         rng = self.rng
         self.seq_id += 1
         self.maybe_subs()
+        if fouled is not None and not any(s.p is fouled for s in self.on[tid]):
+            fouled = self.pick(tid, x, y, x)[0]        # he was just substituted at this dead ball
         if kind == "kickoff":
             self.dead("kickoff")
             self.gain(tid)
             p, _, _ = self.pick(tid, 50, 50, 50, usage=False)
-            return dict(team=tid, x=50.0, y=50.0, pattern="kickoff", holder=p)
+            return dict(team=tid, x=50.0, y=50.0, pattern="kickoff", holder=p, restart="kickoff")
         if kind == "corner":
             return self.corner(tid)
         if kind == "goal_kick":
@@ -681,7 +700,9 @@ class MatchSim:
     def injury(self, tid, p: Player):
         if p.trap_flag or not any(s.p is p for s in self.on[tid]):
             return
-        self.emit(tid, p.player_id, "injury", 50, 50, outcome="off")
+        lp = self.last.get(p.player_id)              # where he went down: his last position
+        ix, iy = self.absxy(tid, lp[1], lp[2]) if lp else (50, 50)
+        self.emit(tid, p.player_id, "injury", ix, iy, outcome="off")
         self.dead("injury")
         self.stoppage["injuries"] += 1
         self.injured.append((p.player_id, self.rng.choice((1, 1, 1, 2, 2, 3, 4))))
@@ -832,13 +853,14 @@ class MatchSim:
                 if not protect and rng.random() < drib:
                     d, dx, dy = self.pick(o_id, 100 - x, 100 - y, 100 - x, scale=10, usage=False)
                     ok = rng.random() < 0.52 + 0.2 * (self.att(tid) - o.dfn)
-                    self.emit(tid, holder.player_id, "dribble", x, y, outcome="success" if ok else "fail", idx=idx)
+                    self.emit(tid, holder.player_id, "dribble", x, y, outcome="success" if ok else "fail",
+                              pattern=pattern, idx=idx)
                     if not ok:
-                        self.emit(o_id, d.player_id, "tackle", dx, dy, outcome="success", idx=idx)
+                        self.emit(o_id, d.player_id, "tackle", dx, dy, outcome="success", pattern=pattern, idx=idx)
                         return self._won(o_id, d, dx, dy)
                     nx, ny = _clip(x + rng.uniform(4, 10), 2, 97), _clip(y + rng.gauss(0, 6), 2, 98)
                     self.tick(t, 0.6)
-                    self.emit(tid, holder.player_id, "carry", x, y, nx, ny, idx=idx)
+                    self.emit(tid, holder.player_id, "carry", x, y, nx, ny, pattern=pattern, idx=idx)
                     x, y = nx, ny
                     continue
             # ---- choose the pass ----
@@ -942,8 +964,6 @@ class MatchSim:
                             outcome="success" if ok else ("offside" if offside else "fail"), pattern=sp_pattern,
                             pressed=pressed, idx=idx)
             self.record_pass(eid, holder, recv, x, y, xe, ye, ptype, ok, p_succ)
-            if holder.position == "GK":
-                self.last.pop(holder.player_id, None)
             idx += 1
             restart = None
             if ok:

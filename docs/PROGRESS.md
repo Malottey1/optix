@@ -46,6 +46,34 @@ Committed as one stage (see Decisions). Summary:
 - Showcase: seed 20260957 (958 tries), AUR 2-1 NOR (goals 18', 47', 78'); every trap fires with
   margin >= 10%.
 
+### Stage 7-8 (partial). Realism tests, report, downstream repair
+- tests/test_realism.py: 14 default tests on the small league (every range, fixtures, lineups,
+  players on the pitch, 11 v 10 after a red, subs match lineups, minutes add up, bans, no player
+  teleports, ball continuity, restart spots, referential integrity, unique names, determinism) and
+  6 slow ones on the full league (the same checks plus xG by bin, goals variance/mean, late goals,
+  correlation signs including press vs PPDA). tools/realism_report.py writes docs/realism-report.md
+  (with a v1 column from docs/realism-v1-measured.json). Every target is in range on both leagues.
+- Generator bugs found by these tests and fixed: a player substituted at a dead ball could take the
+  free kick; kick-offs could start with a dribble; keepers' last position was dropped after a pass
+  (no reach check); keeper saves and claims at a fixed spot could be out of reach (now pulled
+  within reach, using no random numbers); injuries were logged at the centre spot; dribble, tackle
+  and carry events lost the sequence's play pattern.
+- goals_dispersion sampling SD 1.0 -> 1.41 (the variance/mean ratio of n Poisson counts has SD about
+  sqrt(2/n)); the slow test still requires 0.95-1.3 on the full league with no allowance.
+- Soft-lane own-lanes gate now compares lifts over each lane's league rate (lanes have different
+  baselines); NOR found on 8/8 seeds, HAR 7/8, no false positives.
+- Engine: PPDA counts fouls (standard definition); ball-won height counts won tackles only.
+- Showcase now seed 20261383 (1384 tries), AUR 4-1 NOR, all margins >= 10%.
+- Test changes: test_data_gen attacking-output clone test 30 -> 100 matches a side (30 was
+  underpowered; true ratio about 1.8); test_dashboard reads the final score from ground truth
+  instead of a literal "2 – 1".
+- Docs: data-dictionary.md, engine.md and ARCHITECTURE.md updated for v2.
+- NOT DONE yet: refresh docs/screens/ (python -m tools.check_dashboard after agents.run_match;
+  the slow dashboard test passes), the final summary at the top of this file with the before/after
+  table (docs/realism-report.md has it), and the "Needs human review" list: the champion's points
+  vary 77-95 across seeds; the small-league CAL control's minimum entry share is close to its 15%
+  gate on some seeds; the Verifier's recall moved by up to 0.15 between builds.
+
 ### Decisions (realism v2)
 - Era for "realistic": recent seasons 2022/23-2024/25 as instructed; where those seasons differ a lot
   (goals 2.85-3.28, yellows 3.4-5.1) the range spans them.

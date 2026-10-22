@@ -3,6 +3,7 @@
 Runs the showcase stream into a temp out/, serves the repo with that out/, and checks every view
 loads with no console error, page error or failed request, no horizontal scroll, and shows the
 blocked-then-rewritten moment."""
+import json
 import shutil
 from pathlib import Path
 
@@ -32,4 +33,5 @@ def test_dashboard_views_render_without_errors(tmp_path, monkeypatch):
         assert r["cards"] > 0, name
     assert report["perimeter_lock_halftime"]["rewrites"] >= 1
     assert report["blocked_then_rewritten_drawer"]["drawerOpen"]
-    assert report["full_time_analyst_es"]["score"] == "2 – 1"
+    home, away = json.loads((ROOT / "data" / "showcase" / "ground_truth.json").read_text())["showcase"]["score"]
+    assert report["full_time_analyst_es"]["score"] == f"{home} – {away}"     # the final whistle, after stoppage time

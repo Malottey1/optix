@@ -286,7 +286,7 @@ def test_attacking_output_drives_goals_independently_of_sit_deep():
     rng = random.Random(7)
     players = {t.team_id: build_players(rng, t) for t in (hi, lo, opp)}
     goals = Counter()
-    n = 30
+    n = 100                 # 30 a side was underpowered: the true ratio is about 1.8, 30 games gave 1.4
     for spec in (hi, lo):
         for i in range(n):
             home, away = (spec, opp) if i % 2 == 0 else (opp, spec)

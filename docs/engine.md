@@ -1,4 +1,13 @@
-# Engine (v1)
+# Engine (v1, updated for realism v2)
+
+Realism v2 changed the data, not the engine's design. Engine-side changes: PPDA counts fouls as
+defensive actions (the standard definition; `metrics.PPDA_ACTIONS`); ball-won height counts won
+tackles and interceptions only; the soft-lane rule gained a lift-based own-lanes gate; two Verifier
+rules were retuned on the v2 full league (see "Verifier"); the Analyst's half-time summaries fire on
+the first-half `half_end` event instead of at 2,700 s, because the clock now runs through stoppage
+time. New event types (fouls, cards, substitutions, duels, saves and others) need no special
+handling: metrics select the event types they define, and players who come off the bench are
+ordinary players.
 
 Pure, stdlib-only Python over the CSV tables. It never imports the generator and never reads
 `ground_truth.json`; the loader (`engine/tables.py`) also drops the hidden generator columns in
@@ -49,8 +58,9 @@ reader has: how big, and how sure.
 final-third entry passes by its opponents, per lane (attacker point of view), against the league
 rate for that lane. `profiles.soft_lane()` flags at most one lane per team: the largest lift, if
 it is >= 4 pp (`SOFT_LANE_MIN_PP`), the lower end of the team's Wilson interval is above the
-league rate, and the lane stands out from the team's own other lanes (two-proportion z >= 2.33,
-`SOFT_LANE_MIN_Z_OWN`: one-sided 5% Bonferroni-corrected for five lanes). The last gate stops a
+league rate, and the lane's lift over the league rate stands out from the team's pooled lift in
+its other lanes (z >= 2.33, `SOFT_LANE_MIN_Z_OWN`: one-sided 5% Bonferroni-corrected for five
+lanes; lifts rather than raw rates because lanes have different league baselines). The last gate stops a
 side that often sits deep, and so concedes completions everywhere, from being read as soft in one
 lane. (Realism v2: was >= 6 pp with no own-lanes gate.)
 
@@ -83,23 +93,22 @@ Conclusions:
   league (7 of 7; slow test `test_soft_lanes_recovered_above_stated_size`), with 0 of 12 unplanted
   teams flagged. IRK's 2.7 pp plant is below what ~400 attempts can resolve.
 
-## Pressing: why ball-won height and PPDA mislead for CAL
+## Pressing: PPDA, ball-won height and press intensity
 
-CAL is the planted high-press team. On this data:
-- **Ball-won height** (mean x of tackles and interceptions) puts CAL at 39.3 against AUR's 40.3. It
-  mostly reflects where the *opponent* plays: a pinned-back team wins the ball low whatever it
-  does (NOR: 26.0), and a team that dominates territory wins it high without pressing.
-- **PPDA** (opponent passes in their own 60% per tackle or interception) gives CAL 5.68, about the
-  same as VES at 5.57. Both its numerator and denominator depend on where the opponent chooses to
-  play and on how many of its passes fail anywhere, so territory and opponent style blur the press
-  signal. (Not diagnosed further; the observed numbers are what matter for the rule.)
-- **press_intensity** (pressure events per opponent pass) isolates the behaviour: CAL 0.275, nearly
-  double the next team (0.146), and the full league's high-press archetype teams all sit above the
-  league average.
+CAL is the planted high-press team. On the v2 small league (seed 2026):
 
-The Verifier rule `ppda_alone` refers to this: a pressing claim backed only by PPDA (or ball-won
-height) is context-flagged, because on event data like this it can rank a non-pressing team level
-with a pressing one.
+| Team | PPDA | press_intensity | ball-won height |
+|---|---|---|---|
+| CAL | 10.2 | 0.274 | 44.6 |
+| VES | 13.9 | 0.168 | 40.6 |
+| AUR | 14.6 | 0.137 | 39.9 |
+| HAR | 16.0 | 0.149 | 41.9 |
+| NOR | 18.9 | 0.094 | 36.7 |
+
+In v1 PPDA put CAL level with VES and ball-won height put it below AUR. With realistic failed-pass
+outcomes, fouls counted as defensive actions and only won tackles in ball-won height, all three now
+single out CAL. The `ppda_alone` rule stays: PPDA still depends on where the opponent chooses to
+play, and press_intensity (pressure events per opponent pass) is the direct measure of the behaviour.
 
 ## Step 4 metrics on the planted traps
 
@@ -142,10 +151,10 @@ pass_quality_ratio; small_sample_xg shots; ppda_alone press_intensity. With them
 is `published_with_context`; without them it is `blocked` and `verification.revision_hint` lists
 the missing params (the Analyst's revision loop, docs/ARCHITECTURE.md).
 
-Full-league precision/recall is in docs/PROGRESS.md (Step 5); every rule fires on <= 5% of non-trap
-cases.
+Full-league precision/recall: v1 in docs/PROGRESS.md (Step 5), v2 in the realism v2 section there.
+On the v2 full league every rule fires on <= 5% of non-trap cases (the slow test allows 10%).
 
 ## Known gaps
 
-- npxG equals xG because the data has no penalties yet.
-- HAR's soft lane is not recoverable from the 40-match season (see above); it is on the full league.
+- The soft-lane table above is from v1. In v2, with the own-lanes gate, the small league finds NOR's
+  left flank on 8 of 8 seeds checked and HAR's right flank on 7 of 8, with no unplanted lane flagged.

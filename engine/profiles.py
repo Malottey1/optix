@@ -171,8 +171,8 @@ def bracket_shift(ds: Dataset, team_id: str, to_bracket: str = "leading", from_b
 
 # Soft-lane rule (see docs/engine.md): a defence is soft in a lane when opponents complete entries
 # into it at least SOFT_LANE_MIN_PP above the league rate for that lane AND the lower end of the
-# team's 95% Wilson interval is above the league rate AND the lane stands out from the team's own
-# other lanes (two-proportion z >= SOFT_LANE_MIN_Z_OWN). The last gate matters for a side that
+# team's 95% Wilson interval is above the league rate AND the lane's lift stands out from the
+# team's lift in its other lanes (z >= SOFT_LANE_MIN_Z_OWN). The last gate matters for a side that
 # often sits deep: a deep block lets opponents complete entries more easily in every lane, which
 # is not a soft lane. At most one lane per team: the largest lift. The z gate is one-sided 5%
 # Bonferroni-corrected for the five lanes tested per team (0.05 / 5 -> z 2.33).
@@ -181,15 +181,21 @@ SOFT_LANE_MIN_Z_OWN = 2.33
 
 
 def _z_vs_rest(comp: dict, lane: str) -> float | None:
-    """Two-proportion z of `lane`'s conceded completion vs the team's other lanes pooled."""
-    k1, n1 = comp[lane]["completed"], comp[lane]["attempted"]
-    k2 = sum(v["completed"] for l, v in comp.items() if l != lane)
-    n2 = sum(v["attempted"] for l, v in comp.items() if l != lane)
-    if not n1 or not n2:
+    """Two-sample z of `lane`'s conceded-completion lift over the league rate for that lane, vs the
+    team's pooled lift over the league rate in its other lanes. Lifts, not raw rates: lanes have
+    different league baselines (a central entry is harder to complete than one down a flank)."""
+    k1, n1, l1 = comp[lane]["completed"], comp[lane]["attempted"], comp[lane]["league"]
+    rest = [v for l, v in comp.items() if l != lane and v["attempted"] and v["league"] is not None]
+    n2 = sum(v["attempted"] for v in rest)
+    if not n1 or not n2 or l1 is None:
         return None
-    p1, p2 = k1 / n1, k2 / n2
-    se = math.sqrt(p1 * (1 - p1) / n1 + p2 * (1 - p2) / n2)
-    return (p1 - p2) / se if se else None
+    p1 = k1 / n1
+    lift1 = p1 - l1
+    lift2 = sum(v["completed"] - v["attempted"] * v["league"] for v in rest) / n2
+    var2 = sum(v["attempted"] * (v["completed"] / v["attempted"]) * (1 - v["completed"] / v["attempted"])
+               for v in rest) / n2 ** 2
+    se = math.sqrt(p1 * (1 - p1) / n1 + var2)
+    return (lift1 - lift2) / se if se else None
 
 
 def soft_lane(ds: Dataset, team_id: str, bracket: str = "all") -> dict | None:

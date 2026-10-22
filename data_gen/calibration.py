@@ -56,7 +56,9 @@ TARGETS = {
                          definition="matches won by the away team / matches"),
     "home_goal_edge": _T(lo=0.15, hi=0.45, unit="goals", per="matches", sd=1.9, source="approximate",
                          definition="mean of home_score - away_score"),
-    "goals_dispersion": _T(lo=0.95, hi=1.30, unit="ratio", per="team_matches", sd=1.0, source="approximate",
+    # sd: the variance-to-mean ratio of n Poisson counts has sampling SD about sqrt(2 / n), so the
+    # per-observation SD for the allowance is sqrt(2)
+    "goals_dispersion": _T(lo=0.95, hi=1.30, unit="ratio", per="team_matches", sd=1.41, source="approximate",
                            definition="variance / mean of goals per team per match"),
     "goals_first_15_share": _T(lo=0.08, hi=0.16, unit="share", per="goals", sd=0.33, source="goal_timing",
                                definition="goals in football minutes 0-14 / goals"),
@@ -343,6 +345,7 @@ def season_stats(t: dict) -> dict:
     out["corr_ppda_possession"] = pearson([ppda[x] for x in ts], [poss[x] for x in ts])
     n.update(matches=nm, team_matches=ntm, teams=len(teams), passes=cnt["passes"])
     out["_n"] = n
+    out["_ppda_by_team"] = ppda              # per team, for the PPDA-vs-press check in tests/test_realism.py
     return out
 
 

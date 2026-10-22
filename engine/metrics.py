@@ -25,6 +25,7 @@ from .zones import FINAL_THIRD_X, LANES, WIDE_LANES, in_box, lane_of
 FORWARD_GAIN = 8.0          # data dictionary: a pass is forward if it gains >= 8 x units
 XG_BANDS = ((0.0, 0.05), (0.05, 0.10), (0.10, 0.20), (0.20, 0.40), (0.40, 1.01))
 BALL_WINNING = ("tackle", "interception")
+PPDA_ACTIONS = ("tackle", "interception", "foul")      # the standard PPDA defensive actions
 
 
 @dataclass(frozen=True)
@@ -185,8 +186,8 @@ def xg_sum(events, shots, team_id, window=None, state=None) -> MetricResult:
 def npxg_sum(events, shots, team_id, window=None, state=None) -> MetricResult:
     """Non-penalty xG: xg_sum excluding shots with shot_type == "penalty".
 
-    Known limits: as xg_sum. The synthetic data currently has no penalties, so npxG equals xG;
-    set-piece shots (corners) are included, as in the standard definition.
+    Known limits: as xg_sum. Set-piece shots (corners, direct free kicks) are included, as in the
+    standard definition.
     """
     rows = [(e, s) for e, s in _team_shots(events, shots, team_id, window, state)
             if s["shot_type"] != "penalty"]
@@ -293,7 +294,8 @@ def chances_by_player(events, passes, team_id=None, window=None, state=None) -> 
 # ---------- defending / style ----------
 
 def ball_won_height(events, team_id, window=None, state=None) -> MetricResult:
-    """Mean x (0 own goal .. 100 opponent goal) where the team wins the ball by tackle or interception.
+    """Mean x (0 own goal .. 100 opponent goal) where the team wins the ball by a won tackle or an
+    interception (a lost tackle did not win it).
 
     Inputs: events; team_id (None = league); optional window and game state.
     Value: mean x. sd: per-event standard deviation. Evidence: the ball-winning events.
@@ -302,7 +304,8 @@ def ball_won_height(events, team_id, window=None, state=None) -> MetricResult:
     reflects where the OPPONENT plays: a pinned-back side wins the ball low whatever it does, and
     on this data it does not single out the pressing team (use press_intensity for that).
     """
-    rows = list(e for e in _acting(events, team_id, window, state) if e["event_type"] in BALL_WINNING)
+    rows = list(e for e in _acting(events, team_id, window, state) if e["event_type"] in BALL_WINNING
+                and not (e["event_type"] == "tackle" and e["outcome"] != "success"))
     m, sd = _mean_sd([e["x_start"] for e in rows])
     return MetricResult(m, tuple(e["event_id"] for e in rows), len(rows), sd=sd)
 
@@ -464,8 +467,8 @@ def ppda(events, team_id, window=None, state=None) -> MetricResult:
     """Passes allowed per defensive action (standard PPDA; lower = more intense press).
 
     Definition: opponent passes attempted with x_start < 60 (their own 60%) divided by the team's
-    tackles and interceptions with x_start >= 40 (the same zone in the team's own frame).
-    Pressure events are not defensive actions in this definition.
+    tackles (won or lost), interceptions and fouls with x_start >= 40 (the same zone in the team's
+    own frame). Pressure events are not defensive actions in this definition.
     Inputs: events; team_id; optional window and game state.
     Value: ratio. sample_size: defensive actions. Evidence: the defensive actions.
     Known limits: must not be read alone (rule ppda_alone): it misses pressing that forces a
@@ -477,7 +480,7 @@ def ppda(events, team_id, window=None, state=None) -> MetricResult:
         if (e["event_type"] == "pass" and e["opponent_team_id"] == team_id and e["x_start"] < 60
                 and _in_scope(e, team_id, window, state)):
             passes_allowed += 1
-        elif (e["event_type"] in BALL_WINNING and e["team_id"] == team_id and e["x_start"] >= 40
+        elif (e["event_type"] in PPDA_ACTIONS and e["team_id"] == team_id and e["x_start"] >= 40
               and _in_scope(e, team_id, window, state)):
             acts.append(e["event_id"])
     return MetricResult(passes_allowed / len(acts) if acts else None, tuple(acts), len(acts),

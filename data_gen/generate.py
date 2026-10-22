@@ -105,7 +105,7 @@ def showcase_is_realistic(sim: MatchSim) -> bool:
 # Where the seed search starts, per generator seed. A full search from 0 takes ~2 minutes, so we
 # record the first offset that a search from 0 finds; tests/test_data_gen.py (slow) re-runs the
 # search from 0 and checks it lands on the same offset. Set to 0 after changing the simulator.
-SHOWCASE_SEARCH_START = {2026: 957}
+SHOWCASE_SEARCH_START = {2026: 1383}
 
 
 def showcase_reference(seed: int, tables=None) -> float:
