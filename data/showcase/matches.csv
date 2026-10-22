@@ -1,2 +1,2 @@
-match_id,season,matchweek,date,home_team_id,away_team_id,home_score,away_score,home_xg,away_xg
-m_showcase,2026-27,1,2026-08-15,t_aur,t_nor,2,1,1.06,1.1
+match_id,season,matchweek,date,kickoff,home_team_id,away_team_id,home_score,away_score,home_xg,away_xg,ball_in_play_sec
+m_showcase,2026-27,1,2026-08-15,17:30,t_aur,t_nor,2,1,0.95,1.28,3682

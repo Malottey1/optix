@@ -44,8 +44,12 @@ def timeline(ds, match_id) -> dict:
              for e in evs if e["event_type"] == "shot" and e["outcome"] == "goal"]
     players = {pid: {"name": p["name"], "team": ds.code(p["team_id"]), "shirt": p["shirt"]}
                for pid, p in ds.players.items() if p["team_id"] in team}
+    # elapsed-clock bounds of each half, so the dashboard can show football time (45+2, 90+5)
+    periods = [{"period": int(p), "start_sec": min(e["clock_sec"] for e in evs if str(e["period"]) == p),
+                "end_sec": max(e["clock_sec"] for e in evs if str(e["period"]) == p)}
+               for p in sorted({str(e["period"]) for e in evs})]
     return {"match_id": match_id, "home": team[m["home_team_id"]], "away": team[m["away_team_id"]],
-            "duration_sec": evs[-1]["clock_sec"], "momentum": [[t, round(v, 1)] for t, v in mom],
+            "duration_sec": evs[-1]["clock_sec"], "periods": periods, "momentum": [[t, round(v, 1)] for t, v in mom],
             "goals": goals, "players": players}
 
 

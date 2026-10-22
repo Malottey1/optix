@@ -71,7 +71,7 @@ TEAM_TRAPS = {
 }
 
 # Player plants, keyed like config.PLAYER_TRAITS.
-_VOLUME = dict(usage=2.3, cross_mult=0.15, wide_forward=True, trap_flag="volume_passer")
+_VOLUME = dict(usage=1.4, cross_mult=0.15, wide_forward=True, trap_flag="volume_passer")
 _CORNER = dict(usage=0.4, cross_mult=0.5, set_piece_taker=True, trap_flag="corner_specialist")
 EXTRA_PLAYER_TRAITS = {
     ("GRM", "right_winger"): _VOLUME,
@@ -95,21 +95,44 @@ EXPECTED_EVIDENCE = {
 }
 
 
-def _vary(rng: random.Random, base: tuple) -> dict:
+# Formations per archetype (the first is used unless the team carries a winger plant).
+FORMATION_BY_ARCHETYPE = {
+    "high_press": ("4-3-3", "4-2-3-1"),
+    "low_block_counter": ("4-4-2", "4-1-4-1", "3-5-2"),
+    "possession": ("4-3-3", "4-2-3-1"),
+    "direct": ("4-4-2", "3-5-2"),
+    "wing_play": ("4-2-3-1", "4-3-3"),
+    "balanced": ("4-2-3-1", "4-4-2", "4-1-4-1"),
+}
+WINGER_FORMATIONS = ("4-3-3", "4-2-3-1")
+
+# Team quality: a hidden strength draw that shifts the correlated dials, as in a real league where
+# the strongest clubs also keep the ball and press more. A few teams defy their strength (the
+# style does not follow the quality), so the correlations are not perfect.
+QUALITY = {"ASV": 1.8, "DCH": -1.0, "ESF": 2.0, "FWM": -1.1, "GRM": 0.2, "HBC": -0.3, "IRK": 0.8,
+           "JPH": -1.2, "KWC": 0.9, "LMF": -0.9, "MDL": -0.2, "OKP": -0.6, "PLQ": -1.2, "QNT": 0.4,
+           "RVD": 0.1}
+DEFY_STRENGTH = {"PLQ", "LMF"}     # a weak side that presses hard; a strong-ish one would be direct
+
+
+def _vary(rng: random.Random, base: tuple, q: float = 0.0, defy: bool = False) -> dict:
+    """One team's dials: the archetype values, seeded noise, and the quality shift. Every dial is
+    bounded to a plausible range."""
     style, lanes, att, dfn, press, tempo, direct, deep, ao, counter, spam = base
     w = [l * rng.lognormvariate(0, 0.15) for l in lanes]
     total = sum(w)
     clip = lambda v, lo, hi: max(lo, min(hi, v))
+    sq = -q if defy else q           # style follows quality, unless the team defies it
     return dict(
         style_seed=style,
         lane_weights=tuple(round(x / total, 3) for x in w),
-        att=round(att + rng.uniform(-0.03, 0.03), 3),
-        dfn=round(dfn + rng.uniform(-0.03, 0.03), 3),
-        press=round(clip(press + rng.uniform(-0.08, 0.08), 0.1, 0.95), 3),
-        tempo=round(tempo * rng.uniform(0.92, 1.08), 2),
-        directness=round(clip(direct + rng.uniform(-0.05, 0.05), 0.2, 0.9), 3),
-        sit_deep=round(clip(deep + rng.uniform(-0.08, 0.08), 0.05, 0.95), 3),
-        attacking_output=round(ao * rng.uniform(0.92, 1.08), 3),
+        att=round(clip(att + 0.06 * q + rng.uniform(-0.02, 0.02), 0.85, 1.15), 3),
+        dfn=round(clip(dfn + 0.06 * q + rng.uniform(-0.02, 0.02), 0.85, 1.15), 3),
+        press=round(clip(press + 0.06 * sq + rng.uniform(-0.06, 0.06), 0.1, 0.95), 3),
+        tempo=round(clip(tempo * rng.uniform(0.92, 1.08), 3.2, 6.5), 2),
+        directness=round(clip(direct - 0.05 * sq + rng.uniform(-0.04, 0.04), 0.2, 0.9), 3),
+        sit_deep=round(clip(deep - 0.05 * q + rng.uniform(-0.08, 0.08), 0.05, 0.95), 3),
+        attacking_output=round(clip(ao * (1 + 0.12 * q) * rng.uniform(0.95, 1.05), 0.6, 1.8), 3),
         counter=round(clip(counter + rng.uniform(-0.08, 0.08), 0.05, 0.9), 3),
         shot_spam=round(clip(spam + rng.uniform(-0.05, 0.05), 0.0, 1.0), 3),
     )
@@ -117,13 +140,17 @@ def _vary(rng: random.Random, base: tuple) -> dict:
 
 def extra_teams() -> list[TeamSpec]:
     rng = random.Random(FULL_LEAGUE_TEAM_SEED)
+    winger_plants = {code for code, role in EXTRA_PLAYER_TRAITS if role.endswith("winger")}
     out = []
     for code, name, arch in EXTRA_TEAMS:
-        kw = _vary(rng, ARCHETYPES[arch])
+        kw = _vary(rng, ARCHETYPES[arch], QUALITY[code], code in DEFY_STRENGTH)
         kw.update(TEAM_TRAPS.get(code, {}))
-        # lane_weights may need renormalising after rounding; keep as drawn (sum ~1)
+        forms = FORMATION_BY_ARCHETYPE[arch]
+        if code in winger_plants:
+            forms = [f for f in forms if f in WINGER_FORMATIONS] or list(WINGER_FORMATIONS)
+        formation = forms[rng.randrange(len(forms))]
         out.append(TeamSpec(team_id=f"t_{code.lower()}", code=code, name=name, weak_lane=kw.pop("weak_lane", None),
-                            archetype=arch, **kw))
+                            archetype=arch, formation=formation, **kw))
     return out
 
 
@@ -148,19 +175,3 @@ def team_traps(teams: list[TeamSpec]) -> dict:
         if traps:
             out[t.code] = traps
     return out
-
-
-def round_robin(team_ids: list[str], rng: random.Random) -> list[tuple[int, str, str]]:
-    """Double round robin by the circle method: (matchweek, home, away), every team plays once per
-    week, home and away swap in the second half of the season."""
-    ids = list(team_ids)
-    rng.shuffle(ids)
-    n = len(ids)
-    first = []
-    for week in range(n - 1):
-        for i in range(n // 2):
-            a, b = ids[i], ids[n - 1 - i]
-            first.append((week + 1, a, b) if (week + i) % 2 == 0 else (week + 1, b, a))
-        ids = [ids[0]] + [ids[-1]] + ids[1:-1]
-    second = [(w + n - 1, away, home) for w, home, away in first]
-    return first + second

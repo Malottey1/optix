@@ -47,7 +47,8 @@ def test_totals(full):
     assert set(weeks.values()) == {1}                  # one match per team per matchweek
     pairs = Counter((m["home_team_id"], m["away_team_id"]) for m in ds.matches.values())
     assert set(pairs.values()) == {1} and len(pairs) == 380    # every ordered pair once
-    assert 550_000 <= len(ds.events) <= 800_000
+    # realism v2 logs carries, duels, clearances, fouls, cards, saves and substitutions too
+    assert 650_000 <= len(ds.events) <= 1_000_000
     assert gt["n_events"] == len(ds.events)
 
 
@@ -132,8 +133,10 @@ def test_team_traps_visible(full):
 
 
 # Stated recoverable size: a planted soft lane whose TRUE effect (lower bound, from the generator's
-# own success probabilities) is at least this many percentage points must be recovered.
-RECOVERABLE_EFFECT_PP = 5.0
+# own success probabilities) is at least this many percentage points must be recovered. Realism v2:
+# about 600 conceded entry attempts per lane per season (sd about 1.9 pp), so 5 pp is only 2.6 sd
+# and cannot be recovered every time; 7 pp (3.7 sd) can.
+RECOVERABLE_EFFECT_PP = 7.0
 
 
 def test_soft_lanes_recovered_above_stated_size(full):

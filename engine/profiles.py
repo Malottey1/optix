@@ -13,6 +13,8 @@ Brackets: "all" (every minute), "leading", "level", "trailing" (team's own point
 """
 from __future__ import annotations
 
+import math
+
 from functools import lru_cache
 
 from . import metrics as M
@@ -169,8 +171,25 @@ def bracket_shift(ds: Dataset, team_id: str, to_bracket: str = "leading", from_b
 
 # Soft-lane rule (see docs/engine.md): a defence is soft in a lane when opponents complete entries
 # into it at least SOFT_LANE_MIN_PP above the league rate for that lane AND the lower end of the
-# team's 95% Wilson interval is above the league rate. At most one lane per team: the largest lift.
-SOFT_LANE_MIN_PP = 6.0
+# team's 95% Wilson interval is above the league rate AND the lane stands out from the team's own
+# other lanes (two-proportion z >= SOFT_LANE_MIN_Z_OWN). The last gate matters for a side that
+# often sits deep: a deep block lets opponents complete entries more easily in every lane, which
+# is not a soft lane. At most one lane per team: the largest lift. The z gate is one-sided 5%
+# Bonferroni-corrected for the five lanes tested per team (0.05 / 5 -> z 2.33).
+SOFT_LANE_MIN_PP = 4.0
+SOFT_LANE_MIN_Z_OWN = 2.33
+
+
+def _z_vs_rest(comp: dict, lane: str) -> float | None:
+    """Two-proportion z of `lane`'s conceded completion vs the team's other lanes pooled."""
+    k1, n1 = comp[lane]["completed"], comp[lane]["attempted"]
+    k2 = sum(v["completed"] for l, v in comp.items() if l != lane)
+    n2 = sum(v["attempted"] for l, v in comp.items() if l != lane)
+    if not n1 or not n2:
+        return None
+    p1, p2 = k1 / n1, k2 / n2
+    se = math.sqrt(p1 * (1 - p1) / n1 + p2 * (1 - p2) / n2)
+    return (p1 - p2) / se if se else None
 
 
 def soft_lane(ds: Dataset, team_id: str, bracket: str = "all") -> dict | None:
@@ -183,9 +202,11 @@ def soft_lane(ds: Dataset, team_id: str, bracket: str = "all") -> dict | None:
     """
     comp = team_style_profile(ds, team_id, bracket)["completion"]["entry_completion_conceded"]
     ok = [l for l, v in comp.items() if v["effect_pp"] is not None and v["interval"] is not None
-          and v["effect_pp"] >= SOFT_LANE_MIN_PP and v["interval"][0] > v["league"]]
+          and v["effect_pp"] >= SOFT_LANE_MIN_PP and v["interval"][0] > v["league"]
+          and (_z_vs_rest(comp, l) or 0.0) >= SOFT_LANE_MIN_Z_OWN]
     if not ok:
         return None
     lane = max(ok, key=lambda l: comp[l]["effect_pp"])
     r = team_metric(ds, team_id, "entry_completion_conceded", bracket)
-    return dict(lane=lane, **comp[lane], evidence_event_ids=list(r.detail["lane_attempt_ids"][lane][:12]))
+    return dict(lane=lane, **comp[lane], z_vs_own_lanes=round(_z_vs_rest(comp, lane), 2),
+                evidence_event_ids=list(r.detail["lane_attempt_ids"][lane][:12]))

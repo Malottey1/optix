@@ -14,7 +14,7 @@ from data_gen.generate import main as generate
 from engine import metrics as M
 from engine.claims import build_claim
 from engine.matchup import matchup_claim
-from engine.rules import RULES
+from engine.rules import RULES, field_tilt_with_lead
 from engine.tables import load, match_events, score_diff
 from engine.verifier import verdict, verify
 
@@ -58,9 +58,11 @@ def status(claim, ds):
 # ---------- fact check ----------
 
 def test_honest_claim_passes_and_verified_claim_validates(data, validator):
-    _, sc, _ = data
-    c = claim_on(sc, "xg", team("t_aur"))
-    out = verify(c, sc)
+    # AUR has only six shots in the v2 showcase (small_sample_xg rightly fires), so the honest
+    # claim is AUR's season xG, built and verified on the season data
+    season, _, _ = data
+    c = build_claim(season, "xg", "season", team("t_aur"), template_key="xg.stat", param_values=("amount",))
+    out = verify(c, season)
     assert out["verification"]["fact_check"] == "pass"
     assert out["verification"]["status"] == "published"
     assert out["verification"]["actual_value"] == pytest.approx(c["value"]["amount"], abs=0.005)
@@ -255,7 +257,8 @@ def test_field_tilt_rule_silent_on_high_territory_with_box_entries(data):
             c = build_claim(season, "field_tilt", "match", team(tid), match_id=mid,
                             template_key="field_tilt.stat", param_values=("amount",))
             sv = c["supporting_values"]
-            if c["value"]["amount"] >= 60 and sv["box_entry_share"] > 15:
+            # above the rule's entry cap (15% before realism v2, now the retuned constant)
+            if c["value"]["amount"] >= 60 and sv["box_entry_share"] > 100 * field_tilt_with_lead.MAX_ENTRY_SHARE:
                 checked += 1
                 assert "field_tilt_with_lead" not in verdict(c, season).rule_ids, (mid, tid)
     assert checked >= 3

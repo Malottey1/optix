@@ -12,6 +12,10 @@
     "analyst": "{attacker} envoie {attack_share} % de ses entrées dans le dernier tiers par le {lane_label} (moyenne de la ligue {league_share} %), et {defender} laisse réussir {concede_completion} % des entrées de ce côté (ligue {league_completion} %).",
     "casual": "Attention au {lane_label} : {attacker} y attaque {attack_share} % du temps (la plupart des équipes {league_share} %), et {concede_completion} % de ces attaques réussissent contre {defender} (d'habitude {league_completion} %)."
   },
+  "matchup.weak_lane": {
+    "analyst": "{attacker} envoie {attack_share} % de ses entrées dans le dernier tiers dans le {lane_label} (moyenne de la ligue {league_share} %), et {defender} laisse réussir {concede_completion} % des entrées à cet endroit (ligue {league_completion} %).",
+    "casual": "Attention au {lane_label} : {attacker} y passe {attack_share} % du temps (la plupart des équipes {league_share} %), et {concede_completion} % de ces attaques réussissent contre {defender} (d'habitude {league_completion} %)."
+  },
   "field_tilt.stat": {
     "analyst": "{team} détient {amount} % de domination territoriale (field tilt) sur cette période.",
     "casual": "{team} campe dans le camp adverse : {amount} % des passes dans le dernier tiers sont les siennes."

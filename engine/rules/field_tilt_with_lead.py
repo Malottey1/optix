@@ -18,7 +18,7 @@ from . import RuleResult
 RULE_ID = "field_tilt_with_lead"
 MIN_TILT = 0.60
 MIN_TRAILING_SHARE = 0.5
-MAX_ENTRY_SHARE = 0.15
+MAX_ENTRY_SHARE = 0.18
 REQUIRES = ("box_entries",)
 
 

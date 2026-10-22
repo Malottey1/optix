@@ -48,8 +48,11 @@ reader has: how big, and how sure.
 `metrics.entry_completion_by_lane(conceded=True)`: for the defending team, completed / attempted
 final-third entry passes by its opponents, per lane (attacker point of view), against the league
 rate for that lane. `profiles.soft_lane()` flags at most one lane per team: the largest lift, if
-it is >= 6 pp (`SOFT_LANE_MIN_PP`) and the lower end of the team's Wilson interval is above the
-league rate.
+it is >= 4 pp (`SOFT_LANE_MIN_PP`), the lower end of the team's Wilson interval is above the
+league rate, and the lane stands out from the team's own other lanes (two-proportion z >= 2.33,
+`SOFT_LANE_MIN_Z_OWN`: one-sided 5% Bonferroni-corrected for five lanes). The last gate stops a
+side that often sits deep, and so concedes completions everywhere, from being read as soft in one
+lane. (Realism v2: was >= 6 pp with no own-lanes gate.)
 
 **Why HAR's right flank was missed.** The *share* of entries a defence concedes into a lane mostly
 reflects where its opponents like to attack: every attacker has its own lane habits, and the
@@ -126,8 +129,8 @@ Context rules (one module each in `engine/rules/`, thresholds documented in the 
 | causal_claim | claim_type causal | always | block, causal.not_supported_by_event_data |
 | causal_red_card | a claim mentioning a red card (metric, template_key or params) | it is causal (claim_type causal, or template_key with caused/because/due_to/cost) | block, red_card.descriptive_only |
 | single_match_fatigue | fatigue.* on a match/window scope | always | block, fatigue.single_match_not_supported |
-| field_tilt_with_lead | field_tilt / territorial_stress, team, match/window | tilt >= 60%, trailing for >= 50% of its final-third passes, box entries <= 15% of them | context, field_tilt.trailing_vs_deep_block |
-| shot_spam | xg / npxg, team | >= 10 shots, >= 75% with xG <= 0.08, mean <= 0.07 | context, xg.volume_of_low_quality_shots |
+| field_tilt_with_lead | field_tilt / territorial_stress, team, match/window | tilt >= 60%, trailing for >= 50% of its final-third passes, box entries <= 18% of them | context, field_tilt.trailing_vs_deep_block |
+| shot_spam | xg / npxg, team | >= 12 shots, >= 65% with xG <= 0.08, mean <= 0.08 | context, xg.volume_of_low_quality_shots |
 | set_piece_inflation | chances_created | >= 4 chances, >= 50% from set pieces | context, chances_created.mostly_set_pieces |
 | wide_forward_passes | forward_passes, player | >= 15, >= 70% wide, pass_quality_ratio <= 0.5 | context, forward_passes.wide_low_threat |
 | small_sample_xg | xg / npxg, match/window | < 8 shots | context, xg.small_sample |

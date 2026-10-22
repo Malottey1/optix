@@ -44,9 +44,10 @@ def test_every_insight_validates(stream, insight_validator):
 
 
 def test_insights_are_timed_in_match_order(stream):
-    s, _ = stream
+    s, ds = stream
     starts = [i["clock"]["start_sec"] for i in s.insights]
-    assert starts == sorted(starts) and starts[-1] <= 5400
+    # the clock runs on through stoppage time: insights end by the last event, not at 90:00
+    assert starts == sorted(starts) and starts[-1] <= ds.events[-1]["clock_sec"]
     assert len({i["insight_id"] for i in s.insights}) == len(s.insights)
 
 

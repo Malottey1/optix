@@ -27,8 +27,9 @@ pytestmark = pytest.mark.slow
 
 MAX_NON_TRAP_RATE = 0.10
 TRAILING_SEC = 2700
-# measured on seed 2026 (shot_spam 11/24, field_tilt_with_lead 20/37); pinned a little below
-MIN_MATCH_RECALL = {"shot_spam": 0.40, "field_tilt_with_lead": 0.45}
+# measured on the v2 full league, seed 2026 (shot_spam 13/25, field_tilt_with_lead 22/28) after the
+# realism-v2 retune of both rules; pinned about one sampling SD below (25-30 positives per rule)
+MIN_MATCH_RECALL = {"shot_spam": 0.42, "field_tilt_with_lead": 0.65}
 
 
 @pytest.fixture(scope="module")

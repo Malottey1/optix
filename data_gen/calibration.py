@@ -152,17 +152,10 @@ TARGETS = {
                                definition="Pearson r: PPDA vs possession (pressing sides keep the ball more)"),
 }
 
-# Targets the generator does not meet yet. Realism v2 removes them stage by stage: the calibration
+# Targets the generator does not meet yet. Realism v2 emptied it stage by stage: the calibration
 # tests allow failures only from this set (a new failure fails), and tests/test_realism.py requires
-# it to be empty at the end of realism v2.
-NOT_YET_MODELLED: set = {
-    "goals_dispersion", "added_time_first_half_min", "added_time_min", "added_time_second_half_min", "back_pass_share",
-    "ball_in_play_min", "clearances_per_team", "corr_possession_shots", "corr_ppda_possession",
-    "final_third_pass_share", "fouls_per_team", "header_share", "inside_box_share",
-    "interceptions_per_team", "offsides_per_team", "on_target_share", "pass_accuracy", "passes_per_team",
-    "penalties_per_match", "players_used_per_team", "possession_sd_pp", "ppda_league", "reds_per_match",
-    "set_piece_goal_share", "subs_per_team", "team_pass_spread", "yellows_per_match",
-}
+# it to stay empty.
+NOT_YET_MODELLED: set = set()
 
 
 def _f(v):

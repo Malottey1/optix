@@ -122,7 +122,8 @@ def test_metric_definitions_hold_on_their_evidence(ds):
 def test_field_tilt_window_and_state_partition(ds):
     aur = tid(ds, "AUR")
     whole = M.field_tilt(ds.events, aur)
-    halves = [M.field_tilt(ds.events, aur, window=w) for w in ((0, 2699), (2700, 6000))]
+    # the clock runs on through stoppage time, so the second window is open-ended
+    halves = [M.field_tilt(ds.events, aur, window=w) for w in ((0, 2699), (2700, 10**6))]
     assert sum(h.detail["team_f3_passes"] for h in halves) == whole.detail["team_f3_passes"]
     states = [M.field_tilt(ds.events, aur, state=s) for s in ("leading", "level", "trailing")]
     assert sum(s.sample_size for s in states) == whole.sample_size
@@ -253,10 +254,15 @@ def test_matchup_claim_uses_season_scope_and_backed_params(ds):
     v = claim["value"]
     assert v["interval"]["low"] < v["amount"] < v["interval"]["high"]
     assert v["effect_pp"] == pytest.approx(v["amount"] - v["baseline"], abs=0.11)
-    # attacker share: n=779 -> high; NOR's left-flank completion: 190 attempts (< 200) -> medium;
-    # a matchup takes the lower of the two
-    assert v["confidence"] == "medium"
-    assert claim["supporting_values"]["completion_attempts"] < 200 <= v["sample_size"]
+    # a matchup takes the lower of its two confidences: the attacker's lane share and the
+    # defender's completion rate in that lane (both recomputed from the claim's own numbers)
+    from engine.metrics import min_confidence, share_confidence
+    sv = claim["supporting_values"]
+    share_c = share_confidence(round(v["amount"] / 100 * v["sample_size"]), v["sample_size"], v["baseline"] / 100)
+    k = round(sv["concede_completion"] / 100 * sv["completion_attempts"])
+    comp_c = share_confidence(k, sv["completion_attempts"], sv["league_completion"] / 100)
+    assert v["confidence"] == min_confidence(share_c, comp_c)
+    assert v["confidence"] in ("medium", "high") and sv["completion_attempts"] < v["sample_size"]
     assert v["baseline_source"]["kind"] == "season" and v["baseline_source"]["n"] > v["sample_size"]
 
 

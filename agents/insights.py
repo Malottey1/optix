@@ -68,7 +68,8 @@ def payload(pub, view, kind: str, match_id: str) -> dict:
         evs = match_events(view)[match_id]
         sign = 1 if c["subject"]["id"] == m["home_team_id"] else -1
         series = F.momentum(evs, view.shots, T.xt_grid(view), m["home_team_id"], m["away_team_id"]).value
-        p["series"] = [round(sign * v, 1) for _, v in series][-SERIES_LEN:]
+        # up to the claim's window end: the triggering event can land a minute later after a long stoppage
+        p["series"] = [round(sign * v, 1) for t, v in series if t <= c["window"]["to_sec"]][-SERIES_LEN:]
     elif kind == "rhythm_wave":
         evs = match_events(view)[match_id]
         p["series"] = F.rhythm(evs, end_minute=c["window"]["to_sec"] // 60, length=SERIES_LEN).value

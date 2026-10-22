@@ -12,6 +12,10 @@
     "analyst": "{attacker} send {attack_share}% of final-third entries down the {lane_label} (league {league_share}%), and {defender} let {concede_completion}% of entries there succeed (league {league_completion}%).",
     "casual": "Watch the {lane_label}: {attacker} attack it {attack_share}% of the time (most teams {league_share}%), and {concede_completion}% of attacks there work against {defender} (usually {league_completion}%)."
   },
+  "matchup.weak_lane": {
+    "analyst": "{attacker} send {attack_share}% of final-third entries into the {lane_label} (league {league_share}%), and {defender} let {concede_completion}% of entries there succeed (league {league_completion}%).",
+    "casual": "Watch the {lane_label}: {attacker} go through it {attack_share}% of the time (most teams {league_share}%), and {concede_completion}% of attacks there work against {defender} (usually {league_completion}%)."
+  },
   "field_tilt.stat": {
     "analyst": "{team} hold {amount}% field tilt in this spell.",
     "casual": "{team} are camped in the opposition half: {amount}% of the final-third passing is theirs."

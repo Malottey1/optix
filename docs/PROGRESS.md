@@ -15,6 +15,37 @@ Started 2026-10-21 18:24.
   dispersion, missed on the pooled small seasons); later stages remove entries.
 - Tests: 122 passed by default.
 
+### Stages 1-6. Fixtures, squads, the ball, chances, dead balls, league structure
+Committed as one stage (see Decisions). Summary:
+- Stage 1, fixtures: `data_gen/schedule.py`. Circle method, Berger home/away alternation, the second
+  half of the season mirrored, at most 2 home or 2 away in a row, weekend slots from 15 Aug 2026 to
+  22 May 2027, international breaks and two midweek rounds. The small league plays the 5-team double
+  round robin twice (40 matches). tests/test_schedule.py.
+- Stage 2, squads: `data_gen/squads.py`. 24-player squads (formation XI + 2 GK, 4 DF, 4 MF, 3 FW),
+  formations by style (4-3-3, 4-2-3-1, 4-4-2, 3-5-2, 4-1-4-1), a unique name pool per league,
+  `lineups.csv`, 2-5 substitutions per team (mostly 55-85', earlier when trailing or after a red),
+  minutes played, a one-match ban after a red or a fifth yellow, light rotation after short rest,
+  injuries with forced subs. Trap players and goalkeepers are never rested or subbed off for tactics.
+- Stage 3, the ball: failed passes end as interceptions, out of play, blocks, tackles on reception,
+  clearances or loose balls; duels, carries, dribbles, clearances and blocks; goal kicks, throw-ins,
+  build-up from the goalkeeper and centre-backs; back passes and pass lengths in range; position
+  continuity with a teleport guard (reach 6 + 8 m/s); style drives volume; PPDA in range.
+- Stage 4, chances: headers, shots in the box, on target, distance, penalties, set-piece goals and
+  cross completion in range; goalkeeper saves and claims; xG refitted per bin.
+- Stage 5, dead balls and time: fouls, cards (a booked player is more careful), offsides, red cards
+  change behaviour (the side down a player defends deeper), stoppage time from stoppages, ball in
+  play, goal timing rising late in each half. Contracts unchanged (the new event types already fit).
+- Stage 6, league: bounded, correlated dials from a quality score; PLQ and LMF defy their strength;
+  champion and bottom points in range; correlation signs as targets.
+- Calibration: every target passes on the small league (seed 2026 and seeds 1-5 pooled) and on the
+  full league (seeds 2026 and 7). `NOT_YET_MODELLED` is empty.
+- Verifier retune on the v2 full league (seed 2026, 1345 cases): shot_spam >= 12 shots, >= 65% low xG,
+  mean <= 0.08 (recall 0.40 -> 0.52, non-trap rate 3.3% -> 4.8%); field_tilt_with_lead entry cap
+  15% -> 18% (recall 0.64 -> 0.79, non-trap rate 1.1% -> 3.6%). Recall moved by up to 0.15 between
+  simulator builds during tuning (25-30 positives per rule), so the test floors sit about one SD below.
+- Showcase: seed 20260957 (958 tries), AUR 2-1 NOR (goals 18', 47', 78'); every trap fires with
+  margin >= 10%.
+
 ### Decisions (realism v2)
 - Era for "realistic": recent seasons 2022/23-2024/25 as instructed; where those seasons differ a lot
   (goals 2.85-3.28, yellows 3.4-5.1) the range spans them.
@@ -22,6 +53,46 @@ Started 2026-10-21 18:24.
   2 sd / sqrt(n) for the sample size actually measured.
 - Season-shape targets (correlations across teams, points of champion and bottom team, possession SD,
   pass-volume spread, players used) apply only to the 20-team league (`min_teams`).
+
+- Stage 1 committed together with Stages 2-6: the v1 small-league recovery tests pass only on the
+  old fixture draw, so the new calendar and the rewritten simulator had to land together for the
+  suite to be green at each commit.
+- Field tilt spell length: `traps.FIELD_TILT_MIN_F3` 100 -> 60 final-third passes. With realistic
+  final-third volume (about a quarter of passes), 100 passes in a leading spell is rare even for a
+  dominant chaser; 60 keeps the trap clear of noise.
+- NOR's weak lane is planted at strength 1.5 (`weak_strength`) and opponents aim at a known soft side
+  (near side only); after a completed entry into the weak lane, box passes and shot appetite rise
+  slightly (`via_weak`). The soft-lane truth helper formula (0.09 x strength) is unchanged.
+- The flank trap's completion check compares against the season reference completion for that lane,
+  not only the other end of the same match (one match is too small a sample).
+- CAL dials raised (att 1.08, dfn 1.06, press 0.90, directness 0.58, attacking output 1.25) so the
+  negative control "dominant, not a tilt trap" is neither vacuous nor failing: at output 1.10 CAL's
+  box-entry share in its level-or-ahead high-tilt spells ranged 0.09-0.27 over 8 seeds (half the
+  seeds had a spell under the 15% gate); now 0.15-0.36 on all 8.
+- Result shape: CHASE_URGENCY 0.8 -> 0.5 and SHOT_RATE_BOX 0.135 -> 0.14. A strong trailing-side
+  urgency fed equalisers, so draws ran at 31-33% on the full league. Raising shot volume alone
+  pushed small-league shots per team over range. Checked on full seeds 2026 and 7 and the small
+  league (seed 2026 and seeds 1-5 pooled).
+- Soft-lane own-lanes gate z 1.64 -> 2.33 (one-sided 5%, Bonferroni for 5 lanes): AUR's
+  left_half_space was flagged on seeds 2 and 2026 (z 1.69, 2.23); every planted lane that 1.64
+  found has z >= 2.75 across 8 seeds.
+- Half-time summaries fire on the first-half `half_end` event (after stoppage time), not at 2700 s.
+- The dashboard shows football time from the timeline's new `periods` (45+3, 90+6); the scrub runs
+  to the last event. The evidence drawer shows `related_player_id` (fouled player, player on).
+- Momentum payload series is cut at the claim's window end (a long stoppage could put the
+  triggering event a minute later, so the series' last point disagreed with the claim).
+- Volume passer usage 1.4 (was higher): at the old usage the passer led the league by an implausible
+  margin.
+- Showcase realism envelope: the search also requires <= 30 shots per team, <= 6 goals and >= 250
+  passes per team; NOR's left winger gets delivery 1.4 in the showcase only.
+- Soft-lane rule: the lane must also beat the team's own other lanes (two-proportion z >= 1.64), and
+  the minimum gap fell 6 -> 4 pp. Without the own-lanes gate, a deep block made every lane look soft
+  against AUR.
+- New play patterns `throw_in` and `goal_kick`, new shot types `penalty` and `free_kick`; the
+  `related_player_id` column carries the player fouled, the player coming on and the duel opponent.
+- New template `matchup.weak_lane` (en/es/fr): the top matchup can now be a half-space, not a flank.
+- Verifier thresholds retuned on the full league (numbers in the stage note). Lower precision is
+  accepted: non-trap fires are real low-quality volume or real trailing territory, still true context.
 
 ### Test changes (realism v2)
 - test_data_gen.py `test_season_meets_calibration_targets`, test_full_league.py
@@ -35,6 +106,30 @@ Started 2026-10-21 18:24.
 - `test_calibration_is_not_a_lucky_seed` (slow): pools five other seeds' seasons (200 matches) and
   checks the same targets, instead of "mean within a band around the point target" (no point targets
   any more). It now builds the seasons without the showcase search, which made it take 6 minutes.
+
+- test_data_gen.py `test_shape`: 120 players, 24 per team, unique names (squads are now 24, Stage 2).
+- test_data_gen.py `test_events_are_clean`: the last clock is between 5400 and 5400 + 1200 s and the
+  half_end periods are 1 and 2 (stoppage time now runs past 90:00).
+- test_data_gen.py `test_field_tilt_does_not_fire_on_cal_dominance`: CAL only, with a 40-pass spell
+  floor stated in the test (the trap default fell to 60, see Decisions).
+- test_data_gen.py season firings test uses `traps.FIELD_TILT_MIN_F3` instead of a literal 100.
+- test_engine.py: the second-half partition window is (2700, end of match) instead of (2700, 5400)
+  (stoppage time); matchup confidence is recomputed as the minimum of the share and completion
+  confidences and must be medium or high.
+- test_full_league.py: `RECOVERABLE_EFFECT_PP` 7.0 (power reasoning in the comment, realistic
+  final-third volume halves the sample); total events between 650k and 1M (richer event types).
+- test_stream.py: insights start no later than the last event (stoppage time), not 5400.
+- test_verifier.py `test_honest_claim_passes_and_verified_claim_validates`: AUR has six shots in the
+  v2 showcase, so `small_sample_xg` rightly fires on its match xG; the honest claim is now AUR's
+  season xG on the season data.
+- test_verifier.py `test_field_tilt_rule_silent_on_high_territory_with_box_entries`: the "above the
+  entry cap" filter uses the rule constant instead of a literal 15 (cap retuned to 18%).
+- test_verifier_full.py `MIN_MATCH_RECALL`: shot_spam 0.40 -> 0.42, field_tilt_with_lead 0.45 -> 0.65,
+  about one sampling SD below the retuned measurement (0.52, 0.79). A raise, not a weakening.
+- test_agents.py `test_raw_field_tilt_claim_blocked_then_republished_with_context`: picks NOR's first
+  tilt claim after AUR's first goal instead of NOR's first tilt claim. In the v2 showcase NOR's first
+  claim covers 0-15' at 0-0, which is honest and published as is; the test now also asserts that.
+- Calibration tests: `NOT_YET_MODELLED` is now empty, so they require every target.
 
 ## Overnight run (steps 0-10)
 

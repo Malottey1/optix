@@ -7,10 +7,10 @@ Action: context. REQUIRES shots and xg_per_shot in params.
 from . import RuleResult
 
 RULE_ID = "shot_spam"
-MIN_SHOTS = 10
+MIN_SHOTS = 12
 LOW_XG = 0.08
-MIN_LOW_SHARE = 0.75
-MAX_MEAN_XG = 0.07
+MIN_LOW_SHARE = 0.65
+MAX_MEAN_XG = 0.08
 REQUIRES = ("shots", "xg_per_shot")
 
 

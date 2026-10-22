@@ -3,78 +3,581 @@
   "generator_seed": 2026,
   "n_matches": 40,
   "expected": {
-    "home_win_share": {
-      "target": 0.38,
+    "goals_per_match": {
       "tolerance": [
-        0.23,
-        0.53
+        2.6,
+        3.3
       ],
-      "unit": "share of matches",
+      "unit": "goals",
+      "per": "matches",
+      "sd": 1.7,
+      "source": "The Analyst: 2.85 (22/23), 3.28 (23/24) goals per match https://theanalyst.com/articles/numbers-behind-premier-league-goal-explosion ; 2024/25: 2.93 https://en.wikipedia.org/wiki/2024%E2%80%9325_Premier_League",
+      "definition": "mean of home_score + away_score"
+    },
+    "home_win_share": {
+      "tolerance": [
+        0.4,
+        0.49
+      ],
+      "unit": "share",
+      "per": "matches",
+      "sd": 0.49,
+      "source": "home wins about 48% in 22/23 https://www.premierleague.com/news/2916832 ; 24/25 split 40.8/24.5/34.7% https://www.fiso.co.uk/premier-league-scoring-trends-2024-25-season-vs-2025-26-gw25-whats-changed/",
       "definition": "matches won by the home team / matches"
     },
     "draw_share": {
-      "target": 0.3,
+      "tolerance": [
+        0.2,
+        0.28
+      ],
+      "unit": "share",
+      "per": "matches",
+      "sd": 0.43,
+      "source": "home wins about 48% in 22/23 https://www.premierleague.com/news/2916832 ; 24/25 split 40.8/24.5/34.7% https://www.fiso.co.uk/premier-league-scoring-trends-2024-25-season-vs-2025-26-gw25-whats-changed/",
+      "definition": "drawn matches / matches"
+    },
+    "away_win_share": {
+      "tolerance": [
+        0.28,
+        0.36
+      ],
+      "unit": "share",
+      "per": "matches",
+      "sd": 0.47,
+      "source": "home wins about 48% in 22/23 https://www.premierleague.com/news/2916832 ; 24/25 split 40.8/24.5/34.7% https://www.fiso.co.uk/premier-league-scoring-trends-2024-25-season-vs-2025-26-gw25-whats-changed/",
+      "definition": "matches won by the away team / matches"
+    },
+    "home_goal_edge": {
       "tolerance": [
         0.15,
         0.45
       ],
-      "unit": "share of matches",
-      "definition": "drawn matches / matches"
-    },
-    "away_win_share": {
-      "target": 0.32,
-      "tolerance": [
-        0.17,
-        0.47
-      ],
-      "unit": "share of matches",
-      "definition": "matches won by the away team / matches"
-    },
-    "goals_per_match": {
-      "target": 2.7,
-      "tolerance": [
-        2.2,
-        3.2
-      ],
       "unit": "goals",
-      "definition": "mean of home_score + away_score"
+      "per": "matches",
+      "sd": 1.9,
+      "source": "approximate, football knowledge (wide range, not a measurement)",
+      "definition": "mean of home_score - away_score"
     },
-    "one_goal_or_less_share": {
-      "target": 0.7,
+    "goals_dispersion": {
       "tolerance": [
-        0.55,
-        0.85
+        0.95,
+        1.3
       ],
-      "unit": "share of matches",
-      "definition": "matches with |home_score - away_score| <= 1 / matches"
+      "unit": "ratio",
+      "per": "team_matches",
+      "sd": 1.0,
+      "source": "approximate, football knowledge (wide range, not a measurement)",
+      "definition": "variance / mean of goals per team per match"
     },
-    "shots_per_match": {
-      "target": 24.0,
+    "goals_first_15_share": {
       "tolerance": [
-        22.0,
-        26.0
+        0.08,
+        0.16
+      ],
+      "unit": "share",
+      "per": "goals",
+      "sd": 0.33,
+      "source": "26.3% of goals after minute 75 in one season https://premierleague.com/news/3871035 ; the rest approximate",
+      "definition": "goals in football minutes 0-14 / goals"
+    },
+    "goals_last_15_share": {
+      "tolerance": [
+        0.19,
+        0.3
+      ],
+      "unit": "share",
+      "per": "goals",
+      "sd": 0.42,
+      "source": "26.3% of goals after minute 75 in one season https://premierleague.com/news/3871035 ; the rest approximate",
+      "definition": "goals in football minute 75 or later of the second half (incl. added time) / goals"
+    },
+    "shots_per_team": {
+      "tolerance": [
+        11.0,
+        14.0
       ],
       "unit": "shots",
-      "definition": "rows in shots.csv / matches (both teams)"
+      "per": "team_matches",
+      "sd": 4.5,
+      "source": "approximate, football knowledge (wide range, not a measurement)",
+      "definition": "shots / team-matches"
     },
-    "corners_per_match": {
-      "target": 10.5,
+    "on_target_share": {
       "tolerance": [
-        8.0,
-        13.0
+        0.32,
+        0.37
+      ],
+      "unit": "share",
+      "per": "shots",
+      "sd": 0.47,
+      "source": "approximate, football knowledge (wide range, not a measurement)",
+      "definition": "shots with result goal or saved / shots"
+    },
+    "blocked_share": {
+      "tolerance": [
+        0.2,
+        0.3
+      ],
+      "unit": "share",
+      "per": "shots",
+      "sd": 0.43,
+      "source": "approximate, football knowledge (wide range, not a measurement)",
+      "definition": "shots with result blocked / shots"
+    },
+    "conversion": {
+      "tolerance": [
+        0.09,
+        0.12
+      ],
+      "unit": "share",
+      "per": "shots",
+      "sd": 0.31,
+      "source": "approximate, football knowledge (wide range, not a measurement)",
+      "definition": "goals from shots / shots"
+    },
+    "xg_per_shot": {
+      "tolerance": [
+        0.09,
+        0.12
+      ],
+      "unit": "xG",
+      "per": "shots",
+      "sd": 0.15,
+      "source": "approximate, football knowledge (wide range, not a measurement)",
+      "definition": "sum of xg / shots"
+    },
+    "goals_vs_xg": {
+      "tolerance": [
+        -0.1,
+        0.1
+      ],
+      "unit": "relative",
+      "per": "goals",
+      "sd": 1.0,
+      "source": "approximate, football knowledge (wide range, not a measurement)",
+      "definition": "goals from shots / sum of xg - 1"
+    },
+    "inside_box_share": {
+      "tolerance": [
+        0.6,
+        0.72
+      ],
+      "unit": "share",
+      "per": "shots",
+      "sd": 0.47,
+      "source": "approximate, football knowledge (wide range, not a measurement)",
+      "definition": "shots from inside the box (x >= 84, 22 <= y <= 78) / shots"
+    },
+    "header_share": {
+      "tolerance": [
+        0.11,
+        0.19
+      ],
+      "unit": "share",
+      "per": "shots",
+      "sd": 0.36,
+      "source": "approximate, football knowledge (wide range, not a measurement)",
+      "definition": "shots with body_part head / shots"
+    },
+    "mean_shot_distance_m": {
+      "tolerance": [
+        15.5,
+        18.5
+      ],
+      "unit": "m",
+      "per": "shots",
+      "sd": 7.0,
+      "source": "approximate, football knowledge (wide range, not a measurement)",
+      "definition": "mean shot_distance_m"
+    },
+    "penalties_per_match": {
+      "tolerance": [
+        0.2,
+        0.32
+      ],
+      "unit": "penalties",
+      "per": "matches",
+      "sd": 0.5,
+      "source": "107 penalties in 23/24 (0.28 per match) https://premierleague.com/news/4029218 ; about 0.23 part-way through 24/25 https://theanalyst.com/articles/who-has-won-the-most-penalties-premier-league",
+      "definition": "shots with shot_type penalty / matches"
+    },
+    "set_piece_goal_share": {
+      "tolerance": [
+        0.2,
+        0.33
+      ],
+      "unit": "share",
+      "per": "goals",
+      "sd": 0.43,
+      "source": "19.8% of goals from set pieces excluding penalties in 23/24 https://www.fantasyfootballscout.co.uk/2025/10/18/just-how-important-are-set-pieces-in-fpl ; penalties add roughly 7-9 points (approximate)",
+      "definition": "goals whose shot event has play_pattern set_piece (corners, free kicks, penalties) / goals"
+    },
+    "corners_per_team": {
+      "tolerance": [
+        4.5,
+        5.8
       ],
       "unit": "corners",
-      "definition": "passes with pass_type == corner / matches (both teams)"
+      "per": "team_matches",
+      "sd": 2.7,
+      "source": "approximate, football knowledge (wide range, not a measurement)",
+      "definition": "passes with pass_type corner / team-matches"
+    },
+    "crosses_per_team": {
+      "tolerance": [
+        10.0,
+        20.0
+      ],
+      "unit": "crosses",
+      "per": "team_matches",
+      "sd": 6.0,
+      "source": "approximate, football knowledge (wide range, not a measurement)",
+      "definition": "passes with pass_type cross / team-matches"
+    },
+    "cross_completion": {
+      "tolerance": [
+        0.2,
+        0.3
+      ],
+      "unit": "share",
+      "per": "crosses",
+      "sd": 0.43,
+      "source": "approximate, football knowledge (wide range, not a measurement)",
+      "definition": "completed crosses / crosses"
+    },
+    "passes_per_team": {
+      "tolerance": [
+        400.0,
+        520.0
+      ],
+      "unit": "passes",
+      "per": "team_matches",
+      "sd": 110.0,
+      "source": "approximate, football knowledge (wide range, not a measurement)",
+      "definition": "pass events excluding throw-ins / team-matches"
+    },
+    "pass_accuracy": {
+      "tolerance": [
+        0.79,
+        0.85
+      ],
+      "unit": "share",
+      "per": "team_matches",
+      "sd": 0.05,
+      "source": "approximate, football knowledge (wide range, not a measurement)",
+      "definition": "completed / attempted passes excluding throw-ins"
+    },
+    "back_pass_share": {
+      "tolerance": [
+        0.1,
+        0.2
+      ],
+      "unit": "share",
+      "per": "team_matches",
+      "sd": 0.04,
+      "source": "approximate, football knowledge (wide range, not a measurement)",
+      "definition": "passes (excl. throw-ins, goal kicks, corners) whose direction is more than 135 degrees from straight at goal / those passes"
+    },
+    "final_third_pass_share": {
+      "tolerance": [
+        0.18,
+        0.3
+      ],
+      "unit": "share",
+      "per": "team_matches",
+      "sd": 0.06,
+      "source": "approximate, football knowledge (wide range, not a measurement)",
+      "definition": "passes (excl. throw-ins) starting at x >= 66.7 / passes"
+    },
+    "tackles_per_team": {
+      "tolerance": [
+        14.0,
+        21.0
+      ],
+      "unit": "tackles",
+      "per": "team_matches",
+      "sd": 5.0,
+      "source": "approximate, football knowledge (wide range, not a measurement)",
+      "definition": "tackle events / team-matches"
+    },
+    "interceptions_per_team": {
+      "tolerance": [
+        7.0,
+        12.0
+      ],
+      "unit": "interceptions",
+      "per": "team_matches",
+      "sd": 4.0,
+      "source": "approximate, football knowledge (wide range, not a measurement)",
+      "definition": "interception events / team-matches"
+    },
+    "clearances_per_team": {
+      "tolerance": [
+        14.0,
+        26.0
+      ],
+      "unit": "clearances",
+      "per": "team_matches",
+      "sd": 8.0,
+      "source": "approximate, football knowledge (wide range, not a measurement)",
+      "definition": "clearance events / team-matches"
+    },
+    "fouls_per_team": {
+      "tolerance": [
+        9.5,
+        12.5
+      ],
+      "unit": "fouls",
+      "per": "team_matches",
+      "sd": 3.5,
+      "source": "about 22-23 fouls awarded per match https://www.olbg.com/blogs/men-middle-premier-league-referee-performances",
+      "definition": "foul events / team-matches"
+    },
+    "yellows_per_match": {
+      "tolerance": [
+        3.3,
+        4.6
+      ],
+      "unit": "cards",
+      "per": "matches",
+      "sd": 1.8,
+      "source": "The Analyst: 4.2 yellows per match in 23/24 (record), 5.1 early 24/25 https://theanalyst.com/articles/new-premier-league-records-on-the-cards",
+      "definition": "card events with outcome yellow or second_yellow / matches"
+    },
+    "reds_per_match": {
+      "tolerance": [
+        0.04,
+        0.15
+      ],
+      "unit": "cards",
+      "per": "matches",
+      "sd": 0.3,
+      "source": "approximate, football knowledge (wide range, not a measurement)",
+      "definition": "card events with outcome second_yellow or red / matches"
+    },
+    "offsides_per_team": {
+      "tolerance": [
+        1.4,
+        2.6
+      ],
+      "unit": "offsides",
+      "per": "team_matches",
+      "sd": 1.5,
+      "source": "approximate, football knowledge (wide range, not a measurement)",
+      "definition": "offside events / team-matches"
+    },
+    "added_time_min": {
+      "tolerance": [
+        7.0,
+        13.0
+      ],
+      "unit": "minutes",
+      "per": "matches",
+      "sd": 2.5,
+      "source": "507 s (22/23) and 702 s (23/24) played beyond 90 minutes https://www.premierleague.com/news/3860720",
+      "definition": "first-half plus second-half added time, from the half_end events"
+    },
+    "added_time_first_half_min": {
+      "tolerance": [
+        1.0,
+        4.0
+      ],
+      "unit": "minutes",
+      "per": "matches",
+      "sd": 1.0,
+      "source": "approximate, football knowledge (wide range, not a measurement)",
+      "definition": "first-half added time"
+    },
+    "added_time_second_half_min": {
+      "tolerance": [
+        4.0,
+        10.0
+      ],
+      "unit": "minutes",
+      "per": "matches",
+      "sd": 1.8,
+      "source": "approximate, football knowledge (wide range, not a measurement)",
+      "definition": "second-half added time"
+    },
+    "ball_in_play_min": {
+      "tolerance": [
+        54.0,
+        60.0
+      ],
+      "unit": "minutes",
+      "per": "matches",
+      "sd": 4.0,
+      "source": "54:49 (22/23), 58:11 (23/24) https://theanalyst.com/articles/match-time-ball-in-play-referees-stats",
+      "definition": "matches.ball_in_play_sec / 60"
+    },
+    "subs_per_team": {
+      "tolerance": [
+        3.0,
+        5.0
+      ],
+      "unit": "substitutions",
+      "per": "team_matches",
+      "sd": 1.0,
+      "source": "approximate, football knowledge (wide range, not a measurement)",
+      "definition": "substitution events / team-matches"
+    },
+    "ppda_league": {
+      "tolerance": [
+        8.0,
+        16.0
+      ],
+      "unit": "ratio",
+      "per": "teams",
+      "sd": 2.5,
+      "source": "approximate, football knowledge (wide range, not a measurement)",
+      "definition": "mean over teams of (opponent passes in their own 60% / tackles, interceptions and fouls in the opponent's 60%)",
+      "min_teams": 20
+    },
+    "possession_sd_pp": {
+      "tolerance": [
+        5.0,
+        8.5
+      ],
+      "unit": "pp",
+      "per": "none",
+      "sd": 0.0,
+      "source": "approximate, football knowledge (wide range, not a measurement)",
+      "definition": "SD across teams of season possession (share of match passes)",
+      "min_teams": 20
+    },
+    "team_pass_spread": {
+      "tolerance": [
+        1.45,
+        2.4
+      ],
+      "unit": "ratio",
+      "per": "none",
+      "sd": 0.0,
+      "source": "approximate, football knowledge (wide range, not a measurement)",
+      "definition": "highest / lowest team mean passes per match",
+      "min_teams": 20
+    },
+    "champion_points": {
+      "tolerance": [
+        78.0,
+        95.0
+      ],
+      "unit": "points",
+      "per": "none",
+      "sd": 0.0,
+      "source": "approximate, football knowledge (wide range, not a measurement)",
+      "definition": "points of the top team (38 matches)",
+      "min_teams": 20
+    },
+    "bottom_points": {
+      "tolerance": [
+        15.0,
+        35.0
+      ],
+      "unit": "points",
+      "per": "none",
+      "sd": 0.0,
+      "source": "approximate, football knowledge (wide range, not a measurement)",
+      "definition": "points of the bottom team",
+      "min_teams": 20
+    },
+    "players_used_per_team": {
+      "tolerance": [
+        20.0,
+        30.0
+      ],
+      "unit": "players",
+      "per": "none",
+      "sd": 0.0,
+      "source": "approximate, football knowledge (wide range, not a measurement)",
+      "definition": "players with minutes > 0 per team over the season",
+      "min_teams": 20
+    },
+    "corr_possession_shots": {
+      "tolerance": [
+        0.3,
+        1.0
+      ],
+      "unit": "r",
+      "per": "none",
+      "sd": 0.0,
+      "source": "approximate, football knowledge (wide range, not a measurement)",
+      "definition": "Pearson r across teams: season possession vs shots per match",
+      "min_teams": 20
+    },
+    "corr_possession_pass_accuracy": {
+      "tolerance": [
+        0.5,
+        1.0
+      ],
+      "unit": "r",
+      "per": "none",
+      "sd": 0.0,
+      "source": "approximate, football knowledge (wide range, not a measurement)",
+      "definition": "Pearson r: possession vs pass accuracy",
+      "min_teams": 20
+    },
+    "corr_ppda_possession": {
+      "tolerance": [
+        -1.0,
+        -0.2
+      ],
+      "unit": "r",
+      "per": "none",
+      "sd": 0.0,
+      "source": "approximate, football knowledge (wide range, not a measurement)",
+      "definition": "Pearson r: PPDA vs possession (pressing sides keep the ball more)",
+      "min_teams": 20
     }
   },
   "measured": {
-    "home_win_share": 0.475,
-    "draw_share": 0.3,
-    "away_win_share": 0.225,
-    "goals_per_match": 2.7,
-    "one_goal_or_less_share": 0.725,
-    "shots_per_match": 23.9,
-    "corners_per_match": 11.225
+    "goals_per_match": 3.025,
+    "home_win_share": 0.35,
+    "draw_share": 0.25,
+    "away_win_share": 0.4,
+    "home_goal_edge": -0.025,
+    "goals_dispersion": 0.8098,
+    "passes_per_team": 437.0125,
+    "pass_accuracy": 0.7848,
+    "back_pass_share": 0.1555,
+    "final_third_pass_share": 0.293,
+    "corners_per_team": 5.575,
+    "crosses_per_team": 11.075,
+    "cross_completion": 0.2833,
+    "tackles_per_team": 19.4375,
+    "interceptions_per_team": 10.4125,
+    "clearances_per_team": 17.5125,
+    "fouls_per_team": 9.775,
+    "offsides_per_team": 1.675,
+    "subs_per_team": 4.475,
+    "yellows_per_match": 4.3,
+    "reds_per_match": 0.075,
+    "shots_per_team": 14.85,
+    "on_target_share": 0.3468,
+    "blocked_share": 0.2424,
+    "conversion": 0.1019,
+    "xg_per_shot": 0.1098,
+    "goals_vs_xg": -0.0724,
+    "inside_box_share": 0.6633,
+    "header_share": 0.1608,
+    "mean_shot_distance_m": 18.2641,
+    "penalties_per_match": 0.225,
+    "set_piece_goal_share": 0.1736,
+    "goals_first_15_share": 0.124,
+    "goals_last_15_share": 0.2479,
+    "added_time_first_half_min": 3.6771,
+    "added_time_second_half_min": 8.1633,
+    "added_time_min": 11.8404,
+    "ball_in_play_min": 58.6804,
+    "ppda_league": 14.5888,
+    "possession_sd_pp": 5.5406,
+    "team_pass_spread": 1.3349,
+    "champion_points": 32,
+    "bottom_points": 16,
+    "players_used_per_team": 22,
+    "corr_possession_shots": 0.8063,
+    "corr_possession_pass_accuracy": 0.9927,
+    "corr_ppda_possession": -0.1002
   },
   "pitch_frame": "x 0-100 toward the opponent goal; every event is in the acting team's attacking frame",
   "teams": {
@@ -88,7 +591,9 @@
         0.12,
         0.08
       ],
-      "weak_lane_attacker_pov": null
+      "weak_lane_attacker_pov": null,
+      "weak_strength": null,
+      "formation": "4-2-3-1"
     },
     "NOR": {
       "team_id": "t_nor",
@@ -100,7 +605,9 @@
         0.22,
         0.15
       ],
-      "weak_lane_attacker_pov": "left_flank"
+      "weak_lane_attacker_pov": "left_flank",
+      "weak_strength": 1.5,
+      "formation": "4-3-3"
     },
     "CAL": {
       "team_id": "t_cal",
@@ -112,7 +619,9 @@
         0.2,
         0.1
       ],
-      "weak_lane_attacker_pov": null
+      "weak_lane_attacker_pov": null,
+      "weak_strength": null,
+      "formation": "4-3-3"
     },
     "VES": {
       "team_id": "t_ves",
@@ -124,7 +633,9 @@
         0.15,
         0.3
       ],
-      "weak_lane_attacker_pov": null
+      "weak_lane_attacker_pov": null,
+      "weak_strength": null,
+      "formation": "4-2-3-1"
     },
     "HAR": {
       "team_id": "t_har",
@@ -136,7 +647,9 @@
         0.2,
         0.2
       ],
-      "weak_lane_attacker_pov": "right_flank"
+      "weak_lane_attacker_pov": "right_flank",
+      "weak_strength": 1.0,
+      "formation": "4-4-2"
     }
   },
   "planted_players": {
@@ -153,14 +666,17 @@
   },
   "showcase": {
     "match_id": "m_showcase",
-    "sim_seed": 20264547,
-    "seeds_tried": 4548,
+    "sim_seed": 20260957,
+    "seeds_tried": 958,
     "home": "t_aur",
     "away": "t_nor",
     "scripted": "AUR scores their first chance of quality after minute 10",
     "player_overrides": {
       "NOR:right_winger": {
         "usage": 3.8
+      },
+      "NOR:left_winger": {
+        "delivery": 1.4
       }
     },
     "score": [
@@ -170,54 +686,57 @@
     "traps": {
       "field_tilt_while_leading": {
         "window_sec": [
-          1329,
-          5400
+          1092,
+          6097
         ],
-        "chaser_field_tilt": 0.762,
-        "chaser_f3_passes": 147,
-        "chaser_box_entries": 14,
+        "chaser_field_tilt": 0.866,
+        "chaser_f3_passes": 155,
+        "chaser_box_entries": 20,
         "chaser_perimeter_passes": 132,
         "evidence_event_ids": [
-          "m_showcase_e00368",
-          "m_showcase_e00370",
-          "m_showcase_e00371",
-          "m_showcase_e00462",
-          "m_showcase_e00463",
-          "m_showcase_e00464",
-          "m_showcase_e00465",
-          "m_showcase_e00466",
-          "m_showcase_e00467",
-          "m_showcase_e00468",
-          "m_showcase_e00469",
-          "m_showcase_e00470",
-          "m_showcase_e00369",
-          "m_showcase_e00530",
-          "m_showcase_e00532"
+          "m_showcase_e00449",
+          "m_showcase_e00459",
+          "m_showcase_e00483",
+          "m_showcase_e00484",
+          "m_showcase_e00498",
+          "m_showcase_e00524",
+          "m_showcase_e00525",
+          "m_showcase_e00548",
+          "m_showcase_e00549",
+          "m_showcase_e00550",
+          "m_showcase_e00551",
+          "m_showcase_e00553",
+          "m_showcase_e00571",
+          "m_showcase_e00708",
+          "m_showcase_e00794"
         ],
         "passed": true
       },
       "shot_spam": {
-        "shots": 19,
-        "low_xg_shots": 16,
-        "mean_xg": 0.058,
-        "total_xg": 1.1,
+        "shots": 23,
+        "low_xg_shots": 19,
+        "mean_xg": 0.056,
+        "total_xg": 1.28,
         "evidence_event_ids": [
-          "m_showcase_e00219",
-          "m_showcase_e00231",
-          "m_showcase_e00372",
-          "m_showcase_e00535",
-          "m_showcase_e00603",
-          "m_showcase_e00691",
-          "m_showcase_e00848",
-          "m_showcase_e00905",
-          "m_showcase_e00914",
-          "m_showcase_e01029",
-          "m_showcase_e01107",
-          "m_showcase_e01228",
-          "m_showcase_e01230",
-          "m_showcase_e01244",
-          "m_showcase_e01322",
-          "m_showcase_e01359"
+          "m_showcase_e00573",
+          "m_showcase_e00605",
+          "m_showcase_e00710",
+          "m_showcase_e00796",
+          "m_showcase_e00933",
+          "m_showcase_e01032",
+          "m_showcase_e01041",
+          "m_showcase_e01049",
+          "m_showcase_e01065",
+          "m_showcase_e01095",
+          "m_showcase_e01129",
+          "m_showcase_e01379",
+          "m_showcase_e01448",
+          "m_showcase_e01550",
+          "m_showcase_e01580",
+          "m_showcase_e01815",
+          "m_showcase_e01819",
+          "m_showcase_e01849",
+          "m_showcase_e01867"
         ],
         "passed": true
       },
@@ -226,83 +745,93 @@
         "rank_in_match": 1,
         "wide_share": 0.925,
         "evidence_event_ids": [
-          "m_showcase_e00058",
-          "m_showcase_e00174",
-          "m_showcase_e00176",
-          "m_showcase_e00213",
-          "m_showcase_e00215",
-          "m_showcase_e00267",
-          "m_showcase_e00368",
-          "m_showcase_e00461",
-          "m_showcase_e00473",
-          "m_showcase_e00504",
-          "m_showcase_e00507",
-          "m_showcase_e00581",
-          "m_showcase_e00594",
-          "m_showcase_e00628",
-          "m_showcase_e00634"
+          "m_showcase_e00008",
+          "m_showcase_e00019",
+          "m_showcase_e00151",
+          "m_showcase_e00175",
+          "m_showcase_e00207",
+          "m_showcase_e00250",
+          "m_showcase_e00282",
+          "m_showcase_e00308",
+          "m_showcase_e00322",
+          "m_showcase_e00489",
+          "m_showcase_e00498",
+          "m_showcase_e00522",
+          "m_showcase_e00542",
+          "m_showcase_e00598",
+          "m_showcase_e00627"
         ],
         "passed": true
       },
       "corner_specialist": {
-        "chances_created": 6,
+        "chances_created": 7,
         "from_corners": 6,
-        "open_play": 0,
+        "open_play": 1,
         "evidence_event_ids": [
-          "m_showcase_e00218",
-          "m_showcase_e00230",
-          "m_showcase_e00534",
-          "m_showcase_e01028",
-          "m_showcase_e01227",
-          "m_showcase_e01229"
+          "m_showcase_e00571",
+          "m_showcase_e00708",
+          "m_showcase_e01047",
+          "m_showcase_e01226",
+          "m_showcase_e01520",
+          "m_showcase_e01817"
         ],
         "passed": true
       },
       "one_flank_vs_weak_lane": {
-        "entries_into_final_third": 31,
-        "left_side_share": 0.613,
+        "entries_into_final_third": 34,
+        "left_side_share": 0.647,
         "defender_weak_lane": "left_flank",
+        "weak_lane_completion": 0.789,
+        "reverse_completion": 0.692,
+        "weak_lane_completion_ratio": 1.22,
         "evidence_event_ids": [
-          "m_showcase_e00324",
-          "m_showcase_e00412",
-          "m_showcase_e00446",
-          "m_showcase_e00798",
-          "m_showcase_e00921",
-          "m_showcase_e01173"
+          "m_showcase_e00034",
+          "m_showcase_e00078",
+          "m_showcase_e00410",
+          "m_showcase_e00469",
+          "m_showcase_e00507",
+          "m_showcase_e00533",
+          "m_showcase_e00678",
+          "m_showcase_e00825",
+          "m_showcase_e00849",
+          "m_showcase_e00887",
+          "m_showcase_e00975",
+          "m_showcase_e01194"
         ],
+        "reference_completion": 0.647,
         "passed": true
       }
     },
     "trap_margins": {
       "field_tilt_while_leading.chaser_field_tilt": {
-        "value": 0.762,
+        "value": 0.866,
         "threshold": 0.68,
         "kind": ">=",
-        "margin": 0.121
+        "margin": 0.274
       },
       "field_tilt_while_leading.chaser_f3_passes": {
-        "value": 147,
-        "threshold": 100,
+        "value": 155,
+        "threshold": 60,
         "kind": ">=",
-        "margin": 0.47
+        "margin": 1.583
       },
       "field_tilt_while_leading.box_entry_share": {
-        "value": 0.095,
+        "value": 0.129,
         "threshold": 0.15,
         "kind": "<=",
-        "margin": 0.365
+        "margin": 0.14
       },
       "shot_spam.low_xg_shots": {
-        "value": 16,
+        "value": 19,
         "threshold": 12,
         "kind": ">=",
-        "margin": 0.333
+        "margin": 0.583
       },
       "shot_spam.low_xg_share": {
-        "value": 0.842,
+        "value": 0.826,
         "threshold": 0.75,
         "kind": ">=",
-        "margin": 0.123
+        "margin": 0.101
       },
       "volume_passer.forward_passes": {
         "value": 40,
@@ -330,21 +859,27 @@
       },
       "corner_specialist.corner_vs_open_play": {
         "value": 6,
-        "threshold": 1,
+        "threshold": 2,
         "kind": ">=",
-        "margin": 5.0
+        "margin": 2.0
       },
       "one_flank_vs_weak_lane.entries_into_final_third": {
-        "value": 31,
+        "value": 34,
         "threshold": 10,
         "kind": ">=",
-        "margin": 2.1
+        "margin": 2.4
       },
       "one_flank_vs_weak_lane.left_side_share": {
-        "value": 0.613,
+        "value": 0.647,
         "threshold": 0.5,
         "kind": ">=",
-        "margin": 0.226
+        "margin": 0.294
+      },
+      "one_flank_vs_weak_lane.weak_lane_completion_ratio": {
+        "value": 1.22,
+        "threshold": 1.0,
+        "kind": ">=",
+        "margin": 0.22
       }
     },
     "min_margin": 0.1

@@ -33,7 +33,6 @@ CHECKPOINT_SEC = 900
 TILT_WINDOW_SEC = 1800
 MIN_TILT = 60.0
 TILT_COOLDOWN_SEC = 1800
-HALF_TIME_SEC = 2700
 MIN_SHOTS_FOR_XG = 5
 MIN_CHANCES = 3
 MIN_FORWARD = 15
@@ -94,6 +93,9 @@ class AnalystAgent:
             for p in self._pre_match:          # published at kickoff, triggered by the first event
                 p.trigger_event_id, p.trigger_clock = e["event_id"], e["clock_sec"]
             out += self._pre_match
+        if e["event_type"] == "half_end" and str(e["period"]) == "1" and not self._half_done:
+            self._half_done = True                 # half-time summaries at the whistle, after stoppage time
+            out += self._summaries(e, state, t, "ht")
         if e["event_type"] == "shot":
             state.shots[e["team_id"]] += 1
         if e["event_type"] == "pass" and e["outcome"] == "success":
@@ -120,7 +122,7 @@ class AnalystAgent:
         t = last["clock_sec"]
         out = []
         if t > self._next_checkpoint - CHECKPOINT_SEC:
-            out += self._checkpoint(last, state, t, summaries=False)
+            out += self._checkpoint(last, state, t)
         out += self._summaries(last, state, t, "ft")
         return [p for p in out if p is not None]
 
@@ -171,7 +173,7 @@ class AnalystAgent:
                      metric="zone_mismatch", template_key=c["template_key"], attempt=1, strategy=None)
         return out
 
-    def _checkpoint(self, e, state, t, summaries=True):
+    def _checkpoint(self, e, state, t):
         out = []
         view = state.view(self.ds)
         t0 = max(0, t - TILT_WINDOW_SEC)
@@ -184,9 +186,6 @@ class AnalystAgent:
                 subj, extra = self._team(tid)
                 out.append(self._propose(self._spec("field_tilt", "window", subj, t0, t, "field_tilt.stat",
                                                     extra_params=extra, state=state), "recap_line", e, state))
-        if summaries and not self._half_done and t >= HALF_TIME_SEC:
-            self._half_done = True
-            out += self._summaries(e, state, t, "ht")
         return out
 
     def _summaries(self, e, state, t, tag):

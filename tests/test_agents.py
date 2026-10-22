@@ -75,11 +75,17 @@ def test_stream_with_duplicates_publishes_the_same(sc, run):
 
 # ---------- the revision loop ----------
 
-def test_raw_field_tilt_claim_blocked_then_republished_with_context(run):
+def test_raw_field_tilt_claim_blocked_then_republished_with_context(sc, run):
     o, pubs = run
     nor = [p for p in pubs if p.result.claim["metric"] == "field_tilt" and p.result.claim["subject"]["id"] == "t_nor"]
-    assert nor, "NOR's trailing field tilt should be published"
-    p = nor[0]
+    aur_goal = min(e["clock_sec"] for e in match_events(sc)[MID]
+                   if e["event_type"] == "shot" and e["outcome"] == "goal" and e["team_id"] == "t_aur")
+    # a NOR tilt claim from before AUR scored is honest as it stands: published at the first attempt
+    level = [q for q in nor if q.result.claim["window"]["to_sec"] <= aur_goal]
+    assert all(len(q.history) == 1 and q.history[0].status == "published" for q in level)
+    trailing = [q for q in nor if q.result.claim["window"]["to_sec"] > aur_goal]
+    assert trailing, "NOR's trailing field tilt should be published"
+    p = trailing[0]
     first, last = p.history[0], p.history[-1]
     assert first.claim["template_key"] == "field_tilt.stat"
     assert first.status == "blocked" and first.claim["verification"]["rule_ids"] == ["field_tilt_with_lead"]

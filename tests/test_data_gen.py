@@ -56,7 +56,10 @@ def test_shape(season):
         per_team[m["home_team_id"]] += 1
         per_team[m["away_team_id"]] += 1
     assert set(per_team.values()) == {16}
-    assert len(season["players"]) == 55
+    # squads of 24 (an XI, a bench and cover); no full name repeats
+    assert len(season["players"]) == 5 * 24
+    assert Counter(p["team_id"] for p in season["players"]) == {t.team_id: 24 for t in TEAMS}
+    assert len({p["name"] for p in season["players"]}) == len(season["players"])
 
 
 def test_events_are_clean(season):
@@ -73,7 +76,9 @@ def test_events_are_clean(season):
     for evs in by_match.values():
         clocks = [int(e["clock_sec"]) for e in evs]
         assert clocks == sorted(clocks)
-        assert max(clocks) <= 5500
+        # 90 minutes plus stoppage time (at most about 20 minutes over both halves)
+        assert 5400 < max(clocks) <= 5400 + 20 * 60
+        assert [e["period"] for e in evs if e["event_type"] == "half_end"] == ["1", "2"]
     kinds = {e["event_type"] for e in ev}
     # the challenge brief names possession changes and pressure events explicitly
     assert {"pass", "shot", "tackle", "interception", "possession_change", "pressure"} <= kinds
@@ -315,7 +320,9 @@ def _typed(events):
 def test_field_tilt_does_not_fire_on_cal_dominance(season):
     """CAL is a high press team that is genuinely dominant. Its high final-third-share spells while
     level or ahead (no deep block to chase) clear the tilt and volume gates but must not fire,
-    because CAL keeps getting into the box."""
+    because CAL keeps getting into the box. Realistic final-third volumes (about one completed
+    final-third pass a minute) mean a 20-minute spell rarely reaches the detector's 100-pass
+    volume gate, so the control lowers that gate to 40 to exercise the box-entry gate on its own."""
     by_match = defaultdict(list)
     for e in season["events"]:
         by_match[e["match_id"]].append(e)
@@ -327,8 +334,8 @@ def test_field_tilt_does_not_fire_on_cal_dominance(season):
         for s, t, diff in _spells(evs, "t_cal"):
             if diff < 0 or t - s < 1200:
                 continue
-            r = traps.field_tilt_spell(evs, (s, t), "t_cal")
-            if r["chaser_field_tilt"] >= 0.68 and r["chaser_f3_passes"] >= 100:
+            r = traps.field_tilt_spell(evs, (s, t), "t_cal", min_f3=40)
+            if r["chaser_field_tilt"] >= 0.68 and r["chaser_f3_passes"] >= 40:
                 high.append(r)
     assert len(high) >= 2, "control is vacuous: CAL never had a high-tilt spell"
     for r in high:
@@ -378,7 +385,7 @@ def test_field_tilt_firings_in_the_season_all_have_low_box_entries(season):
             if r and r["passed"]:
                 fired += 1
                 assert r["chaser_box_entries"] <= 0.15 * r["chaser_f3_passes"]
-            elif r and r["chaser_field_tilt"] >= 0.68 and r["chaser_f3_passes"] >= 100:
+            elif r and r["chaser_field_tilt"] >= 0.68 and r["chaser_f3_passes"] >= traps.FIELD_TILT_MIN_F3:
                 assert r["chaser_box_entries"] > 0.15 * r["chaser_f3_passes"]
     assert fired >= 1, "the trap should also occur naturally outside the showcase"
 

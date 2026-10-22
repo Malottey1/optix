@@ -122,7 +122,17 @@
   // ---------- helpers ----------
 
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-  const mmss = (sec) => `${String(Math.floor(sec / 60)).padStart(2, "0")}:${String(sec % 60).padStart(2, "0")}`;
+  const pad = (n) => String(n).padStart(2, "0");
+  // elapsed clock -> football time: mm:ss inside each half, then 45+m / 90+m in stoppage time
+  const mmss = (sec) => {
+    sec = Math.floor(sec);
+    const periods = (state.timeline && state.timeline.periods) || [];
+    const half = [...periods].reverse().find((p) => sec >= p.start_sec);
+    if (!half) return `${pad(Math.floor(sec / 60))}:${pad(sec % 60)}`;
+    const base = (half.period - 1) * 2700, into = sec - half.start_sec;
+    if (into <= 2700) return `${pad(Math.floor((base + into) / 60))}:${pad((base + into) % 60)}`;
+    return `${(base + 2700) / 60}+${Math.ceil((into - 2700) / 60)}`;
+  };
   const teamColor = (code) => (code === state.timeline.home.code ? "var(--home)" : "var(--away)");
   const playerName = (pid) => (state.timeline.players[pid] || {}).name || pid;
   const el = (tag, attrs = {}, parent) => {
@@ -429,7 +439,7 @@
     if (rows.length) {
       html += `<div class="table-scroll"><table class="ev"><thead><tr><th>${esc(tr("time"))}</th><th>${esc(tr("player"))}</th><th>${esc(tr("type"))}</th>
         <th>${esc(tr("from"))}</th><th>${esc(tr("to"))}</th><th>${esc(tr("outcome"))}</th></tr></thead><tbody>${rows.map((e) => `<tr>
-        <td>${esc(mmss(+e.clock_sec))}</td><td>${esc(playerName(e.player_id))}</td><td>${esc(e.event_type)}</td>
+        <td>${esc(mmss(+e.clock_sec))}</td><td>${esc(playerName(e.player_id))}${e.related_player_id ? ` → ${esc(playerName(e.related_player_id))}` : ""}</td><td>${esc(e.event_type)}</td>
         <td>${esc(e.x_start)}, ${esc(e.y_start)}</td><td>${e.x_end ? `${esc(e.x_end)}, ${esc(e.y_end)}` : "–"}</td><td>${esc(e.outcome)}</td></tr>`).join("")}</tbody></table></div>`;
     } else {
       const pts = ins.payload.points || [];

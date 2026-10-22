@@ -48,43 +48,34 @@ class TeamSpec:
     shot_spam: float           # 0-1, tendency to shoot from distance vs a deep block
     weak_strength: float = 1.0 # scales the weak-lane bonus (1.0 = the original 5-team plant)
     archetype: str = ""        # full league only: the archetype the team was generated from
+    formation: str = "4-3-3"   # see data_gen/squads.py
 
 
 TEAMS = [
     # lane_weights, weak_lane, att, dfn, press, tempo, directness, sit_deep, attacking_output, counter, shot_spam
     TeamSpec("t_aur", "AUR", "Aurelia Rovers", "left-heavy counter, protects a lead by sitting deep",
-             (0.38, 0.22, 0.20, 0.12, 0.08), None, 1.05, 1.00, 0.40, 4.0, 0.62, 0.85, 0.90, 0.50, 0.0),
+             (0.38, 0.22, 0.20, 0.12, 0.08), None, 1.05, 1.00, 0.40, 4.0, 0.62, 0.85, 0.90, 0.50, 0.0,
+             formation="4-2-3-1"),
     TeamSpec("t_nor", "NOR", "Northgate Town", "slow possession, soft against attacks down the attacker's left, shoots from range when chasing",
-             (0.15, 0.22, 0.26, 0.22, 0.15), "left_flank", 1.06, 0.97, 0.30, 6.0, 0.35, 0.15, 1.50, 0.15, 0.8),
+             (0.15, 0.22, 0.26, 0.22, 0.15), "left_flank", 1.06, 0.97, 0.30, 6.0, 0.35, 0.15, 1.50, 0.15, 0.8,
+             weak_strength=1.5, formation="4-3-3"),
     TeamSpec("t_cal", "CAL", "Calder Athletic", "high press, central play",
-             (0.10, 0.20, 0.40, 0.20, 0.10), None, 1.00, 1.00, 0.85, 4.5, 0.55, 0.30, 0.90, 0.50, 0.0),
+             (0.10, 0.20, 0.40, 0.20, 0.10), None, 1.08, 1.06, 0.90, 4.5, 0.58, 0.30, 1.25, 0.50, 0.0,
+             formation="4-3-3"),
     TeamSpec("t_ves", "VES", "Veston United", "wing play down both flanks",
-             (0.30, 0.15, 0.10, 0.15, 0.30), None, 1.03, 1.00, 0.50, 5.0, 0.50, 0.40, 1.25, 0.30, 0.0),
+             (0.30, 0.15, 0.10, 0.15, 0.30), None, 1.03, 1.00, 0.50, 5.0, 0.50, 0.40, 1.25, 0.30, 0.0,
+             formation="4-2-3-1"),
     TeamSpec("t_har", "HAR", "Harbor Wanderers", "direct long-ball, shoots early and often",
-             (0.20, 0.20, 0.20, 0.20, 0.20), "right_flank", 0.97, 0.95, 0.45, 3.8, 0.80, 0.50, 0.85, 0.45, 0.5),
+             (0.20, 0.20, 0.20, 0.20, 0.20), "right_flank", 0.97, 0.95, 0.45, 3.8, 0.80, 0.50, 0.85, 0.45, 0.5,
+             formation="4-4-2"),
 ]
 TEAM_BY_ID = {t.team_id: t for t in TEAMS}
-
-# position, role, home x, home y (own attacking frame), shirt
-FORMATION = [
-    ("GK", "goalkeeper", 5, 50, 1),
-    ("DF", "left_back", 28, 12, 3),
-    ("DF", "centre_back_l", 22, 38, 5),
-    ("DF", "centre_back_r", 22, 62, 4),
-    ("DF", "right_back", 28, 88, 2),
-    ("MF", "defensive_mid", 40, 50, 6),
-    ("MF", "central_mid_l", 50, 35, 8),
-    ("MF", "central_mid_r", 50, 65, 10),
-    ("FW", "left_winger", 72, 12, 11),
-    ("FW", "right_winger", 72, 88, 7),
-    ("FW", "striker", 85, 50, 9),
-]
 
 # Planted player traits keyed by (team code, role).
 PLAYER_TRAITS = {
     # NOR right winger: high pass volume (a top-3 forward passer season-wide, not a runaway
     # leader), forward passes almost all end wide, rarely crosses.
-    ("NOR", "right_winger"): dict(usage=2.3, cross_mult=0.15, wide_forward=True,
+    ("NOR", "right_winger"): dict(usage=1.4, cross_mult=0.15, wide_forward=True,
                                   trap_flag="volume_passer"),
     # NOR left winger: takes every corner, little open-play creativity (rarely on the ball, rarely
     # crosses), so his chances created stay corner-led even though NOR now creates more overall.
@@ -98,10 +89,5 @@ PLAYER_TRAITS = {
 # unmistakable version of a trap while the season keeps the realistic one.
 SHOWCASE_PLAYER_TRAITS = {
     ("NOR", "right_winger"): dict(usage=3.8),
+    ("NOR", "left_winger"): dict(delivery=1.4),
 }
-
-FIRST = ["Tomas", "Idris", "Lukas", "Kofi", "Mateo", "Jonas", "Ravi", "Emil", "Nico", "Sami",
-         "Oskar", "Dario", "Felix", "Hugo", "Anders", "Kwame", "Luca", "Mika", "Theo", "Yusuf"]
-LAST = ["Brandt", "Okoye", "Varga", "Lindqvist", "Moreau", "Haddad", "Petrov", "Santos", "Novak",
-        "Adeyemi", "Keller", "Duarte", "Rossi", "Mensah", "Larsen", "Costa", "Ivanov", "Bauer",
-        "Nakamura", "Quinn"]

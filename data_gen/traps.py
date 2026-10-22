@@ -36,7 +36,13 @@ def lead_window(events, leader_id, other_id):
     return (start, events[-1]["clock_sec"]) if start is not None else None
 
 
-def field_tilt_spell(events, window, chaser_id, min_f3=100, min_tilt=0.68, max_entry_share=0.15):
+# Volume gate of the field-tilt trap. Realism v2: a side completes about one final-third pass a
+# minute, so 60 is the volume of roughly an hour of pressure (v1 used 100, set on v1's inflated
+# final-third volumes).
+FIELD_TILT_MIN_F3 = 60
+
+
+def field_tilt_spell(events, window, chaser_id, min_f3=FIELD_TILT_MIN_F3, min_tilt=0.68, max_entry_share=0.15):
     """Field-tilt trap test on one time window (start_sec, end_sec] for the chasing team.
 
     Fires only when all three hold: the chaser has most of the final-third passes (tilt), enough
@@ -104,17 +110,42 @@ def corner_specialist_trap(events, passes, player_id):
                 passed=bool(len(corner) >= 4 and len(corner) >= 2 * len(op)))
 
 
-def flank_attack_trap(events, attacker_id, defender_id):
-    """Attacker's final-third progression by lane vs the lane the defender is soft in."""
+def flank_attack_trap(events, attacker_id, defender_id, reference_completion=None):
+    """Attacker's final-third progression by lane vs the lane the defender is soft in.
+
+    Also checks that the soft side shows in the match itself: the attacker's entries into the
+    defender's weak lane complete more often than the defender's own entries into the same lane
+    at the other end, and more often than `reference_completion` (the season's completion rate of
+    entries into that lane, when given). weak_lane_completion_ratio is against the reference if
+    given, else against the other end."""
     weak = TEAM_BY_ID[defender_id].weak_lane
     f3 = [e for e in events if _ok_pass(e) and e["team_id"] == attacker_id
           and e["x_start"] < FINAL_THIRD_X <= e["x_end"]]
     lanes = Counter(lane_of(e["y_end"]) for e in f3)
     n = sum(lanes.values())
     share = (lanes["left_flank"] + lanes["left_half_space"]) / n if n else 0
+
+    def completion(team):
+        tries = [e for e in events if e["event_type"] == "pass" and e["team_id"] == team
+                 and e["x_start"] < FINAL_THIRD_X <= e["x_end"] and lane_of(e["y_end"]) == weak]
+        return sum(e["outcome"] == "success" for e in tries) / len(tries) if tries else 0.0
+
+    att_c, def_c = completion(attacker_id), completion(defender_id)
+    ref = def_c if reference_completion is None else reference_completion
+    ratio = att_c / ref if ref else (2.0 if att_c else 0.0)
     return dict(entries_into_final_third=n, left_side_share=round(share, 3), defender_weak_lane=weak,
+                weak_lane_completion=round(att_c, 3), reverse_completion=round(def_c, 3),
+                weak_lane_completion_ratio=round(ratio, 3),
                 evidence_event_ids=[e["event_id"] for e in f3 if lane_of(e["y_end"]) == "left_flank"][:12],
-                passed=bool(n >= 10 and share >= 0.5 and weak == "left_flank"))
+                reference_completion=None if reference_completion is None else round(reference_completion, 3),
+                passed=bool(n >= 10 and share >= 0.5 and weak == "left_flank" and ratio > 1.0 and att_c > def_c))
+
+
+def lane_entry_completion(events, lane) -> float | None:
+    """Completion rate of every final-third entry attempt into `lane` (attacker POV) in `events`."""
+    tries = [e for e in events if e["event_type"] == "pass" and e["x_start"] < FINAL_THIRD_X <= e["x_end"]
+             and lane_of(e["y_end"]) == lane]
+    return sum(e["outcome"] == "success" for e in tries) / len(tries) if tries else None
 
 
 def trap_margins(checks: dict) -> dict:
@@ -129,7 +160,7 @@ def trap_margins(checks: dict) -> dict:
     fl = checks["one_flank_vs_weak_lane"]
     rows = {
         "field_tilt_while_leading.chaser_field_tilt": (ft["chaser_field_tilt"], 0.68, ">="),
-        "field_tilt_while_leading.chaser_f3_passes": (ft["chaser_f3_passes"], 100, ">="),
+        "field_tilt_while_leading.chaser_f3_passes": (ft["chaser_f3_passes"], FIELD_TILT_MIN_F3, ">="),
         "field_tilt_while_leading.box_entry_share": (
             ft["chaser_box_entries"] / max(1, ft["chaser_f3_passes"]), 0.15, "<="),
         "shot_spam.low_xg_shots": (ss["low_xg_shots"], 12, ">="),
@@ -141,6 +172,7 @@ def trap_margins(checks: dict) -> dict:
         "corner_specialist.corner_vs_open_play": (cs["from_corners"], max(1, 2 * cs["open_play"]), ">="),
         "one_flank_vs_weak_lane.entries_into_final_third": (fl["entries_into_final_third"], 10, ">="),
         "one_flank_vs_weak_lane.left_side_share": (fl["left_side_share"], 0.5, ">="),
+        "one_flank_vs_weak_lane.weak_lane_completion_ratio": (fl["weak_lane_completion_ratio"], 1.0, ">="),
     }
     out = {}
     for k, (v, t, kind) in rows.items():
