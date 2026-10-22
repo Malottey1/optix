@@ -45,11 +45,12 @@ export function TeamDot({ side, className = "" }) {
 }
 
 /** A label with its rule in a tooltip (hover or keyboard focus); the rule is also the accessible description. */
-export function RuleTip({ id, label, rule, className = "" }) {
-  return html`<span class=${cx("tip inline-flex", className)}>
+export function RuleTip({ id, label, prefix, rule, muted = false, end = false, className = "" }) {
+  return html`<span class=${cx("tip inline-flex", end && "tip-end", className)}>
     <button type="button" aria-describedby=${id}
-        class="inline-flex items-center gap-1 rounded-full border border-line bg-surface-2 px-2.5 py-1 text-[12px] font-semibold text-ink hover:border-line-strong">
-      ${label}<span aria-hidden="true" class="text-ink-3">ⓘ</span>
+        class=${cx("inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[12px] font-semibold hover:border-line-strong",
+          muted ? "border-line bg-surface-1 text-ink-3" : "border-muted-accent/40 bg-muted-accent-soft text-ink")}>
+      ${prefix && html`<span class="font-medium text-ink-3">${prefix}</span>`}${label}<span aria-hidden="true" class="text-ink-3">ⓘ</span>
     </button>
     <span role="tooltip" id=${id} class="tip-body">${rule}</span>
   </span>`;

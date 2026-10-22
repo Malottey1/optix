@@ -137,9 +137,10 @@ input[type="range"].scrub::-moz-range-thumb { width: 12px; height: 12px; border-
   position: absolute; z-index: 30; left: 0; top: calc(100% + 6px); width: min(300px, 80vw);
   background: var(--surface-3); color: var(--ink); border: 1px solid var(--line-strong); border-radius: 10px;
   padding: 0.6rem 0.75rem; font-size: 12.5px; line-height: 1.45; box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
-  opacity: 0; pointer-events: none; transform: translateY(-2px); transition: opacity 120ms ease, transform 120ms ease;
+  display: none; pointer-events: none;
 }
-.tip:hover > .tip-body, .tip:focus-within > .tip-body { opacity: 1; transform: none; }
+.tip:hover > .tip-body, .tip:focus-within > .tip-body { display: block; }
+.tip.tip-end > .tip-body { left: auto; right: 0; }
 
 /* scrollbars on dark */
 * { scrollbar-color: var(--line-strong) transparent; scrollbar-width: thin; }
