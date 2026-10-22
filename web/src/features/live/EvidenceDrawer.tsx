@@ -4,6 +4,7 @@
 import { useState, type ReactNode } from "react";
 import { Arrowheads, InsightLayer, PitchLines } from "../../components/pitch/Pitch";
 import { StatusChip, TeamDot } from "../../components/ui/badge";
+import { ScrollRegion } from "../../components/ui/scroll-region";
 import { Sheet } from "../../components/ui/sheet";
 import { useData } from "../../data/context";
 import { cx } from "../../lib/cx";
@@ -151,7 +152,7 @@ function Body({ ins }: { ins: Insight }) {
         <h3 id="events-h" className="eyebrow">
           {t("evidence_events")} · <span className="num">{num(rows.length, lang)}</span>
         </h3>
-        <div className="mt-2 overflow-x-auto rounded-xl border border-line">
+        <ScrollRegion label={t("evidence_events")} className="mt-2">
           <table className="w-full min-w-[480px] border-collapse text-[12.5px]">
             <thead className="bg-surface-2 text-left text-ink-3">
               <tr>
@@ -203,7 +204,7 @@ function Body({ ins }: { ins: Insight }) {
               ))}
             </tbody>
           </table>
-        </div>
+        </ScrollRegion>
       </section>
     </div>
   );
