@@ -2,7 +2,8 @@
 of its own: every number in a sentence is a param, and every numeric param appears in every
 sentence (number_guard). Templates live in agents/templates/<language>.json with an "analyst" and
 a "casual" variant per template_key, plus `_labels` for string params that need translating (lane
-names). Translation happens here, after verification, and the number guard runs on every language:
+names) and `_rules` (one plain sentence per Verifier rule, no numbers, for the dashboard).
+Translation happens here, after verification, and the number guard runs on every language:
 numbers are written in the language's own form (decimal comma in es/fr) and must match the params.
 """
 from __future__ import annotations
@@ -34,6 +35,11 @@ def templates(language: str) -> dict:
 def labels(language: str) -> dict:
     """Translated labels for string params (e.g. labels("es")["lane"]["left_flank"])."""
     return _file(language)["_labels"]
+
+
+def rule_reasons(language: str) -> dict:
+    """rule_id -> one plain sentence (no numbers) saying why the Verifier stopped or reworded a claim."""
+    return _file(language)["_rules"]
 
 
 def languages() -> list:

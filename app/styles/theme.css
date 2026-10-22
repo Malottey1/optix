@@ -1,0 +1,153 @@
+/* Optix theme: colour tokens and the few rules Tailwind utilities do not cover.
+ * Dark is the default and primary look. Tokens are mapped to Tailwind colours in index.html
+ * (@theme inline), so utilities like bg-surface-1 or text-ink-2 read these variables. */
+
+:root {
+  color-scheme: dark;
+  /* surfaces: near-black navy, layered elevation */
+  --bg: #060a12;
+  --surface-1: #0b1220;
+  --surface-2: #111a2c;
+  --surface-3: #18233a;
+  --line: #22304a;
+  --line-strong: #33445f;
+  /* ink */
+  --ink: #eef2f9;
+  --ink-2: #b3bdd0;
+  --ink-3: #8a96ad;
+  /* one confident accent for live / verified, one muted accent */
+  --accent: #2fe0b5;
+  --accent-ink: #04261d;
+  --accent-soft: rgba(47, 224, 181, 0.12);
+  --muted-accent: #9aa8ff;
+  --muted-accent-soft: rgba(154, 168, 255, 0.12);
+  /* semantic: passed / revised / blocked */
+  --pass: #4ade80;
+  --pass-soft: rgba(74, 222, 128, 0.12);
+  --revise: #fbbf24;
+  --revise-soft: rgba(251, 191, 36, 0.12);
+  --block: #f87171;
+  --block-soft: rgba(248, 113, 113, 0.12);
+  /* teams: categorical slots 1 and 2 */
+  --home: #5aa2ff;
+  --away: #ff9548;
+  /* pitch */
+  --pitch: #0a1a17;
+  --pitch-line: rgba(214, 236, 228, 0.28);
+  --pitch-third: rgba(214, 236, 228, 0.12);
+
+  --font-sans: "SF Pro Text", "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue",
+    Roboto, Arial, system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --card-pad: 1rem;
+  --gap: 1rem;
+}
+
+:root[data-contrast="high"] {
+  --surface-1: #070d18;
+  --surface-2: #0b1322;
+  --surface-3: #111c30;
+  --line: #5b6f93;
+  --line-strong: #8da0c4;
+  --ink: #ffffff;
+  --ink-2: #e2e8f2;
+  --ink-3: #c9d2e2;
+  --pitch-line: rgba(235, 250, 245, 0.6);
+  --pitch-third: rgba(235, 250, 245, 0.3);
+}
+
+:root[data-density="compact"] {
+  --card-pad: 0.7rem;
+  --gap: 0.7rem;
+}
+
+/* Plain CSS body background so there is no white flash before Tailwind runs. */
+html, body {
+  background: var(--bg);
+  color: var(--ink);
+  margin: 0;
+}
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-variant-numeric: tabular-nums;
+  min-height: 100vh;
+}
+
+.num, table, time, .tabular { font-variant-numeric: tabular-nums; }
+code, .mono { font-family: var(--font-mono); }
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.card-pad { padding: var(--card-pad); }
+.stack-gap { gap: var(--gap); }
+
+/* boot screen before React mounts */
+.boot {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  color: var(--ink-3);
+  font: 500 14px/1.4 var(--font-sans);
+  letter-spacing: 0.02em;
+}
+
+/* skeleton shimmer */
+.skeleton {
+  background: linear-gradient(90deg, var(--surface-2) 0%, var(--surface-3) 50%, var(--surface-2) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+  border-radius: 10px;
+}
+@keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+/* live dot */
+.live-dot { width: 8px; height: 8px; border-radius: 999px; background: var(--accent); box-shadow: 0 0 0 0 var(--accent-soft); }
+.is-playing .live-dot { animation: pulse 1.6s ease-out infinite; }
+@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(47, 224, 181, 0.45); } 100% { box-shadow: 0 0 0 10px rgba(47, 224, 181, 0); } }
+
+/* card enter */
+.card-enter { animation: card-in 260ms ease-out both; }
+@keyframes card-in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+
+/* ball marker glides between event locations */
+.ball { transition: transform 160ms linear; }
+
+/* slide-overs */
+.slide-over { transition: transform 220ms ease, opacity 220ms ease; }
+
+/* range input */
+input[type="range"].scrub { -webkit-appearance: none; appearance: none; height: 28px; background: transparent; width: 100%; }
+input[type="range"].scrub::-webkit-slider-runnable-track { height: 4px; border-radius: 999px; background: var(--line-strong); }
+input[type="range"].scrub::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none; width: 16px; height: 16px; border-radius: 999px; margin-top: -6px;
+  background: var(--ink); border: 3px solid var(--accent);
+}
+input[type="range"].scrub::-moz-range-track { height: 4px; border-radius: 999px; background: var(--line-strong); }
+input[type="range"].scrub::-moz-range-thumb { width: 12px; height: 12px; border-radius: 999px; background: var(--ink); border: 3px solid var(--accent); }
+
+/* tooltips (rule text) */
+.tip { position: relative; }
+.tip > .tip-body {
+  position: absolute; z-index: 30; left: 0; top: calc(100% + 6px); width: min(300px, 80vw);
+  background: var(--surface-3); color: var(--ink); border: 1px solid var(--line-strong); border-radius: 10px;
+  padding: 0.6rem 0.75rem; font-size: 12.5px; line-height: 1.45; box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+  opacity: 0; pointer-events: none; transform: translateY(-2px); transition: opacity 120ms ease, transform 120ms ease;
+}
+.tip:hover > .tip-body, .tip:focus-within > .tip-body { opacity: 1; transform: none; }
+
+/* scrollbars on dark */
+* { scrollbar-color: var(--line-strong) transparent; scrollbar-width: thin; }
+
+/* reduced motion: the OS setting or the in-app toggle */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+:root[data-motion="reduce"] *, :root[data-motion="reduce"] *::before, :root[data-motion="reduce"] *::after {
+  animation: none !important; transition: none !important; scroll-behavior: auto !important;
+}

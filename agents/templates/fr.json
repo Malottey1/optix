@@ -8,6 +8,17 @@
       "right_flank": "flanc droit"
     }
   },
+  "_rules": {
+    "field_tilt_with_lead": "L'équipe qui avait le territoire courait après le score face à un bloc bas, donc le territoire seul exagère sa maîtrise ; la phrase dit maintenant combien peu de passes ont atteint la surface.",
+    "shot_spam": "La plupart de ces tirs étaient de faible qualité, donc le total d'xG parle plus du volume que du danger ; la phrase donne maintenant le nombre de tirs et l'xG par tir.",
+    "small_sample_xg": "Trop peu de tirs pour qu'un chiffre d'xG veuille dire grand-chose seul ; la phrase donne maintenant le nombre de tirs.",
+    "set_piece_inflation": "La plupart des occasions sont venues de coups de pied arrêtés, donc le total exagère la créativité dans le jeu ; la phrase sépare maintenant les deux.",
+    "wide_forward_passes": "Beaucoup de passes vers l'avant, mais surtout sur les côtés et rarement vers les zones centrales dangereuses ; la phrase donne maintenant la qualité de passe.",
+    "ppda_alone": "Le PPDA seul peut placer une équipe passive au niveau d'une équipe qui presse dans ces données ; la phrase ajoute maintenant l'intensité du pressing.",
+    "causal_claim": "Les données d'événements montrent ce qui s'est passé, pas pourquoi, donc une affirmation de cause n'est jamais publiée.",
+    "causal_red_card": "Les données d'événements ne peuvent pas montrer qu'un carton rouge a causé un résultat, donc l'affirmation n'est jamais publiée.",
+    "single_match_fatigue": "Il n'y a pas de données de tracking et un match est un échantillon trop petit pour diagnostiquer la fatigue, donc l'affirmation n'est jamais publiée."
+  },
   "matchup.weak_flank": {
     "analyst": "{attacker} envoie {attack_share} % de ses entrées dans le dernier tiers par le {lane_label} (moyenne de la ligue {league_share} %), et {defender} laisse réussir {concede_completion} % des entrées de ce côté (ligue {league_completion} %).",
     "casual": "Attention au {lane_label} : {attacker} y attaque {attack_share} % du temps (la plupart des équipes {league_share} %), et {concede_completion} % de ces attaques réussissent contre {defender} (d'habitude {league_completion} %)."

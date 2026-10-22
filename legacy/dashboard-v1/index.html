@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Optix Match Insights</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='6' fill='none' stroke='%232a78d6' stroke-width='2'/%3E%3Ccircle cx='8' cy='8' r='2' fill='%232a78d6'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <span class="logo" aria-hidden="true">◎</span>
+      <div>
+        <h1>Optix</h1>
+        <p class="sub" data-i18n="subtitle">Verified match insights · synthetic data</p>
+      </div>
+    </div>
+    <div class="scoreboard" aria-live="polite">
+      <span class="team home"><i class="swatch home" aria-hidden="true"></i><b id="home-code">HOME</b></span>
+      <span class="score" id="score">0 – 0</span>
+      <span class="team away"><b id="away-code">AWAY</b><i class="swatch away" aria-hidden="true"></i></span>
+      <span class="clock" id="clock">00:00</span>
+    </div>
+  </header>
+
+  <nav class="controls" aria-label="Playback and view">
+    <button id="play" type="button" aria-pressed="false"><span data-i18n="play">Play</span></button>
+    <label class="speed"><span data-i18n="speed">Speed</span>
+      <select id="speed">
+        <option value="10">10×</option>
+        <option value="30" selected>30×</option>
+        <option value="60">60×</option>
+        <option value="120">120×</option>
+      </select>
+    </label>
+    <input id="scrub" type="range" min="0" max="5400" step="1" value="0" aria-label="Match clock">
+    <div class="seg" role="group" aria-label="Mode">
+      <button type="button" data-mode="casual" aria-pressed="true" data-i18n="casual">Casual</button>
+      <button type="button" data-mode="analyst" aria-pressed="false" data-i18n="analyst">Analyst</button>
+    </div>
+    <label><span data-i18n="language">Language</span>
+      <select id="lang">
+        <option value="en">English</option>
+        <option value="es">Español</option>
+        <option value="fr">Français</option>
+      </select>
+    </label>
+    <label><span data-i18n="focus">Player focus</span>
+      <select id="player"><option value="" data-i18n="all_players">All players</option></select>
+    </label>
+  </nav>
+
+  <main class="layout">
+    <section class="col-main">
+      <article class="panel pitch-panel">
+        <header class="panel-head">
+          <h2 data-i18n="focus_pitch">Focus Pitch</h2>
+          <span class="muted small" id="pitch-caption"></span>
+        </header>
+        <svg id="pitch" viewBox="-2 -2 109 72" role="img" aria-label="Pitch with the selected insight's events"></svg>
+        <p class="muted small proxy-note" data-i18n="proxy">Event locations only (no tracking). Every team attacks left to right.</p>
+      </article>
+
+      <article class="panel">
+        <header class="panel-head"><h2 data-i18n="momentum">Momentum tug-of-war</h2></header>
+        <div class="tug" aria-live="polite">
+          <span class="tug-label home" id="tug-home">HOME</span>
+          <div class="tug-track" id="tug-track"><div class="tug-mid"></div><div class="tug-fill" id="tug-fill"></div></div>
+          <span class="tug-label away" id="tug-away">AWAY</span>
+        </div>
+        <p class="tug-value" id="tug-value"></p>
+        <div class="spark-wrap">
+          <svg id="spark" viewBox="0 0 300 60" preserveAspectRatio="none" role="img" aria-label="Momentum so far"></svg>
+          <div class="tip" id="spark-tip" hidden></div>
+        </div>
+      </article>
+
+      <div class="row2">
+        <article class="panel">
+          <header class="panel-head"><h2 data-i18n="perimeter">Perimeter Lock</h2></header>
+          <div id="perimeter" class="empty" data-i18n="none_yet">Nothing yet.</div>
+        </article>
+        <article class="panel">
+          <header class="panel-head"><h2 data-i18n="honest">Standard vs honest stat</h2></header>
+          <div id="honest" class="empty" data-i18n="none_yet">Nothing yet.</div>
+        </article>
+      </div>
+    </section>
+
+    <aside class="col-feed panel" aria-label="Insight feed">
+      <header class="panel-head">
+        <h2 data-i18n="feed">Live feed</h2>
+        <span class="muted small" id="feed-count"></span>
+      </header>
+      <ol id="feed" class="feed"></ol>
+    </aside>
+  </main>
+
+  <div class="drawer" id="drawer" hidden>
+    <div class="drawer-scrim" data-close></div>
+    <section class="drawer-panel" role="dialog" aria-modal="true" aria-labelledby="drawer-title">
+      <header class="panel-head">
+        <h2 id="drawer-title" data-i18n="evidence">Evidence</h2>
+        <button type="button" class="close" data-close aria-label="Close">×</button>
+      </header>
+      <div id="drawer-body"></div>
+    </section>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

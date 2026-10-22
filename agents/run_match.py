@@ -3,7 +3,8 @@
     python -m agents.run_match --match m_showcase --out out/insights.jsonl
 
 Also writes, next to --out: claims.jsonl (every verification attempt of every published claim),
-timeline.json (teams, players, goals and the engine's per-minute momentum, for the dashboard) and
+timeline.json (teams, players, goals and the engine's per-minute momentum, for the dashboard),
+ui.json (team, player, ledger and report data for the dashboard, agents/dashboard_data.py) and
 agent_log.jsonl (structured logs). Data: --data (match directory, default data/showcase) with the
 season baseline from --season (default data/generated).
 """
@@ -18,6 +19,7 @@ from engine import flow as F
 from engine import threat as T
 from engine.tables import load, match_events
 
+from . import dashboard_data
 from .log import AgentLog
 from .narrative import languages as available_languages
 from .stream import InsightStream
@@ -73,6 +75,9 @@ def main(argv=None):
     write_jsonl(out.parent / "claims.jsonl", stream.attempts())
     (out.parent / "timeline.json").write_text(json.dumps(timeline(ds, a.match), ensure_ascii=False, sort_keys=True),
                                               encoding="utf-8")
+    attempts = {x["claim"]["claim_id"]: x for x in stream.attempts()}
+    ui = dashboard_data.build(ds, ds.baseline, a.match, insights, attempts)
+    (out.parent / "ui.json").write_text(json.dumps(ui, ensure_ascii=False, sort_keys=True), encoding="utf-8")
     lat = [i["clock"]["emitted_latency_ms"] for i in insights]
     blocked = sum(1 for x in stream.attempts() if x["claim"]["verification"]["status"] == "blocked")
     print(f"{len(insights)} insights -> {out} ({blocked} blocked attempts revised, "

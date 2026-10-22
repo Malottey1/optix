@@ -8,6 +8,17 @@
       "right_flank": "right flank"
     }
   },
+  "_rules": {
+    "field_tilt_with_lead": "The side with the territory was chasing the game against a deep block, so territory alone overstates its control; the sentence now says how few passes reached the box.",
+    "shot_spam": "Most of those shots were low-quality attempts, so the xG total says more about volume than about danger; the sentence now gives the shot count and the xG per shot.",
+    "small_sample_xg": "Too few shots for an xG figure to mean much on its own; the sentence now gives the shot count.",
+    "set_piece_inflation": "Most of the chances came from set pieces, so the total overstates open-play creativity; the sentence now splits the two.",
+    "wide_forward_passes": "Many forward passes, but mostly wide and rarely into dangerous central areas; the sentence now gives the pass quality.",
+    "ppda_alone": "PPDA alone can rank a passive side level with a pressing one in this data; the sentence now adds press intensity.",
+    "causal_claim": "Event data shows what happened, not why, so a claim that one thing caused another is never published.",
+    "causal_red_card": "A red card cannot be shown to have caused a result from event data, so the claim is never published.",
+    "single_match_fatigue": "There is no tracking data, and one match is too small a sample to diagnose fatigue, so the claim is never published."
+  },
   "matchup.weak_flank": {
     "analyst": "{attacker} send {attack_share}% of final-third entries down the {lane_label} (league {league_share}%), and {defender} let {concede_completion}% of entries there succeed (league {league_completion}%).",
     "casual": "Watch the {lane_label}: {attacker} attack it {attack_share}% of the time (most teams {league_share}%), and {concede_completion}% of attacks there work against {defender} (usually {league_completion}%)."

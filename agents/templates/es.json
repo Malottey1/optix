@@ -8,6 +8,17 @@
       "right_flank": "flanco derecho"
     }
   },
+  "_rules": {
+    "field_tilt_with_lead": "El equipo con el territorio iba por detrás ante un bloque bajo, así que el territorio por sí solo exagera su control; la frase ahora dice qué pocos pases llegaron al área.",
+    "shot_spam": "La mayoría de esos tiros fueron de baja calidad, así que el xG total habla más del volumen que del peligro; la frase ahora da el número de tiros y el xG por tiro.",
+    "small_sample_xg": "Hay muy pocos tiros para que una cifra de xG signifique mucho por sí sola; la frase ahora da el número de tiros.",
+    "set_piece_inflation": "La mayoría de las ocasiones llegaron a balón parado, así que el total exagera la creatividad en juego abierto; la frase ahora separa ambas.",
+    "wide_forward_passes": "Muchos pases hacia delante, pero casi todos por fuera y rara vez hacia zonas centrales peligrosas; la frase ahora da la calidad del pase.",
+    "ppda_alone": "El PPDA por sí solo puede igualar a un equipo pasivo con uno que presiona en estos datos; la frase ahora añade la intensidad de presión.",
+    "causal_claim": "Los datos de eventos muestran qué pasó, no por qué, así que nunca se publica que una cosa causó otra.",
+    "causal_red_card": "Con datos de eventos no se puede demostrar que una roja causara un resultado, así que la afirmación nunca se publica.",
+    "single_match_fatigue": "No hay datos de tracking y un partido es una muestra demasiado pequeña para diagnosticar cansancio, así que la afirmación nunca se publica."
+  },
   "matchup.weak_flank": {
     "analyst": "{attacker} envía el {attack_share} % de sus entradas al último tercio por el {lane_label} (media de la liga {league_share} %), y {defender} permite que el {concede_completion} % de las entradas por ahí salgan bien (liga {league_completion} %).",
     "casual": "Ojo al {lane_label}: {attacker} ataca por ahí el {attack_share} % de las veces (la mayoría, {league_share} %), y contra {defender} funciona el {concede_completion} % de esos ataques (lo normal, {league_completion} %)."

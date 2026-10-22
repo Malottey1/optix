@@ -324,6 +324,46 @@ def forward_passes_wide_share(events, team_id=None, player_id=None, window=None,
                                     wide_ids=tuple(wide)))
 
 
+INVOLVEMENT_TYPES = ("pass", "carry", "dribble", "shot", "duel", "tackle", "interception", "clearance",
+                     "block", "ball_recovery", "pressure", "foul", "save", "claim")
+
+
+def involvement(events, player_id, team_id=None, window=None, state=None) -> MetricResult:
+    """Actions credited to one player: every event of a type in INVOLVEMENT_TYPES (on-ball actions,
+    duels, pressures, fouls, goalkeeper saves and claims) with the player as the actor.
+
+    Inputs: events; player_id; optional team_id, window and game state.
+    Value: count. detail: share of the team's actions of those types in the same scope (None if
+    team_id is not given). Evidence: the events.
+    Known limits: event data only, so it counts what the player did with or near the ball, not
+    off-ball movement or distance covered. Minutes played are not in the data, so this is not
+    per 90; a substitute's count is not comparable with a starter's.
+    """
+    mine, team_n = [], 0
+    for e in _acting(events, team_id, window, state):
+        if e["event_type"] not in INVOLVEMENT_TYPES:
+            continue
+        team_n += 1
+        if e["player_id"] == player_id:
+            mine.append(e["event_id"])
+    return MetricResult(len(mine), tuple(mine), len(mine),
+                        detail=dict(team_share=len(mine) / team_n if team_id is not None and team_n else None))
+
+
+def pass_completion(events, player_id=None, team_id=None, window=None, state=None) -> MetricResult:
+    """Share of attempted passes that were completed (outcome "success").
+
+    Inputs: events; player_id and/or team_id; optional window and game state.
+    Value: completed / attempted (None if no passes). detail: attempted, completed.
+    Known limits: a safe sideways passer completes more than a creative one; pair with forward
+    passes and pass_quality_ratio before reading it as quality.
+    """
+    att = [e for e in _acting(events, team_id, window, state, "pass") if player_id is None or e["player_id"] == player_id]
+    done = [e["event_id"] for e in att if e["outcome"] == "success"]
+    return MetricResult(len(done) / len(att) if att else None, tuple(done), len(att),
+                        detail=dict(attempted=len(att), completed=len(done)))
+
+
 def forward_passes_by_player(events, team_id=None, window=None, state=None) -> MetricResult:
     """Completed forward passes per player, highest first.
 
