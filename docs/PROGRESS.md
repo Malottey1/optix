@@ -1,5 +1,40 @@
 # Progress log
 
+## Visuals (branch `ui-visuals`, from `ui-v2`)
+
+Started 2026-10-22 18:23. Football-native visuals in web/, each drawing a metric or claim the
+engine already produces. The audit is docs/visuals-plan.md; each visual is described in
+docs/visuals.md.
+
+### Visuals decisions
+
+- **Branch base:** main does not contain web/, so ui-visuals was branched from ui-v2. Green start:
+  default suite 166 passed, `npm run build` ok. The preview server from the previous session was
+  stopped first so builds and tests run alone.
+- **Export (agents/dashboard_data.py, allowed as a plain export):** a `visuals` section with the
+  showcase match's shots (location, xG, result), `engine.flow.territorial_stress` spells per team,
+  `engine.flow.rhythm` per minute (run per period, because minutes 45-49 exist in both halves),
+  leading and trailing field tilt and press intensity from `engine.profiles.team_style_profile`,
+  and per player the forward passes and key passes grouped by start and end zone with xT added
+  (`threat.value_at`) and xA. Plus `head_to_head[].claim.lane` (the lane the claim object names).
+  No new metric, no engine change. Tests: tests/test_dashboard_data.py (two new tests).
+- **ui.json size:** with the export it was 1.17 MB; run_match now writes it with compact
+  separators (1.02 MB). It is still just over 1 MB; committed as is (already minified).
+- **V3 axes:** field tilt (territory) and press intensity (pressure events per opponent pass).
+  Ball-won height was the first choice for "sitting deep", but its sample is under the minimum in
+  several leading states (AUR leading: 49 ball-winning events); press intensity has hundreds of
+  observations per state and the engine documents that a team that leads and sits deep presses
+  less. Minimum sample per state: n >= 50 on both metrics, the engine's medium-confidence sample
+  size (metrics.CONF_MEDIUM_N).
+- **V5 is ADAPT:** the engine's territorial stress is "a team keeping the ball in the opponent's
+  half" (x >= 50, no on-ball event by the other side). The gauge shows, per team, the cumulative
+  seconds of the opponent's spells: time pinned in its own half, not its own third.
+- **V9 and V11 are SKIP:** no per-match player values exist; the showcase has no red card (two
+  yellows).
+- **V8 percentiles:** computed in the page from the engine's per-player values (documented formula,
+  unit-tested, recomputed independently in Python by the consistency gate). Comparison group:
+  outfield players with at least 100 passes.
+
 ## UI v2 (branch `ui-v2`, from `ui-restructure`)
 
 Started 2026-10-22 16:17. The front end is rebuilt in web/ (Vite + React + TypeScript). The data

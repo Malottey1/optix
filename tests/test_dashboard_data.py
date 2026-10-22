@@ -113,3 +113,63 @@ def test_measured_numbers_are_parsed_from_the_three_reports(out):
         assert r["tables"] and all(t["rows"] and len(t["headers"]) == len(t["rows"][0]) for t in r["tables"])
     text = (ROOT / "docs" / "verifier-recall.md").read_text()
     assert all(n["text"] in text for n in reports["docs/verifier-recall.md"]["notes"])
+
+
+def test_visuals_export_is_plain_engine_output(out):
+    """ui.json visuals: every field is an existing engine metric or a plain count over events."""
+    ui, insights, attempts, gt = out
+    v = ui["visuals"]
+    players = {p["id"]: p for p in ui["players"]}
+    # routes: forward passes and chances regroup exactly the deck's own counts
+    for pid, rows in v["routes"].items():
+        p = players[pid]
+        n = lambda kind: sum(r[3] for r in rows if r[0] == kind)
+        assert (n("fwd"), n("op"), n("sp")) == (p["forward_passes"], p["chances_open_play"], p["chances_set_piece"]), pid
+        assert all(0 <= r[1] < 15 and 0 <= r[2] < 15 for r in rows)
+    assert set(v["routes"]) == set(players)
+    # shots: per team, the stream's full-match xG claims count the same shots and xG
+    checked = 0
+    for ins in insights:
+        final = attempts[ins["claim_id"]]["claim"]
+        if final["metric"] == "xg" and final["subject"]["kind"] == "team":
+            checked += 1
+            team = final["subject"]["team_code"]
+            sh = [s for s in v["shots"] if s[2] == team and s[1] <= final["window"]["to_sec"]]
+            assert len(sh) == final["value"]["sample_size"]
+            assert round(sum(s[6] for s in sh), 2) == final["value"]["amount"]
+    assert checked >= 2
+    # territorial stress: spells are the engine's, and both teams are present
+    assert len(v["stress"]) == 2
+    for spells in v["stress"].values():
+        assert all(s[1] - s[0] == s[2] and s[3] >= 1 for s in spells)
+    # rhythm: one row per minute per period, minute starts 60 s apart
+    for period in {r[0] for r in v["rhythm"]}:
+        rows = [r for r in v["rhythm"] if r[0] == period]
+        assert [b[2] - a[2] for a, b in zip(rows, rows[1:])] == [60] * (len(rows) - 1)
+        assert [b[1] - a[1] for a, b in zip(rows, rows[1:])] == [1] * (len(rows) - 1)
+    # game states: both brackets, both metrics, with the engine's sample size
+    for code, row in v["states"].items():
+        for b in ("leading", "trailing"):
+            assert set(row[b]) == {"field_tilt", "press_intensity"} and all(m["n"] >= 0 for m in row[b].values())
+    # head to head: the claim names its lane, and it is the top lane
+    for h in ui["teams"]["head_to_head"]:
+        if h["claim"]:
+            assert h["claim"]["lane"] == h["top"]
+
+
+def test_visuals_show_the_planted_players_differently(out):
+    """The volume passer's forward passes add less threat per pass than the league's; the corner
+    specialist's chances come mostly from set pieces."""
+    ui, _, _, gt = out
+    routes = ui["visuals"]["routes"]
+    per_pass = lambda pid: (sum(r[4] for r in routes[pid] if r[0] == "fwd")
+                            / max(1, sum(r[3] for r in routes[pid] if r[0] == "fwd")))
+    league = (sum(r[4] for rows in routes.values() for r in rows if r[0] == "fwd")
+              / sum(r[3] for rows in routes.values() for r in rows if r[0] == "fwd"))
+    for pid, plant in gt["planted_players"].items():
+        if plant["trap"] == "volume_passer":
+            assert per_pass(pid) < league, (pid, per_pass(pid), league)
+        if plant["trap"] == "corner_specialist":
+            sp = sum(r[3] for r in routes[pid] if r[0] == "sp")
+            op = sum(r[3] for r in routes[pid] if r[0] == "op")
+            assert sp > op, (pid, sp, op)

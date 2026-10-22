@@ -77,7 +77,7 @@ def main(argv=None):
                                               encoding="utf-8")
     attempts = {x["claim"]["claim_id"]: x for x in stream.attempts()}
     ui = dashboard_data.build(ds, ds.baseline, a.match, insights, attempts)
-    (out.parent / "ui.json").write_text(json.dumps(ui, ensure_ascii=False, sort_keys=True), encoding="utf-8")
+    (out.parent / "ui.json").write_text(json.dumps(ui, ensure_ascii=False, sort_keys=True, separators=(",", ":")), encoding="utf-8")
     lat = [i["clock"]["emitted_latency_ms"] for i in insights]
     blocked = sum(1 for x in stream.attempts() if x["claim"]["verification"]["status"] == "blocked")
     print(f"{len(insights)} insights -> {out} ({blocked} blocked attempts revised, "

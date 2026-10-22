@@ -20,6 +20,10 @@ Sections:
   measured  the tables of docs/realism-report.md, docs/robustness.md and docs/verifier-recall.md
   track     [clock_sec, x, y, team code] of every on-ball event in the match, in the acting team's
             attacking frame (event locations, not tracking: the ball marker on the Focus Pitch)
+  visuals   plain exports of engine metrics the visuals draw (no new metric): the match's shots
+            with xG, territorial-stress spells and per-minute rhythm; per team the leading and
+            trailing field tilt and ball-won height (style profile brackets); per player the
+            forward passes and chances grouped by start and end zone, with xT added and xA
 """
 from __future__ import annotations
 
@@ -28,13 +32,14 @@ from pathlib import Path
 
 from engine import metrics as M
 from engine import threat as T
+from engine import flow as F
 from engine.claims import build_claim
 from engine.matchup import lane_matchup, matchup_claim
 from engine.profiles import soft_lane, team_style_profile
 from engine.style_labels import style_labels
 from engine.tables import match_events, team_events
 from engine.verifier import verdict
-from engine.zones import LANES
+from engine.zones import FINAL_THIRD_X, LANES, MIDDLE_THIRD_X, THIRDS, lane_of, third_of
 
 from .analyst import REVISIONS
 from .narrative import languages, number_guard, render, rule_reasons
@@ -125,6 +130,7 @@ def teams_section(season) -> dict:
                 if c is not None:
                     v = verdict(c, season)
                     row["claim"] = dict(status=v.status, rule_ids=list(v.rule_ids), template_key=c["template_key"],
+                                        lane=c["zone"]["lane"],
                                         confidence=c["value"].get("confidence"),
                                         evidence_event_ids=c["evidence_event_ids"],
                                         text=_rendered(c["template_key"], c["params"]) if v.status != "blocked" else None)
@@ -291,6 +297,74 @@ def measured_section(docs_dir: Path) -> list:
     return [parse_report(docs_dir / name) for name in REPORTS if (docs_dir / name).exists()]
 
 
+# ---------- visuals: plain exports of existing engine metrics ----------
+
+STATE_METRICS = ("field_tilt", "press_intensity")
+
+
+def _zone(x: float, y: float) -> int:
+    """Zone index = third (0 own .. 2 attacking) * 5 + lane (0 left flank .. 4 right flank), attacker POV."""
+    return THIRDS.index(third_of(x)) * len(LANES) + LANES.index(lane_of(y))
+
+
+def _routes(ev, season, grid, pid, tid) -> list:
+    """[kind, from_zone, to_zone, passes, xt_or_xa_sum] per group. kind "fwd": the player's completed
+    forward passes (same set as forward_passes_wide_share), summed xT added (threat.value_at);
+    kind "op" / "sp": the player's key passes in open play / from set pieces (same split as
+    chances_created), summed xA from the passes table."""
+    groups: dict = {}
+    for e in M._acting(ev, tid, etype="pass"):
+        if e["player_id"] != pid:
+            continue
+        rows = []
+        if e["outcome"] == "success" and e["x_end"] - e["x_start"] >= M.FORWARD_GAIN:
+            rows.append(("fwd", T.value_at(grid, e["x_end"], e["y_end"]) - T.value_at(grid, e["x_start"], e["y_start"])))
+        p = season.passes[e["event_id"]]
+        if p["is_key_pass"]:
+            rows.append(("sp" if p["pass_type"] == "corner" or e["play_pattern"] == "set_piece" else "op", p["xa"]))
+        for kind, v in rows:
+            g = groups.setdefault((kind, _zone(e["x_start"], e["y_start"]), _zone(e["x_end"], e["y_end"])), [0, 0.0])
+            g[0] += 1
+            g[1] += v
+    return [[k, a, b, n, round(v, 4)] for (k, a, b), (n, v) in sorted(groups.items())]
+
+
+def visuals_section(match_ds, season, match_id, players) -> dict:
+    evs = match_events(match_ds)[match_id]
+    teams = sorted({e["team_id"] for e in evs if e["team_id"]}, key=match_ds.code)
+    shots = [[e["event_id"], e["clock_sec"], match_ds.code(e["team_id"]), e["player_id"], e["x_start"], e["y_start"],
+              round(match_ds.shots[e["event_id"]]["xg"], 4), match_ds.shots[e["event_id"]]["shot_result"],
+              match_ds.shots[e["event_id"]]["shot_type"]] for e in evs if e["event_type"] == "shot"]
+    stress = {}
+    for tid in teams:
+        r = F.territorial_stress(evs, tid, top=len(evs))
+        stress[match_ds.code(tid)] = [[s["start_sec"], s["end_sec"], s["seconds"], s["n_events"]]
+                                      for s in sorted(r.detail["spells"], key=lambda s: s["start_sec"])]
+    rhythm = []
+    for period in sorted({e["period"] for e in evs}):
+        pe = [e for e in evs if e["period"] == period]
+        lo, hi = min(e["minute"] for e in pe), max(e["minute"] for e in pe)
+        r = F.rhythm(pe, end_minute=hi, length=hi - lo + 1)
+        first = pe[0]
+        t0 = first["clock_sec"] - first["second"] - 60 * (first["minute"] - lo)   # clock at the start of minute lo
+        for m, n, var in zip(r.detail["minutes"], r.detail["possession_changes"], r.detail["tempo_var"]):
+            rhythm.append([period, m, t0 + 60 * (m - lo), n, var])
+    states = {}
+    for tid in sorted(season.teams, key=season.code):
+        row = {}
+        for b in ("leading", "trailing"):
+            prof = team_style_profile(season, tid, b)["metrics"]
+            row[b] = {k: dict(value=_r(prof[k]["value"], 4), league=_r(prof[k]["league"], 4), n=prof[k]["n"],
+                              interval=None if prof[k]["interval"] is None else [_r(x, 4) for x in prof[k]["interval"]],
+                              confidence=prof[k]["confidence"]) for k in STATE_METRICS}
+        states[season.code(tid)] = row
+    grid = T.xt_grid(season)
+    routes = {p["id"]: _routes(team_events(season, season.players[p["id"]]["team_id"]), season, grid, p["id"],
+                               season.players[p["id"]]["team_id"]) for p in players}
+    return dict(shots=shots, stress=stress, rhythm=rhythm, states=states, state_min_n=M.CONF_MEDIUM_N,
+                routes=routes, zones=dict(thirds=list(THIRDS), lanes=list(LANES), third_x=[MIDDLE_THIRD_X, FINAL_THIRD_X]))
+
+
 # ---------- all ----------
 
 def build(match_ds, season, match_id, insights, attempts, docs_dir: Path = ROOT / "docs") -> dict:
@@ -306,4 +380,5 @@ def build(match_ds, season, match_id, insights, attempts, docs_dir: Path = ROOT 
                 reasons={lang: rule_reasons(lang) for lang in languages()},
                 evidence=evidence_section(ids, (match_ds, season)), measured=measured_section(docs_dir),
                 track=[[e["clock_sec"], e["x_start"], e["y_start"], match_ds.code(e["team_id"])]
-                       for e in match_events(match_ds)[match_id] if e["event_type"] in TRACK_TYPES])
+                       for e in match_events(match_ds)[match_id] if e["event_type"] in TRACK_TYPES],
+                visuals=visuals_section(match_ds, season, match_id, players))
