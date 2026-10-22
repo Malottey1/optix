@@ -120,11 +120,11 @@ The season preview (scope `season`) is verified against the season baseline.
 | Fictional teams, no trademarks | `data_gen/config.py`, `data_gen/league.py` | `test_full_league.py` (fictional names) |
 | No predictions | Analyst triggers describe past and present only | review (no predictive metric exists) |
 | Zones from the attacker's point of view | `engine/zones.py` | `test_engine.py::test_zones_match_the_data_dictionary`, soft-lane recovery tests |
-| Contracts decouple engine and UI | `agents/insights.py` (semantic `insight_type`), `app/app.js` (widget mapping) | `test_stream.py` |
+| Contracts decouple engine and UI | `agents/insights.py` (semantic `insight_type`), `app/` (widget mapping in components/ and pages/) | `test_stream.py` |
 | Engine recovers planted style seeds and traps | `engine/profiles.py`, `engine/matchup.py`, rules | `test_engine.py`, `test_full_league.py`, `test_verifier.py` |
 | Effect sizes, Wilson intervals, confidence | `engine/metrics.py`, `engine/profiles.py` | `test_engine_fixtures.py`, `test_engine.py` |
 | Season baselines for single matches | `engine/tables.py` | `test_engine.py::test_showcase_uses_season_baseline` |
 | Block -> revise -> re-verify with attempts | `agents/analyst.py` (`revise`), `verification.revision_hint` | `test_agents.py::test_raw_field_tilt_claim_blocked_then_republished_with_context` |
 | Insight stream runner and latency < 1 s | `agents/stream.py`, `agents/run_match.py` | `test_stream.py::test_latency_under_one_second` |
 | Personalization modes | `agents/personalization.py`, `agents/personalize.py` | `test_translation.py` |
-| Dashboard, no console errors | `app/`, `tools/check_dashboard.py` | `test_dashboard.py` (slow, needs Playwright) |
+| Dashboard: no-build React, local only, every number traced | `app/`, `agents/dashboard_data.py`, `tools/check_dashboard.py` | `test_ui_stack.py`, `test_dashboard_data.py`, `test_number_trace.py`, `test_dashboard.py` (slow, needs Playwright) |

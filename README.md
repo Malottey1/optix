@@ -7,7 +7,7 @@ Optix is a multi-agent engine that turns synthetic football event data into live
 - **Fact check:** does the event log support the claim?
 - **Context check:** is it true but misleading given game state, sample size or metric limits? (For example, high field tilt from a team that is trailing and passing around a deep block.)
 
-> Status: data generator (small and 20-team league), engine (metrics, effect sizes, xT, flow), Verifier with nine context rules, agents with a block-and-revise loop, timed insight stream in English, Spanish and French, and a static dashboard. See `docs/PROGRESS.md`.
+> Status: data generator (small and 20-team league), engine (metrics, effect sizes, xT, flow), Verifier with nine context rules, agents with a block-and-revise loop, timed insight stream in English, Spanish and French, and a dashboard (React with no build step: Live Center, Team Board, Player Deck, Tech Blueprint). See `docs/PROGRESS.md`.
 
 ## Who it is for
 
@@ -38,8 +38,9 @@ contracts/   JSON Schemas: claim object, insight stream
 data_gen/    synthetic data generator
 engine/      metrics, style profiles, matchup, momentum, Verifier rules
 agents/      Ingest, Analyst, Verifier, Narrative, Personalization agents; orchestrator; stream; templates
-app/         static dashboard (no build step)
-tools/       headless dashboard check
+app/         dashboard: React + htm + Tailwind browser build, native ES modules vendored in app/vendor/, no build step
+tools/       headless dashboard check, report generators
+legacy/      the first dashboard (reference only)
 docs/        design notes
 tests/       tests
 ```
@@ -53,7 +54,7 @@ python3 -m venv .venv && source .venv/bin/activate      # 1. fresh environment (
 pip install -r requirements-dev.txt                      # 2. jsonschema + pytest, nothing else
 python -m data_gen.generate --seed 2026                  # 3. season (data/generated) + showcase match
 python -m agents.run_match --match m_showcase --out out/insights.jsonl   # 4. stream the match through the agents
-python -m http.server 8000                               # 5. then open http://localhost:8000/app/
+python -m http.server 8000                               # 5. then open http://localhost:8000/app/ (no npm, no build)
 ```
 
 Optional:
@@ -63,13 +64,13 @@ python -m pytest -q                                      # tests (slow ones: -m 
 python -m engine.report --team AUR --opponent NOR        # style profiles and matchup, as text
 python -m agents.personalize --mode casual --lang es --favorite NOR   # personalized feed in the terminal
 python -m data_gen.generate --league full                # 20 teams, 380 matches (data/full, ~15 s)
-pip install -r requirements-ui.txt && python -m tools.check_dashboard # headless dashboard check + screenshots
+pip install -r requirements-ui.txt && python -m tools.check_dashboard # headless gates on every route + docs/screens/
 ```
 
 What you get: `out/insights.jsonl` (timed insights, contracts/insight.schema.json), `out/claims.jsonl`
 (every verification attempt, including blocked ones), `out/timeline.json` and `out/agent_log.jsonl`
-(structured logs). Architecture: `docs/ARCHITECTURE.md`. Engine and Verifier: `docs/engine.md`.
-Dashboard: `docs/dashboard.md`.
+(structured logs), `out/ui.json` (team, player, ledger and report data for the dashboard). Architecture: `docs/ARCHITECTURE.md`. Engine and Verifier: `docs/engine.md`.
+Dashboard (stack, pages, checks): `docs/dashboard.md`.
 
 ## Not built yet (planned)
 

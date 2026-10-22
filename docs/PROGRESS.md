@@ -1,5 +1,40 @@
 # Progress log
 
+## UI restructure (branch `ui-restructure`)
+
+The dashboard is rebuilt as a no-build React app: React 18.3.1, htm 3.1.1 and the Tailwind 4.1.11
+browser build, all as native ES modules vendored in app/vendor/ (VENDOR.md has checksums and
+licences). It has hash routes #/live, #/teams, #/players and #/tech, a settings slide-over, and
+native SVG for every chart and pitch. Details are in docs/dashboard.md. The Preact fallback was not
+needed: esm.sh produced self-contained React and ReactDOM builds whose only import is the bare
+"react".
+
+Gate results (`python -m tools.check_dashboard`, every route at 1440 and 390 px):
+- no console errors, failed requests or non-localhost requests;
+- no horizontal scroll and no overlapping text;
+- Tab reaches every control (19-36 per view);
+- Tailwind applied;
+- the evidence drawer lists exactly the claim's event ids;
+- 0 untraced numbers;
+- the language switch changes no number on 35 cards, and the number guard is clean;
+- no forbidden words;
+- storage blocked and reduced motion both work.
+
+Replay at fast speed: 240 frames in 4 s, mean 16.7 ms, p95 16.8 ms, max 16.8 ms, 0 long tasks.
+
+Test changes:
+- **tests/test_dashboard.py** (slow) was rewritten for the new UI. It runs every gate above on a
+  freshly streamed match. The old test checked views of the old page (#feed .card, ?select=...).
+  Those no longer exist.
+- **New, default suite:**
+  - tests/test_ui_stack.py: no package.json, lockfile, bundler config or node_modules; no remote
+    URL in an import, script src, link href, CSS url(), @import or fetch; import map targets and
+    relative imports exist; VENDOR.md covers every file with a matching SHA-256;
+  - tests/test_dashboard_data.py: the ui.json ledger and rewrites; the number guard on original
+    wordings; rule reasons; planted styles on the Team Board; planted players on the Player Deck;
+    evidence rows; parsed reports;
+  - tests/test_number_trace.py: the number tracer catches invented numbers and ids.
+
 ## Unattended decisions
 
 - **Phase 0, per-league sanity bound:** a league fails only when the Wilson 95% upper bound of its
@@ -12,6 +47,47 @@
   passed, 0 skipped (the dashboard test ran). Pooled recall on true cases:
   - claim level: shot_spam 85/96 = 0.89 [0.81-0.93], field_tilt 56/105 = 0.53 [0.44-0.63];
   - pipeline level: shot_spam 86/96 = 0.90 [0.82-0.94], field_tilt 91/105 = 0.87 [0.79-0.92].
+
+- **Phase A, docs honesty:** the README said language models write sentences; it now says templates
+  do, and adds a "Not built yet (planned)" section (Azure, Event Hubs, Application Insights, Agent
+  Framework, LLM phrasing). Measured full-league figures were corrected to 800,670 events, 121 MB and
+  about 15 s (the docs had about 750,000 events, 110 MB and 20 s). The ARCHITECTURE example "76%" is
+  now 76.3%, the value the stream writes. engine.md's unplanted fire rates now match
+  docs/verifier-recall.md (16.0% pipeline, 3.2% claim level). The NOR->NTG rename and the "0x"
+  template wording were left for the Azure step, as instructed.
+- **Phase A, pyproject.toml** is pytest configuration, not a bundler or build config. It stays, and
+  the no-build test does not flag it.
+- **Phase A, .gitignore** now also covers .claude/settings.local.json, .cache/, *.log and archives.
+- **Phase B, the old dashboard** (app/app.js, style.css, index.html and its screenshots) was moved
+  with `git mv` to legacy/dashboard-v1/, not deleted. It is not served or tested.
+- **Phase B, data for the new pages** comes from one new file, out/ui.json, written by
+  agents/dashboard_data.py inside agents.run_match, so the quickstart is unchanged. Two new engine
+  pieces document their definitions and limits: `metrics.involvement` and `metrics.pass_completion`
+  for the Player Deck, and `engine/style_labels.py` for the Team Board label rules.
+- **Phase B, label rule:** a style label shows only when the 95% interval excludes the league average
+  AND the gap is at least 3 pp (shares) or 5% (means). Otherwise the label reads "typical".
+- **Phase B, "original wording" of a rewritten card** is the blocked attempt's own claim
+  (template_key and params), rendered by the same templates and checked by the number guard. The
+  "why" sentence is a new `_rules` block in agents/templates/{en,es,fr}.json: one plain sentence per
+  rule, no numbers.
+- **Phase B, language:** the switch changes the insight sentences (the stream's translated,
+  number-guarded outputs) and the main interface strings. Team Board, Player Deck and Tech page
+  explanations stay in English.
+- **Phase B, ball marker** on the Focus Pitch is the location of the latest on-ball event, flipped
+  into the frame of the team shown. It is labelled an event-based proxy, not tracking (rule 6).
+- **Phase B, speed control** uses words (Slow / Normal / Fast = 10 / 30 / 90 match seconds per
+  second) so no un-sourced number appears on screen.
+- **Phase B, number trace:** a number on screen passes when it is in the data: any number in
+  out/*.json*, any number inside a string there, or the length of a list or object there, which
+  covers "15 events". Football clock times (mm:ss, 45+m) derived from clock seconds also pass.
+  Id-like words (event ids, player ids) must be strings in the data.
+- **Phase B, the Tailwind browser build prints a console warning** ("should not be used in
+  production"). It is a warning, not an error, and the gate counts errors only. The no-build stack
+  requires this build.
+- **Phase B, Pillow** was added to requirements-ui.txt to keep screenshots under 300 KB
+  (palette-quantised PNG).
+- **Phase B, a stray empty directory /tmp/x** was created by mistake during a check. It holds
+  nothing and was left in place (no rm).
 
 ## Verifier recall: diagnosis and fixes for the match-level rules
 
