@@ -50,6 +50,12 @@ export function Scoreboard({ data }) {
         <span aria-hidden="true" class="hidden h-10 w-1.5 rounded-full bg-away sm:block"></span>
       </div>
     </div>
+    <div class="border-t border-line px-4 py-2.5 sm:px-6">
+      <div class="flex items-center gap-3">
+        <span class="shrink-0 text-[11px] font-semibold uppercase tracking-[0.1em] text-ink-3">${t("momentum")}</span>
+        <${MomentumBar} data=${data} className="flex-1" />
+      </div>
+    </div>
   </div>`;
 }
 
@@ -116,7 +122,7 @@ export function FocusPitch({ data }) {
         <${TeamDot} side=${side} />${team} →</span>`}>
     <figure class="m-0">
       <svg id="pitch" viewBox="-2 -2 109 72" role="img" aria-label=${`${t("focus_pitch")}: ${caption}`}
-          class="block h-auto w-full rounded-xl" data-frame-team=${team}>
+          class="mx-auto block h-auto max-h-[58vh] w-full rounded-xl" data-frame-team=${team}>
         <${Arrowheads} id="focus" />
         <${PitchLines} />
         <${InsightLayer} insight=${ins} side=${side} markerId="focus" />
@@ -155,17 +161,40 @@ const MomentumChart = React.memo(function MomentumChart({ data, upto }) {
   </svg>`;
 });
 
-export function Momentum({ data }) {
-  const { t, lang } = useT();
-  const tl = data.timeline;
-  // one engine value per minute: re-render once per minute of match time, not per frame
+// one engine value per minute: re-render once per minute of match time, not per frame
+function useMomentum(tl) {
   const idx = useReplay((s) => {
     let i = -1;
     for (let k = 0; k < tl.momentum.length && tl.momentum[k][0] <= s.t; k++) i = k;
     return i;
   });
-  const [sec, v] = idx >= 0 ? tl.momentum[idx] : [0, 0];
+  return idx >= 0 ? tl.momentum[idx] : [0, 0];
+}
+
+/** Tug-of-war bar: the engine's momentum at the clock, home pulling left, away pulling right. */
+export function MomentumBar({ data, className = "" }) {
+  const { t, lang } = useT();
+  const tl = data.timeline;
+  const [, v] = useMomentum(tl);
   const w = Math.abs(v) / 2;
+  const lead = v > 0 ? tl.home.code : v < 0 ? tl.away.code : null;
+  return html`<div class=${cx("flex items-center gap-2 text-[11.5px] font-bold", className)} data-testid="momentum-bar">
+    <span class="w-9 text-home">${tl.home.code}</span>
+    <svg viewBox="0 0 200 12" preserveAspectRatio="none" class="h-2.5 flex-1" role="img"
+        aria-label=${`${t("momentum")}: ${lead || t("level")} ${num(Math.abs(v), lang)}`}>
+      <rect x="0" y="0" width="200" height="12" rx="6" fill="var(--surface-3)" />
+      <rect data-momentum=${v} x=${v >= 0 ? 100 - w : 100} y="0" width=${w} height="12" rx="3"
+          fill=${v >= 0 ? "var(--home)" : "var(--away)"} />
+      <line x1="100" x2="100" y1="0" y2="12" stroke="var(--ink-3)" strokeWidth="1" vectorEffect="non-scaling-stroke" />
+    </svg>
+    <span class="w-9 text-right text-away">${tl.away.code}</span>
+  </div>`;
+}
+
+export function Momentum({ data }) {
+  const { t, lang } = useT();
+  const tl = data.timeline;
+  const [sec, v] = useMomentum(tl);
   const lead = v > 0 ? tl.home.code : v < 0 ? tl.away.code : null;
   return html`<${Panel} id="momentum" title=${t("momentum")} subtitle=${t("momentum_note")}>
     <div class="flex items-end justify-between gap-3">
@@ -174,17 +203,6 @@ export function Momentum({ data }) {
         ${lead ? html`<span class="inline-flex items-center gap-1.5"><${TeamDot} side=${v > 0 ? "home" : "away"} />${lead} ${t("pulling")}</span>`
           : t("level")}
       </div>
-    </div>
-    <div class="mt-3 flex items-center gap-2 text-[11.5px] font-bold">
-      <span class="w-9 text-home">${tl.home.code}</span>
-      <svg viewBox="0 0 200 12" preserveAspectRatio="none" class="h-3 flex-1" role="img"
-          aria-label=${`${t("momentum")}: ${lead || t("level")} ${num(Math.abs(v), lang)}`}>
-        <rect x="0" y="0" width="200" height="12" rx="6" fill="var(--surface-3)" />
-        <rect data-momentum=${v} x=${v >= 0 ? 100 - w : 100} y="0" width=${w} height="12" rx="3"
-            fill=${v >= 0 ? "var(--home)" : "var(--away)"} />
-        <line x1="100" x2="100" y1="0" y2="12" stroke="var(--ink-3)" strokeWidth="1" vectorEffect="non-scaling-stroke" />
-      </svg>
-      <span class="w-9 text-right text-away">${tl.away.code}</span>
     </div>
     <div class="mt-3"><${MomentumChart} data=${data} upto=${sec} /></div>
   <//>`;
