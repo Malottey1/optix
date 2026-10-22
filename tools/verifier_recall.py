@@ -305,6 +305,7 @@ def render(results) -> str:
          "above the 0.08 low-xG line. v4 uses the chance-xG line as a rule condition, so its zero "
          "chance-xG false positives hold by construction; the total-xG label stays independent of it.", ""]
     splits = (("2026-2028 (tune)", TUNE), ("2029-2030 (hold-out)", HOLD), ("all", tuple(seeds)))
+    L += _reading(results, seeds)
     for level, title in (("claim", "Claim level: one full-match claim per team (tests/test_verifier_full.py)"),
                          ("pipeline", "Pipeline level: the claims the Analyst proposes while streaming")):
         L += [f"## {title}", "",
@@ -353,6 +354,47 @@ def render(results) -> str:
                          + "; claim windows " + (", ".join(str(tuple(w["window"])) for w in r["windows"]) or "none"))
             L.append("")
     return "\n".join(L)
+
+
+def _reading(results, seeds) -> list:
+    """The headline figures in words, computed from the results (no number typed by hand)."""
+    ft = "field_tilt_with_lead"
+    cur = {(lvl, name): evaluate(results, ss, ft, lvl, CURRENT)
+           for lvl in ("claim", "pipeline") for name, ss in (("tune", TUNE), ("hold", HOLD), ("all", tuple(seeds)))}
+    old = evaluate(results, tuple(seeds), ft, "pipeline", "v2")
+    lines = {"match": set(), "window": set()}
+    for res in results:
+        for r in res["rows"]:
+            if r["rule"] == ft:
+                lines["match"].add(r["claim"]["q_line"])
+                lines["window"].update(w["feat"]["q_line"] for w in r["windows"]
+                                       if w["window"][1] - w["window"][0] == WINDOW_SEC)
+    span = {k: f"{min(v):.2f}-{max(v):.2f}" for k, v in lines.items() if v}
+
+    def rec(lvl, name):
+        k, n = cur[(lvl, name)]["true"]
+        lo, hi = wilson(k, n)
+        return f"{k / n:.2f} [{lo:.2f}-{hi:.2f}], n={n}"
+
+    def split(s):
+        u, b = s["unplanted"][1], s["unplanted_by_label"]
+        return (f"{s['unplanted'][0] / u:.1%} of {u} unplanted cases: {b['justified'] / u:.1%} justified, "
+                f"{b['unclear'] / u:.1%} unclear, {b['false positive'] / u:.1%} real false positives")
+    return ["## Reading these numbers", "",
+            f"- field_tilt_with_lead on one full-match claim per team: {rec('claim', 'tune')} on the tuning "
+            f"seeds 2026-2028, but {rec('claim', 'hold')} on the hold-out seeds 2029-2030. The changes "
+            "(including the chaser-threat line at the league's 75th percentile) were chosen on the tuning "
+            "seeds, so the hold-out figure is the honest one for this level.",
+            f"- The same rule in the Analyst pipeline, the figure users experience: {rec('pipeline', 'tune')} "
+            f"(tuning) and {rec('pipeline', 'hold')} (hold-out). The pipeline proposes a field tilt claim for "
+            "every 30-minute window above 60% tilt, several per match, and a case counts as caught when any "
+            "of them fires, so a window the rule misses is often caught by a neighbouring one. A full-match "
+            "claim has one chance, its box-entry and threat figures are averaged over the whole match, and "
+            f"the league's threat line for full matches is tighter than for 30-minute windows (less spread: "
+            f"{span.get('match')} against {span.get('window')} on these leagues).",
+            f"- Analyst-pipeline unplanted fire rate, outcome label on total xG: before the changes {split(old)}; "
+            f"now {split(cur[('pipeline', 'all')])}. The before figures are the old rules re-applied to the "
+            "claim scopes recorded in this run (the Analyst's windows do not depend on the rules).", ""]
 
 
 def main(argv=None):

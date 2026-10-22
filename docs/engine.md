@@ -190,10 +190,26 @@ average against a 1.03x line) and the planted caveat would be suppressed; from r
 made 0.59x. After the change the pipeline fires on 516 of 3230 unplanted cases (16.0%), of which
 17 (0.5% of all cases) are false positives by the total-xG label. Because the rule now uses the
 chance-xG line itself, the chance-xG label is no longer an independent check (it shows 0 by
-construction); the total-xG label still is. The cost is recall on planted cases where the chaser
-did create real chances: pipeline recall on true cases 0.94 -> 0.87, full-match claims 0.80 -> 0.53
-(those are full matches in which a chaser of a deep block still beat the league's 75th percentile
-from real chances, where "territory, not threat" would mislead).
+construction); the total-xG label still is. Split the same way, the 16.0% is 12.8% justified,
+2.7% unclear and 0.5% real false positives (before: 11.0%, 2.8%, 4.0%).
+
+The cost is recall on planted cases where the chaser did create real chances. The changes,
+including the 75th-percentile threat line, were chosen on the tuning seeds 2026-2028, and seeds
+2029-2030 are a hold-out, so the hold-out figures are the ones to quote:
+
+| field_tilt_with_lead recall, true cases | tuning 2026-2028 | hold-out 2029-2030 |
+|---|---|---|
+| one full-match claim per team | 0.62 [0.49-0.73], n=60 | 0.42 [0.29-0.57], n=45 |
+| Analyst pipeline (what users see) | 0.90 [0.80-0.95], n=60 | 0.82 [0.69-0.91], n=45 |
+
+The two levels differ because the pipeline proposes a field tilt claim for every 30-minute window
+above 60% tilt, several per match, and a case is caught when any of them fires, so a window the
+rule misses is often caught by a neighbour. A full-match claim has one chance; its box-entry and
+threat figures are averaged over the whole match; and the league's threat line is tighter for full
+matches than for 30-minute windows (1.06-1.09 against 1.29-1.37 on the five leagues). Full-match
+recall is a weak spot: it is lower than before these changes (0.70 pooled), and the cases it drops
+are full matches in which a chaser of a deep block still beat the league's 75th percentile from
+real chances, where "territory, not threat" would mislead.
 
 ## Known gaps
 

@@ -137,3 +137,68 @@ def pipeline_claims(ds, match_id) -> dict:
     orc.verifier.check = spy
     orc.run()
     return seen
+
+
+def wilson(k: int, n: int, z: float = 1.96) -> tuple[float, float]:
+    """Wilson 95% interval for k successes in n."""
+    if n == 0:
+        return (0.0, 1.0)
+    p = k / n
+    c = (p + z * z / (2 * n)) / (1 + z * z / n)
+    h = z * (p * (1 - p) / n + z * z / (4 * n * n)) ** 0.5 / (1 + z * z / n)
+    return (max(0.0, c - h), min(1.0, c + h))
+
+
+def league_counts(seed: int) -> dict:
+    """Generate the full league for `seed` in a temp dir and count every Verifier case:
+    {"level|rule|kind|fired": n} for the match rules (kind true / below_detection / non_trap,
+    level claim / pipeline), "player|rule|planted|fired" for the player rules, and
+    "field_tilt_false_positive": unplanted pipeline cases with a fire whose chaser made more total
+    non-penalty xG than the league's 75th percentile (tools/verifier_recall.py, outcome label).
+    Meant to run in a fresh process per league (tests/test_verifier_full.py)."""
+    import tempfile
+    from collections import Counter
+    from pathlib import Path
+
+    from data_gen.generate import main_full
+    from engine.claims import build_claim
+    from engine.tables import load
+    from engine.verifier import verdict
+
+    with tempfile.TemporaryDirectory() as d:
+        gt = main_full(seed, Path(d))
+        ds = load(d)
+    res = Counter()
+    pipe = {}
+    for mid in match_events(ds):
+        pipe[mid] = pipeline_claims(ds, mid)
+        drop_match_caches(ds)
+    for c in cases(ds, gt):
+        if c["planted"] is None:
+            continue
+        kind = "non_trap" if not c["planted"] else "below_detection" if c["reason"] else "true"
+        claim = build_claim(ds, c["metric"], "match", {"kind": "team", "id": c["team_id"]}, match_id=c["match_id"],
+                            template_key=f"{c['metric']}.stat", param_values=("amount",))
+        res[f"claim|{c['rule']}|{kind}|{int(c['rule'] in verdict(claim, ds).rule_ids)}"] += 1
+        fired = [w for w in pipe[c["match_id"]].get((c["team_id"], c["metric"]), []) if c["rule"] in w["rules"]]
+        res[f"pipeline|{c['rule']}|{kind}|{int(bool(fired))}"] += 1
+        if kind == "non_trap" and c["rule"] == "field_tilt_with_lead" and fired:
+            res["field_tilt_false_positive"] += any(_total_xg_false_positive(ds, c, w["window"]) for w in fired)
+    planted = {pid: p["trap"] for pid, p in gt["planted_players"].items()}
+    for pid in ds.players:
+        for rule, metric, trap, min_n in (("set_piece_inflation", "chances_created", "corner_specialist", 4),
+                                          ("wide_forward_passes", "forward_passes", "volume_passer", 15)):
+            c = build_claim(ds, metric, "season", {"kind": "player", "id": pid}, template_key=f"{metric}.stat",
+                            param_values=("amount",))
+            if c["value"]["amount"] >= min_n:
+                res[f"player|{rule}|{int(planted.get(pid) == trap)}|{int(rule in verdict(c, ds).rule_ids)}"] += 1
+    return dict(res)
+
+
+def _total_xg_false_positive(ds, case, window) -> bool:
+    """The outcome label of one fire: the chaser made more non-penalty xG (every shot) than the
+    league's 75th percentile of chasers over scopes of that length."""
+    evs = [e for e in match_events(ds)[case["match_id"]] if window[0] <= e["clock_sec"] <= window[1]]
+    r = M.chaser_threat(evs, ds.shots, case["team_id"], M.state_npxg_rates(ds)).value
+    line = M.chaser_threat_line(ds, window[1] - window[0])
+    return r is not None and line is not None and r > line
