@@ -1,5 +1,49 @@
 # Progress log
 
+## 3C. Multi-seed robustness
+
+Tool: `python -m tools.robustness` (about 20 minutes on 6 processes; `--json F --reuse` skips seeds
+already measured). Full tables: docs/robustness.md.
+
+- **Small league, 10 seeds (2026-2035):** 9 of 10 seeds have all 38 applicable targets in range.
+  The one miss is goals_dispersion on seed 2035 (1.63). No target fails on more than 2 seeds.
+  Caveat: with 40 matches the sampling allowance is wide, so values such as a 0.125 draw share
+  still pass. The small league is a weak test of realism; the full league is the real one.
+- **Full league, seeds 2026 / 2027 / 2028:**
+  - 47/47 targets in range on every seed.
+  - Champion points 84 / 86 / 93; bottom 21 / 25 / 24. With 2029 and 2030 added, the champion
+    range is 84-93.
+  - Every planted volume passer (4), corner specialist (4), shot-spam team (3) and
+    deep-when-leading team (3) is recovered on every seed.
+  - Soft lanes: 6/6 with a true effect of at least 7 pp are found on every seed, with 0/12 false
+    positives. The two weak plants, IRK (0.3, about 2.6 pp) and RVD (0.6, about 5.2 pp), are never
+    found. That is expected, because they are below the stated recoverable size.
+- **Showcase search from offset 0:**
+  - 2026 finds 4-1 at try 1384, with a minimum margin of 14%. This matches SHOWCASE_SEARCH_START.
+  - 2027 finds 2-0 at try 2724, with a minimum margin of 11%.
+  - 2028 finds 1-1 at try 1090, with a minimum margin of 10%.
+  - The tightest thresholds are shot_spam.low_xg_share and chaser_field_tilt. A 1-1 showcase would
+    have no lead for the field-tilt story to sit on for long, so only 2026 and 2027 give a natural
+    demo.
+- **Verifier, pooled (Wilson 95% intervals):**
+  - With 3 seeds:
+    - shot_spam recall 0.64 (0.53-0.73), 88 true cases, false-fire rate 0.051;
+    - field_tilt_with_lead recall 0.73 (0.60-0.82), 62 cases, false-fire rate 0.042.
+  - With 5 seeds (2029 and 2030 added only for pooling):
+    - shot_spam 0.64 (0.56-0.71), 149 cases;
+    - field_tilt_with_lead 0.69 (0.60-0.77), 107 cases.
+  - set_piece_inflation and wide_forward_passes: recall 1.00 on all 20 plants. False-fire rates are
+    0.041 and 0.001; precision is 0.22 and 0.91.
+  - The player rules cannot reach 75 true cases: each league plants only 4 of each, so 75 would need
+    about 19 leagues.
+- **Needs human review:**
+  - The comment in `tests/test_verifier_full.py` gives recall as 13/25 and 22/28. That is stale: the
+    test itself now prints 21/31 and 15/16 on seed 2026.
+  - The field_tilt recall floor of 0.65 holds on seed 2026 only by luck (0.94). Seeds 2027, 2029 and
+    2030 measure 0.57, 0.56 and 0.75.
+  - Recommendation: pin the floors to the pooled lower bounds (shot_spam about 0.55, field_tilt
+    about 0.60) and run that test on more than one seed. Not changed here.
+
 ## Realism v2: summary (read this first)
 
 Branch `realism-v2` (tag `pre-realism-v2` marks the start). Commits: Stage 0 (fc34094),
