@@ -156,7 +156,7 @@ from zero and checks it finds the same seed.
 
 `python -m data_gen.generate --league full` writes a 20-team league to `data/full/` (git-ignored):
 double round robin by the circle method (380 matches, 38 per team, one match per team per matchweek),
-about 750,000 events, about 110 MB, about 20 s. `--league small` (the default) is byte-identical to the
+about 800,000 events (800,670 for seed 2026), about 120 MB, about 15 s on a laptop. `--league small` (the default) is byte-identical to the
 5-team output and still writes the showcase; `full` does not touch the showcase.
 
 - The five original teams are unchanged. The 15 extra teams (`data_gen/league.py`) are drawn from six

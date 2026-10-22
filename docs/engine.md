@@ -168,9 +168,10 @@ On a full-match claim per team every rule fires on <= 6% of non-trap cases (the 
   team on which the rule fires. It measures how specific the rule is to the plant, not whether
   the caveat was wrong. Every generated team drops deeper when it leads (sit_deep 0.15-0.53 outside
   the plants), so a chaser circulating around a block with few box entries is a real pattern on
-  unplanted teams too. In the Analyst pipeline the rate is high (15-19% of cases) because the
-  Analyst proposes a field tilt claim for every 30-minute window above 60% tilt, several per match,
-  and one fire per match is enough. On one full-match claim per team it is 3-5%.
+  unplanted teams too. In the Analyst pipeline the rate is high (16-19% of cases across the rule
+  versions in docs/verifier-recall.md, 16.0% now) because the Analyst proposes a field tilt claim
+  for every 30-minute window above 60% tilt, several per match, and one fire per match is enough.
+  On one full-match claim per team it is 3.2% now (2.7-3.5% by seed group).
 - **Outcome-based precision**: independent of the rule's inputs (which are passes). For each fire,
   the chaser's non-penalty xG in the claim's scope is compared with what an average side makes in
   the same time in the same game states (`metrics.chaser_threat`: league npxG per second while

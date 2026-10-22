@@ -87,7 +87,7 @@ Each handoff is a typed message (`agents/messages.py`) and a structured log reco
 
 ### The revision loop
 
-1. The Analyst's first attempt is plain: the headline number only (`field_tilt.stat`: "NOR hold 76%
+1. The Analyst's first attempt is plain: the headline number only (`field_tilt.stat`: "NOR hold 76.3%
    field tilt in this spell").
 2. The Verifier fact-checks it against the events ingested so far, then runs the context rules. A
    context rule that fires names the params the sentence must carry (`REQUIRES`); when they are

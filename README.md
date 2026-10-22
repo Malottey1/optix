@@ -25,7 +25,7 @@ Fans (second-screen explanations and recaps), broadcasters and studios (trustwor
 
 ## Design principles
 
-1. Numbers are computed deterministically; language models only write sentences from calculated facts.
+1. Numbers are computed deterministically; sentences are filled from templates with already-calculated facts (no language model is used in this build; LLM phrasing is planned and would only reword those facts behind the same number guard).
 2. Claims are verified as language-independent objects, then translated.
 3. Everything is explainable: each insight links to the events behind it.
 4. Synthetic data only; fictional teams; no real trademarks.
@@ -62,7 +62,7 @@ Optional:
 python -m pytest -q                                      # tests (slow ones: -m slow)
 python -m engine.report --team AUR --opponent NOR        # style profiles and matchup, as text
 python -m agents.personalize --mode casual --lang es --favorite NOR   # personalized feed in the terminal
-python -m data_gen.generate --league full                # 20 teams, 380 matches (data/full, ~20 s)
+python -m data_gen.generate --league full                # 20 teams, 380 matches (data/full, ~15 s)
 pip install -r requirements-ui.txt && python -m tools.check_dashboard # headless dashboard check + screenshots
 ```
 
@@ -70,6 +70,14 @@ What you get: `out/insights.jsonl` (timed insights, contracts/insight.schema.jso
 (every verification attempt, including blocked ones), `out/timeline.json` and `out/agent_log.jsonl`
 (structured logs). Architecture: `docs/ARCHITECTURE.md`. Engine and Verifier: `docs/engine.md`.
 Dashboard: `docs/dashboard.md`.
+
+## Not built yet (planned)
+
+These are design intentions, not features of this repo:
+
+- Azure deployment (hosting, Event Hubs ingestion, Application Insights telemetry) and any
+  Microsoft Agent Framework wiring. The agents here are plain Python classes run in one process.
+- Live LLM phrasing. Every sentence today comes from the templates in `agents/templates/`.
 
 ## License
 
