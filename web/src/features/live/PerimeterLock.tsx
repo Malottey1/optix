@@ -36,6 +36,7 @@ export function PerimeterLock() {
       id="perimeter"
       title={t("perimeter")}
       subtitle={t("perimeter_note")}
+      subtitleClassName="wide:hidden"
       actions={
         <span className="display shrink-0 text-[15px] font-semibold text-ink-3">
           {clock(ins.clock.start_sec, tl.periods)}

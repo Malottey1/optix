@@ -17,6 +17,7 @@ export function VizFigure({
   table,
   children,
   className,
+  captionClassName,
 }: {
   id?: string;
   /** data-viz name, e.g. "crosshairs" (tests look visuals up by it). */
@@ -25,11 +26,14 @@ export function VizFigure({
   table?: SrTable;
   children: ReactNode;
   className?: string;
+  captionClassName?: string;
 }) {
   return (
     <figure id={id} data-viz={viz} className={cx("m-0 min-w-0", className)}>
       {children}
-      {caption && <figcaption className="mt-2 text-[12px] leading-relaxed text-ink-3">{caption}</figcaption>}
+      {caption && (
+        <figcaption className={cx("mt-2 text-[12px] leading-relaxed text-ink-3", captionClassName)}>{caption}</figcaption>
+      )}
       {table && (
         <div className="sr-only">
           <table data-sr-table={viz}>

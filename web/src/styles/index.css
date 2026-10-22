@@ -4,6 +4,11 @@
 @import "tailwindcss";
 @import "./tokens.css";
 
+/* `wide:` = the 1600px+ demo dashboard (Live Center fits one screen at 1600x900 and 1920x1080). */
+@theme {
+  --breakpoint-wide: 100rem;
+}
+
 @theme inline {
   --color-bg: var(--bg);
   --color-surface-1: var(--surface-1);

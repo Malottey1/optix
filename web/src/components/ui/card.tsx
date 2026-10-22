@@ -11,6 +11,7 @@ export function Panel({
   children,
   className,
   bodyClassName,
+  subtitleClassName,
   level = 2,
 }: {
   id?: string;
@@ -21,6 +22,8 @@ export function Panel({
   children?: ReactNode;
   className?: string;
   bodyClassName?: string;
+  /** e.g. "wide:hidden" where a dense layout drops the subtitle (the caption still explains). */
+  subtitleClassName?: string;
   level?: 2 | 3;
 }) {
   const H = level === 2 ? "h2" : "h3";
@@ -40,7 +43,9 @@ export function Panel({
                 {title}
               </H>
             )}
-            {subtitle && <p className="mt-1 max-w-prose text-[13px] leading-snug text-ink-3">{subtitle}</p>}
+            {subtitle && (
+              <p className={cx("mt-1 max-w-prose text-[13px] leading-snug text-ink-3", subtitleClassName)}>{subtitle}</p>
+            )}
           </div>
           {actions}
         </header>

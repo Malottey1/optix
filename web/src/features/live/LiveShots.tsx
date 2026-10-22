@@ -19,8 +19,9 @@ export function LiveShots() {
       id="live-shots"
       title="Shot quality"
       subtitle="Every shot so far; a block's area is its xG, so ten tiny blocks can weigh less than one big one."
+      subtitleClassName="wide:hidden"
     >
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-3 wide:[&_svg[data-shots]]:max-h-[118px]">
         {[tl.home, tl.away].map((t, i) => (
           <div key={t.code} className="min-w-0" data-team={t.code}>
             <p className="mb-1.5 text-[12.5px] font-semibold text-ink-2">{t.code}</p>

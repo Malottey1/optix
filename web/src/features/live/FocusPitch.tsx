@@ -110,7 +110,7 @@ function Caption({ ins }: { ins: Insight | null }) {
         <p
           id="pitch-caption"
           lang={lang}
-          className="mt-2 text-[16px] font-semibold leading-snug text-ink sm:text-[18px]"
+          className="mt-2 text-[16px] font-semibold leading-snug text-ink sm:text-[18px] wide:mt-1.5 wide:text-[16px]"
         >
           {textOf(ins.text.rendered, lang, "casual")}
         </p>
@@ -132,6 +132,7 @@ export function FocusPitch() {
       id="focus"
       title={t("focus_pitch")}
       subtitle={t("pitch_note")}
+      subtitleClassName="wide:hidden"
       actions={
         <span className="inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full border border-line bg-surface-2 px-2.5 py-1 text-[12px] font-semibold text-ink-2">
           <TeamDot side={side} />
@@ -147,7 +148,7 @@ export function FocusPitch() {
             viewBox="-2.5 -2 110 72"
             role="img"
             aria-label={`${t("focus_pitch")}: ${team} ${t("attacking")}`}
-            className="mx-auto block h-auto max-h-[62vh] w-full rounded-xl"
+            className="mx-auto block h-auto max-h-[62vh] w-full rounded-xl wide:max-h-[calc(100vh-560px)] wide:[@media(min-height:62.5rem)]:max-h-[calc(100vh-680px)]"
             data-frame-team={team}
             data-team={team}
           >
@@ -164,10 +165,10 @@ export function FocusPitch() {
             {team} →
           </span>
         </div>
-        <figcaption className="mt-4 rounded-xl border border-line bg-surface-2 px-4 py-3">
+        <figcaption className="mt-4 rounded-xl border border-line bg-surface-2 px-4 py-3 wide:hidden wide:[@media(min-height:62.5rem)]:block">
           <Caption ins={ins} />
         </figcaption>
-        <p className="mt-2.5 flex items-center gap-1.5 text-[12px] text-ink-3">
+        <p className="mt-2.5 flex items-center gap-1.5 text-[12px] text-ink-3 wide:mt-2">
           <Icon name="ball" className="h-3.5 w-3.5" />
           {t("ball_note")}
         </p>

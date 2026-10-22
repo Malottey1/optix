@@ -60,6 +60,7 @@ export function StressGauges() {
       id="stress"
       title="Pinned in own half"
       subtitle="Time the opponent kept the ball in this team's half without losing it (the engine's territorial-stress spells), adding up as the match plays."
+      subtitleClassName="wide:hidden"
     >
       <VizFigure
         viz="stress-gauges"
@@ -76,7 +77,7 @@ export function StressGauges() {
               <div key={t.code} className="flex items-end gap-3" data-team={t.code} data-gauge>
                 <svg
                   viewBox={`0 0 36 ${GH + 2}`}
-                  className="h-[132px] w-8 shrink-0"
+                  className="h-[132px] w-8 shrink-0 wide:h-[76px] wide:w-6"
                   role="img"
                   aria-label={`${t.code} pinned in own half, filling up to the playhead; full match ${mmss(totals[i]!)}`}
                 >
@@ -114,7 +115,7 @@ export function StressGauges() {
                     {t.code}
                   </p>
                   <p
-                    className="display mt-1 text-[30px] font-bold leading-none text-ink"
+                    className="display mt-1 text-[30px] font-bold leading-none text-ink wide:text-[26px]"
                     data-role="stress-value"
                     ref={(el) => {
                       texts.current[i] = el;
@@ -131,9 +132,9 @@ export function StressGauges() {
           })}
         </div>
       </VizFigure>
-      <p className="mt-3 text-[12px] leading-relaxed text-ink-3">
-        Event-based: a spell ends when the pinned team touches the ball. Territory is not threat; read it with the
-        Perimeter Lock.
+      <p className="mt-3 text-[12px] leading-relaxed text-ink-3 wide:hidden">
+        <span className="wide:hidden">Event-based: a spell ends when the pinned team touches the ball. </span>
+        Territory is not threat; read it with the Perimeter Lock.
       </p>
     </Panel>
   );
@@ -183,9 +184,14 @@ export function RhythmPulse() {
       id="rhythm"
       title="Rhythm"
       subtitle="Possession changes per minute: tall, jagged peaks are transition chaos; a flat line is one side keeping the ball."
+      subtitleClassName="wide:hidden"
+      className="wide:grid wide:grid-cols-[9rem_minmax(0,1fr)] wide:items-center wide:[&>header]:pb-[var(--pad)]"
+      bodyClassName="wide:pl-0"
     >
       <VizFigure
         viz="rhythm-pulse"
+        className="wide:grid wide:grid-cols-[minmax(0,1fr)_17rem] wide:items-center wide:gap-5"
+        captionClassName="wide:mt-0"
         caption={
           <>
             Peak <b className="num font-semibold text-ink-2">{num(peak, lang)}</b> changes in a minute
@@ -195,7 +201,7 @@ export function RhythmPulse() {
                 at <span className="num">{clock(peakRow[2], tl.periods)}</span>
               </>
             ) : null}
-            . Height is the count, mirrored around the centre line.
+            .<span className="wide:hidden"> Height is the possession changes in a minute, mirrored around the centre line.</span>
           </>
         }
         table={{
@@ -207,7 +213,7 @@ export function RhythmPulse() {
         <svg
           viewBox={`0 0 ${RW} ${RH}`}
           preserveAspectRatio="none"
-          className="block h-[92px] w-full rounded-lg border border-line bg-surface-1"
+          className="block h-[92px] w-full rounded-lg border border-line bg-surface-1 wide:h-[44px]"
           role="img"
           aria-label={`Rhythm: possession changes per minute through the match, peak ${peak} in a minute.`}
           data-peak={peak}

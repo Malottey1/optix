@@ -64,8 +64,17 @@ def test_the_visuals_match_the_engine_output(report):
     assert c["pairs"] == 20 and c["cards"].get("crosshairs") and c["cards"].get("shot-blocks") and c["arrows"], c
 
 
+def test_the_live_first_screen_shows_every_live_visual_at_1080p_and_900p(report):
+    fs = report["first_screen"]
+    assert set(fs) == {"1920x1080", "1600x900"}, fs
+    for size, v in fs.items():
+        assert not v["problems"] and all(v["boxes"].values()), (size, v)
+
+
 def test_replay_frame_times_and_bundle_size_are_recorded(report):
     f = report["frames"]
     assert f["frames"] > 30, f
+    for k in ("frames", "frames_1080p"):
+        assert report[k]["p95_ms"] <= check_web.FRAME_P95_MS, report[k]
     assert report["bundle"]["total_kb"] < 250, report["bundle"]
     print("\nreplay frames:", f, "\ninitial JS:", report["bundle"])

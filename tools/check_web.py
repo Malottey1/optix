@@ -23,7 +23,9 @@ width in Chromium, save screenshots to docs/screens-v3/, and report every gate:
   * SVG text renders at 11 px or more at phone width;
   * no forbidden word (real club names, prediction or betting language, invented statistics);
   * the page still works with storage blocked, and with reduced motion it does not autoplay;
-  * replay frame times while playing (p50 / p95) and the initial JS size (gzip).
+  * the Live Center's first screen at 1920x1080 and 1600x900 shows every Live visual whole, with no
+    overlapping text (check_first_screen);
+  * replay frame p95 at most 20 ms (at 1440x900 and 1920x1080) and initial JS under 250 KB gzip.
 
     python -m tools.check_web               # needs web/dist (cd web && npm run build)
     python -m tools.check_web --ref out --mutation-proof
@@ -500,8 +502,12 @@ def check_robustness(browser, base) -> dict:
     return out
 
 
-def check_replay_frames(browser, base, ms=4000) -> dict:
-    ctx, page, log = _context(browser, *WIDTHS["desktop"])
+FRAME_P95_MS = 20
+INITIAL_JS_KB = 250
+
+
+def check_replay_frames(browser, base, ms=4000, size=WIDTHS["desktop"]) -> dict:
+    ctx, page, log = _context(browser, *size)
     _open(page, base, "live", "t=0")
     page.click("[data-name='speed'][data-value='fast']")
     page.click("#play")
@@ -515,6 +521,39 @@ def check_replay_frames(browser, base, ms=4000) -> dict:
     return dict(frames=len(d), mean_ms=round(sum(d) / len(d), 1), p50_ms=pick(0.5), p95_ms=pick(0.95),
                 max_ms=round(d[-1], 1), over_33ms=sum(1 for x in d if x > 33.4), long_tasks=len(res["longs"]),
                 clock_after=clock, problems=log["problems"])
+
+
+FIRST_SCREENS = ((1920, 1080), (1600, 900))
+# what the Live Center must show without scrolling on a wide screen (the demo video)
+FIRST_SCREEN = {"focus pitch": "#focus", "perimeter lock": "#perimeter", "tug-of-war": "[data-testid=momentum-bar]",
+                "stress gauges": "#stress", "rhythm pulse": "#rhythm", "shot quality": "#live-shots",
+                "stream (top)": "#feed-panel > header"}
+
+
+def check_first_screen(browser, base) -> dict:
+    """At 1920x1080 and 1600x900 the Live Center's first screen, unscrolled, contains each visual's
+    whole bounding box; no text overlaps; SVG text is at least MIN_SVG_PX."""
+    out = {}
+    for w, h in FIRST_SCREENS:
+        ctx, page, log = _context(browser, w, h)
+        _open(page, base, "live", QUERY["live"])
+        boxes = page.evaluate("""(sel) => Object.fromEntries(Object.entries(sel).map(([k, s]) => {
+            const e = document.querySelector(s); if (!e) return [k, null];
+            const r = e.getBoundingClientRect(); return [k, [r.left, r.top, r.right, r.bottom]]; }))""", FIRST_SCREEN)
+        problems = []
+        for name, b in boxes.items():
+            if b is None:
+                problems.append(f"{name} missing")
+            elif b[0] < 0 or b[1] < 0 or b[2] > w + 0.5 or b[3] > h + 0.5:
+                problems.append(f"{name} not fully in the first screen: {[round(x) for x in b]}")
+        ov = page.evaluate(OVERLAP_JS)
+        small = page.evaluate(SMALL_SVG_TEXT_JS)
+        problems += [f"overlapping text {x}" for x in ov["overlaps"][:5]]
+        problems += [f"SVG text under {MIN_SVG_PX}px {x}" for x in small[:5]]
+        out[f"{w}x{h}"] = dict(boxes={k: [round(x) for x in v] if v else None for k, v in boxes.items()},
+                               problems=problems + log["problems"])
+        ctx.close()
+    return out
 
 
 def demo_screen(browser, base, screens: Path):
@@ -552,6 +591,8 @@ def run(dist: Path | None = None, screens_dir: Path | None = None, screens: bool
             report["drawer"] = check_evidence_drawer(browser, base, src)
             report["robustness"] = check_robustness(browser, base)
             report["frames"] = check_replay_frames(browser, base)
+            report["frames_1080p"] = check_replay_frames(browser, base, size=(1920, 1080))
+            report["first_screen"] = check_first_screen(browser, base)
             if shots:
                 report["demo_problems"] = demo_screen(browser, base, shots)
         if set(routes) == set(ROUTES):
@@ -615,8 +656,15 @@ def failures(report) -> list:
         f += [f"reduced motion: {x}" for x in R["reduced_motion"]["problems"]]
         if R["reduced_motion"]["autoplay"] != "false" or R["reduced_motion"]["motion"] != "reduce":
             f.append(f"reduced motion: {R['reduced_motion']}")
-    if "frames" in report:
-        f += [f"frames: {x}" for x in report["frames"].get("problems", [])]
+    for k in ("frames", "frames_1080p"):
+        if k in report:
+            f += [f"{k}: {x}" for x in report[k].get("problems", [])]
+            if report[k].get("p95_ms", 0) > FRAME_P95_MS:
+                f.append(f"{k}: p95 {report[k]['p95_ms']} ms over {FRAME_P95_MS} ms")
+    for size, v in report.get("first_screen", {}).items():
+        f += [f"first screen {size}: {x}" for x in v["problems"]]
+    if report.get("bundle", {}).get("total_kb", 0) >= INITIAL_JS_KB:
+        f.append(f"initial JS {report['bundle']['total_kb']} KB gzip, budget {INITIAL_JS_KB} KB")
     f += [f"demo screen: {x}" for x in report.get("demo_problems", [])]
     if report["bundle"]["total_kb"] >= 250:
         f.append(f"initial JS {report['bundle']['total_kb']} KB gzip (budget 250)")
@@ -650,7 +698,8 @@ def main(argv=None):
               f"text_runs={r['overlap']['count']:4d} overlaps={len(r['overlap']['overlaps'])} untraced={len(r['untraced'])} "
               f"controls={r['tab']['controls']:3d} tab_missing={len(r['tab']['missing'])} axe_serious={len(bad_axe)} "
               f"axe_minor={len(r['axe']) - len(bad_axe)} problems={len(r['problems'])} remote={len(r['remote'])} attrs={r['attrs']}")
-    for k in ("drawer", "consistency", "mutation_proof", "language", "robustness", "frames", "bundle"):
+    for k in ("drawer", "consistency", "mutation_proof", "language", "robustness", "frames", "frames_1080p",
+              "first_screen", "bundle"):
         if k in report:
             print(f"{k}:", {x: y for x, y in report[k].items() if x != "_problems"} if isinstance(report[k], dict) else report[k])
     if a.json:

@@ -138,13 +138,13 @@ export function Scoreboard() {
     >
       <div aria-hidden="true" className="absolute inset-y-0 left-0 w-1 bg-home" />
       <div aria-hidden="true" className="absolute inset-y-0 right-0 w-1 bg-away" />
-      <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 px-4 pb-3 pt-4 sm:gap-8 sm:px-7 sm:pt-5">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 px-4 pb-3 pt-4 sm:gap-8 sm:px-7 sm:pt-5 wide:pb-1.5 wide:pt-2.5">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <TeamDot side="home" className="hidden sm:inline-block" />
-            <span className="display text-[30px] font-bold leading-none text-ink sm:text-[44px]">{tl.home.code}</span>
+            <span className="display text-[30px] font-bold leading-none text-ink sm:text-[44px] wide:text-[38px]">{tl.home.code}</span>
           </div>
-          <div className="mt-1 hidden truncate text-[14px] text-ink-3 sm:block">{tl.home.name}</div>
+          <div className="mt-1 hidden truncate text-[14px] text-ink-3 sm:block wide:mt-0.5">{tl.home.name}</div>
           <Scorers side="home" />
         </div>
         <div className="text-center">
@@ -152,7 +152,7 @@ export function Scoreboard() {
             id="score"
             data-testid="score"
             aria-live="polite"
-            className="display text-[48px] font-bold leading-[0.9] text-ink sm:text-[76px]"
+            className="display text-[48px] font-bold leading-[0.9] text-ink sm:text-[76px] wide:text-[54px]"
           >
             {g ? g.score_home : 0}
             <span className="mx-2 text-ink-3 sm:mx-3">–</span>
@@ -169,14 +169,14 @@ export function Scoreboard() {
         </div>
         <div className="min-w-0 text-right">
           <div className="flex items-center justify-end gap-2">
-            <span className="display text-[30px] font-bold leading-none text-ink sm:text-[44px]">{tl.away.code}</span>
+            <span className="display text-[30px] font-bold leading-none text-ink sm:text-[44px] wide:text-[38px]">{tl.away.code}</span>
             <TeamDot side="away" className="hidden sm:inline-block" />
           </div>
-          <div className="mt-1 hidden truncate text-[14px] text-ink-3 sm:block">{tl.away.name}</div>
+          <div className="mt-1 hidden truncate text-[14px] text-ink-3 sm:block wide:mt-0.5">{tl.away.name}</div>
           <Scorers side="away" />
         </div>
       </div>
-      <div className="border-t border-line px-4 py-2.5 sm:px-7">
+      <div className="border-t border-line px-4 py-2.5 sm:px-7 wide:py-1.5">
         <MomentumTug />
       </div>
       <p className="sr-only">{t("replay_note")}</p>
