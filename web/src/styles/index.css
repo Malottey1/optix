@@ -1,0 +1,189 @@
+@import "@fontsource-variable/inter/wght.css";
+@import "@fontsource/barlow-condensed/latin-600.css";
+@import "@fontsource/barlow-condensed/latin-700.css";
+@import "tailwindcss";
+@import "./tokens.css";
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface-1: var(--surface-1);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-surface-4: var(--surface-4);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-line: var(--accent-line);
+  --color-muted: var(--muted-accent);
+  --color-muted-soft: var(--muted-accent-soft);
+  --color-pass: var(--pass);
+  --color-pass-soft: var(--pass-soft);
+  --color-revise: var(--revise);
+  --color-revise-soft: var(--revise-soft);
+  --color-block: var(--block);
+  --color-block-soft: var(--block-soft);
+  --color-home: var(--home);
+  --color-home-soft: var(--home-soft);
+  --color-away: var(--away);
+  --color-away-soft: var(--away-soft);
+  --font-sans: var(--font-sans);
+  --font-display: var(--font-display);
+  --font-mono: var(--font-mono);
+}
+
+@layer base {
+  html,
+  body {
+    background: var(--bg);
+    color: var(--ink);
+  }
+  body {
+    font-family: var(--font-sans);
+    font-feature-settings: "cv11", "ss01";
+    font-variant-numeric: tabular-nums;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    min-height: 100vh;
+  }
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  table,
+  time {
+    font-variant-numeric: tabular-nums;
+  }
+  code {
+    font-family: var(--font-mono);
+  }
+  * {
+    scrollbar-color: var(--line-strong) transparent;
+    scrollbar-width: thin;
+  }
+}
+
+@utility num {
+  font-variant-numeric: tabular-nums;
+}
+@utility display {
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums lining-nums;
+  letter-spacing: 0.005em;
+}
+@utility pad {
+  padding: var(--pad);
+}
+@utility gap-flow {
+  gap: var(--gap);
+}
+@utility elev-1 {
+  box-shadow: var(--shadow-1);
+}
+@utility elev-2 {
+  box-shadow: var(--shadow-2);
+}
+@utility eyebrow {
+  font-size: 11.5px;
+  font-weight: 650;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.boot {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  color: #8d99b2;
+  font:
+    500 14px/1.4 system-ui,
+    sans-serif;
+}
+
+/* skeleton shimmer */
+.skeleton {
+  background: linear-gradient(90deg, var(--surface-2) 0%, var(--surface-3) 50%, var(--surface-2) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+  border-radius: 12px;
+}
+@keyframes shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* live pulse on the replay chip */
+.pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--accent);
+}
+[data-playing="true"] .pulse-dot {
+  animation: pulse 1.6s ease-out infinite;
+}
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(55, 230, 168, 0.5);
+  }
+  100% {
+    box-shadow: 0 0 0 10px rgba(55, 230, 168, 0);
+  }
+}
+
+/* sheets (Radix Dialog) */
+@keyframes sheet-in {
+  from {
+    transform: translateX(24px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.sheet[data-state="open"] {
+  animation: sheet-in 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.overlay[data-state="open"] {
+  animation: fade-in 180ms ease-out;
+}
+.tooltip[data-state="delayed-open"],
+.tooltip[data-state="instant-open"] {
+  animation: fade-in 120ms ease-out;
+}
+
+/* reduced motion: the OS setting or the in-app toggle */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+:root[data-motion="reduce"] *,
+:root[data-motion="reduce"] *::before,
+:root[data-motion="reduce"] *::after {
+  animation: none !important;
+  transition: none !important;
+  scroll-behavior: auto !important;
+}

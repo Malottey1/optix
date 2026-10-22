@@ -1,0 +1,69 @@
+/* Optix design tokens. Dark is the default and primary look.
+ * Surfaces: near-black navy with layered elevation. One confident accent (live / verified),
+ * one muted second accent, semantic colours for passed / revised / blocked, two team slots. */
+:root {
+  color-scheme: dark;
+  --bg: #05080f;
+  --surface-1: #0a101c;
+  --surface-2: #0f1727;
+  --surface-3: #162036;
+  --surface-4: #1d2944;
+  --line: #1e2a42;
+  --line-strong: #31405e;
+
+  --ink: #f1f4fa;
+  --ink-2: #b9c2d6;
+  --ink-3: #8d99b2;
+
+  --accent: #37e6a8;
+  --accent-ink: #032318;
+  --accent-soft: rgba(55, 230, 168, 0.12);
+  --accent-line: rgba(55, 230, 168, 0.4);
+  --muted-accent: #9aa6ff;
+  --muted-accent-soft: rgba(154, 166, 255, 0.13);
+
+  --pass: #37e6a8;
+  --pass-soft: rgba(55, 230, 168, 0.12);
+  --revise: #fbbf3c;
+  --revise-soft: rgba(251, 191, 60, 0.12);
+  --block: #ff7a7a;
+  --block-soft: rgba(255, 122, 122, 0.12);
+
+  --home: #5aa7ff;
+  --home-soft: rgba(90, 167, 255, 0.16);
+  --away: #ff9a52;
+  --away-soft: rgba(255, 154, 82, 0.16);
+
+  --pitch: #0b1a19;
+  --pitch-stripe: #0d1f1d;
+  --pitch-line: rgba(214, 236, 228, 0.3);
+  --pitch-faint: rgba(214, 236, 228, 0.12);
+
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Barlow Condensed", "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  --pad: 1.125rem;
+  --gap: 1rem;
+  --radius: 1rem;
+  --shadow-1: 0 1px 0 rgba(255, 255, 255, 0.035) inset, 0 12px 32px -12px rgba(0, 0, 0, 0.6);
+  --shadow-2: 0 1px 0 rgba(255, 255, 255, 0.05) inset, 0 24px 60px -20px rgba(0, 0, 0, 0.75);
+}
+
+:root[data-contrast="high"] {
+  --surface-1: #060b15;
+  --surface-2: #0a1120;
+  --surface-3: #0f182c;
+  --line: #5d7299;
+  --line-strong: #93a6cb;
+  --ink: #ffffff;
+  --ink-2: #e6ebf4;
+  --ink-3: #ccd5e5;
+  --pitch-line: rgba(240, 252, 248, 0.62);
+  --pitch-faint: rgba(240, 252, 248, 0.3);
+}
+
+:root[data-density="compact"] {
+  --pad: 0.75rem;
+  --gap: 0.65rem;
+}

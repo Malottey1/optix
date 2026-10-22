@@ -238,8 +238,8 @@ def _open(page, base, route, query=""):
     page.wait_for_timeout(500)
 
 
-def _tab_order(page) -> dict:
-    n = page.evaluate(FOCUSABLE_JS)
+def _tab_order(page, focusable_js=FOCUSABLE_JS) -> dict:
+    n = page.evaluate(focusable_js)
     page.evaluate("() => { document.activeElement && document.activeElement.blur(); window.scrollTo(0, 0); }")
     seen = set()
     for _ in range(n + 5):

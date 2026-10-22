@@ -1,5 +1,60 @@
 # Progress log
 
+## UI v2 (branch `ui-v2`, from `ui-restructure`)
+
+Started 2026-10-22 16:17. The front end is rebuilt in web/ (Vite + React + TypeScript). The data
+generator, engine, Verifier, Translator and contracts are unchanged.
+
+### UI v2 decisions
+
+- **Branch base:** main does not contain ui-restructure (main is at 189e9f9), so ui-v2 was branched
+  from ui-restructure, as instructed. Default suite before starting: 158 passed.
+- **Data files:** out/ui.json does not hold the stream (the brief assumed it did). The stream is
+  out/insights.jsonl, every verification attempt is out/claims.jsonl, and teams, goals, periods and
+  momentum are out/timeline.json. `npm run data` copies all four, byte for byte, into
+  web/public/data/ (committed). Sizes: ui.json 965 KB (under 1 MB, so copied as is, not minified),
+  insights.jsonl 72 KB, claims.jsonl 50 KB, timeline.json 5.5 KB. No Python code changed.
+- **Versions:** every direct dependency is pinned exactly, and the install used
+  `npm install --before=2026-10-08`, so transitive dependencies are also at least two weeks old.
+  Where a brand-new major had appeared in the last weeks (react-router 8, motion 14, TypeScript 7,
+  Vite 8, ESLint 10, Vitest 5), I pinned the newest release of the previous major, whose APIs I
+  could rely on unattended. npm prints a deprecation notice on eslint 9.39.5 ("no longer
+  supported"); it works and is the newest 9.x.
+- **Dependencies beyond the named stack, and why:** @vitejs/plugin-react and @tailwindcss/vite (the
+  Vite plugins); @radix-ui/react-toggle-group (the segmented controls: speed, density, language,
+  Before / After; a sibling of the Toggle primitive); jsdom (Vitest's DOM environment);
+  @testing-library/dom (peer of React Testing Library); @eslint/js, typescript-eslint,
+  eslint-plugin-react-hooks and globals (the ESLint config); @types/react, @types/react-dom,
+  @types/d3-scale, @types/d3-shape and @types/node (types). TanStack Query was skipped: the data
+  is four static files loaded once. clsx, tailwind-merge and class-variance-authority were skipped
+  too; a one-line `cx` helper is enough.
+- **Fonts:** Inter (variable, UI) and Barlow Condensed 600/700 (scores and big numerals), both OFL,
+  self-hosted through Fontsource and emitted as files by Vite (`assetsInlineLimit: 0`).
+- **Honest labels:** the match header says "Replay", not "Live": it is a synthetic match replayed
+  from the stream. The Perimeter Lock map legend says the grey dots are "other final-third passes
+  in the evidence" (the claim's evidence is a sample of up to 15 events, not every pass).
+- **Phone layout:** the team names are hidden under 640 px (the codes stay, and the names are in the
+  header's accessible label) so neither truncates.
+- **Tab gate:** a Radix roving-focus root (toggle group, tab list) takes focus only to pass it to
+  its active item, so the web checker counts the item, not the root (tools/check_web.py,
+  WEB_FOCUSABLE_JS). tools/check_dashboard._tab_order gained an optional argument for this; the
+  legacy behaviour is unchanged.
+- **Number trace:** one documented formula was added for web/: the per-type counts of an insight's
+  evidence events (the card's evidence summary, "15 events (pass 12, shot 3)").
+- **Settings key:** `optix.settings.v2` (the legacy app keeps `optix.settings.v1`).
+
+### Test changes
+
+- **tests/test_ui_stack.py:** the "no package.json, lockfile, bundler config or node_modules" rule
+  now applies to app/ and legacy/ (the deprecated no-build UIs), plus a new check that no such file
+  exists anywhere outside web/. Reason: web/ is the new Vite build and needs package.json, a
+  lockfile and a bundler config; the rule belonged to the no-build UI. Every app/ check (remote
+  URLs, CDN names, import map, VENDOR.md checksums, plain CSS background) is unchanged.
+- **tests/test_web_stack.py (new, default suite):** exact versions and a committed lockfile that
+  matches package.json; node_modules and dist never tracked; no remote URL in web/src, index.html
+  or a built web/dist; no CDN names and self-hosted fonts only; plain CSS body background and the
+  colour tokens; web/public/data holds the four engine files, identical to out/ when out/ exists.
+
 ## UI restructure (branch `ui-restructure`)
 
 The dashboard is rebuilt as a no-build React app: React 18.3.1, htm 3.1.1 and the Tailwind 4.1.11

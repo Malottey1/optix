@@ -1,5 +1,7 @@
-"""The dashboard stack stays no-build and fully local (docs/dashboard.md):
-  * no package.json, lockfile, bundler or build config, and no node_modules, anywhere in the repo;
+"""The legacy no-build dashboard (app/, deprecated; legacy/ holds the one before it) stays no-build
+and fully local (docs/dashboard.md):
+  * no package.json, lockfile, bundler or build config, and no node_modules, in app/ or legacy/
+    (the current UI in web/ is a Vite build with its own gate: tests/test_web_stack.py);
   * nothing in app/ (vendored files included) imports, loads, links or fetches a remote URL;
   * every import-map target and every relative import exists locally, and every bare import is
     in the import map;
@@ -52,9 +54,16 @@ def _import_map():
     return json.loads(m.group(1))["imports"]
 
 
-def test_no_package_manager_bundler_or_node_modules_anywhere():
-    bad = [str(p.relative_to(ROOT)) for p in _walk(ROOT)
+def test_no_package_manager_bundler_or_node_modules_in_the_legacy_ui():
+    bad = [str(p.relative_to(ROOT)) for root in (APP, ROOT / "legacy") for p in _walk(root)
            if (p.is_dir() and p.name == "node_modules") or (p.is_file() and BUILD_FILES.match(p.name))]
+    assert not bad, bad
+
+
+def test_build_files_live_only_in_web():
+    """Outside web/, the repo has no JS package or bundler files (pyproject.toml is pytest config)."""
+    bad = [str(p.relative_to(ROOT)) for p in _walk(ROOT) if "web" not in p.relative_to(ROOT).parts[:1]
+           and ((p.is_dir() and p.name == "node_modules") or (p.is_file() and BUILD_FILES.match(p.name)))]
     assert not bad, bad
 
 
