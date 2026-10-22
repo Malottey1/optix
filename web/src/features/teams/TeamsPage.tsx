@@ -6,6 +6,7 @@ import { useState } from "react";
 import { Icon } from "../../components/icons";
 import { MismatchCrosshairs } from "../../components/viz/MismatchCrosshairs";
 import { StateSwaps } from "../../components/viz/StateSwaps";
+import { ZoneShift } from "../../components/viz/ZoneShift";
 import { LANE_NAMES, MIRROR } from "../../components/pitch/Pitch";
 import { Chip, StatusChip } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
@@ -407,6 +408,19 @@ export default function TeamsPage() {
         subtitle="Territory and pressing when trailing and when leading. A side that goes ahead and sits deep gives up territory, so the trailing opponent's field tilt rises without meaning it is on top: that is why the Verifier adds box entries to a field-tilt claim from a trailing side."
       >
         <StateSwaps visuals={m.ui.visuals} codes={T.teams.map((t) => t.code)} initial={m.timeline.home.code} />
+      </Panel>
+      <Panel
+        id="zone-shift"
+        title="Where the ball was, half by half"
+        subtitle={`Showcase match, ${m.timeline.home.code} against ${m.timeline.away.code}: how each side's on-ball events moved between the halves. A side that leads and sits deep shows its share rising in its own third.`}
+      >
+        <ZoneShift
+          track={m.ui.track}
+          periods={m.timeline.periods}
+          thirdX={m.ui.visuals.zones.third_x}
+          codes={[m.timeline.home.code, m.timeline.away.code]}
+          initial={m.timeline.home.code}
+        />
       </Panel>
       <div className="grid grid-cols-1 gap-flow md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
         {T.teams.map((t) => (

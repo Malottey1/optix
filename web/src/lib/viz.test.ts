@@ -15,6 +15,9 @@ import {
   sqrtScale,
   stressAt,
   zoneCenter,
+  zoneOf,
+  zoneShares,
+  divColor,
 } from "./viz";
 
 describe("lane mirroring and the crosshair", () => {
@@ -119,5 +122,36 @@ describe("colour, zones, routes, stress, shots, arcs", () => {
   it("slice arcs are closed paths and empty for zero radius", () => {
     expect(sliceArc(50, 50, 10, 40, 0, 7)).toMatch(/^M.*Z$/);
     expect(sliceArc(50, 50, 10, 10, 0, 7)).toBe("");
+  });
+});
+
+describe("zone grid", () => {
+  it("zones match the export: thirds by x, lanes by y edges at 20/40/60/80", () => {
+    const tx = [33.3, 66.7] as const;
+    expect(zoneOf(0, 0, tx)).toBe(0);
+    expect(zoneOf(33.3, 20, tx)).toBe(6);
+    expect(zoneOf(66.7, 100, tx)).toBe(14);
+    expect(zoneOf(50, 59.9, tx)).toBe(7);
+  });
+  it("zone shares are per team and window and sum to one", () => {
+    const tr: [number, number, number, string][] = [
+      [1, 10, 10, "AUR"],
+      [2, 10, 10, "AUR"],
+      [3, 90, 50, "AUR"],
+      [4, 90, 50, "NOR"],
+      [99, 90, 50, "AUR"],
+    ];
+    const { shares, n } = zoneShares(tr, "AUR", 0, 10, [33.3, 66.7]);
+    expect(n).toBe(3);
+    expect(shares[0]).toBeCloseTo(2 / 3, 10);
+    expect(shares[12]).toBeCloseTo(1 / 3, 10);
+    expect(shares.reduce((a, b) => a + b, 0)).toBeCloseTo(1, 10);
+    expect(zoneShares(tr, "XYZ", 0, 10, [33.3, 66.7]).shares.every((s) => s === 0)).toBe(true);
+  });
+  it("diverging colour: grey at zero, symmetric ends, clamps", () => {
+    expect(divColor(0)).toBe("rgb(62, 70, 86)");
+    expect(divColor(1)).toBe("rgb(55, 230, 168)");
+    expect(divColor(-1)).toBe("rgb(176, 132, 240)");
+    expect(divColor(-5)).toBe(divColor(-1));
   });
 });

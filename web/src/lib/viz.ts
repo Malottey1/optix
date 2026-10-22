@@ -119,3 +119,37 @@ export function sliceArc(cx: number, cy: number, r0: number, r1: number, i: numb
   if (r1 <= r0) return "";
   return `M${p(r0, a0)} L${p(r1, a0)} A${r1} ${r1} 0 ${large} 1 ${p(r1, a1)} L${p(r0, a1)} A${r0} ${r0} 0 ${large} 0 ${p(r0, a0)}Z`;
 }
+
+/** Zone index of a point in the attacker's frame, as the export's `_zone`: third · 5 + lane. */
+export function zoneOf(x: number, y: number, thirdX: readonly [number, number]): number {
+  const third = x >= thirdX[1] ? 2 : x >= thirdX[0] ? 1 : 0;
+  const lane = y < 20 ? 0 : y < 40 ? 1 : y < 60 ? 2 : y < 80 ? 3 : 4;
+  return third * 5 + lane;
+}
+
+/** Share of a team's on-ball events per zone (15 values summing to 1) between two clock times. */
+export function zoneShares(
+  track: readonly (readonly [number, number, number, string])[],
+  team: string,
+  from: number,
+  to: number,
+  thirdX: readonly [number, number],
+): { shares: number[]; n: number } {
+  const counts = new Array<number>(15).fill(0);
+  let n = 0;
+  for (const [t, x, y, code] of track)
+    if (code === team && t >= from && t <= to) {
+      counts[zoneOf(x, y, thirdX)]!++;
+      n++;
+    }
+  return { shares: counts.map((c) => (n ? c / n : 0)), n };
+}
+
+/** Diverging colour for -1..1 (purple below zero, neutral grey at zero, green above); clamps. */
+export function divColor(t: number): string {
+  const u = Math.max(-1, Math.min(1, Number.isFinite(t) ? t : 0));
+  const MID = [62, 70, 86];
+  const END = u < 0 ? [176, 132, 240] : [55, 230, 168];
+  const c = MID.map((m, i) => Math.round(m + (END[i]! - m) * Math.abs(u)));
+  return `rgb(${c[0]}, ${c[1]}, ${c[2]})`;
+}

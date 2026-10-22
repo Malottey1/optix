@@ -16,7 +16,7 @@ import { VizFigure } from "./Figure";
 
 const W = 520;
 const H = 300;
-const M = { l: 30, r: 18, t: 16, b: 30 };
+const M = { l: 36, r: 18, t: 16, b: 36 };
 
 /** Displayed values: tilt as a percentage to 1 dp, press to 3 dp (documented in docs/visuals.md). */
 export const tiltPct = (v: number) => Math.round(v * 1000) / 10;
@@ -47,6 +47,9 @@ export function StateSwaps({ visuals, codes, initial }: { visuals: Visuals; code
     .domain([0, Math.max(...ys) * 1.12])
     .range([H - M.b, M.t]);
   const cur = pts.find((p) => p.code === sel)!;
+  // point labels near an edge are anchored inwards so they stay inside the plot
+  const anchor = (px: number) => (px < M.l + 70 ? "start" : px > W - M.r - 70 ? "end" : "middle");
+  const labelX = (px: number) => (px < M.l + 70 ? px - 8 : px > W - M.r - 70 ? px + 8 : px);
   const tickX = x.ticks(5);
   const tickY = y.ticks(4);
   const describe = (p: (typeof pts)[number]) =>
@@ -115,18 +118,18 @@ export function StateSwaps({ visuals, codes, initial }: { visuals: Visuals; code
             <line x1={M.l} x2={W - M.r} y1={y(t)} y2={y(t)} stroke="var(--line)" />
           </g>
         ))}
-        <text x={(M.l + W - M.r) / 2} y={H - 6} textAnchor="middle" fontSize="15" fill="var(--ink-2)">
+        <text x={(M.l + W - M.r) / 2} y={H - 6} textAnchor="middle" fontSize="19" fill="var(--ink-2)">
           Field tilt → more territory
         </text>
         <text
-          x={14}
+          x={18}
           y={(M.t + H - M.b) / 2}
           textAnchor="middle"
-          fontSize="15"
+          fontSize="19"
           fill="var(--ink-2)"
-          transform={`rotate(-90 14 ${(M.t + H - M.b) / 2})`}
+          transform={`rotate(-90 18 ${(M.t + H - M.b) / 2})`}
         >
-          Press intensity → presses more
+          Press intensity →
         </text>
         {pts.map((p) => {
           const on = p.code === sel;
@@ -173,20 +176,20 @@ export function StateSwaps({ visuals, codes, initial }: { visuals: Visuals; code
         {cur.trailing && cur.leading && (
           <g aria-hidden="true">
             <text
-              x={x(cur.leading.x)}
-              y={y(cur.leading.y) + (cur.leading.y < cur.trailing.y ? 26 : -14)}
-              textAnchor="middle"
-              fontSize="16"
+              x={labelX(x(cur.leading.x))}
+              y={y(cur.leading.y) + (cur.leading.y < cur.trailing.y ? 30 : -16)}
+              textAnchor={anchor(x(cur.leading.x))}
+              fontSize="20"
               fontWeight="700"
               fill="var(--accent)"
             >
               {cur.code} leading
             </text>
             <text
-              x={x(cur.trailing.x)}
-              y={y(cur.trailing.y) + (cur.trailing.y <= cur.leading.y ? 26 : -14)}
-              textAnchor="middle"
-              fontSize="15"
+              x={labelX(x(cur.trailing.x))}
+              y={y(cur.trailing.y) + (cur.trailing.y <= cur.leading.y ? 30 : -16)}
+              textAnchor={anchor(x(cur.trailing.x))}
+              fontSize="19"
               fill="var(--ink-2)"
             >
               trailing

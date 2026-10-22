@@ -58,8 +58,8 @@ export const MismatchCrosshairs = memo(function MismatchCrosshairs({
   }));
   const max = Math.max(...up.map((x) => Math.max(x.v, x.lg)), ...down.map((x) => Math.max(x.v, x.lg)), 1);
   const half = compact ? 78 : 104;
-  const labelH = 30;
-  const top = 30;
+  const labelH = 36;
+  const top = 34;
   const mid = top + half;
   const H = mid + half + 26 + labelH;
   const y = (v: number) => (half * v) / max;
@@ -220,7 +220,7 @@ export const MismatchCrosshairs = memo(function MismatchCrosshairs({
                 y={mid - y(Math.max(u.v, u.lg)) - 8}
                 textAnchor="middle"
                 className="num"
-                fontSize="18"
+                fontSize="22"
                 fontWeight="700"
                 fill={hit ? "var(--revise)" : "var(--ink)"}
               >
@@ -228,10 +228,10 @@ export const MismatchCrosshairs = memo(function MismatchCrosshairs({
               </text>
               <text
                 x={cx0}
-                y={mid + y(Math.max(d.v, d.lg)) + 21}
+                y={mid + y(Math.max(d.v, d.lg)) + 25}
                 textAnchor="middle"
                 className="num"
-                fontSize="17"
+                fontSize="21"
                 fill="var(--ink-2)"
               >
                 {num(d.v, lang)}
@@ -240,7 +240,7 @@ export const MismatchCrosshairs = memo(function MismatchCrosshairs({
                 x={cx0}
                 y={H - 8}
                 textAnchor="middle"
-                fontSize="18"
+                fontSize="22"
                 fontWeight={hit ? 700 : 500}
                 fill={hit ? "var(--revise)" : "var(--ink-2)"}
               >
