@@ -5,7 +5,7 @@ Runs the showcase stream into a temp out/, copies the built web/dist with those 
 place of the committed ones, and runs every gate of tools/check_web.py on every route at desktop and
 phone width: no console error, failed or remote request, horizontal scroll or overlapping text; Tab
 reaches every control; Tailwind applied; axe finds nothing serious; the evidence drawer lists event
-ids from the stream; every number traces to the data; in-app navigation; the language switch keeps
+ids from the stream; every number traces to the data; each visual matches the engine output; in-app navigation; the language switch keeps
 every number; no forbidden word; storage blocked and reduced motion work. The legacy app/ checks
 live in test_dashboard_legacy.py."""
 import shutil
@@ -38,7 +38,7 @@ def report(tmp_path_factory):
     shutil.copytree(ROOT / "web" / "dist", dist)
     for f in DATA:
         shutil.copyfile(out / f, dist / "data" / f)
-    return check_web.run(dist, tmp / "screens")
+    return check_web.run(dist, tmp / "screens", ref_dir=out)
 
 
 def test_every_gate_passes_on_every_route_and_width(report):
@@ -56,6 +56,12 @@ def test_the_live_center_shows_a_rewritten_card_and_the_drawer_lists_its_events(
 def test_in_app_navigation_reaches_every_route(report):
     for v in report["navigation"].values():
         assert not v["problems"] and not any(r.endswith(":missing") for r in v["reached"]), v
+
+
+def test_the_visuals_match_the_engine_output(report):
+    c = report["consistency"]
+    assert not c["problems"], c["problems"]
+    assert c["pairs"] == 20 and c["cards"].get("crosshairs") and c["cards"].get("shot-blocks") and c["arrows"], c
 
 
 def test_replay_frame_times_and_bundle_size_are_recorded(report):

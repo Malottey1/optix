@@ -1,5 +1,5 @@
 """Headless check of the built dashboard (web/dist): serve it, open every route at desktop and phone
-width in Chromium, save screenshots to docs/screens-v2/, and report every gate:
+width in Chromium, save screenshots to docs/screens-v3/, and report every gate:
 
   * no console error, page error, failed request, HTTP error, or request to a host other than
     localhost; no horizontal scroll; no overlapping text; Tab reaches every control;
@@ -8,16 +8,24 @@ width in Chromium, save screenshots to docs/screens-v2/, and report every gate:
   * every number on every route traces to the source data (web/dist/data, byte copies of out/) or
     to a documented formula: football clock time from clock seconds, the length of a listed
     collection, and the per-type counts of an insight's evidence events (the card's evidence
-    summary: "15 events (pass 12, shot 3)");
+    summary: "15 events (pass 12, shot 3)"), and the visuals' formulas in docs/visuals.md (shot
+    counts and xG sums per prefix, game-state values, route pass quality and xA per chance, pizza
+    percentiles), each recomputed here independently of the page;
+  * each visual matches the engine output (check_consistency): the crosshair sits on the verified
+    claim's lane, the shot blocks are the claim window's shots and xG, the territorial-stress
+    gauges end at the engine's spell totals, the arrows follow the pass counts (count and width
+    order), the pizza shows the percentiles; --mutation-proof shows each check fails on a throwaway
+    copy with that visual's data changed;
   * the evidence drawer lists exactly the claim's event ids, and every one exists in the stream;
   * the SVG layers carry data attributes tests can read (data-event-id, data-lane, data-team,
     data-claim-id);
   * switching language never changes a number, and every sentence passes the number guard;
-  * no forbidden word (real club names, prediction or betting language);
+  * no forbidden word (real club names, prediction or betting language, invented statistics);
   * the page still works with storage blocked, and with reduced motion it does not autoplay;
   * replay frame times while playing (p50 / p95) and the initial JS size (gzip).
 
     python -m tools.check_web               # needs web/dist (cd web && npm run build)
+    python -m tools.check_web --ref out --mutation-proof
 Shares its helpers with tools/check_dashboard.py (the legacy app/ checker).
 """
 from __future__ import annotations
@@ -25,7 +33,9 @@ from __future__ import annotations
 import argparse
 import gzip
 import json
+import math
 import re
+import shutil
 from collections import Counter
 from pathlib import Path
 
@@ -73,13 +83,233 @@ AXE_JS = """async () => {
 
 
 def web_sources(dist: Path) -> dict:
-    """The tracer's sources: the data files, plus the evidence-summary counts (documented formula)."""
+    """The tracer's sources: the data files, plus the evidence-summary counts and the visuals'
+    documented formulas (docs/visuals.md), recomputed here independently of the page."""
     src = load_sources(dist / "data")
     ev = src["ui"]["evidence"]
     for ins in src["insights"].values():
         counts = Counter(ev[i]["event_type"] for i in ins["evidence_event_ids"] if i in ev)
         src["nums"].update(float(c) for c in counts.values())
+    src["nums"].update(round(abs(float(v)), 6) for v in visual_numbers(src["ui"]))
     return src
+
+
+# ---------- the visuals' documented formulas (docs/visuals.md), independent of the page ----------
+
+PIZZA_KEYS = ("involvement", "forward_passes", "pass_completion", "pass_quality_ratio", "chances_open_play",
+              "wide_share", "chances_set_piece")
+PIZZA_MIN_PASSES = 100
+MIN_ROUTE_PASSES = 2
+
+
+def js_round(v: float, dp: int = 0) -> float:
+    """Math.round(v * 10^dp) / 10^dp, as the page rounds (half up, not half to even)."""
+    f = 10 ** dp
+    return math.floor(v * f + 0.5) / f
+
+
+def percentile(values, v):
+    xs = [x for x in values if x is not None]
+    if v is None or not xs:
+        return None
+    return 100 * (sum(1 for x in xs if x < v) + 0.5 * sum(1 for x in xs if x == v)) / len(xs)
+
+
+def pizza(ui, pid) -> dict:
+    """Displayed percentiles of one player against outfield players with >= 100 passes."""
+    group = [p for p in ui["players"] if p["position"] != "GK" and p["passes"] >= PIZZA_MIN_PASSES]
+    p = next(x for x in ui["players"] if x["id"] == pid)
+    out = {}
+    for k in PIZZA_KEYS:
+        v = percentile([g[k] for g in group], p[k])
+        out[k] = None if v is None else int(js_round(v))
+    return out
+
+
+def route_groups(rows, mode):
+    """Routes of a mode, thickest first (fwd: only routes with >= MIN_ROUTE_PASSES passes)."""
+    g = [r for r in rows if (r[0] == "fwd" if mode == "fwd" else r[0] != "fwd")]
+    g.sort(key=lambda r: (-r[3], r[1], r[2]))
+    return [r for r in g if r[3] >= MIN_ROUTE_PASSES] if mode == "fwd" else g
+
+
+def stress_totals(ui) -> dict:
+    """Per team: seconds pinned in its own half over the match (the opponent's spells)."""
+    codes = sorted(ui["visuals"]["stress"])
+    return {c: sum(s[2] for s in ui["visuals"]["stress"][o]) for c in codes for o in codes if o != c}
+
+
+def visual_numbers(ui) -> set:
+    v = ui["visuals"]
+    out = set()
+    for team in {s[2] for s in v["shots"]}:                 # shot panels and cards: every prefix
+        xs = [s[6] for s in v["shots"] if s[2] == team]
+        for k in range(1, len(xs) + 1):
+            t = sum(xs[:k])
+            out |= {k, js_round(t, 2), js_round(t / k, 3)}
+    for st in v["states"].values():                          # V3 values as shown
+        for b in st.values():
+            if b["field_tilt"]["value"] is not None:
+                out.add(js_round(b["field_tilt"]["value"] * 100, 1))
+            if b["press_intensity"]["value"] is not None:
+                out.add(js_round(b["press_intensity"]["value"], 3))
+    ch = [r for rows in v["routes"].values() for r in rows if r[0] != "fwd"]
+    league_xa = sum(r[4] for r in ch) / max(1, sum(r[3] for r in ch))
+    out.add(js_round(league_xa, 3))
+    for rows in v["routes"].values():                        # V4 per route and per player
+        fwd = [r for r in rows if r[0] == "fwd"]
+        for r in fwd:
+            out.add(js_round(r[5] / r[3] / v["league_hot_share"], 2))
+        n = sum(r[3] for r in fwd)
+        if n:
+            out.add(js_round(sum(r[5] for r in fwd) / n / v["league_hot_share"], 2))
+        out.add(sum(r[3] for r in route_groups(rows, "fwd")))
+        chances = [r for r in rows if r[0] != "fwd"]
+        for r in chances:
+            out.add(js_round(r[4] / r[3], 3))
+        if chances:
+            out.add(js_round(sum(r[4] for r in chances) / sum(r[3] for r in chances), 3))
+    for p in ui["players"]:                                  # V8
+        out |= {x for x in pizza(ui, p["id"]).values() if x is not None}
+    return out
+
+
+def check_consistency(browser, base, ref_dir: Path) -> dict:
+    """Each visual against the engine's own output in ref_dir (normally out/ or the committed data):
+    the crosshair lane is the verified claim's lane, the shot blocks are the claim's shots and xG,
+    the gauges end at the engine's spell totals, the arrows follow the pass counts, and the pizza
+    shows the recomputed percentiles. Serving a mutated copy of the data makes these fail."""
+    ref = load_sources(ref_dir)
+    ui = ref["ui"]
+    claims = {}
+    for line in (ref_dir / "claims.jsonl").read_text(encoding="utf-8").splitlines():
+        if line.strip():
+            a = json.loads(line)
+            claims[a["claim"]["claim_id"]] = a["claim"]
+    problems = []
+    ctx, page, log = _context(browser, *WIDTHS["desktop"])
+    # V1 on the Team Board: every ordered pair
+    _open(page, base, "teams")
+    pairs = 0
+    for h in ui["teams"]["head_to_head"]:
+        page.select_option("#h2h-attacker", h["attacker"])
+        page.select_option("#h2h-defender", h["defender"])
+        if (page.input_value("#h2h-attacker"), page.input_value("#h2h-defender")) != (h["attacker"], h["defender"]):
+            page.select_option("#h2h-attacker", h["attacker"])
+        got = page.get_attribute("#h2h [data-viz=crosshairs] svg[data-claim-lane]", "data-claim-lane")
+        want = h["claim"]["lane"] if h["claim"] and h["claim"]["status"] != "blocked" else ""
+        pairs += 1
+        if got != want:
+            problems.append(f"crosshair {h['attacker']}->{h['defender']}: lane {got!r}, claim says {want!r}")
+    # V1, V2 and V5 on the Live Center at full time (a fresh page: the clock query is read on load)
+    ctx.close()
+    earlier = log["problems"]
+    ctx, page, log = _context(browser, *WIDTHS["desktop"])
+    log["problems"][:0] = earlier
+    _open(page, base, "live", "t=99999")
+    cards = page.eval_on_selector_all("[data-card-visual] svg[data-claim-id]", """els => els.map((e) => ({
+        kind: e.closest('[data-card-visual]').dataset.cardVisual, claim: e.dataset.claimId,
+        lane: e.dataset.claimLane ?? null, xg: e.dataset.xg ?? null,
+        shots: [...e.querySelectorAll('rect[data-event-id]')].map((r) => r.dataset.eventId)}))""")
+    seen = Counter(c["kind"] for c in cards)
+    for c in cards:
+        cl = claims.get(c["claim"])
+        if cl is None:
+            problems.append(f"card visual for unknown claim {c['claim']}")
+            continue
+        if c["kind"] == "crosshairs":
+            want = (cl.get("zone") or {}).get("lane") if cl["verification"]["status"] != "blocked" else ""
+            if c["lane"] != want:
+                problems.append(f"card crosshair {c['claim']}: lane {c['lane']!r}, claim says {want!r}")
+        if c["kind"] == "shot-blocks":
+            w, team = cl["window"], cl["subject"]["team_code"]
+            want_ids = [s[0] for s in ui["visuals"]["shots"] if s[2] == team and w["from_sec"] <= s[1] <= w["to_sec"]]
+            if c["shots"] != want_ids or len(c["shots"]) != cl["value"]["sample_size"]:
+                problems.append(f"shot blocks {c['claim']}: {len(c['shots'])} blocks, claim has {cl['value']['sample_size']}")
+            if c["xg"] is None or abs(float(c["xg"]) - cl["value"]["amount"]) > 0.005:
+                problems.append(f"shot blocks {c['claim']}: xG {c['xg']}, claim says {cl['value']['amount']}")
+    for kind in ("crosshairs", "shot-blocks"):
+        if not seen[kind]:
+            problems.append(f"no {kind} card visual at full time")
+    gauges = dict(page.eval_on_selector_all("[data-gauge]", """els => els.map((e) => [e.dataset.team,
+        Number(e.querySelector('[data-role=stress-value]').dataset.value)])"""))
+    for team, want in stress_totals(ui).items():
+        if gauges.get(team) != want:
+            problems.append(f"gauge {team}: {gauges.get(team)} s at full time, engine spells add up to {want} s")
+    # V4 and V8 on the Player Deck: the default profile
+    _open(page, base, "players")
+    pid = page.get_attribute("#profile [data-viz=pass-routes] svg", "data-player")
+    arrows = page.eval_on_selector_all("#profile [data-viz=pass-routes] [data-route]", """els => els.map((e) => [
+        Number(e.dataset.value), Number(e.querySelector('path, circle').getAttribute('stroke-width'))])""")
+    want = route_groups(ui["visuals"]["routes"].get(pid, []), "fwd")
+    if len(arrows) != len(want):
+        problems.append(f"routes {pid}: {len(arrows)} arrows, data has {len(want)} routes")
+    if sorted(a[0] for a in arrows) != sorted(r[3] for r in want):
+        problems.append(f"routes {pid}: pass counts differ from the data")
+    by_n = sorted(arrows)
+    if any(b[1] < a[1] for a, b in zip(by_n, by_n[1:])):
+        problems.append(f"routes {pid}: arrow width does not grow with the pass count")
+    pz = dict(page.eval_on_selector_all("#profile [data-role=pizza-list] li", """els => els.map((e) => [
+        e.dataset.metric, e.dataset.percentile === '' ? null : Number(e.dataset.percentile)])"""))
+    if pz != pizza(ui, pid):
+        problems.append(f"pizza {pid}: {pz} vs {pizza(ui, pid)}")
+    ctx.close()
+    return dict(pairs=pairs, cards=dict(seen), gauges=gauges, player=pid, arrows=len(arrows),
+                problems=problems + log["problems"])
+
+
+# ---------- mutation proof: each consistency check must fail when its data changes ----------
+
+def _mut_crosshair(ui):
+    h = next(h for h in ui["teams"]["head_to_head"] if h["claim"] and h["claim"]["status"] != "blocked")
+    h["claim"]["lane"] = next(l for l in ("left_flank", "center") if l != h["claim"]["lane"])
+
+
+def _mut_shots(ui):
+    del ui["visuals"]["shots"][-1]
+
+
+def _mut_gauge(ui):
+    s = next(iter(ui["visuals"]["stress"].values()))[0]
+    s[1] += 30
+    s[2] += 30
+
+
+def _mut_routes(ui):
+    for rows in ui["visuals"]["routes"].values():
+        r = next((r for r in rows if r[0] == "fwd" and r[3] >= MIN_ROUTE_PASSES), None)
+        if r:
+            r[3] += 5
+
+
+def _mut_pizza(ui):
+    for p in ui["players"]:
+        p["involvement"] = -p["involvement"]
+
+
+MUTATIONS = {"crosshair": (_mut_crosshair, "crosshair"), "shot blocks": (_mut_shots, "shot blocks"),
+             "gauge": (_mut_gauge, "gauge"), "routes": (_mut_routes, "routes"), "pizza": (_mut_pizza, "pizza")}
+
+
+def mutation_proof(browser, dist: Path, ref_dir: Path, tmp: Path) -> dict:
+    """Serve a throwaway copy of dist with one visual's data changed, run check_consistency against the
+    unchanged ref_dir, and record whether that visual's check failed. The copy is left in tmp."""
+    out = {}
+    for name, (mutate, prefix) in MUTATIONS.items():
+        copy = tmp / f"mut-{name.replace(' ', '-')}"
+        if not copy.exists():
+            shutil.copytree(dist, copy)
+        ui = json.loads((ref_dir / "ui.json").read_text(encoding="utf-8"))
+        mutate(ui)
+        (copy / "data" / "ui.json").write_text(json.dumps(ui, separators=(",", ":")), encoding="utf-8")
+        httpd = serve(copy)
+        try:
+            r = check_consistency(browser, f"http://127.0.0.1:{httpd.server_address[1]}/", ref_dir)
+        finally:
+            httpd.shutdown()
+        hits = [x for x in r["problems"] if x.startswith(prefix)]
+        out[name] = dict(caught=bool(hits), problems=hits[:3])
+    return out
 
 
 def initial_js_gzip(dist: Path) -> dict:
@@ -255,7 +485,8 @@ def demo_screen(browser, base, screens: Path):
     return log["problems"]
 
 
-def run(dist: Path | None = None, screens_dir: Path | None = None, screens: bool = True, routes=ROUTES) -> dict:
+def run(dist: Path | None = None, screens_dir: Path | None = None, screens: bool = True, routes=ROUTES,
+        ref_dir: Path | None = None) -> dict:
     from playwright.sync_api import sync_playwright
     dist = Path(dist or WEB / "dist")
     src = web_sources(dist)
@@ -284,6 +515,7 @@ def run(dist: Path | None = None, screens_dir: Path | None = None, screens: bool
             if shots:
                 report["demo_problems"] = demo_screen(browser, base, shots)
         if set(routes) == set(ROUTES):
+            report["consistency"] = check_consistency(browser, base, ref_dir or dist / "data")
             report["navigation"] = check_navigation(browser, base)
             report["language"] = check_language_switch(browser, base, src)
         browser.close()
@@ -329,6 +561,7 @@ def failures(report) -> list:
             f.append(f"language: forbidden words {L['forbidden_other_lang']}")
         if not L["cards"]:
             f.append("language: no cards at full time")
+    f += [f"consistency: {x}" for x in report.get("consistency", {}).get("problems", [])]
     for wn, v in report.get("navigation", {}).items():
         f += [f"navigation@{wn}: {x}" for x in v["problems"]]
         f += [f"navigation@{wn}: never reached {x}" for x in v["reached"] if x.endswith(":missing")]
@@ -351,19 +584,31 @@ def failures(report) -> list:
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--dist", default=str(WEB / "dist"))
-    ap.add_argument("--out", default=str(ROOT / "docs" / "screens-v2"), help="screenshot directory")
+    ap.add_argument("--out", default=str(ROOT / "docs" / "screens-v3"), help="screenshot directory")
     ap.add_argument("--no-screens", action="store_true")
     ap.add_argument("--routes", default=",".join(ROUTES))
     ap.add_argument("--json", default=None, help="also write the full report here")
+    ap.add_argument("--ref", default=None, help="engine output the visuals are checked against (default: dist/data)")
+    ap.add_argument("--mutation-proof", action="store_true",
+                    help="also show each consistency check fails on a throwaway copy with that visual's data changed")
     a = ap.parse_args(argv)
-    report = run(Path(a.dist), Path(a.out), screens=not a.no_screens, routes=tuple(a.routes.split(",")))
+    report = run(Path(a.dist), Path(a.out), screens=not a.no_screens, routes=tuple(a.routes.split(",")),
+                 ref_dir=Path(a.ref) if a.ref else None)
+    if a.mutation_proof:
+        import tempfile
+        from playwright.sync_api import sync_playwright
+        with tempfile.TemporaryDirectory() as tmp, sync_playwright() as p:
+            browser = p.chromium.launch(executable_path=chromium_path())
+            report["mutation_proof"] = mutation_proof(browser, Path(a.dist), Path(a.ref or Path(a.dist) / "data"), Path(tmp))
+            report["failures"] += [f"mutation proof: {k} not caught" for k, v in report["mutation_proof"].items()
+                                   if not v["caught"]]
     for r in report["routes"]:
         bad_axe = [v["id"] for v in r["axe"] if v["impact"] in AXE_FAIL]
         print(f"{r['route']:8s} {r['width']:5d}px overflow_x={r['overflowX']!s:5s} tailwind={r['tailwind_ok']!s:5s} "
               f"text_runs={r['overlap']['count']:4d} overlaps={len(r['overlap']['overlaps'])} untraced={len(r['untraced'])} "
               f"controls={r['tab']['controls']:3d} tab_missing={len(r['tab']['missing'])} axe_serious={len(bad_axe)} "
               f"axe_minor={len(r['axe']) - len(bad_axe)} problems={len(r['problems'])} remote={len(r['remote'])} attrs={r['attrs']}")
-    for k in ("drawer", "language", "robustness", "frames", "bundle"):
+    for k in ("drawer", "consistency", "mutation_proof", "language", "robustness", "frames", "bundle"):
         if k in report:
             print(f"{k}:", {x: y for x, y in report[k].items() if x != "_problems"} if isinstance(report[k], dict) else report[k])
     if a.json:

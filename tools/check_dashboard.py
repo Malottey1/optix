@@ -39,7 +39,7 @@ FORBIDDEN = ("Arsenal", "Aston Villa", "Bournemouth", "Brentford", "Brighton", "
              "Everton", "Fulham", "Ipswich", "Leeds United", "Leicester", "Liverpool", "Luton", "Manchester", "Newcastle",
              "Nottingham", "Sheffield United", "Southampton", "Sunderland", "Tottenham", "West Ham", "Wolverhampton",
              "Wolves", "Premier League", "predict", "will win", "going to win", "betting", "odds", "forecast",
-             "bookmaker", "wager", "favourite to", "favorite to")
+             "bookmaker", "wager", "favourite to", "favorite to", "60,000", "60000")
 LOCAL_HOSTS = {"127.0.0.1", "localhost"}
 
 
