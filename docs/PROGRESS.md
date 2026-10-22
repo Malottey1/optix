@@ -3,7 +3,38 @@
 ## UI v2 (branch `ui-v2`, from `ui-restructure`)
 
 Started 2026-10-22 16:17. The front end is rebuilt in web/ (Vite + React + TypeScript). The data
-generator, engine, Verifier, Translator and contracts are unchanged.
+generator, engine, Verifier, Translator and contracts are unchanged. web/ is now the current UI;
+app/ and legacy/ are deprecated and kept for reference (docs/dashboard.md has the stack and how to run).
+
+Pages: Live Center, Team Board, Player Deck, Tech Blueprint and the settings tray, all built.
+
+Gate results (Node 23.4.0, npm 10.9.2; each run alone):
+- `npm run lint`, `npm run typecheck`, `npm test` (18 Vitest tests), `npm run build`: pass.
+- `python -m tools.check_web`, every route at 1440 and 390 px: no console errors, failed or
+  non-localhost requests; no horizontal scroll; 0 overlapping text; 0 untraced numbers; Tab reaches
+  every control; Tailwind applied; axe: 0 serious or critical (and 0 moderate or minor); data
+  attributes present. Evidence drawer: exact event ids for 5 cards incl. rewrites. In-app
+  navigation through every route at both widths: no errors. Language switch: 35 cards, no number
+  changed, number guard passes in en/es/fr, every route's numbers equal in en and fr. Storage
+  blocked and reduced motion: pass.
+- Replay at fast speed: p50 16.7 ms, p95 16.7 ms, max 16.8 ms, 0 long tasks.
+- Initial JS: 149.0 KB gzip (budget 250 KB); pages are lazy chunks.
+- Default Python suite: 166 passed. Slow `tests/test_dashboard.py` (web) 4 passed,
+  `tests/test_dashboard_legacy.py` (app/) 3 passed.
+- Screenshots: docs/screens-v2/ (8 route shots plus live_1080p.png, each under 300 KB).
+
+Dependencies (exact):
+- dependencies: @fontsource-variable/inter 5.3.0, @fontsource/barlow-condensed 5.3.0,
+  @radix-ui/react-dialog 1.2.0, @radix-ui/react-slider 1.5.0, @radix-ui/react-switch 1.3.8,
+  @radix-ui/react-tabs 1.1.22, @radix-ui/react-toggle 1.1.19, @radix-ui/react-toggle-group 1.1.20,
+  @radix-ui/react-tooltip 1.3.0, d3-scale 4.0.2, d3-shape 3.2.0, motion 12.43.0, react 19.3.0,
+  react-dom 19.3.0, react-router 7.18.4, zustand 5.0.15.
+- devDependencies: @eslint/js 9.39.5, @tailwindcss/vite 4.3.3, @testing-library/dom 10.4.2,
+  @testing-library/react 16.3.3, @types/d3-scale 4.0.9, @types/d3-shape 3.2.0, @types/node 22.20.5,
+  @types/react 19.3.0, @types/react-dom 19.3.0, @vitejs/plugin-react 5.2.0, axe-core 4.14.0,
+  eslint 9.39.5, eslint-plugin-react-hooks 7.1.1, globals 17.13.0, jsdom 26.1.0,
+  json-schema-to-typescript 16.0.0, prettier 3.9.9, tailwindcss 4.3.3, typescript 5.9.3,
+  typescript-eslint 8.71.1, vite 7.3.7, vitest 3.2.7.
 
 ### UI v2 decisions
 
@@ -35,10 +66,23 @@ generator, engine, Verifier, Translator and contracts are unchanged.
   in the evidence" (the claim's evidence is a sample of up to 15 events, not every pass).
 - **Phone layout:** the team names are hidden under 640 px (the codes stay, and the names are in the
   header's accessible label) so neither truncates.
-- **Tab gate:** a Radix roving-focus root (toggle group, tab list) takes focus only to pass it to
-  its active item, so the web checker counts the item, not the root (tools/check_web.py,
-  WEB_FOCUSABLE_JS). tools/check_dashboard._tab_order gained an optional argument for this; the
-  legacy behaviour is unchanged.
+- **Tab gate:** a Radix roving-focus group (toggle group, tab list) is one Tab stop: Tab lands on
+  the root or on its active item, and arrow keys move inside. The web checker therefore counts focus
+  on the nearest checked ancestor (tools/check_web.py, WEB_ACTIVE_JS), so the group counts as
+  reached. tools/check_dashboard._tab_order gained an optional argument for this; the legacy
+  behaviour is unchanged.
+- **Navigation bug found by the language gate:** navigating inside the app crashed ("destroy_ is
+  not a function"): the scroll-to-top effect returned `window.scrollTo(...)`, which returns a
+  promise in this Chromium, and React called it as the cleanup. Fixed with a block body, and a new
+  navigation gate (tools/check_web.check_navigation) clicks the nav links through every route at
+  both widths; it was run against the old build and reports the crash.
+- **Tech Blueprint:** the walkthrough follows the earliest rewritten claim in the stream from its
+  blocked attempt to the published sentences in three languages; the report intros keep their
+  markdown code spans as `<code>`. Every number on the page comes from ui.json (ledger, rewrites,
+  measured) or claims.jsonl.
+- **CI:** .github/workflows/ci.yml runs the default Python suite, then web `npm ci --ignore-scripts`,
+  lint, typecheck, test and build on Node LTS. No secrets. The slow browser tests stay local
+  (CI has no Chromium set up by this repo).
 - **Number trace:** one documented formula was added for web/: the per-type counts of an insight's
   evidence events (the card's evidence summary, "15 events (pass 12, shot 3)").
 - **Settings key:** `optix.settings.v2` (the legacy app keeps `optix.settings.v1`).
@@ -54,6 +98,12 @@ generator, engine, Verifier, Translator and contracts are unchanged.
   matches package.json; node_modules and dist never tracked; no remote URL in web/src, index.html
   or a built web/dist; no CDN names and self-hosted fonts only; plain CSS body background and the
   colour tokens; web/public/data holds the four engine files, identical to out/ when out/ exists.
+- **tests/test_dashboard.py (slow):** now runs every tools/check_web gate on a copy of the built
+  web/dist with a freshly streamed match. Reason: web/ passes every gate and replaces app/. The
+  previous app/ test moved unchanged to **tests/test_dashboard_legacy.py** (slow); nothing was
+  deleted or weakened. It skips (slow suite only) when web/dist or web/node_modules is missing.
+- **tests/test_number_trace.py:** one new test proves the tracer on the committed web data: a real
+  headline traces, and the same headline with an invented number is caught.
 
 ## UI restructure (branch `ui-restructure`)
 

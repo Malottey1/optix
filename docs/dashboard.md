@@ -1,71 +1,88 @@
 # Dashboard
 
-`app/` is a React app with no build step. It replays the showcase match on a clock and shows the
-verified insight stream, team style fingerprints, player context and how the pipeline checks
-itself. The page computes no statistic. Every number comes from the files `agents.run_match` writes:
-- `out/insights.jsonl`
-- `out/claims.jsonl`
-- `out/timeline.json`
-- `out/ui.json` (built by `agents/dashboard_data.py` from engine/ outputs and the generated reports in docs/)
+The current dashboard is `web/`: Vite, React and TypeScript. It replays the showcase match on a clock
+and shows the verified insight stream, team style fingerprints, player context and how the pipeline
+checks itself. The page computes no statistic. Every number comes from the four files
+`agents.run_match` writes, copied byte for byte into `web/public/data/`:
+- `insights.jsonl` (the timed insight stream, `contracts/insight.schema.json`)
+- `claims.jsonl` (every verification attempt, including blocked ones)
+- `timeline.json` (teams, goals, momentum, periods)
+- `ui.json` (built by `agents/dashboard_data.py` from engine/ outputs and the generated reports in docs/)
 
+`app/` (React with no build step) and `legacy/dashboard-v1/` are **deprecated** and kept for reference;
+their checks still run as `tests/test_dashboard_legacy.py`.
+
+## Run it
+
+Needs Node 20.19 or later and the Python environment from the README quick start.
+
+```bash
+python -m agents.run_match --match m_showcase --out out/insights.jsonl   # engine output in out/
+cd web
+npm ci --ignore-scripts      # exact versions from package-lock.json
+npm run data                 # copy out/ into public/data/ (only after the engine output changed)
+npm run dev                  # http://127.0.0.1:5173/
+npm run build                # static site in web/dist/
+npm run preview              # serve web/dist/ on http://127.0.0.1:4173/
 ```
-python -m agents.run_match --match m_showcase --out out/insights.jsonl
-python -m http.server 8000          # from the repo root
-open http://localhost:8000/app/
-```
+
+`web/public/data/` is committed, so `npm run dev` and `npm run build` work without running Python.
+The data files are never edited by hand; `npm run data` refreshes them. Other scripts: `npm run lint`,
+`npm run typecheck`, `npm test` (Vitest), `npm run format`, `npm run gen:types` (TypeScript types from
+`contracts/*.schema.json`, output committed in `web/src/types/generated/`).
 
 ## Stack
 
-- **React 18.3.1 and ReactDOM**, self-contained production ESM builds, plus **htm 3.1.1** for JSX-like
-  tagged templates. Native browser ES modules: `index.html` has an import map that maps `react`,
-  `react-dom/client` and `htm` to `./vendor/`, and loads one `<script type="module" src="./main.js">`.
-- **Tailwind CSS 4.1.11 browser build** (`@tailwindcss/browser`), loaded from `./vendor/`. Colour tokens
-  live as CSS variables in `app/styles/theme.css` and are mapped to Tailwind colours with `@theme inline`
-  in `index.html`. The body background is set in plain CSS, so there is no white flash before Tailwind runs.
-- **Hash routing:** `#/live`, `#/teams`, `#/players`, `#/tech`.
-- **Native SVG** for the pitch, lanes, momentum, the Perimeter Lock and the pipeline diagram. There is
-  no canvas and no chart library. Marks carry `data-event-id`, `data-lane`, `data-team` and similar
-  attributes, so tests can inspect them.
-- **System font stack** with tabular numerals.
+All versions are exact and every package was at least two weeks old when installed
+(`npm install --save-exact --ignore-scripts --before=<date>`). The full list is in `docs/PROGRESS.md`.
 
-There is no package.json, lockfile, bundler, build config or node_modules. The vendored files were
-downloaded once with curl. `app/vendor/VENDOR.md` lists each one with its source URL, version, SHA-256
-and licence. At runtime the page requests nothing except the server it is loaded from.
+- **Vite 7, React 19, TypeScript 5.9** in strict mode (`noUncheckedIndexedAccess`; no `any`).
+- **React Router** `HashRouter`: `#/live`, `#/teams`, `#/players`, `#/tech`. Each page is a lazy chunk.
+- **Tailwind CSS 4** through its Vite plugin. Design tokens are CSS variables in
+  `web/src/styles/tokens.css`, mapped to Tailwind colours with `@theme inline`. The body background is
+  set in plain CSS in `index.html`, so there is no flash before the styles load.
+- **Radix UI primitives** (dialog for the drawer and settings tray, tooltip, tabs, toggle group,
+  slider, switch), wrapped as small components in `web/src/components/ui/`.
+- **Motion** for transitions, through `MotionConfig` so reduced motion (system or setting) turns them off.
+- **Zustand** stores for the replay clock and the settings.
+- **d3-scale and d3-shape** for maths only. The pitch, lanes, momentum chart, Perimeter Lock, scatter
+  and bars are hand-written SVG; there is no canvas and no chart library. Marks carry
+  `data-event-id`, `data-lane`, `data-team`, `data-claim-id` and similar attributes for the tests.
+- **Fontsource** self-hosted fonts (Inter variable for the interface, Barlow Condensed for numerals and
+  display; both OFL) with tabular numerals. Nothing is loaded from a CDN; at runtime the page requests
+  nothing except the server it is loaded from.
+- Dev tooling: ESLint, Prettier, Vitest with Testing Library and jsdom, axe-core (used by the browser
+  gate), json-schema-to-typescript.
 
-Code layout:
-- `app/main.js`: data loading and routing.
-- `app/lib/`: data loader, replay clock store, settings, interface strings, formatting.
-- `app/components/`: shell and navigation, settings tray, pitch, Live Center widgets, insight cards
-  and evidence drawer.
-- `app/pages/`: one module per route.
+Code layout (`web/src/`):
+- `data/`: `StreamSource` interface, `ReplaySource` (loads the four files), `SseSource` (interface and
+  contract test only, **not wired yet**: no server sends events), and the match model (indexes and lookups).
+- `types/`: generated contract types, hand-written types for the rest of `ui.json`, and runtime shape
+  guards that fail loudly with the path of the first field that drifted.
+- `state/`: replay clock and settings stores.
+- `components/`: shell and navigation, settings tray, pitch, icons, and the `ui/` primitives.
+- `features/<page>/`: one folder per route.
+- `lib/`: formatting (numbers in each language's own form, football clock) and the interface dictionaries.
 
-Replay: `requestAnimationFrame` advances a small external store. Each component subscribes to the
-slice it needs with `useSyncExternalStore` and a selector:
-- the clock and scrubber update each frame;
-- the ball marker updates when the latest event changes;
-- momentum updates once per match minute;
-- the feed updates when a new insight arrives.
+Replay: `requestAnimationFrame` advances the clock store. Components subscribe with coarse selectors
+(for example the scrubber on a two-second grid, the feed when a new insight arrives); the parts that
+move every frame (clock text, ball marker and trail, momentum playhead) are written through refs by
+`useReplayFrame`, so a tick does not re-render the tree.
 
 ## Pages
 
 | Route | What it shows | Source |
 |---|---|---|
-| `#/live` Live Center | Scoreboard with a momentum tug-of-war; play, pause, scrub and speed; SVG Focus Pitch with the selected or latest insight's evidence and a ball marker at the latest event location (an event-based proxy, labelled as such); momentum chart; Perimeter Lock; the stream of verified cards. Each card has a headline (the stream's casual sentence), confidence, evidence count and attempt count, and an evidence drawer with the claim, every verification attempt and the evidence events. A card whose first attempt was blocked shows "Rewritten after verification", a Before / After toggle (the blocked claim's own wording vs. the published one) and the rule's reason in one sentence | `insights.jsonl`, `claims.jsonl`, `timeline.json`, `ui.json` (rewrites, reasons, evidence, track) |
-| `#/teams` Team Board | Per team: style labels (tempo, press, passing, territory, counters), each with its rule and numbers in a tooltip (`engine/style_labels.py`); entry lanes against the league; soft lane (`engine.profiles.soft_lane`). Head to head: any attacker and defender, lane mismatch on a pitch in the attacker's frame, the verified matchup sentence, and the per-lane table | `ui.json` teams |
-| `#/players` Player Deck | Involvement (`engine.metrics.involvement`), pass completion, forward passes, wide share, pass quality, chances created (open play / set piece). The Verifier's context cards for the volume passer and the set-piece creators, with Before / After and the reason | `ui.json` players |
-| `#/tech` Tech Blueprint | Pipeline (Analyst → Verifier → Narrative with number guard); the verification ledger (every claim: passed / passed with context / revised / blocked, and the rule that decided it); the measured numbers, parsed from docs/realism-report.md, docs/robustness.md and docs/verifier-recall.md; "Planned Azure integration (not built)" | `ui.json` ledger, measured |
+| `#/live` Live Center | Scoreboard with a momentum tug-of-war; play, pause, scrub (with goal and insight markers) and speed; SVG Focus Pitch with the selected or latest insight's evidence and a ball marker at the latest event location (an event-based proxy, labelled as such); momentum chart; Perimeter Lock; the stream of verified cards. Each card has a headline (the stream's sentence), an evidence summary, and an evidence drawer with a mini pitch, the claim object, every verification attempt and the exact evidence events. A card whose first attempt was blocked shows "Rewritten after verification", a Before / After toggle and the rule's reason in one sentence | `insights.jsonl`, `claims.jsonl`, `timeline.json`, `ui.json` (rewrites, reasons, evidence, track) |
+| `#/teams` Team Board | Head to head first: any attacker and defender, lane mismatch on a pitch in the attacker's frame (mirror handled, the defender's own name for each lane shown), the verified matchup sentence and the per-lane table. Per team: style labels with their rule and numbers in a tooltip (`engine/style_labels.py`); entry lanes made and conceded against the league; soft lane in both frames | `ui.json` teams |
+| `#/players` Player Deck | Only involvement, pass quality and chances created. The Verifier's context cards for the volume passer and the set-piece creators (Before / After, reason, chance split, evidence); volume against quality; where the chances come from; the full sortable, filterable table | `ui.json` players |
+| `#/tech` Tech Blueprint | Pipeline (Analyst → Verifier → Narrative → number guard) with counts from the ledger; one real claim followed from its blocked first attempt to the translated sentence; the verification ledger (every claim: passed / passed with context / revised / blocked, and the deciding rule); the measured numbers, parsed from docs/realism-report.md, docs/robustness.md and docs/verifier-recall.md; "Planned Azure integration (not built yet)" | `ui.json` ledger, measured, rewrites |
 
-Settings (slide-over, not a page):
-- language: en / es / fr, which switches between the stream's own translated, number-guarded sentences;
-- reduce motion;
-- density;
-- show evidence by default;
-- high contrast.
-
-They are saved in localStorage inside try/catch, so the app works when storage is blocked. The dark
-theme is the only theme. Only the insight sentences and the main interface strings are translated;
-the Team Board, Player Deck and Tech page explanations are English. Each theme colour (status, team,
-accent) appears with an icon or a label, never alone.
+Settings (slide-over from the header): language (en / es / fr: the stream's own translated,
+number-guarded sentences plus small interface dictionaries), reduce motion, show evidence by default,
+high contrast and density. They are saved in localStorage inside try/catch, so the app works when
+storage is blocked. The tray says that the Team Board, Player Deck and Tech Blueprint explanations are
+English only.
 
 View options for screenshots and tests: `#/live?t=2760&select=ins_0009&lang=es&play=1`.
 
@@ -77,26 +94,32 @@ View options for screenshots and tests: `#/live?t=2760&select=ins_0009&lang=es&p
 
 ## Checking it
 
-`python -m tools.check_dashboard` (needs `pip install -r requirements-ui.txt`) serves the repo and opens
-every route at 1440 px and 390 px in headless Chromium. It writes `docs/screens/<route>_<desktop|mobile>.png`
-plus `live_1080p.png` (the first screen at 1920×1080), each under 300 KB. It fails on any of:
+`python -m tools.check_web` (needs `pip install -r requirements-ui.txt` and a built `web/dist`) serves
+`web/dist` and opens every route at 1440 px and 390 px in headless Chromium, with axe-core injected.
+It writes `docs/screens-v2/<route>_<desktop|mobile>.png` plus `live_1080p.png`, each under 300 KB.
+It fails on any of:
 - a console error, page error, failed request, HTTP error, or request to a host other than localhost;
-- horizontal scroll;
-- overlapping text (text line boxes inside `<main>`, clipped by their scroll containers);
-- a control that Tab never reaches;
-- Tailwind not applied (computed styles of known utilities);
-- an evidence drawer that lists an event id not in the stream;
-- a number on screen that does not trace to the data (football clock times and counts of listed
-  items are the only derived numbers);
+- horizontal scroll; overlapping text;
+- a control that Tab never reaches; Tailwind not applied; a serious or critical axe finding;
+- missing data attributes on the marks;
+- an evidence drawer whose events differ from the stream's evidence ids;
+- a number on screen that does not trace to the data (football clock times, counts of listed items and
+  per-type counts of evidence events are the only derived numbers);
+- a crash or missing page when navigating between routes in the app;
 - a language switch that changes a number, or a sentence that fails the number guard;
 - a forbidden word (real club names, prediction or betting language);
-- an error with storage blocked or with reduced motion.
+- an error with storage blocked or with reduced motion;
+- initial JavaScript of 250 KB gzip or more.
 
-It also records replay frame times while the match plays at fast speed. The slow test
-`tests/test_dashboard.py` runs the same checks on a freshly streamed match. The fast tests:
-- `tests/test_ui_stack.py`: no build tooling, no remote URLs, import map targets exist, VENDOR.md
-  checksums match;
-- `tests/test_dashboard_data.py`: ui.json content;
-- `tests/test_number_trace.py`: the number tracer.
+It also records replay frame times (p50 / p95) while the match plays at fast speed.
 
-The first dashboard (plain HTML and vanilla JS) is kept for reference in `legacy/dashboard-v1/`.
+Tests:
+- `tests/test_dashboard.py` (slow): every gate above on a freshly streamed match.
+- `tests/test_web_stack.py`: exact versions and a tracked lockfile, no node_modules or dist in git,
+  no remote URL or CDN in `web/src`, `web/index.html` or `web/dist`, plain-CSS body background,
+  committed data equal to `out/`.
+- `tests/test_number_trace.py`: the number tracer, including on the committed web data.
+- `tests/test_dashboard_data.py`: ui.json content.
+- `tests/test_ui_stack.py` and `tests/test_dashboard_legacy.py` (slow): the deprecated `app/`.
+- `web/src/**/*.test.ts(x)` (Vitest): formatting, dictionaries, shape guards, data sources, settings
+  with storage blocked, and the rewritten card's Before / After.
