@@ -8,7 +8,7 @@ Triggers (deterministic, in match clock):
   * kickoff: season matchup preview for each direction (attacker lane vs defender completion),
     computed in prepare() before the first event;
   * every CHECKPOINT_SEC: each team's field tilt over the last TILT_WINDOW_SEC when >= MIN_TILT
-    (once per team per TILT_COOLDOWN_SEC);
+    (once per team per TILT_COOLDOWN_SEC; FT_TILT_COOLDOWN_SEC at full time);
   * at half time and full time: each team's xG so far (>= MIN_SHOTS_FOR_XG shots), top chance
     creator (>= MIN_CHANCES), top forward passer (>= MIN_FORWARD), PPDA;
   * every 30 minutes: the rhythm wave (last 15 minutes);
@@ -33,6 +33,9 @@ CHECKPOINT_SEC = 900
 TILT_WINDOW_SEC = 1800
 MIN_TILT = 60.0
 TILT_COOLDOWN_SEC = 1800
+# at the final whistle the cooldown drops to one checkpoint, so the closing spell (often a
+# trailing side's push in stoppage time) gets its own window instead of falling in the gap
+FT_TILT_COOLDOWN_SEC = 900
 MIN_SHOTS_FOR_XG = 5
 MIN_CHANCES = 3
 MIN_FORWARD = 15
@@ -122,7 +125,7 @@ class AnalystAgent:
         t = last["clock_sec"]
         out = []
         if t > self._next_checkpoint - CHECKPOINT_SEC:
-            out += self._checkpoint(last, state, t)
+            out += self._checkpoint(last, state, t, FT_TILT_COOLDOWN_SEC)
         out += self._summaries(last, state, t, "ft")
         return [p for p in out if p is not None]
 
@@ -173,7 +176,7 @@ class AnalystAgent:
                      metric="zone_mismatch", template_key=c["template_key"], attempt=1, strategy=None)
         return out
 
-    def _checkpoint(self, e, state, t):
+    def _checkpoint(self, e, state, t, cooldown=TILT_COOLDOWN_SEC):
         out = []
         view = state.view(self.ds)
         t0 = max(0, t - TILT_WINDOW_SEC)
@@ -181,7 +184,7 @@ class AnalystAgent:
             evs = [x for x in match_events(view)[state.match_id] if t0 <= x["clock_sec"] <= t]
             tilt = M.field_tilt(evs, tid).value
             key = ("field_tilt", tid)
-            if tilt is not None and 100 * tilt >= MIN_TILT and t - state.last_emit.get(key, -TILT_COOLDOWN_SEC) >= TILT_COOLDOWN_SEC:
+            if tilt is not None and 100 * tilt >= MIN_TILT and t - state.last_emit.get(key, -cooldown) >= cooldown:
                 state.last_emit[key] = t
                 subj, extra = self._team(tid)
                 out.append(self._propose(self._spec("field_tilt", "window", subj, t0, t, "field_tilt.stat",

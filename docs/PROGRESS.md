@@ -1,5 +1,91 @@
 # Progress log
 
+## Verifier recall: diagnosis and fixes for the match-level rules
+
+Tool: `python -m tools.verifier_recall --json F --out docs/verifier-recall.md`. It runs one full
+league at a time in a fresh child process (about 2 minutes and 1.9 GB each) and writes F after
+every league. Full tables, miss classes and examples are in docs/verifier-recall.md. Case
+definitions are in tests/verifier_cases.py. Seeds 2026-2028 were used to choose the changes;
+2029-2030 are the hold-out.
+
+**Changes**
+1. **shot_spam** counts non-penalty shots only. A penalty's xG of 0.78 was lifting the mean of a
+   dozen speculative shots over the 0.08 cap.
+2. **field_tilt_with_lead** takes the box-entry share over the trailing part of the scope. On a
+   full-match claim, box entries from level spells diluted the pattern; this was category (b) for
+   the claims.
+3. **The Analyst** proposes a full-time field-tilt window when the last one ended at least 15
+   minutes before the whistle. The 30-minute cooldown was skipping the closing push in stoppage
+   time, which was category (b) for the pipeline.
+4. **field_tilt_with_lead** stays quiet when the chaser clearly out-created an average chaser
+   from real chances. "Real chances" means non-penalty shots above 0.08 xG. "Clearly" means above
+   the league's 75th percentile for scopes of that length, against the same time in each game
+   state. This uses the new `metrics.chaser_threat` and `metrics.chaser_threat_line`. It removes
+   the real false positives (see docs/engine.md, "Reading the field tilt caveat").
+
+**Before (v2) and after (current code), pooled over five leagues.** Recall is on true cases with
+Wilson 95% intervals and the number of true cases. "FP" is the share of all unplanted cases whose
+fires are real false positives by the total-xG outcome label.
+
+| Rule | Level | Seeds | Recall before | Recall after | Unplanted fire rate before → after | FP before → after |
+|---|---|---|---|---|---|---|
+| shot_spam | claim | tune | 0.81 [0.69-0.90] (44/54) | 0.87 [0.76-0.94] (47/54) | 0.051 → 0.053 | – |
+| shot_spam | claim | hold-out | 0.88 [0.75-0.95] (37/42) | 0.90 [0.78-0.96] (38/42) | 0.045 → 0.051 | – |
+| shot_spam | pipeline | tune | 0.85 [0.73-0.92] (46/54) | 0.89 [0.78-0.95] (48/54) | 0.052 → 0.054 | – |
+| shot_spam | pipeline | hold-out | 0.88 [0.75-0.95] (37/42) | 0.90 [0.78-0.96] (38/42) | 0.049 → 0.054 | – |
+| field_tilt | claim | tune | 0.75 [0.63-0.84] (45/60) | 0.62 [0.49-0.73] (37/60) | 0.042 → 0.035 | 0.013 → 0.004 |
+| field_tilt | claim | hold-out | 0.64 [0.50-0.77] (29/45) | 0.42 [0.29-0.57] (19/45) | 0.035 → 0.027 | 0.010 → 0.001 |
+| field_tilt | pipeline | tune | 0.95 [0.86-0.98] (57/60) | 0.90 [0.80-0.95] (54/60) | 0.180 → 0.158 | 0.041 → 0.005 |
+| field_tilt | pipeline | hold-out | 0.89 [0.77-0.95] (40/45) | 0.82 [0.69-0.91] (37/45) | 0.176 → 0.163 | 0.038 → 0.006 |
+
+- **Recall over all planted cases**, including those below detection, after the changes:
+  - shot_spam: 0.68 (claim) and 0.68 (pipeline) of 149;
+  - field_tilt: 0.52 (claim) and 0.87 (pipeline) of 107.
+- **The 17.8% Analyst-pipeline rate before the changes**, as shares of all 3230 unplanted cases:
+  - 11.0% justified: the chaser made no more xG than an average chaser;
+  - 2.8% unclear;
+  - 4.0% real false positives.
+  - After the changes the rate is 16.0%, with 0.5% real false positives.
+- **Changes 1-3 alone** (v3 in docs/verifier-recall.md):
+  - field_tilt claim-level recall rose 0.70 → 0.80;
+  - pipeline recall rose 0.92 → 0.94;
+  - unplanted rates stayed under 6% on claims;
+  - but real false positives rose to 5.0% in the pipeline.
+- **Change 4** trades recall for honesty:
+  - The dropped planted cases are chasers of a deep block that still beat the league's 75th
+    percentile from real chances. For those, "territory, not threat" would mislead.
+  - Claim-level field-tilt recall falls below where it was before all of these changes.
+- **Rejected** (offline estimates on the tuning seeds):
+  - a trailing-spell alternative for shot_spam, which pushed unplanted fires to 6.1-6.4%;
+  - judging tilt on the trailing part only, at 6.0-7.1%;
+  - gating on the league average instead of the 75th percentile: pipeline recall 0.75, claim recall 0.41.
+- **The old-code numbers** are not a fresh run of the old code. A /tmp cleanup wiped the stored
+  diagnosis, so the old rules were re-applied to the scopes recorded by the new run. This works
+  because the Analyst's windows do not depend on the rules; the old full-time cooldown is
+  reproduced by dropping the extra window. The rebuilt numbers match the earlier measurements
+  exactly, e.g. seed 2026 shot_spam 21/31, field_tilt 15/16, unplanted 32/646 and 24/646.
+
+**Miss classes after the changes, pipeline level, all five leagues**
+- shot_spam:
+  - (a) 0;
+  - (b) 3: the full-match claim dilutes the trailing spell, and the fix was rejected for its false fires;
+  - (c) 7: mean xG over 0.08 from a few good chances;
+  - (d) 37: 32 with fewer than 12 non-penalty shots while trailing.
+- field_tilt:
+  - (a) 1;
+  - (b) 0;
+  - (c) 13, of which 8 were held back by the threat condition;
+  - (d) 0.
+
+**Needs human review**
+- **Claim-level field-tilt recall after change 4 is 0.53 [0.44-0.63].** The floor is set just
+  under that pooled bound (0.43), and the slow test fails on seed 2029 (0.40, 10/25); it also
+  measures 0.43 on 2027. Pipeline recall, which is what users see, passes on both seeds tested.
+  - Options: keep change 4 and accept that the claim-level floor is a pooled bound, not a per-league
+    one (current state); or drop change 4 and live with the 4-5% real false positives in the stream.
+- **playwright is no longer importable** in this Python environment, so tests/test_dashboard.py is
+  skipped. This is an environment change, not a code change; I did not install anything.
+
 ## 3C. Multi-seed robustness
 
 Tool: `python -m tools.robustness` (about 20 minutes on 6 processes; `--json F --reuse` skips seeds
@@ -262,6 +348,32 @@ Committed as one stage (see Decisions). Summary:
   accepted: non-trap fires are real low-quality volume or real trailing territory, still true context.
 
 ### Test changes (realism v2)
+- **Verifier recall work, tests/test_verifier_full.py**, rewritten on tests/verifier_cases.py:
+  - **Seed:** the league seed is selectable (OPTIX_VERIFIER_SEED, default 2026).
+  - **True cases:** recall is asserted on true cases, meaning planted cases minus those below
+    detection (fewer than 12 non-penalty shots, or no extra low-xG shots, while trailing; fewer
+    than 30 final-third passes, or under 60% tilt, while trailing). Recall on all planted cases
+    is printed.
+  - **Pipeline level:** recall and fire rate are now also checked on the claims the Analyst
+    proposes while streaming each match.
+  - **Floors:** set just under the pooled Wilson lower bounds over seeds 2026-2030:
+    - claim level: shot_spam 0.80 (was 0.42 on all planted cases), field_tilt 0.43 (was 0.65);
+    - pipeline level: shot_spam 0.81, field_tilt 0.78.
+  - **Why the field-tilt claim floor went down:** the requirement changed. The rule now
+    deliberately stays quiet on chasers that made clearly more than an average chaser from real
+    chances.
+  - **Pipeline caps:** the field-tilt pipeline unplanted rate is capped at 20%, since the Analyst
+    proposes several windows per match. Real false positives (total-xG label) are capped at 2% of
+    unplanted cases.
+  - **Player rules:** they now require every plant caught (4 per league), as before (recall 1.0).
+  - **Stale comment:** the comment that gave 13/25 and 22/28 is gone; it now gives the pooled
+    numbers.
+  - **Runs:** the slow test was run on seeds 2026 (pass) and 2029. On 2029, claim-level field-tilt
+    recall is 0.40 against the 0.43 pooled floor, so it fails (see "Needs human review" above).
+- **test_verifier.py `test_field_tilt_rule_silent_on_high_territory_with_box_entries`:** unchanged
+  and still passing. It selects full-match claims by the whole-match box-entry share, while the
+  rule now looks at the trailing part only. A claim with many box entries overall but few while
+  trailing could now fire, but none of those in the small league does.
 - test_data_gen.py `test_season_meets_calibration_targets`, test_full_league.py
   `test_full_league_meets_calibration`: targets are now ranges with an allowance; the tests allow
   failures only from `calibration.NOT_YET_MODELLED` (a ratchet; tests/test_realism.py will require

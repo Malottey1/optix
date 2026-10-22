@@ -19,7 +19,7 @@ import math
 from collections import defaultdict
 from dataclasses import dataclass, field
 
-from .tables import BRACKETS3, bracket3, bracket5, score_diff
+from .tables import BRACKETS3, bracket3, bracket5, match_events, score_diff
 from .zones import FINAL_THIRD_X, LANES, WIDE_LANES, in_box, lane_of
 
 FORWARD_GAIN = 8.0          # data dictionary: a pass is forward if it gains >= 8 x units
@@ -194,6 +194,94 @@ def npxg_sum(events, shots, team_id, window=None, state=None) -> MetricResult:
     total = sum(s["xg"] for _, s in rows)
     return MetricResult(total, tuple(e["event_id"] for e, _ in rows), len(rows),
                         detail=dict(shots=len(rows), xg_per_shot=total / len(rows) if rows else None))
+
+
+_THREAT: dict = {}
+
+
+def state_npxg_rates(ds, min_xg: float = 0.0) -> dict:
+    """League non-penalty xG per team-second in each game state, from shots with xG > min_xg.
+
+    Definition: for every match and both teams, the seconds between consecutive events are booked
+    to the team's state at the earlier event (bracket3: leading / level / trailing); every
+    non-penalty shot's xG (above min_xg) to the shooter's state. rate = npxG / team-seconds.
+    Inputs: a dataset (the league baseline); min_xg (0 = every shot). Value: {state: rate}.
+    Cached per (dataset, min_xg).
+    Known limits: one league rate per state; a strong side chasing a weak one is expected to make
+    no more than an average chaser.
+    """
+    key = (id(ds), "rates", min_xg)
+    if key not in _THREAT:
+        xg, sec = defaultdict(float), defaultdict(float)
+        for mid, evs in match_events(ds).items():
+            for tid in (ds.matches[mid]["home_team_id"], ds.matches[mid]["away_team_id"]):
+                for prev, e in zip(evs, evs[1:]):
+                    sec[bracket3(score_diff(prev, tid))] += e["clock_sec"] - prev["clock_sec"]
+                for e in evs:
+                    s = ds.shots.get(e["event_id"]) if e["event_type"] == "shot" and e["team_id"] == tid else None
+                    if s and s["shot_type"] != "penalty" and s["xg"] > min_xg:
+                        xg[bracket3(score_diff(e, tid))] += s["xg"]
+        _THREAT[key] = (ds, {k: xg[k] / sec[k] for k in sec if sec[k]})
+    return _THREAT[key][1]
+
+
+def chaser_threat(events, shots, team_id, rates, min_xg: float = 0.0) -> MetricResult:
+    """The team's non-penalty xG in scope (shots with xG > min_xg) against what an average side
+    would make in the same time in the same game states.
+
+    Definition: ratio = npxG / expected, expected = sum over consecutive events in scope of
+    (seconds to the next event) x rates[team's state at the earlier event] (state_npxg_rates).
+    Inputs: events in scope (in order); shots table; team_id; the league rates (built with the
+    same min_xg); min_xg. Value: ratio (None if expected is 0). detail: npxg, expected, seconds,
+    trailing_seconds.
+    Known limits: xG is the only threat measure; a ratio over a short scope is noisy. With
+    min_xg 0 a pile of speculative shots counts as threat (twenty 0.05 shots make 1.0 xG); a
+    min_xg at the low-xG line counts only real chances.
+    """
+    npxg = expected = sec = trailing = 0.0
+    for prev, e in zip(events, events[1:]):
+        dt = e["clock_sec"] - prev["clock_sec"]
+        st = bracket3(score_diff(prev, team_id))
+        expected += rates.get(st, 0.0) * dt
+        sec += dt
+        trailing += dt if st == "trailing" else 0
+    ids = []
+    for e in events:
+        if (e["event_type"] == "shot" and e["team_id"] == team_id and shots[e["event_id"]]["shot_type"] != "penalty"
+                and shots[e["event_id"]]["xg"] > min_xg):
+            npxg += shots[e["event_id"]]["xg"]
+            ids.append(e["event_id"])
+    return MetricResult(npxg / expected if expected else None, tuple(ids), len(ids),
+                        detail=dict(npxg=npxg, expected=expected, seconds=sec, trailing_seconds=trailing))
+
+
+def chaser_threat_line(ds, length_sec: int | None, pctl: float = 0.75, min_xg: float = 0.0,
+                       step_sec: int = 900) -> float | None:
+    """The pctl quantile of chaser_threat over league scopes of the same kind in which the subject
+    trailed for at least half the time: full matches (length_sec None), or windows of length_sec
+    ending every step_sec and at full time.
+
+    Inputs: the league dataset; scope length; quantile; min_xg as in chaser_threat. Value: the
+    ratio at that quantile, or None when fewer than 20 such scopes exist. Cached per argument set.
+    Known limits: the reference pools every team; game state is matched only through the rates.
+    """
+    key = (id(ds), "line", length_sec, pctl, min_xg)
+    if key not in _THREAT:
+        rates = state_npxg_rates(ds, min_xg)
+        ratios = []
+        for mid, evs in match_events(ds).items():
+            end = evs[-1]["clock_sec"]
+            spans = [(0, end)] if length_sec is None else \
+                [(t - length_sec, t) for t in list(range(length_sec, end, step_sec)) + [end] if t >= length_sec]
+            for tid in (ds.matches[mid]["home_team_id"], ds.matches[mid]["away_team_id"]):
+                for a, b in spans:
+                    r = chaser_threat([e for e in evs if a <= e["clock_sec"] <= b], ds.shots, tid, rates, min_xg)
+                    d = r.detail
+                    if r.value is not None and d["seconds"] and d["trailing_seconds"] >= 0.5 * d["seconds"]:
+                        ratios.append(r.value)
+        ratios.sort()
+        _THREAT[key] = (ds, ratios[int(pctl * (len(ratios) - 1))] if len(ratios) >= 20 else None)
+    return _THREAT[key][1]
 
 
 def shots_by_xg_band(events, shots, team_id, window=None, state=None, bands=XG_BANDS) -> MetricResult:

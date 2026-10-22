@@ -89,9 +89,14 @@ Conclusions:
 - Completion rate recovers HAR on the full league. On the 40-match season HAR has only 186 attempts
   into that lane: the 95% interval half-width is about 6 pp, as large as the effect, so it is not
   reliably recoverable there. That is a sample-size limit, not a broken metric.
-- Stated recoverable size: a planted soft lane with true effect >= 5 pp is recovered on the full
-  league (7 of 7; slow test `test_soft_lanes_recovered_above_stated_size`), with 0 of 12 unplanted
-  teams flagged. IRK's 2.7 pp plant is below what ~400 attempts can resolve.
+- Stated recoverable size (v1): a planted soft lane with true effect >= 5 pp was recovered on the
+  v1 full league (7 of 7), with 0 of 12 unplanted teams flagged.
+- **Detection limit (v2): soft lanes below roughly 7 percentage points are not reliably detected.**
+  A season gives about 600 conceded entry attempts per lane (sd about 1.9 pp), so 5 pp is only
+  2.6 sd. On the five full leagues of seeds 2026-2030 every plant with a true effect >= 7 pp is found
+  (6 of 6 per league) with 0 of 12 unplanted teams flagged, and the two weaker plants (IRK about
+  2.6 pp, RVD about 5.2 pp) are never found (docs/robustness.md; slow test
+  `test_soft_lanes_recovered_above_stated_size` pins 7 pp).
 
 ## Pressing: PPDA, ball-won height and press intensity
 
@@ -138,8 +143,8 @@ Context rules (one module each in `engine/rules/`, thresholds documented in the 
 | causal_claim | claim_type causal | always | block, causal.not_supported_by_event_data |
 | causal_red_card | a claim mentioning a red card (metric, template_key or params) | it is causal (claim_type causal, or template_key with caused/because/due_to/cost) | block, red_card.descriptive_only |
 | single_match_fatigue | fatigue.* on a match/window scope | always | block, fatigue.single_match_not_supported |
-| field_tilt_with_lead | field_tilt / territorial_stress, team, match/window | tilt >= 60%, trailing for >= 50% of its final-third passes, box entries <= 18% of them | context, field_tilt.trailing_vs_deep_block |
-| shot_spam | xg / npxg, team | >= 12 shots, >= 65% with xG <= 0.08, mean <= 0.08 | context, xg.volume_of_low_quality_shots |
+| field_tilt_with_lead | field_tilt / territorial_stress, team, match/window | tilt >= 60%, trailing for >= 50% of its final-third passes, box entries while trailing <= 18% of its final-third passes while trailing, and chance xG (shots > 0.08) no more than the league's 75th percentile of chasers for that scope length | context, field_tilt.trailing_vs_deep_block |
+| shot_spam | xg / npxg, team | >= 12 non-penalty shots, >= 65% of them with xG <= 0.08, their mean <= 0.08 | context, xg.volume_of_low_quality_shots |
 | set_piece_inflation | chances_created | >= 4 chances, >= 50% from set pieces | context, chances_created.mostly_set_pieces |
 | wide_forward_passes | forward_passes, player | >= 15, >= 70% wide, pass_quality_ratio <= 0.5 | context, forward_passes.wide_low_threat |
 | small_sample_xg | xg / npxg, match/window | < 8 shots | context, xg.small_sample |
@@ -151,8 +156,44 @@ pass_quality_ratio; small_sample_xg shots; ppda_alone press_intensity. With them
 is `published_with_context`; without them it is `blocked` and `verification.revision_hint` lists
 the missing params (the Analyst's revision loop, docs/ARCHITECTURE.md).
 
-Full-league precision/recall: v1 in docs/PROGRESS.md (Step 5), v2 in the realism v2 section there.
-On the v2 full league every rule fires on <= 5% of non-trap cases (the slow test allows 10%).
+Full-league precision/recall: v1 in docs/PROGRESS.md (Step 5); for the match-level rules on five
+v2 full leagues, with every miss classified, docs/verifier-recall.md (`python -m tools.verifier_recall`).
+On a full-match claim per team every rule fires on <= 6% of non-trap cases (the slow test allows 10%).
+
+### Reading the field tilt caveat: two false-fire measures
+
+`field_tilt_with_lead` is scored two ways, and they answer different questions.
+
+- **Unplanted fire rate**: the share of (match, team) cases whose opponent is not a planted sit-deep
+  team on which the rule fires. It measures how specific the rule is to the plant, not whether
+  the caveat was wrong. Every generated team drops deeper when it leads (sit_deep 0.15-0.53 outside
+  the plants), so a chaser circulating around a block with few box entries is a real pattern on
+  unplanted teams too. In the Analyst pipeline the rate is high (15-19% of cases) because the
+  Analyst proposes a field tilt claim for every 30-minute window above 60% tilt, several per match,
+  and one fire per match is enough. On one full-match claim per team it is 3-5%.
+- **Outcome-based precision**: independent of the rule's inputs (which are passes). For each fire,
+  the chaser's non-penalty xG in the claim's scope is compared with what an average side makes in
+  the same time in the same game states (`metrics.chaser_threat`: league npxG per second while
+  leading / level / trailing). A fire is *justified* at or below that average (territory without
+  threat, which is what the caveat says), a *false positive* above the league's 75th percentile
+  of that ratio for scopes of the same length in which the subject trailed at least half the time
+  (`metrics.chaser_threat_line`), and *unclear* in between.
+
+On the five leagues (docs/verifier-recall.md), before the threat condition, 576 of 3230 unplanted
+cases (17.8%) drew a pipeline fire: 355 justified (11.0% of all cases), 92 unclear (2.8%) and 129
+real false positives (4.0%). The rule now also requires that the chaser did not clearly
+out-create an average chaser from real chances (shots above the 0.08 low-xG line, against the
+league's 75th percentile line). Speculative shots are left out on purpose: twenty 0.05 shots make
+1.0 xG without making a side dangerous, and a chaser circulating around a deep block shoots from
+range. Counting them, the showcase's NOR (a shot-spam chaser) would read as a threat (1.12x the
+average against a 1.03x line) and the planted caveat would be suppressed; from real chances it
+made 0.59x. After the change the pipeline fires on 516 of 3230 unplanted cases (16.0%), of which
+17 (0.5% of all cases) are false positives by the total-xG label. Because the rule now uses the
+chance-xG line itself, the chance-xG label is no longer an independent check (it shows 0 by
+construction); the total-xG label still is. The cost is recall on planted cases where the chaser
+did create real chances: pipeline recall on true cases 0.94 -> 0.87, full-match claims 0.80 -> 0.53
+(those are full matches in which a chaser of a deep block still beat the league's 75th percentile
+from real chances, where "territory, not threat" would mislead).
 
 ## Known gaps
 
