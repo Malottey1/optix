@@ -45,8 +45,8 @@ All versions are exact and every package was at least two weeks old when install
   slider, switch), wrapped as small components in `web/src/components/ui/`.
 - **Motion** for transitions, through `MotionConfig` so reduced motion (system or setting) turns them off.
 - **Zustand** stores for the replay clock and the settings.
-- **d3-scale and d3-shape** for maths only. The pitch, lanes, momentum chart, Perimeter Lock, scatter
-  and bars are hand-written SVG; there is no canvas and no chart library. Marks carry
+- **d3-scale and d3-shape** for maths only. The pitch, lanes, momentum chart, Perimeter Lock, scatter,
+  bars and the visuals in `components/viz/` (docs/visuals.md) are hand-written SVG; there is no canvas and no chart library. Marks carry
   `data-event-id`, `data-lane`, `data-team`, `data-claim-id` and similar attributes for the tests.
 - **Fontsource** self-hosted fonts (Inter variable for the interface, Barlow Condensed for numerals and
   display; both OFL) with tabular numerals. Nothing is loaded from a CDN; at runtime the page requests
@@ -73,10 +73,10 @@ move every frame (clock text, ball marker and trail, momentum playhead) are writ
 
 | Route | What it shows | Source |
 |---|---|---|
-| `#/live` Live Center | Scoreboard with a momentum tug-of-war; play, pause, scrub (with goal and insight markers) and speed; SVG Focus Pitch with the selected or latest insight's evidence and a ball marker at the latest event location (an event-based proxy, labelled as such); momentum chart; Perimeter Lock; the stream of verified cards. Each card has a headline (the stream's sentence), an evidence summary, and an evidence drawer with a mini pitch, the claim object, every verification attempt and the exact evidence events. A card whose first attempt was blocked shows "Rewritten after verification", a Before / After toggle and the rule's reason in one sentence | `insights.jsonl`, `claims.jsonl`, `timeline.json`, `ui.json` (rewrites, reasons, evidence, track) |
-| `#/teams` Team Board | Head to head first: any attacker and defender, lane mismatch on a pitch in the attacker's frame (mirror handled, the defender's own name for each lane shown), the verified matchup sentence and the per-lane table. Per team: style labels with their rule and numbers in a tooltip (`engine/style_labels.py`); entry lanes made and conceded against the league; soft lane in both frames | `ui.json` teams |
-| `#/players` Player Deck | Only involvement, pass quality and chances created. The Verifier's context cards for the volume passer and the set-piece creators (Before / After, reason, chance split, evidence); volume against quality; where the chances come from; the full sortable, filterable table | `ui.json` players |
-| `#/tech` Tech Blueprint | Pipeline (Analyst → Verifier → Narrative → number guard) with counts from the ledger; one real claim followed from its blocked first attempt to the translated sentence; the verification ledger (every claim: passed / passed with context / revised / blocked, and the deciding rule); the measured numbers, parsed from docs/realism-report.md, docs/robustness.md and docs/verifier-recall.md; "Planned Azure integration (not built yet)" | `ui.json` ledger, measured, rewrites |
+| `#/live` Live Center | Scoreboard with a momentum tug-of-war; play, pause, scrub (with goal and insight markers) and speed; SVG Focus Pitch with the selected or latest insight's evidence and a ball marker at the latest event location (an event-based proxy, labelled as such); momentum chart; Perimeter Lock; rhythm pulse; pinned-in-own-half gauges; shot blocks; the stream of verified cards (matchup cards show mismatch crosshairs, xG cards shot blocks, the rhythm card a pulse). Each card has a headline (the stream's sentence), an evidence summary, and an evidence drawer with a mini pitch, the evidence chain (nodes by event type, click to pin on the pitch), the claim object, every verification attempt and the exact evidence events. A card whose first attempt was blocked shows "Rewritten after verification", a Before / After toggle and the rule's reason in one sentence | `insights.jsonl`, `claims.jsonl`, `timeline.json`, `ui.json` (rewrites, reasons, evidence, track) |
+| `#/teams` Team Board | Head to head first: any attacker and defender, mismatch crosshairs (entries up, conceded down, crosshair on the verified claim's lane, attacker's frame with the mirror handled), the verified matchup sentence and the per-lane table behind a disclosure. Game-state swaps (field tilt and press intensity, trailing to leading). Zone shift of the showcase match, half by half. Per team: style labels with their rule and numbers in a tooltip (`engine/style_labels.py`); entry lanes made and conceded against the league; soft lane in both frames | `ui.json` teams |
+| `#/players` Player Deck | Only involvement, pass quality and chances created. The Verifier's context cards for the volume passer and the set-piece creators (Before / After, reason, chance split, pass routes, evidence); a player profile with pass routes (forward passes or chances) and a percentile pizza; volume against quality; where the chances come from; the full sortable, filterable table | `ui.json` players |
+| `#/tech` Tech Blueprint | Pipeline (Analyst → Verifier → Narrative → number guard) with counts from the ledger; one real claim followed from its blocked first attempt to the translated sentence; the verification ledger (every claim: passed / passed with context / revised / blocked, and the deciding rule); the measured numbers, a visual guide (legend of every visual), parsed from docs/realism-report.md, docs/robustness.md and docs/verifier-recall.md; "Planned Azure integration (not built yet)" | `ui.json` ledger, measured, rewrites |
 
 Settings (slide-over from the header): language (en / es / fr: the stream's own translated,
 number-guarded sentences plus small interface dictionaries), reduce motion, show evidence by default,
@@ -96,18 +96,21 @@ View options for screenshots and tests: `#/live?t=2760&select=ins_0009&lang=es&p
 
 `python -m tools.check_web` (needs `pip install -r requirements-ui.txt` and a built `web/dist`) serves
 `web/dist` and opens every route at 1440 px and 390 px in headless Chromium, with axe-core injected.
-It writes `docs/screens-v2/<route>_<desktop|mobile>.png` plus `live_1080p.png`, each under 300 KB.
+It writes `docs/screens-v3/<route>_<desktop|mobile>.png` plus `live_1080p.png`, each under 300 KB.
 It fails on any of:
 - a console error, page error, failed request, HTTP error, or request to a host other than localhost;
 - horizontal scroll; overlapping text;
 - a control that Tab never reaches; Tailwind not applied; a serious or critical axe finding;
 - missing data attributes on the marks;
 - an evidence drawer whose events differ from the stream's evidence ids;
-- a number on screen that does not trace to the data (football clock times, counts of listed items and
-  per-type counts of evidence events are the only derived numbers);
+- a number on screen that does not trace to the data (football clock times, counts of listed items,
+  per-type counts of evidence events and the visuals' formulas in docs/visuals.md are the only
+  derived numbers);
+- a visual that disagrees with the engine output (`check_consistency`; `--ref out --mutation-proof`
+  also shows each of those checks fails on a copy with that visual's data changed);
 - a crash or missing page when navigating between routes in the app;
 - a language switch that changes a number, or a sentence that fails the number guard;
-- a forbidden word (real club names, prediction or betting language);
+- a forbidden word (real club names, prediction or betting language, invented statistics such as "60,000");
 - an error with storage blocked or with reduced motion;
 - initial JavaScript of 250 KB gzip or more.
 

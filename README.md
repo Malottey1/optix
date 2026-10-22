@@ -66,13 +66,13 @@ python -m engine.report --team AUR --opponent NOR        # style profiles and ma
 python -m agents.personalize --mode casual --lang es --favorite NOR   # personalized feed in the terminal
 python -m data_gen.generate --league full                # 20 teams, 380 matches (data/full, ~15 s)
 cd web && npm run build && npm run preview               # production build in web/dist, served on :4173
-pip install -r requirements-ui.txt && python -m tools.check_web     # headless gates on every route + docs/screens-v2/
+pip install -r requirements-ui.txt && python -m tools.check_web     # headless gates on every route + docs/screens-v3/
 ```
 
 What you get: `out/insights.jsonl` (timed insights, contracts/insight.schema.json), `out/claims.jsonl`
 (every verification attempt, including blocked ones), `out/timeline.json` and `out/agent_log.jsonl`
 (structured logs), `out/ui.json` (team, player, ledger and report data for the dashboard). Architecture: `docs/ARCHITECTURE.md`. Engine and Verifier: `docs/engine.md`.
-Dashboard (stack, pages, checks): `docs/dashboard.md`.
+Dashboard (stack, pages, checks): `docs/dashboard.md`. Visuals (what each draws, formula, caveats, skipped ones): `docs/visuals.md`.
 
 ## Not built yet (planned)
 

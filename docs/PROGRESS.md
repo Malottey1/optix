@@ -35,6 +35,43 @@ docs/visuals.md.
   unit-tested, recomputed independently in Python by the consistency gate). Comparison group:
   outfield players with at least 100 passes.
 
+- **V4 colour changed during the build:** the plan coloured forward routes by xT added per pass, but
+  the volume passer's xT per pass (0.009) equals the league's, so he did not read grey. The export
+  gained a per-route count of passes ending in a high-threat cell (`hot`) and the league share
+  (`league_hot_share`); routes are coloured by route pass quality, the engine's own
+  `pass_quality_ratio` definition. A test rebuilds each player's ratio from the routes. Forward
+  routes with one pass are hidden (caption gives shown / total). Chances keep xA per chance.
+- **V7 pin:** clicking a node in the evidence chain pins that event on the drawer's pitch (the
+  table below stays the text version).
+- **V10 built (Tier 3):** from `track` (the showcase's on-ball event locations, attacker frame),
+  share per zone per half and the shift in points; on the Team Board for the two showcase teams.
+  No export change.
+- **Tug-of-war:** the label says who is pulling, with no number (the brief forbids a raw
+  percentage).
+- **V3 tick numbers removed:** axis ticks would be numbers not in the data; exact values are in the
+  value cards and the hidden table.
+- **Placement:** the matchup and xG cards on Live carry compact crosshairs and shot blocks; the
+  Player Deck context cards carry compact pass routes; Tech has a visual guide.
+- **Lazy loading:** the pages were already lazy chunks; each visual lives in its route's chunk
+  (initial JS unchanged at 149 KB gzip).
+
+### Test changes (and why)
+
+- `tools/check_web.py`: the number tracer accepts the visuals' documented formulas (recomputed in
+  Python, not read from the page); new `check_consistency` (V1, V2, V5, V4, V8 against the engine
+  output) and `mutation_proof`; screenshots go to docs/screens-v3/; `--ref` and
+  `--mutation-proof` flags.
+- `tools/check_dashboard.py`: "60,000" and "60000" join the forbidden words.
+- `tests/test_dashboard.py`: runs check_web with `ref_dir` = the fresh engine output and asserts the
+  consistency report.
+- `tests/test_visuals_consistency.py` (new, slow): every consistency check fails on a throwaway
+  copy with that visual's data changed.
+- `tests/test_dashboard_data.py`: two tests tie the `visuals` export to the engine functions and
+  show the planted volume passer and corner specialist read differently.
+- Vitest: `lib/viz.test.ts` and `components/viz/helpers.test.ts` cover every geometry and scale
+  function. No convex hull exists (V11 is skipped), so none is tested.
+- The crosshair table had two "League" headers (React duplicate key warning); renamed.
+
 ## UI v2 (branch `ui-v2`, from `ui-restructure`)
 
 Started 2026-10-22 16:17. The front end is rebuilt in web/ (Vite + React + TypeScript). The data
