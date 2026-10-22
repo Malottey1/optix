@@ -411,7 +411,7 @@ function PlayerTable({ players, flagged }: { players: PlayerRow[]; flagged: Set<
           options={(Object.keys(SORTS) as SortKey[]).map((value) => ({ value, label: SORTS[value].label }))}
         />
       </div>
-      <ScrollRegion label="All players" className="mt-4">
+      <ScrollRegion label="Player table, scrolls" className="mt-4">
         <table className="w-full min-w-[900px] border-collapse text-[13px]" data-table="players">
           <thead className="bg-surface-2 text-ink-3">
             <tr>

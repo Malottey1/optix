@@ -188,6 +188,26 @@ def check_language_switch(browser, base, src) -> dict:
                 route_numbers_same=routes, problems=log["problems"])
 
 
+def check_navigation(browser, base) -> dict:
+    """In-app navigation through the visible nav links at both widths (each route check opens a fresh
+    page, so unmount and route-change bugs only show up here)."""
+    out = {}
+    for wn, (w, h) in WIDTHS.items():
+        ctx, page, log = _context(browser, w, h)
+        _open(page, base, "live", QUERY["live"])
+        reached = []
+        for route in [*ROUTES[1:], *ROUTES]:
+            try:
+                page.locator(f"a[href='#/{route}']:visible").last.click(timeout=5000)
+                page.wait_for_selector(f"[data-page='{route}']", timeout=10000)
+                reached.append(route)
+            except Exception:
+                reached.append(f"{route}:missing")
+        out[wn] = dict(reached=reached, problems=log["problems"])
+        ctx.close()
+    return out
+
+
 def check_robustness(browser, base) -> dict:
     out = {}
     ctx, page, log = _context(browser, *WIDTHS["desktop"])
@@ -264,6 +284,7 @@ def run(dist: Path | None = None, screens_dir: Path | None = None, screens: bool
             if shots:
                 report["demo_problems"] = demo_screen(browser, base, shots)
         if set(routes) == set(ROUTES):
+            report["navigation"] = check_navigation(browser, base)
             report["language"] = check_language_switch(browser, base, src)
         browser.close()
     httpd.shutdown()
@@ -308,6 +329,9 @@ def failures(report) -> list:
             f.append(f"language: forbidden words {L['forbidden_other_lang']}")
         if not L["cards"]:
             f.append("language: no cards at full time")
+    for wn, v in report.get("navigation", {}).items():
+        f += [f"navigation@{wn}: {x}" for x in v["problems"]]
+        f += [f"navigation@{wn}: never reached {x}" for x in v["reached"] if x.endswith(":missing")]
     R = report.get("robustness")
     if R is not None:
         f += [f"storage blocked: {x}" for x in R["storage_blocked"]["problems"]]
