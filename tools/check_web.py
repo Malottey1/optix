@@ -47,11 +47,11 @@ DATA_ATTRS = {
     "tech": [("tr[data-claim-id]", "data-claim-id")],
 }
 
-# Like FOCUSABLE_JS, but a Radix roving-focus root (toggle group, tab list) is not a stop of its own:
-# it takes focus only to hand it to its active item, which is counted instead.
-WEB_FOCUSABLE_JS = FOCUSABLE_JS.replace("&& !e.closest('[inert]'))",
-    "&& !e.closest('[inert]') && !(e.matches('[role=group], [role=radiogroup], [role=tablist]') && e.querySelector('button, [role=tab]')))")
-assert WEB_FOCUSABLE_JS != FOCUSABLE_JS
+# A Radix roving-focus group (toggle group, tab list) is one tab stop: its root takes focus and
+# hands it to the active item (whose own tabindex is -1 until then). So the focused element counts
+# for the nearest counted ancestor: reaching the item means the root's stop was reached.
+WEB_ACTIVE_JS = """() => { const e = document.activeElement; const c = e && e.closest('[data-tabcheck]');
+  return c ? c.getAttribute('data-tabcheck') : null; }"""
 
 TAILWIND_JS = """() => {
   const main = document.querySelector('main');
@@ -117,7 +117,7 @@ def check_route(browser, base, route, width_name, src, screens: Path | None, axe
         (screens / f"{route}_{width_name}.png").write_bytes(_shrink_png(page.screenshot(full_page=True)))
     page.add_script_tag(content=axe_src)
     r["axe"] = page.evaluate(AXE_JS)
-    r["tab"] = _tab_order(page, WEB_FOCUSABLE_JS)
+    r["tab"] = _tab_order(page, FOCUSABLE_JS, WEB_ACTIVE_JS)
     r["problems"], r["remote"] = log["problems"], log["remote"]
     ctx.close()
     return r

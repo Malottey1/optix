@@ -238,13 +238,16 @@ def _open(page, base, route, query=""):
     page.wait_for_timeout(500)
 
 
-def _tab_order(page, focusable_js=FOCUSABLE_JS) -> dict:
+ACTIVE_JS = "() => document.activeElement && document.activeElement.getAttribute('data-tabcheck')"
+
+
+def _tab_order(page, focusable_js=FOCUSABLE_JS, active_js=ACTIVE_JS) -> dict:
     n = page.evaluate(focusable_js)
     page.evaluate("() => { document.activeElement && document.activeElement.blur(); window.scrollTo(0, 0); }")
     seen = set()
     for _ in range(n + 5):
         page.keyboard.press("Tab")
-        k = page.evaluate("() => document.activeElement && document.activeElement.getAttribute('data-tabcheck')")
+        k = page.evaluate(active_js)
         if k is not None:
             seen.add(int(k))
     missing = sorted(set(range(n)) - seen)
