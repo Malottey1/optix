@@ -19,3 +19,22 @@ def test_invented_numbers_and_ids_are_caught():
 
 def test_numbers_of_ignores_the_decimal_mark():
     assert numbers_of("75.5% and 37") == numbers_of("75,5 % y 37")
+
+
+def test_the_web_tracer_on_the_committed_web_data_catches_an_invented_number():
+    """Same rules on the sources tools/check_web.py builds from web/public/data: a real headline
+    from the stream traces, the same headline with one number changed does not."""
+    from pathlib import Path
+
+    import pytest
+
+    from tools.check_web import web_sources
+
+    data = Path(__file__).resolve().parent.parent / "web" / "public"
+    if not (data / "data" / "ui.json").exists():
+        pytest.skip("needs web/public/data (cd web && npm run data)")
+    src = web_sources(data)
+    real = next(i["text"]["rendered"]["en"]["casual"] for i in src["insights"].values() if numbers_of(
+        i["text"]["rendered"]["en"]["casual"]))
+    assert untraced_numbers(real, src) == []
+    assert untraced_numbers(real + " and 4815.162 more", src) == ["4815.162"]
