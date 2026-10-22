@@ -423,6 +423,84 @@ function Prose({ text }: { text: string }) {
   );
 }
 
+const GUIDE: { name: string; where: string; reads: string; from: string }[] = [
+  {
+    name: "Mismatch crosshairs",
+    where: "Team Board, matchup cards",
+    reads:
+      "Bars up: where the attacker enters; bars down: where the defender concedes; the crosshair sits only on the lane a verified matchup claim names.",
+    from: "engine/matchup.py",
+  },
+  {
+    name: "Shot blocks",
+    where: "Live Center, xG cards",
+    reads: "One block per shot, area proportional to xG; fill pattern shows the outcome.",
+    from: "shots table, xG claims",
+  },
+  {
+    name: "Game-state swaps",
+    where: "Team Board",
+    reads: "Each team trailing (ring) and leading (diamond): field tilt across, press intensity up.",
+    from: "engine/profiles.py",
+  },
+  {
+    name: "Pass routes",
+    where: "Player Deck",
+    reads:
+      "Arrows between zones; width is the pass count, colour how often the route reaches high-threat central cells (or xA per chance).",
+    from: "engine/threat.py",
+  },
+  {
+    name: "Pinned-in-half gauges",
+    where: "Live Center",
+    reads: "Time the opponent kept the ball in this team's half, adding up with the clock.",
+    from: "engine/flow.py territorial_stress",
+  },
+  {
+    name: "Rhythm pulse",
+    where: "Live Center, rhythm cards",
+    reads: "Possession changes per minute; jagged peaks are chaos, a flat line is control.",
+    from: "engine/flow.py rhythm",
+  },
+  {
+    name: "Event chain",
+    where: "Evidence drawer",
+    reads: "The claim's evidence events in order; shape and colour give the event type; click to pin it on the pitch.",
+    from: "evidence events",
+  },
+  {
+    name: "Percentile pizza",
+    where: "Player Deck",
+    reads: "Slice length is the player's percentile among outfield regulars, for volume, quality and chance source.",
+    from: "player metrics",
+  },
+];
+
+function VisualGuide() {
+  return (
+    <Panel
+      id="visual-guide"
+      title="Visual guide"
+      subtitle="Every shape on these pages draws a number the engine computed; none is decoration. Each has a hidden table with the exact values for screen readers."
+    >
+      <ul className="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-4" data-role="visual-guide">
+        {GUIDE.map((g) => (
+          <li key={g.name} className="rounded-xl border border-line bg-surface-2 px-4 py-3">
+            <b className="text-[14px] text-ink">{g.name}</b>
+            <p className="mt-0.5 text-[11.5px] font-semibold text-ink-3">{g.where}</p>
+            <p className="mt-1.5 text-[12.5px] leading-snug text-ink-2">{g.reads}</p>
+            <code className="mt-1.5 block text-[11px] text-ink-3">{g.from}</code>
+          </li>
+        ))}
+      </ul>
+      <p className="mt-3 text-[12px] text-ink-3">
+        Not drawn, because the data cannot support them: anything from player tracking (off-ball runs, space), fitness
+        or GPS speed, per-match player form, and red-card footprints (the showcase match has no red card).
+      </p>
+    </Panel>
+  );
+}
+
 const BUILT = [
   ["Deterministic engine and Verifier", "Python in engine/ and agents/; every number in this dashboard comes from it."],
   [
@@ -467,6 +545,7 @@ export default function TechPage() {
       <Walkthrough />
       <Ledger />
       <Measured />
+      <VisualGuide />
       <Panel
         id="planned"
         title="Planned Azure integration (not built yet)"

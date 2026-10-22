@@ -4,6 +4,7 @@
 import { useState, type ReactNode } from "react";
 import { Arrowheads, InsightLayer, PitchLines } from "../../components/pitch/Pitch";
 import { StatusChip, TeamDot } from "../../components/ui/badge";
+import { EvidenceChain } from "../../components/viz/EvidenceChain";
 import { ScrollRegion } from "../../components/ui/scroll-region";
 import { Sheet } from "../../components/ui/sheet";
 import { useData } from "../../data/context";
@@ -26,7 +27,9 @@ function Kv({ k, v }: { k: string; v: ReactNode }) {
 function Body({ ins }: { ins: Insight }) {
   const m = useData();
   const { t, lang } = useT();
-  const [hi, setHi] = useState<string | null>(null);
+  const [hover, setHi] = useState<string | null>(null);
+  const [pinned, setPinned] = useState<string | null>(null);
+  const hi = hover ?? pinned;
   const tl = m.timeline;
   const hist = m.chain(ins.claim_id);
   const final = hist.at(-1)!.claim;
@@ -65,6 +68,15 @@ function Body({ ins }: { ins: Insight }) {
           </figcaption>
         </figure>
       )}
+
+      <section aria-labelledby="chain-h">
+        <h3 id="chain-h" className="eyebrow">
+          Event chain · <span className="num">{num(rows.length, lang)}</span>
+        </h3>
+        <div className="mt-2">
+          <EvidenceChain rows={rows} matchId={tl.match_id} periods={tl.periods} pinned={pinned} onPin={setPinned} />
+        </div>
+      </section>
 
       <section aria-labelledby="claim-h">
         <h3 id="claim-h" className="eyebrow">

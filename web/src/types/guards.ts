@@ -160,6 +160,7 @@ export function parseUi(raw: unknown): UiData {
     evidence: "object",
     measured: "array",
     track: "array",
+    visuals: "object",
   });
   const teams = c.fields(o.teams, "teams", {
     teams: "array",
@@ -234,6 +235,45 @@ export function parseUi(raw: unknown): UiData {
       notes: "array",
     }),
   );
+  const vis = c.fields(o.visuals, "visuals", {
+    shots: "array",
+    league_hot_share: "number",
+    stress: "object",
+    rhythm: "array",
+    states: "object",
+    state_min_n: "number",
+    routes: "object",
+    zones: "object",
+  });
+  (vis.shots as unknown[]).forEach((s, i) => {
+    const a = c.arr(s, `visuals.shots[${i}]`);
+    if (a.length !== 9) c.fail(`visuals.shots[${i}]`, `expected 9 fields, got ${a.length}`);
+    c.is(a[6], `visuals.shots[${i}][6]`, "number");
+  });
+  for (const [code, spells] of Object.entries(vis.stress as Record<string, unknown>)) {
+    c.arr(spells, `visuals.stress.${code}`).forEach((s, i) => {
+      const a = c.arr(s, `visuals.stress.${code}[${i}]`);
+      a.forEach((x, j) => c.is(x, `visuals.stress.${code}[${i}][${j}]`, "number"));
+    });
+  }
+  (vis.rhythm as unknown[]).forEach((r, i) => {
+    const a = c.arr(r, `visuals.rhythm[${i}]`);
+    a.forEach((x, j) => c.is(x, `visuals.rhythm[${i}][${j}]`, "number"));
+  });
+  for (const [code, st] of Object.entries(vis.states as Record<string, unknown>)) {
+    for (const b of ["leading", "trailing"]) {
+      const row = c.obj((st as Record<string, unknown>)[b], `visuals.states.${code}.${b}`);
+      for (const m of ["field_tilt", "press_intensity"])
+        c.fields(row[m], `visuals.states.${code}.${b}.${m}`, { value: ["number", "null"], n: "number" });
+    }
+  }
+  for (const [pid, rows] of Object.entries(vis.routes as Record<string, unknown>)) {
+    c.arr(rows, `visuals.routes.${pid}`).forEach((r, i) => {
+      const a = c.arr(r, `visuals.routes.${pid}[${i}]`);
+      if (!["fwd", "op", "sp"].includes(a[0] as string))
+        c.fail(`visuals.routes.${pid}[${i}][0]`, `unknown kind ${String(a[0])}`);
+    });
+  }
   const track = o.track as unknown[];
   if (track.length) c.arr(track[0], "track[0]");
   return raw as UiData;

@@ -17,6 +17,7 @@ import { useT, type Key } from "../../lib/i18n";
 import { select, useReplay } from "../../state/replay";
 import { useSettings } from "../../state/settings";
 import type { Insight } from "../../types/ui";
+import { CardVisual } from "./CardVisual";
 import { PCT_METRICS, evidenceMix, reasonFor, statusOf, textOf } from "./shared";
 
 export const STATUS_KEY: Record<Status, Key> = {
@@ -206,6 +207,7 @@ export const InsightCard = memo(function InsightCard({
           </motion.p>
         </AnimatePresence>
       </button>
+      <CardVisual ins={ins} />
       {rw && <Rewritten ins={ins} view={view} setView={setView} />}
       {chip?.standard_metric != null && chip.standard_value != null && !rw && (
         <Tip content={t("standard_note")}>

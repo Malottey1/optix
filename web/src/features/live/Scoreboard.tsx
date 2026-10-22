@@ -6,7 +6,7 @@ import { TeamDot } from "../../components/ui/badge";
 import { useData } from "../../data/context";
 import { lastAtOrBefore } from "../../data/model";
 import { cx } from "../../lib/cx";
-import { clock, num, phase } from "../../lib/format";
+import { clock, phase } from "../../lib/format";
 import { useT, type Key } from "../../lib/i18n";
 import { useReplay, useReplayFrame } from "../../state/replay";
 
@@ -44,7 +44,7 @@ function ClockText({ className }: { className?: string }) {
 
 export function MomentumTug({ className }: { className?: string }) {
   const m = useData();
-  const { t, lang } = useT();
+  const { t } = useT();
   const tl = m.timeline;
   const [, v] = useMomentumAt();
   const lead = v > 0 ? tl.home.code : v < 0 ? tl.away.code : null;
@@ -58,7 +58,7 @@ export function MomentumTug({ className }: { className?: string }) {
         preserveAspectRatio="none"
         className="h-3 min-w-0 flex-1"
         role="img"
-        aria-label={`${t("momentum")}: ${lead ? `${lead} ${t("pulling")}` : t("level")} ${num(Math.abs(v), lang)}`}
+        aria-label={`${t("momentum")}: ${lead ? `${lead} ${t("pulling")}` : t("level")}`}
       >
         <rect x="0" y="0" width="200" height="12" rx="6" fill="var(--surface-3)" />
         <rect
@@ -82,10 +82,13 @@ export function MomentumTug({ className }: { className?: string }) {
         />
       </svg>
       <span className="w-9 shrink-0 text-[12px] font-bold text-away">{tl.away.code}</span>
-      <span className="display w-[4.5rem] shrink-0 text-right text-[18px] font-semibold leading-none text-ink">
+      <span
+        className="w-[6.5rem] shrink-0 text-right text-[12.5px] font-semibold leading-none text-ink-2"
+        data-role="tug-label"
+      >
         {lead ? (
           <>
-            <span className={v > 0 ? "text-home" : "text-away"}>{lead}</span> {num(Math.abs(v), lang)}
+            <span className={v > 0 ? "text-home" : "text-away"}>{lead}</span> {t("pulling")}
           </>
         ) : (
           <span className="text-[13px] font-semibold text-ink-3">{t("level")}</span>

@@ -4,7 +4,9 @@
 // strip of grass is the mirror (left and right swap), shown beside it.
 import { useState } from "react";
 import { Icon } from "../../components/icons";
-import { BOX, FINAL_THIRD_X, LANE_EDGES, LANE_NAMES, MIRROR, PX, PY, PitchLines } from "../../components/pitch/Pitch";
+import { MismatchCrosshairs } from "../../components/viz/MismatchCrosshairs";
+import { StateSwaps } from "../../components/viz/StateSwaps";
+import { LANE_NAMES, MIRROR } from "../../components/pitch/Pitch";
 import { Chip, StatusChip } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { Panel } from "../../components/ui/card";
@@ -15,7 +17,7 @@ import { useData } from "../../data/context";
 import { cx } from "../../lib/cx";
 import { num, pct, signed } from "../../lib/format";
 import { useT } from "../../lib/i18n";
-import type { HeadToHead as H2H, Lang, StyleLabel, TeamProfile } from "../../types/ui";
+import type { Lang, StyleLabel, TeamProfile } from "../../types/ui";
 import { textOf } from "../live/shared";
 
 const LABEL_NAME: Record<string, string> = {
@@ -219,113 +221,6 @@ function TeamCard({ team, lanes }: { team: TeamProfile; lanes: string[] }) {
   );
 }
 
-/** The attacker's frame: attacking left to right, the attacker's left flank on top. Labels are
- * HTML laid over the lanes so they stay readable on a phone. */
-function MatchupPitch({ att, dfn, lanes, h }: { att: string; dfn: string; lanes: string[]; h: H2H }) {
-  const { lang } = useT();
-  const vb = { x: -2, y: -2, w: 109, h: 72 };
-  const topPct = (y: number) => `${((y * PY - vb.y) / vb.h) * 100}%`;
-  const hPct = (y0: number, y1: number) => `${(((y1 - y0) * PY) / vb.h) * 100}%`;
-  return (
-    <figure className="m-0">
-      <div className="relative">
-        <svg
-          viewBox={`${vb.x} ${vb.y} ${vb.w} ${vb.h}`}
-          className="block h-auto w-full rounded-xl"
-          role="img"
-          data-chart="h2h-pitch"
-          data-team={att}
-          aria-label={`${att} attacking ${dfn}, left to right: ${h.top ? `top lane ${LANE_NAMES[h.top]}` : "no lane mismatch"}`}
-        >
-          <PitchLines thirds />
-          {lanes.map((l, i) => {
-            const v = h.lanes[l]!;
-            const y0 = LANE_EDGES[i]! * PY;
-            const y1 = LANE_EDGES[i + 1]! * PY;
-            const top = l === h.top;
-            const both = (v.attack_pp ?? 0) > 0 && (v.completion_pp ?? 0) > 0;
-            return (
-              <g key={l} data-lane={l} data-mismatch={v.mismatch_pp ?? undefined} data-top={String(top)}>
-                <rect
-                  x={FINAL_THIRD_X * PX}
-                  y={y0}
-                  width={(100 - FINAL_THIRD_X) * PX}
-                  height={y1 - y0}
-                  fill={top ? "var(--revise)" : both ? "var(--accent)" : "transparent"}
-                  opacity={top ? 0.3 : both ? 0.12 : 0}
-                />
-                {i > 0 && (
-                  <line
-                    x1="0"
-                    x2="105"
-                    y1={y0}
-                    y2={y0}
-                    stroke="var(--pitch-faint)"
-                    strokeWidth="0.3"
-                    strokeDasharray="0.8 0.8"
-                  />
-                )}
-                {top && (
-                  <path
-                    d={`M${40 * PX},${(y0 + y1) / 2} L${(FINAL_THIRD_X + 22) * PX},${(y0 + y1) / 2}`}
-                    stroke="var(--revise)"
-                    strokeWidth="0.8"
-                    markerEnd="url(#h2h-arrow)"
-                  />
-                )}
-              </g>
-            );
-          })}
-          <defs>
-            <marker id="h2h-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto">
-              <path d="M0,0 L10,5 L0,10 z" fill="var(--revise)" />
-            </marker>
-          </defs>
-          <rect
-            x={BOX.x * PX}
-            y={BOX.y0 * PY}
-            width={(100 - BOX.x) * PX}
-            height={(BOX.y1 - BOX.y0) * PY}
-            fill="none"
-            stroke="var(--pitch-line)"
-            strokeWidth="0.35"
-          />
-        </svg>
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-          {lanes.map((l, i) => {
-            const v = h.lanes[l]!;
-            const top = l === h.top;
-            return (
-              <div
-                key={l}
-                className="absolute inset-x-[3%] flex items-center justify-between gap-2"
-                style={{ top: topPct(LANE_EDGES[i]!), height: hPct(LANE_EDGES[i]!, LANE_EDGES[i + 1]!) }}
-              >
-                <span className="truncate rounded-md bg-bg/70 px-1.5 py-0.5 text-[11.5px] font-medium text-ink-2 sm:text-[12.5px]">
-                  {LANE_NAMES[l]}
-                </span>
-                <span
-                  className={cx(
-                    "display shrink-0 rounded-md bg-bg/70 px-1.5 py-0.5 text-[15px] font-bold leading-none sm:text-[18px]",
-                    top ? "text-revise" : "text-ink",
-                  )}
-                >
-                  {signed(v.mismatch_pp, lang)}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-      <figcaption className="mt-2 text-[12.5px] leading-relaxed text-ink-3">
-        {att} attacking left to right; {att}'s left flank is the top edge. Figure per lane: mismatch in percentage
-        points ({att}'s lift in entries + {dfn}'s lift in completion conceded); a lane is shaded only when both lifts
-        are positive.
-      </figcaption>
-    </figure>
-  );
-}
-
 function HeadToHead() {
   const m = useData();
   const { lang } = useT();
@@ -406,7 +301,7 @@ function HeadToHead() {
         </div>
       </div>
       <div className="mt-5 grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
-        <MatchupPitch att={att} dfn={dfn} lanes={T.lanes} h={h} />
+        <MismatchCrosshairs h={h} defender={T.teams.find((t) => t.code === dfn)!} lanes={T.lanes} />
         <div className="min-w-0">
           {text ? (
             <div className="rounded-xl border border-line bg-surface-2 px-4 py-3.5">
@@ -431,53 +326,58 @@ function HeadToHead() {
               No lane where {att}'s attacking habit and {dfn}'s soft spot line up, so no claim was made.
             </Empty>
           )}
-          <ScrollRegion label={`Lanes: ${att} attacking ${dfn}`} className="mt-4">
-            <table className="w-full min-w-[520px] border-collapse text-[12.5px]" data-table="h2h">
-              <thead className="bg-surface-2 text-left text-ink-3">
-                <tr>
-                  <th scope="col" className="px-3 py-2 font-semibold">
-                    Lane ({att}'s view)
-                  </th>
-                  <th scope="col" className="px-3 py-2 font-semibold">
-                    {dfn} calls it
-                  </th>
-                  <th scope="col" className="px-3 py-2 font-semibold">
-                    {att} share
-                  </th>
-                  <th scope="col" className="px-3 py-2 font-semibold">
-                    {dfn} completion conceded
-                  </th>
-                  <th scope="col" className="px-3 py-2 font-semibold">
-                    Mismatch
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {T.lanes.map((l) => {
-                  const v = h.lanes[l]!;
-                  return (
-                    <tr key={l} data-lane={l} className={cx("border-t border-line", l === h.top && "bg-revise-soft")}>
-                      <th scope="row" className="px-3 py-1.5 text-left font-semibold">
-                        {LANE_NAMES[l]}
-                      </th>
-                      <td className="px-3 py-1.5 text-ink-3">{LANE_NAMES[MIRROR[l]!]}</td>
-                      <td className="num px-3 py-1.5">
-                        {pct(v.attack_share, lang)} <span className="text-ink-3">vs {pct(v.league_share, lang)}</span>
-                      </td>
-                      <td className="num px-3 py-1.5">
-                        {pct(v.completion, lang)}{" "}
-                        <span className="text-ink-3">vs {pct(v.league_completion, lang)}</span>
-                      </td>
-                      <td className={cx("num px-3 py-1.5 font-semibold", l === h.top && "text-revise")}>
-                        {signed(v.mismatch_pp, lang)}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </ScrollRegion>
-          <p className="mt-2 text-[12px] text-ink-3">"vs" figures are the league rate for that lane.</p>
+          <details className="mt-4 rounded-xl border border-line bg-surface-2" data-role="lane-table">
+            <summary className="cursor-pointer px-4 py-2.5 text-[13px] font-semibold text-ink-2 hover:text-ink">
+              Lane table: completion conceded and mismatch per lane
+            </summary>
+            <ScrollRegion label={`Lanes: ${att} attacking ${dfn}`} className="rounded-none border-x-0 border-b-0">
+              <table className="w-full min-w-[520px] border-collapse text-[12.5px]" data-table="h2h">
+                <thead className="bg-surface-2 text-left text-ink-3">
+                  <tr>
+                    <th scope="col" className="px-3 py-2 font-semibold">
+                      Lane ({att}'s view)
+                    </th>
+                    <th scope="col" className="px-3 py-2 font-semibold">
+                      {dfn} calls it
+                    </th>
+                    <th scope="col" className="px-3 py-2 font-semibold">
+                      {att} share
+                    </th>
+                    <th scope="col" className="px-3 py-2 font-semibold">
+                      {dfn} completion conceded
+                    </th>
+                    <th scope="col" className="px-3 py-2 font-semibold">
+                      Mismatch
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {T.lanes.map((l) => {
+                    const v = h.lanes[l]!;
+                    return (
+                      <tr key={l} data-lane={l} className={cx("border-t border-line", l === h.top && "bg-revise-soft")}>
+                        <th scope="row" className="px-3 py-1.5 text-left font-semibold">
+                          {LANE_NAMES[l]}
+                        </th>
+                        <td className="px-3 py-1.5 text-ink-3">{LANE_NAMES[MIRROR[l]!]}</td>
+                        <td className="num px-3 py-1.5">
+                          {pct(v.attack_share, lang)} <span className="text-ink-3">vs {pct(v.league_share, lang)}</span>
+                        </td>
+                        <td className="num px-3 py-1.5">
+                          {pct(v.completion, lang)}{" "}
+                          <span className="text-ink-3">vs {pct(v.league_completion, lang)}</span>
+                        </td>
+                        <td className={cx("num px-3 py-1.5 font-semibold", l === h.top && "text-revise")}>
+                          {signed(v.mismatch_pp, lang)}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </ScrollRegion>
+            <p className="px-4 py-2 text-[12px] text-ink-3">"vs" figures are the league rate for that lane.</p>
+          </details>
         </div>
       </div>
     </Panel>
@@ -501,6 +401,13 @@ export default function TeamsPage() {
         </p>
       </header>
       <HeadToHead />
+      <Panel
+        id="states"
+        title="When the score changes"
+        subtitle="Territory and pressing when trailing and when leading. A side that goes ahead and sits deep gives up territory, so the trailing opponent's field tilt rises without meaning it is on top: that is why the Verifier adds box entries to a field-tilt claim from a trailing side."
+      >
+        <StateSwaps visuals={m.ui.visuals} codes={T.teams.map((t) => t.code)} initial={m.timeline.home.code} />
+      </Panel>
       <div className="grid grid-cols-1 gap-flow md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
         {T.teams.map((t) => (
           <TeamCard key={t.code} team={t} lanes={T.lanes} />

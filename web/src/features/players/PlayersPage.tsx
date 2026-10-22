@@ -13,6 +13,8 @@ import { useData } from "../../data/context";
 import { cx } from "../../lib/cx";
 import { num, pct, words } from "../../lib/format";
 import { useT } from "../../lib/i18n";
+import { PassRoutes, leagueXaPerChance, type RouteMode } from "../../components/viz/PassRoutes";
+import { PercentilePizza } from "../../components/viz/PercentilePizza";
 import type { PlayerCheck, PlayerRow } from "../../types/ui";
 import { reasonFor, textOf } from "../live/shared";
 
@@ -20,48 +22,6 @@ const RULE_TITLE: Record<string, string> = {
   wide_forward_passes: "Volume, not value",
   set_piece_inflation: "Chances from dead balls",
 };
-
-function Split({
-  a,
-  b,
-  aLabel,
-  bLabel,
-  aColor,
-  bColor,
-}: {
-  a: number;
-  b: number;
-  aLabel: string;
-  bLabel: string;
-  aColor: string;
-  bColor: string;
-}) {
-  const { lang } = useT();
-  const total = a + b || 1;
-  return (
-    <div>
-      <svg
-        viewBox="0 0 100 8"
-        preserveAspectRatio="none"
-        className="block h-2.5 w-full overflow-hidden rounded-full"
-        aria-hidden="true"
-      >
-        <rect x="0" y="0" width={(100 * a) / total} height="8" fill={aColor} />
-        <rect x={(100 * a) / total} y="0" width={(100 * b) / total} height="8" fill={bColor} />
-      </svg>
-      <div className="mt-1.5 flex justify-between gap-2 text-[11.5px] text-ink-3">
-        <span>
-          <span className="mr-1 inline-block h-2 w-2 rounded-full" style={{ background: aColor }} />
-          {aLabel} <b className="num font-semibold text-ink-2">{num(a, lang)}</b>
-        </span>
-        <span>
-          {bLabel} <b className="num font-semibold text-ink-2">{num(b, lang)}</b>
-          <span className="ml-1 inline-block h-2 w-2 rounded-full" style={{ background: bColor }} />
-        </span>
-      </div>
-    </div>
-  );
-}
 
 function ContextCard({ p, c, featured }: { p: PlayerRow; c: PlayerCheck; featured: boolean }) {
   const m = useData();
@@ -137,21 +97,16 @@ function ContextCard({ p, c, featured }: { p: PlayerRow; c: PlayerCheck; feature
           </div>
         ))}
       </dl>
-      <div className="mt-3">
-        {wide ? (
-          <p className="text-[12px] leading-snug text-ink-3">
-            Pass quality: share of forward passes into high-threat central cells against the league rate (1× = league).
-          </p>
-        ) : (
-          <Split
-            a={p.chances_set_piece}
-            b={p.chances_open_play}
-            aLabel="Set piece"
-            bLabel="Open play"
-            aColor="var(--revise)"
-            bColor="var(--accent)"
-          />
-        )}
+      <div className="mt-3" data-card-visual="pass-routes">
+        <PassRoutes
+          rows={m.ui.visuals.routes[p.id] ?? []}
+          mode={wide ? "fwd" : "chances"}
+          leagueHotShare={m.ui.visuals.league_hot_share}
+          leagueXa={leagueXaPerChance(m.ui.visuals.routes)}
+          thirdX={m.ui.visuals.zones.third_x}
+          player={p.id}
+          compact
+        />
       </div>
       <details className="mt-3 text-[12.5px]">
         <summary className="cursor-pointer font-semibold text-ink-2 hover:text-ink">
@@ -511,6 +466,71 @@ function PlayerTable({ players, flagged }: { players: PlayerRow[]; flagged: Set<
   );
 }
 
+/** One player: pass routes (V4) and percentiles (V8), with a picker. */
+function Profile({ players, initial }: { players: PlayerRow[]; initial: string }) {
+  const m = useData();
+  const [id, setId] = useState(initial);
+  const [mode, setMode] = useState<RouteMode>("fwd");
+  const p = players.find((x) => x.id === id) ?? players[0]!;
+  const rows = m.ui.visuals.routes[p.id];
+  const sorted = useMemo(
+    () => [...players].sort((a, b) => a.team.localeCompare(b.team) || a.name.localeCompare(b.name)),
+    [players],
+  );
+  return (
+    <Panel
+      id="profile"
+      title="Player profile"
+      subtitle="Where a player's passes go and what they are worth, and how the player ranks among outfield regulars."
+    >
+      <div className="flex flex-wrap items-end gap-3">
+        <label className="flex flex-col gap-1 text-[12px] font-semibold text-ink-3">
+          Player
+          <select
+            id="profile-player"
+            className="h-10 max-w-full rounded-xl border border-line bg-surface-2 px-3 text-[14px] font-semibold text-ink"
+            value={p.id}
+            onChange={(e) => setId(e.target.value)}
+          >
+            {sorted.map((x) => (
+              <option key={x.id} value={x.id}>
+                {x.team} · {x.name} ({x.position})
+              </option>
+            ))}
+          </select>
+        </label>
+        <Segmented<RouteMode>
+          label="Passes to draw"
+          name="route-mode"
+          value={mode}
+          onChange={setMode}
+          options={[
+            { value: "fwd", label: "Forward passes" },
+            { value: "chances", label: "Chances created" },
+          ]}
+        />
+      </div>
+      <div className="mt-4 grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
+        {rows ? (
+          <PassRoutes
+            rows={rows}
+            mode={mode}
+            leagueHotShare={m.ui.visuals.league_hot_share}
+            leagueXa={leagueXaPerChance(m.ui.visuals.routes)}
+            thirdX={m.ui.visuals.zones.third_x}
+            player={p.id}
+          />
+        ) : (
+          <p className="rounded-xl border border-dashed border-line-strong px-4 py-6 text-center text-[13px] text-ink-3">
+            Pass routes are not available in this dataset for this player.
+          </p>
+        )}
+        <PercentilePizza p={p} players={players} />
+      </div>
+    </Panel>
+  );
+}
+
 export default function PlayersPage() {
   const m = useData();
   const players = m.ui.players;
@@ -542,6 +562,7 @@ export default function PlayersPage() {
           ))}
         </div>
       </Panel>
+      <Profile players={players} initial={cards[0]?.p.id ?? players[0]!.id} />
       <div className="grid grid-cols-1 gap-flow xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
         <VolumeQuality players={players} flagged={flagged} />
         <ChanceSources players={players} flagged={flagged} />

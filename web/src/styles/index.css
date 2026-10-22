@@ -187,3 +187,17 @@
   transition: none !important;
   scroll-behavior: auto !important;
 }
+
+/* V1: the verified lane's glow breathes slowly; static under reduced motion (rules above) */
+@keyframes crosshair-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+.crosshair > circle:first-of-type {
+  animation: crosshair-pulse 2.6s ease-in-out infinite;
+}

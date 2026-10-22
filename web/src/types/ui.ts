@@ -119,6 +119,8 @@ export interface H2HClaim {
   status: string;
   rule_ids: string[];
   template_key: string;
+  /** The lane the claim object names (claim.zone.lane), attacker's frame. */
+  lane: string;
   confidence: Confidence | null;
   evidence_event_ids: string[];
   text: Record<string, { analyst: string; casual: string }> | null;
@@ -231,6 +233,39 @@ export interface Report {
 /** [clock_sec, x, y, team code]: an on-ball event location in the acting team's attacking frame. */
 export type TrackEntry = [number, number, number, string];
 
+// ---------- ui.json visuals: plain exports of engine metrics (agents/dashboard_data.visuals_section) ----------
+
+/** [event_id, clock_sec, team, player_id, x, y, xg, result, shot_type], attacker's frame. */
+export type ShotRow = [string, number, string, string, number, number, number, string, string];
+/** [start_sec, end_sec, seconds, n_events]: one territorial-stress spell (engine.flow.territorial_stress). */
+export type StressSpell = [number, number, number, number];
+/** [period, minute, start_sec, possession_changes, tempo_var] (engine.flow.rhythm, per period). */
+export type RhythmRow = [number, number, number, number, number];
+/** [kind, from_zone, to_zone, passes, sum, hot]: kind fwd (sum = xT added), op / sp (sum = xA);
+ * hot = passes ending in a high-threat central cell (the cells pass_quality_ratio counts). */
+export type RouteKind = "fwd" | "op" | "sp";
+export type RouteRow = [RouteKind, number, number, number, number, number];
+export interface StateMetric {
+  value: number | null;
+  league: number | null;
+  n: number;
+  interval: [number, number] | null;
+  confidence: Confidence | null;
+}
+export type StateName = "leading" | "trailing";
+export type StateMetricName = "field_tilt" | "press_intensity";
+export interface Visuals {
+  shots: ShotRow[];
+  /** League share of forward passes that end in a high-threat cell (pass_quality_ratio's 1×). */
+  league_hot_share: number;
+  stress: Record<string, StressSpell[]>;
+  rhythm: RhythmRow[];
+  states: Record<string, Record<StateName, Record<StateMetricName, StateMetric>>>;
+  state_min_n: number;
+  routes: Record<string, RouteRow[]>;
+  zones: { thirds: string[]; lanes: string[]; third_x: [number, number] };
+}
+
 export interface UiData {
   match_id: string;
   season: { dataset: string; matches: number; teams: number };
@@ -242,6 +277,7 @@ export interface UiData {
   evidence: Record<string, EvidenceRow>;
   measured: Report[];
   track: TrackEntry[];
+  visuals: Visuals;
 }
 
 /** Everything the pages read, loaded once by a StreamSource. */
