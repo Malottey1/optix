@@ -44,7 +44,9 @@ export function Panel({
               </H>
             )}
             {subtitle && (
-              <p className={cx("mt-1 max-w-prose text-[13px] leading-snug text-ink-3", subtitleClassName)}>{subtitle}</p>
+              <p className={cx("mt-1 max-w-prose text-[13px] leading-snug text-ink-3", subtitleClassName)}>
+                {subtitle}
+              </p>
             )}
           </div>
           {actions}

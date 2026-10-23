@@ -48,7 +48,8 @@ export function ZoneShift({
 }) {
   const { lang } = useT();
   const [team, setTeam] = useState(initial);
-  if (periods.length < 2) return <p className="text-[13px] text-ink-3">Not available in this dataset: one period only.</p>;
+  if (periods.length < 2)
+    return <p className="text-[13px] text-ink-3">Not available in this dataset: one period only.</p>;
   const { cells, n1, n2 } = zoneShift(track, team, periods, thirdX);
   const maxAbs = Math.max(1, ...cells.map((c) => Math.abs(c.shift)));
   const top = [...cells].sort((x, y) => y.shift - x.shift)[0]!;
@@ -60,20 +61,15 @@ export function ZoneShift({
       caption={
         <>
           {team}&apos;s on-ball events in the showcase match: <span className="num">{num(n1, lang)}</span> in the first
-          half, <span className="num">{num(n2, lang)}</span> in the second. Each cell: change in the share of those events
-          in that zone, second half minus first, in points. Attacking left to right. Event locations, not tracking; a
-          shift is not a cause.
+          half, <span className="num">{num(n2, lang)}</span> in the second. Each cell: change in the share of those
+          events in that zone, second half minus first, in points. Attacking left to right. Event locations, not
+          tracking; a shift is not a cause.
         </>
       }
       table={{
         caption: `${team}: share of on-ball events per zone, first and second half`,
         head: ["Zone", "First half %", "Second half %", "Change (points)"],
-        rows: cells.map((c) => [
-          name(c.z),
-          num(pct1(c.first), lang),
-          num(pct1(c.second), lang),
-          signed(c.shift, lang),
-        ]),
+        rows: cells.map((c) => [name(c.z), num(pct1(c.first), lang), num(pct1(c.second), lang), signed(c.shift, lang)]),
       }}
     >
       <Segmented

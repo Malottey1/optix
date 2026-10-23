@@ -32,7 +32,9 @@ export function VizFigure({
     <figure id={id} data-viz={viz} className={cx("m-0 min-w-0", className)}>
       {children}
       {caption && (
-        <figcaption className={cx("mt-2 text-[12px] leading-relaxed text-ink-3", captionClassName)}>{caption}</figcaption>
+        <figcaption className={cx("mt-2 text-[12px] leading-relaxed text-ink-3", captionClassName)}>
+          {caption}
+        </figcaption>
       )}
       {table && (
         <div className="sr-only">

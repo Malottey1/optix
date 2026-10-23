@@ -87,9 +87,7 @@ describe("Live stream source", () => {
     await waitFor(() => expect(chip().dataset.source).toBe("replay"));
     expect(useSource.getState().fellBack).toBe(true);
     act(() => seek(1e9));
-    await waitFor(() =>
-      expect(document.querySelectorAll("article[data-insight-id]").length).toBe(insights.length),
-    );
+    await waitFor(() => expect(document.querySelectorAll("article[data-insight-id]").length).toBe(insights.length));
     act(() => useSource.setState({ mode: "replay", fellBack: false }));
   });
 });

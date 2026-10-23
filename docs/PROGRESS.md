@@ -1,5 +1,21 @@
 # Progress log
 
+## Icons (branch `ui-visuals-icons`, from `ui-visuals-brand` f376c6b; local tag `pre-icons`)
+
+Green start: default suite 279 passed, 2 skipped (azure_live); `npm run build` passes. Item status
+is in docs/icons-progress.md.
+
+### Icon decisions
+
+**Phase 0**
+- The icon sheet came with the message and a path (~/Downloads, "OPTIX Icon Set_ Dark UI Style
+  Guide.png", 1536x1024). Copied to design/source/icon-sheet.png (gitignored); the icons are drawn
+  by hand from it, not traced.
+- The brief expected seven files failing `prettier --check`; only five did (App.test.tsx, ui/card.tsx,
+  viz/Figure.tsx, viz/helpers.test.ts, viz/ZoneShift.tsx). The other two (Flow.tsx, Scoreboard.tsx)
+  were already formatted during the brand work. Formatting them changed no behaviour: lint,
+  typecheck, Vitest (55) and build pass, and the built bundle hash is unchanged (index-BRDlwXxd.js).
+
 ## Brand (branch `ui-visuals-brand`, from `ui-visuals-fixes` 9a573d9)
 
 Green start: default suite 239 passed, 2 skipped (azure_live); `npm run build` passes.
