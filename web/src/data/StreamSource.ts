@@ -1,7 +1,7 @@
-// Where the dashboard's data comes from. Today only ReplaySource is wired: it loads the files the
-// engine wrote for the showcase match and the page replays them on its own clock. SseSource
-// defines the live interface (insights pushed one at a time) and is not wired yet; the Azure step
-// will connect it to a server.
+// Where the dashboard's data comes from. ReplaySource loads the files the engine wrote for the
+// showcase match and the page replays them on its own clock. SseSource is used when the page is
+// served by the Optix API: it loads the same files, then the server pushes the verified insights
+// over server-sent events (data/SseSource.ts, pickSource).
 import type { Insight, MatchBundle } from "../types/ui";
 
 export interface StreamSource {

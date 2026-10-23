@@ -9,6 +9,7 @@ import { cx } from "../../lib/cx";
 import { clock, phase } from "../../lib/format";
 import { useT, type Key } from "../../lib/i18n";
 import { useReplay, useReplayFrame } from "../../state/replay";
+import { useSource } from "../../state/source";
 
 const PHASE_KEY: Record<ReturnType<typeof phase>, Key> = {
   pre: "pre_match",
@@ -129,6 +130,7 @@ export function Scoreboard() {
   const goalIdx = useReplay((s) => tl.goals.filter((g) => g.clock_sec <= s.t).length);
   const ph = useReplay((s) => phase(s.t, tl.periods, tl.duration_sec));
   const playing = useReplay((s) => s.playing);
+  const source = useSource();
   const g = tl.goals[goalIdx - 1];
   return (
     <section
@@ -159,9 +161,12 @@ export function Scoreboard() {
             {g ? g.score_away : 0}
           </div>
           <div className="mt-2 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-[12px] font-semibold">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-accent-line bg-accent-soft px-2 py-0.5 uppercase tracking-[0.1em] text-accent">
+            <span
+              data-source={source.mode}
+              className="inline-flex items-center gap-1.5 rounded-full border border-accent-line bg-accent-soft px-2 py-0.5 uppercase tracking-[0.1em] text-accent"
+            >
               <span className="pulse-dot" aria-hidden="true" />
-              {t("replay")}
+              {t(source.mode === "live" ? "live_stream" : "replay")}
             </span>
             <span className="text-ink-2">{t(PHASE_KEY[ph])}</span>
             <ClockText className="display min-w-[3.4rem] rounded-md bg-surface-3 px-1.5 py-0.5 text-[16px] font-semibold leading-tight text-ink" />
@@ -179,7 +184,9 @@ export function Scoreboard() {
       <div className="border-t border-line px-4 py-2.5 sm:px-7 wide:py-1.5">
         <MomentumTug />
       </div>
-      <p className="sr-only">{t("replay_note")}</p>
+      <p className="sr-only">
+        {t(source.mode === "live" ? "live_note" : source.fellBack ? "replay_fallback_note" : "replay_note")}
+      </p>
     </section>
   );
 }

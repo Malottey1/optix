@@ -4,7 +4,9 @@ import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testi
 import { afterEach, describe, expect, it } from "vitest";
 import App from "./App";
 import { ReplaySource } from "./data/ReplaySource";
-import { seek } from "./state/replay";
+import { SseSource, type EventSourceLike } from "./data/SseSource";
+import { seek, useReplay } from "./state/replay";
+import { useSource } from "./state/source";
 import { setSetting } from "./state/settings";
 
 const DATA = join(__dirname, "..", "public", "data");
@@ -54,5 +56,40 @@ describe("Live Center", () => {
     const last = insights.at(-1);
     await waitFor(() => expect(screen.getAllByText(last.text.rendered.fr.casual).length).toBeGreaterThan(0));
     act(() => setSetting("lang", "en"));
+  });
+});
+
+describe("Live stream source", () => {
+  it("shows only pushed insights under a Live stream chip, then falls back to Replay on error", async () => {
+    const listeners: Record<string, ((e: MessageEvent<string>) => void)[]> = {};
+    const es: EventSourceLike = {
+      addEventListener: (t, l) => (listeners[t] ??= []).push(l),
+      onerror: null,
+      close: () => {},
+    };
+    const emit = (t: string, data: string) => listeners[t]?.forEach((l) => l(new MessageEvent(t, { data })));
+    window.location.hash = "#/live";
+    render(<App source={new SseSource("./api", 30, source(), () => es)} />);
+    await screen.findByText((_, el) => el?.getAttribute("data-page") === "live", undefined, { timeout: 5000 });
+    const chip = () => document.querySelector("[data-source]") as HTMLElement;
+    await waitFor(() => expect(chip().dataset.source).toBe("live"));
+    expect(chip().textContent).toMatch(/Live stream/);
+    expect(document.querySelectorAll("article[data-insight-id]").length).toBe(0);
+    act(() => {
+      emit("insight", JSON.stringify(insights[0]));
+      emit("insight", JSON.stringify(insights[1]));
+    });
+    await waitFor(() => expect(document.querySelectorAll("article[data-insight-id]").length).toBe(2));
+    expect(useReplay.getState().limit).toBe(insights[1].clock.start_sec);
+    act(() => seek(1e9));
+    expect(useReplay.getState().t).toBe(insights[1].clock.start_sec);
+    act(() => es.onerror?.(new Event("error")));
+    await waitFor(() => expect(chip().dataset.source).toBe("replay"));
+    expect(useSource.getState().fellBack).toBe(true);
+    act(() => seek(1e9));
+    await waitFor(() =>
+      expect(document.querySelectorAll("article[data-insight-id]").length).toBe(insights.length),
+    );
+    act(() => useSource.setState({ mode: "replay", fellBack: false }));
   });
 });

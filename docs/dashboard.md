@@ -55,14 +55,25 @@ All versions are exact and every package was at least two weeks old when install
   gate), json-schema-to-typescript.
 
 Code layout (`web/src/`):
-- `data/`: `StreamSource` interface, `ReplaySource` (loads the four files), `SseSource` (interface and
-  contract test only, **not wired yet**: no server sends events), and the match model (indexes and lookups).
+- `data/`: `StreamSource` interface, `ReplaySource` (loads the four files), `SseSource` (live: the same
+  files for the board, then verified insights pushed over server-sent events by the Optix API),
+  `pickSource` (live only when the same-origin `./healthz` answers as the Optix service), and the
+  match model (indexes and lookups).
 - `types/`: generated contract types, hand-written types for the rest of `ui.json`, and runtime shape
   guards that fail loudly with the path of the first field that drifted.
 - `state/`: replay clock and settings stores.
 - `components/`: shell and navigation, settings tray, pitch, icons, and the `ui/` primitives.
 - `features/<page>/`: one folder per route.
 - `lib/`: formatting (numbers in each language's own form, football clock) and the interface dictionaries.
+
+Source and indicator: served by the Optix API (`uvicorn service.app:app`, see docs/AZURE.md) the page
+opens the same-origin SSE stream `./api/match/<id>/stream?speed=30` and the scoreboard chip reads
+**Live stream**: the feed holds only the insights the server has pushed, and the clock cannot run
+past the server's clock (`limit` in the replay store). Served as static files (Vite preview, any
+static host) `./healthz` is the static file `public/healthz` (`"service": "static-replay"`), so the
+page replays the files and the chip reads **Replay**. If the live stream drops or sends a malformed
+frame the page falls back to the replay of the same verified files and the chip changes to Replay.
+Every request goes to the origin the page came from.
 
 Replay: `requestAnimationFrame` advances the clock store. Components subscribe with coarse selectors
 (for example the scrubber on a two-second grid, the feed when a new insight arrives); the parts that
@@ -99,6 +110,9 @@ View options for screenshots and tests: `#/live?t=2760&select=ins_0009&lang=es&p
 It writes `docs/screens-v3/<route>_<desktop|mobile>.png` plus `live_1080p.png`, each under 300 KB.
 It fails on any of:
 - a console error, page error, failed request, HTTP error, or request to a host other than localhost;
+- served by the Optix API: a chip other than Live stream, fewer than three cards arriving over SSE, no
+  SSE request, or any request to another origin; served statically: a chip other than Replay
+  (`check_live_stream`; same-origin `/healthz` and `/api/...` calls are the only API calls allowed);
 - horizontal scroll; overlapping text;
 - a control that Tab never reaches; Tailwind not applied; a serious or critical axe finding;
 - missing data attributes on the marks;

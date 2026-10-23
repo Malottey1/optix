@@ -79,6 +79,26 @@ passed together.
   verified live".
 - Audit is opt-in (`run_match --audit FILE`), since an append-only file grows on every run.
 
+**Step E (service and UI wiring)**
+- `service/app.py` (FastAPI): `/healthz`, `/api/matches`, `/api/match/{id}/stream` (SSE replay of the
+  verified `insights.jsonl` at `speed` match seconds per second, `start`, a `tick` every 30 match
+  seconds, `end`), `/api/claims/{id}` (the attempt chain), web/dist mounted at `/`. No CORS
+  middleware, no OpenAPI/docs routes, config from env (`OPTIX_DATA_DIR`, `OPTIX_WEB_DIST`,
+  `OPTIX_MAX_SPEED`). The service replays; it never computes or phrases.
+- Tests drive the app through httpx's ASGI transport. That transport buffers a streamed body, so the
+  timing test runs the replay generator directly on a fake clock (every insight frame is sent when
+  elapsed = start_sec / speed); the HTTP tests check content, order and limits.
+- **No 404 on static hosting:** the page probes `./healthz`. On a static host that is the file
+  `web/public/healthz` (`"service": "static-replay"`), so the probe never fails and the browser gate
+  needed no exception; only the API answers `"service": "optix"`.
+- **Honest live mode:** in Live stream mode the feed is rebuilt from the insights actually received
+  (not the preloaded file), and the clock is capped at the server's clock, so the page cannot show an
+  insight before the server sent it. The board, deck and evidence still come from ui.json.
+- Gate: `check_live_stream` runs the real API with uvicorn on a free local port, serves the build,
+  waits for three cards over SSE, and fails on any request to another origin; the static run must
+  show Replay.
+- E3 (Event Hubs adapter) not built: optional, and the time went to the gates.
+
 ## Visuals polish (branch `ui-visuals-polish`, from `ui-visuals` = main 32730c4)
 
 Green start: default suite 168 passed; `npm run build` ok.

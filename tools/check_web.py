@@ -41,6 +41,7 @@ import re
 import shutil
 from collections import Counter
 from pathlib import Path
+from urllib.parse import urlparse
 
 from tools.check_dashboard import (FOCUSABLE_JS, FORBIDDEN, FRAMES_JS, OVERLAP_JS, _context, _shrink_png, _tab_order,
                                    chromium_path, load_sources, numbers_of, serve, untraced_numbers)
@@ -531,6 +532,59 @@ def check_robustness(browser, base) -> dict:
     return out
 
 
+def _serve_api(dist: Path):
+    """The Optix API (service/app.py) on a free local port, serving `dist` and its data."""
+    import socket
+    import threading
+    import time
+
+    import uvicorn
+
+    from service.app import create_app
+    sock = socket.socket()
+    sock.bind(("127.0.0.1", 0))
+    port = sock.getsockname()[1]
+    sock.close()
+    server = uvicorn.Server(uvicorn.Config(create_app(dist / "data", dist), host="127.0.0.1", port=port,
+                                           log_level="warning"))
+    threading.Thread(target=server.run, daemon=True).start()
+    for _ in range(100):
+        if server.started:
+            break
+        time.sleep(0.05)
+    return server, f"http://127.0.0.1:{port}/"
+
+
+def check_live_stream(browser, dist: Path, static_base: str) -> dict:
+    """Served by the API: the chip says Live stream, cards arrive one by one over SSE, and every
+    request is same-origin (the page, its data, /healthz and /api/...). Served statically: Replay."""
+    out = {"problems": []}
+    ctx, page, log = _context(browser, *WIDTHS["desktop"])
+    _open(page, static_base, "live")
+    out["static_chip"] = page.get_attribute("[data-source]", "data-source")
+    out["problems"] += [f"static: {x}" for x in log["problems"] + log["remote"]]
+    ctx.close()
+    server, base = _serve_api(dist)
+    try:
+        ctx, page, log = _context(browser, *WIDTHS["desktop"])
+        urls = []
+        page.on("request", lambda r: urls.append(r.url))
+        _open(page, base, "live")
+        page.wait_for_selector("[data-source='live']", timeout=10000)
+        first = page.locator("li[data-insight-id]").count()
+        page.wait_for_function("() => document.querySelectorAll('li[data-insight-id]').length >= 3", timeout=20000)
+        out.update(live_chip=page.get_attribute("[data-source]", "data-source"),
+                   chip_text=page.inner_text("[data-source]"), cards_at_open=first,
+                   cards_later=page.locator("li[data-insight-id]").count(),
+                   api_calls=sorted({urlparse(u).path for u in urls if "/api/" in u or u.endswith("/healthz")}),
+                   other_origin=[u for u in urls if not u.startswith(base) and not u.startswith(("data:", "blob:"))])
+        out["problems"] += [f"live: {x}" for x in log["problems"] + log["remote"]]
+        ctx.close()
+    finally:
+        server.should_exit = True
+    return out
+
+
 FRAME_P95_MS = 20
 INITIAL_JS_KB = 250
 
@@ -622,6 +676,7 @@ def run(dist: Path | None = None, screens_dir: Path | None = None, screens: bool
             report["frames"] = check_replay_frames(browser, base)
             report["frames_1080p"] = check_replay_frames(browser, base, size=(1920, 1080))
             report["first_screen"] = check_first_screen(browser, base)
+            report["live_stream"] = check_live_stream(browser, dist, base)
             if shots:
                 report["demo_problems"] = demo_screen(browser, base, shots)
         if set(routes) == set(ROUTES):
@@ -690,6 +745,15 @@ def failures(report) -> list:
             f += [f"{k}: {x}" for x in report[k].get("problems", [])]
             if report[k].get("p95_ms", 0) > FRAME_P95_MS:
                 f.append(f"{k}: p95 {report[k]['p95_ms']} ms over {FRAME_P95_MS} ms")
+    L = report.get("live_stream")
+    if L is not None:
+        f += [f"live stream: {x}" for x in L["problems"]]
+        if L.get("static_chip") != "replay":
+            f.append(f"live stream: static hosting shows {L.get('static_chip')!r}, not replay")
+        if L.get("live_chip") != "live" or L.get("other_origin") or not L.get("cards_later", 0) >= 3:
+            f.append(f"live stream: {L}")
+        if not any(p.startswith("/api/match/") and p.endswith("/stream") for p in L.get("api_calls", [])):
+            f.append(f"live stream: no SSE request {L.get('api_calls')}")
     for size, v in report.get("first_screen", {}).items():
         f += [f"first screen {size}: {x}" for x in v["problems"]]
     if report.get("bundle", {}).get("total_kb", 0) >= INITIAL_JS_KB:
@@ -728,7 +792,7 @@ def main(argv=None):
               f"controls={r['tab']['controls']:3d} tab_missing={len(r['tab']['missing'])} axe_serious={len(bad_axe)} "
               f"axe_minor={len(r['axe']) - len(bad_axe)} problems={len(r['problems'])} remote={len(r['remote'])} attrs={r['attrs']}")
     for k in ("drawer", "consistency", "mutation_proof", "language", "robustness", "frames", "frames_1080p",
-              "first_screen", "bundle"):
+              "first_screen", "live_stream", "bundle"):
         if k in report:
             print(f"{k}:", {x: y for x, y in report[k].items() if x != "_problems"} if isinstance(report[k], dict) else report[k])
     if a.json:
