@@ -37,3 +37,7 @@ out/
 *.log
 *.zip
 *.tar.gz
+
+# Brand originals and review crops stay local (only optimised derivatives are committed)
+design/source/
+design/review/

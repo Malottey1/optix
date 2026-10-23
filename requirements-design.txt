@@ -1,0 +1,5 @@
+# Brand asset tooling (local only; not needed to run or test the engine or the app)
+# tools/brand_audit.py, tools/make_brand_assets.py, tools/make_brand_images.py
+opencv-python-headless>=4.9
+vtracer>=0.6
+pillow>=10
