@@ -2,13 +2,13 @@
 and accepts numbers from the data, clock times and the language's decimal comma."""
 from tools.check_dashboard import numbers_of, untraced_numbers
 
-SRC = {"nums": {75.5, 1.0, 37.0, 2.0, 0.0}, "words": {"m_showcase_e00253", "NOR_07"},
+SRC = {"nums": {75.5, 1.0, 37.0, 2.0, 0.0}, "words": {"m_showcase_e00253", "NTG_07"},
        "timeline": {"duration_sec": 6081}}
 
 
 def test_numbers_from_the_data_and_clock_times_pass():
-    assert untraced_numbers("NOR hold 75.5% of passes, 1 of 37 reached the box. 44:54 · 45+1 · 2 – 0", SRC) == []
-    assert untraced_numbers("NOR tienen el 75,5 % · m_showcase_e00253 · NOR_07", SRC) == []
+    assert untraced_numbers("NTG hold 75.5% of passes, 1 of 37 reached the box. 44:54 · 45+1 · 2 – 0", SRC) == []
+    assert untraced_numbers("NTG tienen el 75,5 % · m_showcase_e00253 · NTG_07", SRC) == []
 
 
 def test_invented_numbers_and_ids_are_caught():

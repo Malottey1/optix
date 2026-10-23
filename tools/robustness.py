@@ -149,7 +149,7 @@ def _showcase_job(seed: int, max_tries: int) -> dict:
                                                reference_completion=showcase_reference(seed))
     except RuntimeError:
         return dict(seed=seed, found=False, tries=max_tries, sec=round(time.perf_counter() - t0, 1))
-    return dict(seed=seed, found=True, sim_seed=s, tries=tries, score=[sim.score["t_aur"], sim.score["t_nor"]],
+    return dict(seed=seed, found=True, sim_seed=s, tries=tries, score=[sim.score["t_aur"], sim.score["t_ntg"]],
                 margins=traps.trap_margins(checks), sec=round(time.perf_counter() - t0, 1))
 
 
@@ -275,7 +275,7 @@ def render(small: dict, full: list, showcase: list, extra: list = ()) -> str:
             L.append(f"| {k} ({m['kind']} {m['threshold']}) | "
                      + " | ".join(f"{s['margins'][k]['value']} (+{100 * s['margins'][k]['margin']:.0f}%)" for s in found) + " |")
         L.append("| minimum margin | " + " | ".join(f"{100 * min(m['margin'] for m in s['margins'].values()):.0f}%" for s in found) + " |")
-        L.append("| score AUR-NOR | " + " | ".join(f"{s['score'][0]}-{s['score'][1]}" for s in found) + " |")
+        L.append("| score AUR-NTG | " + " | ".join(f"{s['score'][0]}-{s['score'][1]}" for s in found) + " |")
         L.append("| seeds tried | " + " | ".join(str(s["tries"]) for s in found) + " |")
         L.append("| search time s | " + " | ".join(str(s["sec"]) for s in found) + " |")
     for s in showcase:

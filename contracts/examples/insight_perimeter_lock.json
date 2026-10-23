@@ -3,7 +3,7 @@
   "match_id": "m_demo_01",
   "clock": { "start_sec": 3120, "duration_sec": 12, "emitted_latency_ms": 840 },
   "insight_type": "perimeter_lock",
-  "teams": { "primary": "NOR", "secondary": "AUR" },
+  "teams": { "primary": "NTG", "secondary": "AUR" },
   "player_ids": [],
   "claim_id": "clm_0002",
   "evidence_event_ids": ["e_004100", "e_004103", "e_004107"],
@@ -20,11 +20,11 @@
   },
   "text": {
     "template_key": "perimeter_lock.trailing",
-    "params": { "team": "NOR", "passes_outside_box": 31, "box_entries": 1 },
+    "params": { "team": "NTG", "passes_outside_box": 31, "box_entries": 1 },
     "rendered": {
       "en": {
-        "analyst": "NOR hold 78% field tilt, but 31 final-third passes stayed outside the box for 1 entry.",
-        "casual": "NOR keep the ball near goal, but 31 passes there led to just 1 trip into the box."
+        "analyst": "NTG hold 78% field tilt, but 31 final-third passes stayed outside the box for 1 entry.",
+        "casual": "NTG keep the ball near goal, but 31 passes there led to just 1 trip into the box."
       }
     },
     "number_guard_passed": true

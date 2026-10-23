@@ -75,13 +75,13 @@ def match_row(sim: MatchSim, fx: dict):
 
 
 def showcase_checks(sim: MatchSim, players, reference_completion=None) -> dict:
-    nor_players = {p.trap_flag: p.player_id for p in players["t_nor"] if p.trap_flag}
+    ntg_players = {p.trap_flag: p.player_id for p in players["t_ntg"] if p.trap_flag}
     return dict(
-        field_tilt_while_leading=traps.field_tilt_trap(sim.events, "t_aur", "t_nor"),
-        shot_spam=traps.shot_spam_trap(sim.events, sim.shots, "t_nor"),
-        volume_passer=traps.volume_passer_trap(sim.events, sim.passes, nor_players["volume_passer"]),
-        corner_specialist=traps.corner_specialist_trap(sim.events, sim.passes, nor_players["corner_specialist"]),
-        one_flank_vs_weak_lane=traps.flank_attack_trap(sim.events, "t_aur", "t_nor", reference_completion),
+        field_tilt_while_leading=traps.field_tilt_trap(sim.events, "t_aur", "t_ntg"),
+        shot_spam=traps.shot_spam_trap(sim.events, sim.shots, "t_ntg"),
+        volume_passer=traps.volume_passer_trap(sim.events, sim.passes, ntg_players["volume_passer"]),
+        corner_specialist=traps.corner_specialist_trap(sim.events, sim.passes, ntg_players["corner_specialist"]),
+        one_flank_vs_weak_lane=traps.flank_attack_trap(sim.events, "t_aur", "t_ntg", reference_completion),
     )
 
 
@@ -109,9 +109,9 @@ SHOWCASE_SEARCH_START = {2026: 1383}
 
 
 def showcase_reference(seed: int, tables=None) -> float:
-    """The season's completion rate of entries into NOR's weak lane (the dashboard's baseline)."""
+    """The season's completion rate of entries into NTG's weak lane (the dashboard's baseline)."""
     tables = tables or season_tables(*small_season(seed, make_players(seed)))
-    return traps.lane_entry_completion(tables["events"], TEAM_BY_ID["t_nor"].weak_lane)
+    return traps.lane_entry_completion(tables["events"], TEAM_BY_ID["t_ntg"].weak_lane)
 
 
 def build_showcase(seed: int, players, max_tries: int = 6000, start: int | None = None, reference_completion=None):
@@ -124,7 +124,7 @@ def build_showcase(seed: int, players, max_tries: int = 6000, start: int | None 
         reference_completion = showcase_reference(seed)
     for k in range(start, start + max_tries):
         s = seed * 10_000 + k
-        sim = simulate(s, SHOWCASE_ID, "t_aur", "t_nor", players,
+        sim = simulate(s, SHOWCASE_ID, "t_aur", "t_ntg", players,
                        force_goal=dict(team_id="t_aur", after_sec=600))
         if not showcase_is_realistic(sim):
             continue
@@ -209,7 +209,7 @@ def main(seed: int, out: Path, showcase_out: Path):
     sc_sim, checks, sc_seed, tries = build_showcase(seed, sc_players,
                                                     reference_completion=showcase_reference(seed, tables))
     write_dataset(showcase_out, [sc_sim], sc_players,
-                  [dict(matchweek=1, date="2026-08-15", kickoff="17:30", home="t_aur", away="t_nor")])
+                  [dict(matchweek=1, date="2026-08-15", kickoff="17:30", home="t_aur", away="t_ntg")])
 
     stats = calibration.season_stats(tables)
 
@@ -224,10 +224,10 @@ def main(seed: int, out: Path, showcase_out: Path):
                             formation=t.formation) for t in TEAMS},
         planted_players={p.player_id: dict(team=p.team_id, role=p.role, trap=p.trap_flag)
                          for ps in players.values() for p in ps if p.trap_flag},
-        showcase=dict(match_id=SHOWCASE_ID, sim_seed=sc_seed, seeds_tried=tries, home="t_aur", away="t_nor",
+        showcase=dict(match_id=SHOWCASE_ID, sim_seed=sc_seed, seeds_tried=tries, home="t_aur", away="t_ntg",
                       scripted="AUR scores their first chance of quality after minute 10",
                       player_overrides={f"{c}:{r}": v for (c, r), v in SHOWCASE_PLAYER_TRAITS.items()},
-                      score=[sc_sim.score["t_aur"], sc_sim.score["t_nor"]], traps=checks,
+                      score=[sc_sim.score["t_aur"], sc_sim.score["t_ntg"]], traps=checks,
                       trap_margins=traps.trap_margins(checks), min_margin=SHOWCASE_MIN_MARGIN),
     )
     for d in (out, showcase_out):

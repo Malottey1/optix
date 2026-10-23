@@ -72,7 +72,7 @@ Soft lanes by plant (true effect is the lower bound from the generator's own pas
 
 | Team | Strength | Seed 2026 effect pp / found | Seed 2027 effect pp / found | Seed 2028 effect pp / found |
 |---|---|---|---|---|
-| NOR | 1.5 | 11.2 / yes | 11.7 / yes | 12.0 / yes |
+| NTG | 1.5 | 11.2 / yes | 11.7 / yes | 12.0 / yes |
 | HAR | 1.0 | 8.6 / yes | 8.5 / yes | 8.4 / yes |
 | FWM | 1.0 | 8.1 / yes | 8.1 / yes | 8.4 / yes |
 | HBC | 2.0 | 13.3 / yes | 14.1 / yes | 13.4 / yes |
@@ -103,7 +103,7 @@ Search from offset 0; a match qualifies when all five traps fire with every thre
 | one_flank_vs_weak_lane.left_side_share (>= 0.5) | 0.646 (+29%) | 0.64 (+28%) | 0.692 (+38%) |
 | one_flank_vs_weak_lane.weak_lane_completion_ratio (>= 1.0) | 1.268 (+27%) | 1.149 (+15%) | 1.2 (+20%) |
 | minimum margin | 14% | 11% | 10% |
-| score AUR-NOR | 4-1 | 2-0 | 1-1 |
+| score AUR-NTG | 4-1 | 2-0 | 1-1 |
 | seeds tried | 1384 | 2724 | 1090 |
 | search time s | 70.3 | 116.9 | 56.8 |
 

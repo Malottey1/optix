@@ -24,7 +24,7 @@ Pure, stdlib-only Python over the CSV tables. It never imports the generator and
 | `flow.py` | `xa_split` (open play vs set piece), `territorial_stress`, `shot_clusters`, `rhythm` (per-minute series), `momentum` (decayed xT + xG tug of war), `milestones` (within-dataset only) |
 | `claims.py` | `compute` (recompute registry: metric -> values + evidence predicate) and `build_claim` (pending claim objects) |
 | `verifier.py` | fact check and context check on claim objects; rules in `rules/` |
-| `report.py` | `python -m engine.report --team AUR --opponent NOR [--data DIR] [--season-baseline DIR] [--json]` |
+| `report.py` | `python -m engine.report --team AUR --opponent NTG [--data DIR] [--season-baseline DIR] [--json]` |
 
 ## Reading the numbers: effect size first, z only for ranking
 
@@ -68,13 +68,13 @@ lane. (Realism v2: was >= 6 pp with no own-lanes gate.)
 reflects where its opponents like to attack: every attacker has its own lane habits, and the
 weak-lane bonus changes how often an entry succeeds, not how often it is tried. The generator's
 true effect, measured from its own logged success probabilities (`tests/soft_lane_truth.py`: pass
-difficulty = 1 - p, remove the 0.09 x weak_strength bonus), is the same for HAR and NOR:
+difficulty = 1 - p, remove the 0.09 x weak_strength bonus), is the same for HAR and NTG:
 
 | Team | Lane | weak_strength | true effect (pp, low-high) | completion lift found (pp) | attempts |
 |---|---|---|---|---|---|
-| NOR (small) | left_flank | 1.0 | 8.4-9.0 | +7.6 | 190 |
+| NTG (small) | left_flank | 1.0 | 8.4-9.0 | +7.6 | 190 |
 | HAR (small) | right_flank | 1.0 | 6.7-9.0 | not flagged | 186 |
-| NOR (full) | left_flank | 1.0 | 7.7-9.0 | +11.2 | 290 |
+| NTG (full) | left_flank | 1.0 | 7.7-9.0 | +11.2 | 290 |
 | HAR (full) | right_flank | 1.0 | 7.3-9.0 | +7.2 | 505 |
 | FWM | center | 1.0 | 7.8-9.0 | +8.9 | 555 |
 | HBC | left_flank | 2.0 | 12.7-18.0 | +9.2 | 449 |
@@ -108,7 +108,7 @@ CAL is the planted high-press team. On the v2 small league (seed 2026):
 | VES | 13.9 | 0.168 | 40.6 |
 | AUR | 14.6 | 0.137 | 39.9 |
 | HAR | 16.0 | 0.149 | 41.9 |
-| NOR | 18.9 | 0.094 | 36.7 |
+| NTG | 18.9 | 0.094 | 36.7 |
 
 In v1 PPDA put CAL level with VES and ball-won height put it below AUR. With realistic failed-pass
 outcomes, fouls counted as defensive actions and only won tackles in ball-won height, all three now
@@ -117,9 +117,9 @@ play, and press_intensity (pressure events per opponent pass) is the direct meas
 
 ## Step 4 metrics on the planted traps
 
-- Volume passer NOR_07: pass_quality_ratio 0.19 (league 1.0); the other top-25 forward passers range
+- Volume passer NTG_07: pass_quality_ratio 0.19 (league 1.0); the other top-25 forward passers range
   0.27-2.28. His forward passes go into the channel, not into high-threat central cells.
-- Corner specialist NOR_11: open-play xA per chance created 0.035, second lowest of the 20 players with
+- Corner specialist NTG_11: open-play xA per chance created 0.035, second lowest of the 20 players with
   15+ chances (median about 0.07); his set-piece xA (1.67) exceeds his open-play xA (1.27).
 
 ## Verifier
@@ -186,7 +186,7 @@ real false positives (4.0%). The rule now also requires that the chaser did not 
 out-create an average chaser from real chances (shots above the 0.08 low-xG line, against the
 league's 75th percentile line). Speculative shots are left out on purpose: twenty 0.05 shots make
 1.0 xG without making a side dangerous, and a chaser circulating around a deep block shoots from
-range. Counting them, the showcase's NOR (a shot-spam chaser) would read as a threat (1.12x the
+range. Counting them, the showcase's NTG (a shot-spam chaser) would read as a threat (1.12x the
 average against a 1.03x line) and the planted caveat would be suppressed; from real chances it
 made 0.59x. After the change the pipeline fires on 516 of 3230 unplanted cases (16.0%), of which
 17 (0.5% of all cases) are false positives by the total-xG label. Because the rule now uses the
@@ -214,5 +214,5 @@ real chances, where "territory, not threat" would mislead.
 
 ## Known gaps
 
-- The soft-lane table above is from v1. In v2, with the own-lanes gate, the small league finds NOR's
+- The soft-lane table above is from v1. In v2, with the own-lanes gate, the small league finds NTG's
   left flank on 8 of 8 seeds checked and HAR's right flank on 7 of 8, with no unplanted lane flagged.

@@ -595,8 +595,8 @@
       "weak_strength": null,
       "formation": "4-2-3-1"
     },
-    "NOR": {
-      "team_id": "t_nor",
+    "NTG": {
+      "team_id": "t_ntg",
       "style_seed": "slow possession, soft against attacks down the attacker's left, shoots from range when chasing",
       "lane_weights": [
         0.15,
@@ -653,13 +653,13 @@
     }
   },
   "planted_players": {
-    "NOR_11": {
-      "team": "t_nor",
+    "NTG_11": {
+      "team": "t_ntg",
       "role": "left_winger",
       "trap": "corner_specialist"
     },
-    "NOR_07": {
-      "team": "t_nor",
+    "NTG_07": {
+      "team": "t_ntg",
       "role": "right_winger",
       "trap": "volume_passer"
     }
@@ -669,13 +669,13 @@
     "sim_seed": 20261383,
     "seeds_tried": 1384,
     "home": "t_aur",
-    "away": "t_nor",
+    "away": "t_ntg",
     "scripted": "AUR scores their first chance of quality after minute 10",
     "player_overrides": {
-      "NOR:right_winger": {
+      "NTG:right_winger": {
         "usage": 3.8
       },
-      "NOR:left_winger": {
+      "NTG:left_winger": {
         "delivery": 1.4
       }
     },

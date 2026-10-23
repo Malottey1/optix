@@ -90,7 +90,7 @@ describe("route declutter", () => {
 
 describe("shot stats", () => {
   it("count, total xG and xG per shot", () => {
-    const s = (xg: number): ShotRow => ["e", 1, "NOR", "p", 90, 50, xg, "saved", "open_play"];
+    const s = (xg: number): ShotRow => ["e", 1, "NTG", "p", 90, 50, xg, "saved", "open_play"];
     const st = shotStats([s(0.05), s(0.05), s(0.2)]);
     expect(st.shots).toBe(3);
     expect(st.xg).toBe(0.3);

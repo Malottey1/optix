@@ -544,7 +544,7 @@
     $("away-code").title = tl.away.name;
     $("scrub").max = tl.duration_sec;
     fillPlayers();
-    // URL options (also used for screenshots): ?t=2760&mode=analyst&lang=es&player=NOR_07&select=ins_0012&drawer=1&play=1
+    // URL options (also used for screenshots): ?t=2760&mode=analyst&lang=es&player=NTG_07&select=ins_0012&drawer=1&play=1
     const q = new URLSearchParams(location.search);
     if (q.has("t")) state.t = Math.min(tl.duration_sec, Math.max(0, +q.get("t")));
     if (["analyst", "casual"].includes(q.get("mode"))) state.mode = q.get("mode");

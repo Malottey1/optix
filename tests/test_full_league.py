@@ -106,7 +106,7 @@ def test_player_traps_visible(full):
             n_cs += 1
             c = M.chances_created(ev, ds.passes, v["team"], pid)
             assert c.detail["set_piece"] > c.detail["open_play"], pid
-    assert n_vp >= 4 and n_cs >= 4                    # NOR's plus at least 3 new of each
+    assert n_vp >= 4 and n_cs >= 4                    # NTG's plus at least 3 new of each
 
 
 def test_team_traps_visible(full):
@@ -171,5 +171,5 @@ def test_profile_and_matchup_run_on_full_league(full):
     for a, d in zip(codes, codes[1:] + codes[:1]):
         m = lane_matchup(ds, gt["teams"][a]["team_id"], gt["teams"][d]["team_id"])
         assert m["n_attack"] > 0 and m["n_concede"] > 0
-    claim = matchup_claim(ds, gt["teams"]["AUR"]["team_id"], gt["teams"]["NOR"]["team_id"])
+    claim = matchup_claim(ds, gt["teams"]["AUR"]["team_id"], gt["teams"]["NTG"]["team_id"])
     assert claim["zone"]["lane"] == "left_flank"

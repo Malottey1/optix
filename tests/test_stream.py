@@ -85,9 +85,9 @@ def test_payload_numbers_come_from_the_claim_and_points_from_evidence(stream):
 def test_planted_traps_reach_the_stream_with_context(stream):
     s, _ = stream
     kinds = {(i["insight_type"], i["teams"]["primary"]) for i in s.insights}
-    assert ("perimeter_lock", "NOR") in kinds
-    assert ("volume_vs_value", "NOR") in kinds
-    assert ("set_piece_inflation", "NOR") in kinds
+    assert ("perimeter_lock", "NTG") in kinds
+    assert ("volume_vs_value", "NTG") in kinds
+    assert ("set_piece_inflation", "NTG") in kinds
     assert ("matchup_mismatch", "AUR") in kinds
     lock = next(i for i in s.insights if i["insight_type"] == "perimeter_lock")
     assert lock["context_chip"]["note_key"] == "field_tilt.trailing_vs_deep_block"

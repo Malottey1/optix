@@ -52,7 +52,7 @@ def test_agents_never_touch_generator_or_ground_truth():
 def test_ingest_drops_duplicates_and_rows_missing_fields(sc):
     evs = match_events(sc)[MID][:50]
     log = AgentLog()
-    state = MatchState(MID, "t_aur", "t_nor")
+    state = MatchState(MID, "t_aur", "t_ntg")
     state.seen_ids.add(evs[0]["event_id"])
     broken = dict(evs[3], x_end=None) if evs[3]["event_type"] == "pass" else dict(evs[3], team_id="")
     rows = evs[:3] + [broken] + evs[4:] + [evs[10]]
@@ -77,14 +77,14 @@ def test_stream_with_duplicates_publishes_the_same(sc, run):
 
 def test_raw_field_tilt_claim_blocked_then_republished_with_context(sc, run):
     o, pubs = run
-    nor = [p for p in pubs if p.result.claim["metric"] == "field_tilt" and p.result.claim["subject"]["id"] == "t_nor"]
+    nor = [p for p in pubs if p.result.claim["metric"] == "field_tilt" and p.result.claim["subject"]["id"] == "t_ntg"]
     aur_goal = min(e["clock_sec"] for e in match_events(sc)[MID]
                    if e["event_type"] == "shot" and e["outcome"] == "goal" and e["team_id"] == "t_aur")
-    # a NOR tilt claim from before AUR scored is honest as it stands: published at the first attempt
+    # a NTG tilt claim from before AUR scored is honest as it stands: published at the first attempt
     level = [q for q in nor if q.result.claim["window"]["to_sec"] <= aur_goal]
     assert all(len(q.history) == 1 and q.history[0].status == "published" for q in level)
     trailing = [q for q in nor if q.result.claim["window"]["to_sec"] > aur_goal]
-    assert trailing, "NOR's trailing field tilt should be published"
+    assert trailing, "NTG's trailing field tilt should be published"
     p = trailing[0]
     first, last = p.history[0], p.history[-1]
     assert first.claim["template_key"] == "field_tilt.stat"
@@ -166,8 +166,8 @@ def test_verifier_only_sees_ingested_events(sc):
     o.feed(evs[:300])
     view = o.state.view(sc)
     assert len(view.events) == 300 and view.events[-1] is evs[299]
-    future = build_claim(sc, "xg", "match", {"kind": "team", "id": "t_nor"}, match_id=MID,
-                         template_key="xg.stat", param_values=("amount",), extra_params={"team": "NOR"})
+    future = build_claim(sc, "xg", "match", {"kind": "team", "id": "t_ntg"}, match_id=MID,
+                         template_key="xg.stat", param_values=("amount",), extra_params={"team": "NTG"})
     res = o.verifier.check(ClaimProposal(future, "recap_line", evs[299]["event_id"], evs[299]["clock_sec"]), o.state)
     assert res.status == "blocked" and "missing_evidence" in res.claim["verification"]["rule_ids"]
 
@@ -182,11 +182,11 @@ def test_every_template_has_both_tones_and_only_param_numbers():
 
 
 def test_number_guard_catches_missing_and_invented_numbers():
-    params = {"team": "NOR", "amount": 1.1, "shots": 19, "xg_per_shot": 0.058}
+    params = {"team": "NTG", "amount": 1.1, "shots": 19, "xg_per_shot": 0.058}
     good = render("xg.volume_vs_value", params, "en")
     assert all(not number_guard(t, params) for t in good.values())
-    assert number_guard("NOR: 1.1 xG from 19 shots.", params) == ["param xg_per_shot=0.058 missing"]
-    assert number_guard("NOR: 1.1 xG from 19 shots, 0.058 each, 3 on target.", params) == ["number 3 is not a param"]
+    assert number_guard("NTG: 1.1 xG from 19 shots.", params) == ["param xg_per_shot=0.058 missing"]
+    assert number_guard("NTG: 1.1 xG from 19 shots, 0.058 each, 3 on target.", params) == ["number 3 is not a param"]
     assert number_guard("Momentum -35.2 to 40", {"a": -35.2, "b": 40.0}) == []
 
 
@@ -211,7 +211,7 @@ def test_personalization_selects_without_changing_numbers(run):
     ins = _insights(pubs)
     agent = PersonalizationAgent()
     casual = agent.select(ins, UserProfile(mode="casual"))
-    analyst = agent.select(ins, UserProfile(mode="analyst", favorite_club="NOR"))
+    analyst = agent.select(ins, UserProfile(mode="analyst", favorite_club="NTG"))
     assert len(casual) == len(analyst) == len(ins)
     assert {i["display"]["text"] for i in casual}.isdisjoint({i["display"]["text"] for i in analyst})
     first_at = {}
@@ -219,8 +219,8 @@ def test_personalization_selects_without_changing_numbers(run):
         first_at.setdefault(i["clock"]["start_sec"], i)
     assert all(i["display"]["favorite"] for t, i in first_at.items()
                if any(j["display"]["favorite"] for j in analyst if j["clock"]["start_sec"] == t))
-    focus = agent.select(ins, UserProfile(player_focus="NOR_07"))
-    assert focus and all("NOR_07" in i["player_ids"] for i in focus)
+    focus = agent.select(ins, UserProfile(player_focus="NTG_07"))
+    assert focus and all("NTG_07" in i["player_ids"] for i in focus)
     single = agent.select(ins, UserProfile(single_metric="threat_pass"))
     assert single and {i["insight_type"] for i in single} == {"threat_pass"}
     with pytest.raises(ValueError):

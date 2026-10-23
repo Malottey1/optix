@@ -80,7 +80,7 @@ def test_tampered_amount_is_value_mismatch(data):
 
 def test_tampered_supporting_value_is_value_mismatch(data):
     _, sc, _ = data
-    c = claim_on(sc, "field_tilt", team("t_nor"))
+    c = claim_on(sc, "field_tilt", team("t_ntg"))
     c["supporting_values"]["box_entries"] += 5
     assert status(c, sc) == ("blocked", ["value_mismatch"])
 
@@ -98,9 +98,9 @@ def test_unknown_or_wrong_evidence_is_missing_evidence(data):
     bad = copy.deepcopy(c)
     bad["evidence_event_ids"] = ["m_showcase_e99999"]
     assert status(bad, sc) == ("blocked", ["missing_evidence"])
-    wrong = copy.deepcopy(c)        # a NOR shot does not support an AUR xG claim
-    nor_shot = next(e["event_id"] for e in sc.events if e["event_type"] == "shot" and e["team_id"] == "t_nor")
-    wrong["evidence_event_ids"] = c["evidence_event_ids"][:2] + [nor_shot]
+    wrong = copy.deepcopy(c)        # a NTG shot does not support an AUR xG claim
+    ntg_shot = next(e["event_id"] for e in sc.events if e["event_type"] == "shot" and e["team_id"] == "t_ntg")
+    wrong["evidence_event_ids"] = c["evidence_event_ids"][:2] + [ntg_shot]
     assert status(wrong, sc) == ("blocked", ["missing_evidence"])
     empty = copy.deepcopy(c)
     empty["evidence_event_ids"] = []
@@ -109,8 +109,8 @@ def test_unknown_or_wrong_evidence_is_missing_evidence(data):
 
 def test_window_claim_evidence_must_be_inside_the_window(data):
     _, sc, _ = data
-    c = claim_on(sc, "field_tilt", team("t_nor"), scope="window", window=(2700, 5400))
-    early = next(e["event_id"] for e in sc.events if e["team_id"] == "t_nor" and e["event_type"] == "pass"
+    c = claim_on(sc, "field_tilt", team("t_ntg"), scope="window", window=(2700, 5400))
+    early = next(e["event_id"] for e in sc.events if e["team_id"] == "t_ntg" and e["event_type"] == "pass"
                  and e["outcome"] == "success" and e["x_start"] >= 66.7 and e["clock_sec"] < 2700)
     c["evidence_event_ids"].append(early)
     assert status(c, sc)[1] == ["missing_evidence"]
@@ -118,7 +118,7 @@ def test_window_claim_evidence_must_be_inside_the_window(data):
 
 def test_season_matchup_claim_is_verified(data):
     season, _, _ = data
-    c = matchup_claim(season, "t_aur", "t_nor")
+    c = matchup_claim(season, "t_aur", "t_ntg")
     assert status(c, season) == ("published", [])
     c["supporting_values"]["concede_completion"] += 2.0
     assert status(c, season) == ("blocked", ["value_mismatch"])
@@ -137,27 +137,27 @@ def test_every_rule_is_registered_once():
     assert len(ids) == len(set(ids)) == 9
 
 
-def test_field_tilt_with_lead_fires_on_nor_in_showcase(data):
+def test_field_tilt_with_lead_fires_on_ntg_in_showcase(data):
     _, sc, gt = data
     w = gt["showcase"]["traps"]["field_tilt_while_leading"]["window_sec"]
-    raw = claim_on(sc, "field_tilt", team("t_nor"), scope="window", window=tuple(w))
-    v = verdict(raw, sc)        # "NOR have 76% field tilt" on its own: blocked, told to add box entries
+    raw = claim_on(sc, "field_tilt", team("t_ntg"), scope="window", window=tuple(w))
+    v = verdict(raw, sc)        # "NTG have 76% field tilt" on its own: blocked, told to add box entries
     assert v.status == "blocked" and "field_tilt_with_lead" in v.rule_ids
     assert v.context_note == "field_tilt.trailing_vs_deep_block"
     assert v.revision_hint == {"field_tilt_with_lead": ["box_entries"]}
     assert verify(raw, sc)["verification"]["revision_hint"] == {"field_tilt_with_lead": ["box_entries"]}
-    ok = claim_on(sc, "field_tilt", team("t_nor"), scope="window", window=tuple(w),
+    ok = claim_on(sc, "field_tilt", team("t_ntg"), scope="window", window=tuple(w),
                   param_values=("amount", "box_entries", "team_f3_passes"))
     v = verdict(ok, sc)
     assert v.status == "published_with_context" and v.rule_ids == ["field_tilt_with_lead"] and not v.revision_hint
 
 
-def test_shot_spam_fires_on_nor_in_showcase(data):
+def test_shot_spam_fires_on_ntg_in_showcase(data):
     _, sc, _ = data
-    v = verdict(claim_on(sc, "xg", team("t_nor")), sc)
+    v = verdict(claim_on(sc, "xg", team("t_ntg")), sc)
     assert "shot_spam" in v.rule_ids and v.status == "blocked"
     assert v.revision_hint == {"shot_spam": ["shots", "xg_per_shot"]}
-    v = verdict(claim_on(sc, "xg", team("t_nor"), param_values=("amount", "shots", "xg_per_shot")), sc)
+    v = verdict(claim_on(sc, "xg", team("t_ntg"), param_values=("amount", "shots", "xg_per_shot")), sc)
     assert v.rule_ids == ["shot_spam"] and v.status == "published_with_context"
 
 
@@ -197,11 +197,11 @@ def test_ppda_alone_fires_without_press_intensity_and_not_with_it(data):
 
 def test_single_match_fatigue_blocks_on_showcase_but_not_season(data):
     season, sc, _ = data
-    c = claim_on(sc, "chances_created", player("NOR_11"), template_key="fatigue.late_drop")
-    v = verdict(c, sc)      # NOR_11 is also the corner specialist, so set_piece_inflation fires too
+    c = claim_on(sc, "chances_created", player("NTG_11"), template_key="fatigue.late_drop")
+    v = verdict(c, sc)      # NTG_11 is also the corner specialist, so set_piece_inflation fires too
     assert v.status == "blocked" and "single_match_fatigue" in v.rule_ids
     assert v.context_note == "fatigue.single_match_not_supported"
-    c2 = build_claim(season, "chances_created", "season", player("NOR_11"), template_key="fatigue.late_drop",
+    c2 = build_claim(season, "chances_created", "season", player("NTG_11"), template_key="fatigue.late_drop",
                      param_values=("amount",))
     assert "single_match_fatigue" not in verdict(c2, season).rule_ids
 
@@ -211,7 +211,7 @@ def test_causal_claims_are_always_blocked(data):
     c = claim_on(sc, "xg", team("t_aur"), claim_type="causal")
     v = verdict(c, sc)
     assert v.status == "blocked" and "causal_claim" in v.rule_ids
-    rc = claim_on(sc, "xg", team("t_nor"), template_key="red_card.caused_loss")
+    rc = claim_on(sc, "xg", team("t_ntg"), template_key="red_card.caused_loss")
     v = verdict(rc, sc)
     assert v.status == "blocked" and v.rule_ids[0] == "causal_red_card"
     ok = claim_on(sc, "xg", team("t_aur"), template_key="red_card.segment_rates", claim_type="descriptive_change")

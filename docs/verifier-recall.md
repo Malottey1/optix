@@ -57,12 +57,12 @@ The v4 rows are the current code's own recorded verdicts. Recorded verdicts that
 **shot_spam, category b** (3 cases)
 
 - seed 2026 m_276 LMF v GRM: trailing spell {"shots": 17, "low_xg_shots": 14, "xg": 1.268, "f3_passes": 69, "field_tilt": 0.496, "box_entries": 13}; claim windows (0, 6071)
-- seed 2027 m_268 NOR v JPH: trailing spell {"shots": 16, "low_xg_shots": 13, "xg": 1.205, "f3_passes": 76, "field_tilt": 0.826, "box_entries": 8}; claim windows (0, 2915), (0, 6132)
+- seed 2027 m_268 NTG v JPH: trailing spell {"shots": 16, "low_xg_shots": 13, "xg": 1.205, "f3_passes": 76, "field_tilt": 0.826, "box_entries": 8}; claim windows (0, 2915), (0, 6132)
 - seed 2030 m_276 ESF v CAL: trailing spell {"shots": 15, "low_xg_shots": 11, "xg": 0.845, "f3_passes": 101, "field_tilt": 0.697, "box_entries": 17}; claim windows (0, 3137), (0, 6400)
 
 **shot_spam, category c** (7 cases)
 
-- seed 2027 m_079 NOR v IRK: trailing spell {"shots": 24, "low_xg_shots": 19, "xg": 1.98, "f3_passes": 74, "field_tilt": 0.548, "box_entries": 16}; claim windows (0, 2958), (0, 6287)
+- seed 2027 m_079 NTG v IRK: trailing spell {"shots": 24, "low_xg_shots": 19, "xg": 1.98, "f3_passes": 74, "field_tilt": 0.548, "box_entries": 16}; claim windows (0, 2958), (0, 6287)
 - seed 2027 m_244 LMF v GRM: trailing spell {"shots": 14, "low_xg_shots": 9, "xg": 1.162, "f3_passes": 37, "field_tilt": 0.457, "box_entries": 8}; claim windows (0, 2925), (0, 6061)
 - seed 2028 m_049 LMF v MDL: trailing spell {"shots": 16, "low_xg_shots": 12, "xg": 1.372, "f3_passes": 82, "field_tilt": 0.569, "box_entries": 11}; claim windows (0, 2911), (0, 5994)
 

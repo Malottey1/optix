@@ -137,22 +137,22 @@ def test_style_seeds_are_recoverable_season_wide(season):
     assert share("t_cal", ["center"]) >= 0.30                              # central
     assert share("t_ves", ["left_flank", "right_flank"]) >= 0.50           # both wings
 
-    # NOR is soft where attackers come down THEIR left (attacker point of view)
+    # NTG is soft where attackers come down THEIR left (attacker point of view)
     conceded = Counter()
     for e in ev:
         if (e["event_type"] == "pass" and e["outcome"] == "success"
                 and float(e["x_start"]) < FINAL_THIRD_X <= float(e["x_end"])
-                and e["opponent_team_id"] == "t_nor"):
+                and e["opponent_team_id"] == "t_ntg"):
             conceded[lane_of(float(e["y_end"]))] += 1
     league = Counter()
     for e in ev:
         if (e["event_type"] == "pass" and e["outcome"] == "success"
                 and float(e["x_start"]) < FINAL_THIRD_X <= float(e["x_end"])
-                and e["opponent_team_id"] != "t_nor"):
+                and e["opponent_team_id"] != "t_ntg"):
             league[lane_of(float(e["y_end"]))] += 1
-    nor_left = conceded["left_flank"] / sum(conceded.values())
+    ntg_left = conceded["left_flank"] / sum(conceded.values())
     lg_left = league["left_flank"] / sum(league.values())
-    assert nor_left > lg_left
+    assert ntg_left > lg_left
 
 
 def test_volume_passer_is_a_top_forward_passer_who_goes_wide(season):

@@ -274,7 +274,7 @@ Test changes:
   Framework, LLM phrasing). Measured full-league figures were corrected to 800,670 events, 121 MB and
   about 15 s (the docs had about 750,000 events, 110 MB and 20 s). The ARCHITECTURE example "76%" is
   now 76.3%, the value the stream writes. engine.md's unplanted fire rates now match
-  docs/verifier-recall.md (16.0% pipeline, 3.2% claim level). The NOR->NTG rename and the "0x"
+  docs/verifier-recall.md (16.0% pipeline, 3.2% claim level). The NTG->NTG rename and the "0x"
   template wording were left for the Azure step, as instructed.
 - **Phase A, pyproject.toml** is pytest configuration, not a bundler or build config. It stays, and
   the no-build test does not flag it.
@@ -509,11 +509,11 @@ Every one of the 47 targets is in range on the small and the full league (`docs/
 has all of them, the xG bins, goal timing and correlations). **Targets still outside range: none.**
 
 **Traps and rules that changed behaviour**
-- All five traps still fire in the showcase with margin >= 10% (seed 20261383, AUR 4-1 NOR) and
+- All five traps still fire in the showcase with margin >= 10% (seed 20261383, AUR 4-1 NTG) and
   are rediscovered from events alone. The engine reads no ground truth.
 - Field-tilt trap: volume gate 100 -> 60 final-third passes (realistic final-third volume). The
   flank trap is checked against the season's completion rate for that lane.
-- NOR's weak lane is planted at strength 1.5; opponents aim at a known soft side.
+- NTG's weak lane is planted at strength 1.5; opponents aim at a known soft side.
 - CAL (the dominant negative control) and VES (both wings) dials were sharpened so their styles stay
   recognisable under the new ball model.
 - shot_spam: >= 12 shots, >= 65% low xG, mean <= 0.08; field_tilt_with_lead: entry cap 18%. Recall
@@ -534,7 +534,7 @@ below; none weakened a requirement, several raised one.
   floors sit about one sampling SD below the current measurement.
 - The showcase is now a 4-1 (previously 2-1). The traps and story still hold. A future seed search
   could prefer closer scores if the demo needs one.
-- The showcase's NOR match PPDA is high (31.4): AUR sit deep and NOR press little in this match.
+- The showcase's NTG match PPDA is high (31.4): AUR sit deep and NTG press little in this match.
   It is published with press intensity alongside (ppda_alone), but worth a look on screen.
 - Stated as approximate: most v2 ranges are wide football-knowledge ranges (see
   `data_gen/calibration.py` SOURCES); only goals, results, fouls, cards, penalties, set pieces,
@@ -585,7 +585,7 @@ Committed as one stage (see Decisions). Summary:
   mean <= 0.08 (recall 0.40 -> 0.52, non-trap rate 3.3% -> 4.8%); field_tilt_with_lead entry cap
   15% -> 18% (recall 0.64 -> 0.79, non-trap rate 1.1% -> 3.6%). Recall moved by up to 0.15 between
   simulator builds during tuning (25-30 positives per rule), so the test floors sit about one SD below.
-- Showcase: seed 20260957 (958 tries), AUR 2-1 NOR (goals 18', 47', 78'); every trap fires with
+- Showcase: seed 20260957 (958 tries), AUR 2-1 NTG (goals 18', 47', 78'); every trap fires with
   margin >= 10%.
 
 ### Stage 7-8 (partial). Realism tests, report, downstream repair
@@ -603,9 +603,9 @@ Committed as one stage (see Decisions). Summary:
 - goals_dispersion sampling SD 1.0 -> 1.41 (the variance/mean ratio of n Poisson counts has SD about
   sqrt(2/n)); the slow test still requires 0.95-1.3 on the full league with no allowance.
 - Soft-lane own-lanes gate now compares lifts over each lane's league rate (lanes have different
-  baselines); NOR found on 8/8 seeds, HAR 7/8, no false positives.
+  baselines); NTG found on 8/8 seeds, HAR 7/8, no false positives.
 - Engine: PPDA counts fouls (standard definition); ball-won height counts won tackles only.
-- Showcase now seed 20261383 (1384 tries), AUR 4-1 NOR, all margins >= 10%.
+- Showcase now seed 20261383 (1384 tries), AUR 4-1 NTG, all margins >= 10%.
 - Test changes: test_data_gen attacking-output clone test 30 -> 100 matches a side (30 was
   underpowered; true ratio about 1.8); test_dashboard reads the final score from ground truth
   instead of a literal "2 – 1".
@@ -627,7 +627,7 @@ Committed as one stage (see Decisions). Summary:
 - Field tilt spell length: `traps.FIELD_TILT_MIN_F3` 100 -> 60 final-third passes. With realistic
   final-third volume (about a quarter of passes), 100 passes in a leading spell is rare even for a
   dominant chaser; 60 keeps the trap clear of noise.
-- NOR's weak lane is planted at strength 1.5 (`weak_strength`) and opponents aim at a known soft side
+- NTG's weak lane is planted at strength 1.5 (`weak_strength`) and opponents aim at a known soft side
   (near side only); after a completed entry into the weak lane, box passes and shot appetite rise
   slightly (`via_weak`). The soft-lane truth helper formula (0.09 x strength) is unchanged.
 - The flank trap's completion check compares against the season reference completion for that lane,
@@ -651,7 +651,7 @@ Committed as one stage (see Decisions). Summary:
 - Volume passer usage 1.4 (was higher): at the old usage the passer led the league by an implausible
   margin.
 - Showcase realism envelope: the search also requires <= 30 shots per team, <= 6 goals and >= 250
-  passes per team; NOR's left winger gets delivery 1.4 in the showcase only.
+  passes per team; NTG's left winger gets delivery 1.4 in the showcase only.
 - Soft-lane rule: the lane must also beat the team's own other lanes (two-proportion z >= 1.64), and
   the minimum gap fell 6 -> 4 pp. Without the own-lanes gate, a deep block made every lane look soft
   against AUR.
@@ -735,8 +735,8 @@ Committed as one stage (see Decisions). Summary:
   entry cap" filter uses the rule constant instead of a literal 15 (cap retuned to 18%).
 - test_verifier_full.py `MIN_MATCH_RECALL`: shot_spam 0.40 -> 0.42, field_tilt_with_lead 0.45 -> 0.65,
   about one sampling SD below the retuned measurement (0.52, 0.79). A raise, not a weakening.
-- test_agents.py `test_raw_field_tilt_claim_blocked_then_republished_with_context`: picks NOR's first
-  tilt claim after AUR's first goal instead of NOR's first tilt claim. In the v2 showcase NOR's first
+- test_agents.py `test_raw_field_tilt_claim_blocked_then_republished_with_context`: picks NTG's first
+  tilt claim after AUR's first goal instead of NTG's first tilt claim. In the v2 showcase NTG's first
   claim covers 0-15' at 0-0, which is honest and published as is; the test now also asserts that.
 - Calibration tests: `NOT_YET_MODELLED` is now empty, so they require every target.
 
@@ -802,8 +802,8 @@ Nothing was cut from the priority list.
   `ground_truth.json` (`showcase.trap_margins`). Before: two thresholds were within 10%
   (spam low-xG share 0.769 vs 0.75, +2.6%; volume-passer wide share 0.86 vs 0.80, +7.5%).
   The seed search now requires every threshold cleared by >= 10% (`SHOWCASE_MIN_MARGIN`).
-  New showcase: seed 20264547, AUR 2-1 NOR. Numbers: chaser tilt 0.762 (>=0.68, +12%), box
-  entries 14 of 147 final-third passes (share 0.095 <= 0.15), 16 of 19 NOR shots low-xG (share
+  New showcase: seed 20264547, AUR 2-1 NTG. Numbers: chaser tilt 0.762 (>=0.68, +12%), box
+  entries 14 of 147 final-third passes (share 0.095 <= 0.15), 16 of 19 NTG shots low-xG (share
   0.842, mean xG 0.058), volume passer rank 1 with wide share 0.925, corner specialist 6 corner
   chances vs 0 open play, AUR left share 0.613 of 31 entries. Smallest margin +12.1%.
 - (c) `@pytest.mark.slow` registered in pyproject.toml, deselected by default (`addopts = -m 'not slow'`).
@@ -844,7 +844,7 @@ Nothing was cut from the priority list.
 - Matchup = attacker share lift + defender completion lift (pp). Claim supporting_values gain
   concede_completion, league_completion, completion_effect_pp, completion_attempts.
 - HAR diagnosis: true effect of its plant (from the generator's logged success probabilities) is
-  7.3-9.0 pp, the same as NOR's. Share missed it (opponents' lane habits swamp it); completion rate
+  7.3-9.0 pp, the same as NTG's. Share missed it (opponents' lane habits swamp it); completion rate
   finds it on the full league (+7.2 pp, n=505) but not on the 40-match season (n=186, interval about
   +-6 pp). Stated recoverable size 5 pp: 7/7 recovered on the full league, 0/12 false positives.
 - `load(dir, baseline="season", season_dir=...)`: single-match analyses use season baselines; a
@@ -860,7 +860,7 @@ Nothing was cut from the priority list.
 - engine/flow.py: xa_split, territorial_stress, shot_clusters, rhythm (15-value series), momentum,
   milestones (first goal in the dataset, 25/50/75/100 completed passes in a match).
 - tests/test_engine_fixtures.py: every metric (old and new) on hand-built events with hand-worked
-  answers, plus trap checks: NOR_07 pass_quality_ratio 0.19 (< 0.35), NOR_11 open-play xA per chance
+  answers, plus trap checks: NTG_07 pass_quality_ratio 0.19 (< 0.35), NTG_11 open-play xA per chance
   < 0.6 x league median.
 - Bug found by a fixture and fixed: high_threat_cells counted every cell tied at the 75th-percentile
   cut, so a mostly-zero grid made every central cell "high threat".
@@ -900,8 +900,8 @@ Nothing was cut from the priority list.
 - Context rules now declare REQUIRES; a fired context rule whose params are missing blocks the claim
   with `verification.revision_hint` (contract change: schema, docs/contracts.md, test). The Analyst
   revises by rule and re-verifies with attempt + 1.
-- Showcase stream: 36 published claims in 0.6 s, none dropped. NOR's raw field tilt claim is blocked
-  by field_tilt_with_lead (attempt 1) and republished with context at attempt 2: "NOR hold 65.4% field
+- Showcase stream: 36 published claims in 0.6 s, none dropped. NTG's raw field tilt claim is blocked
+  by field_tilt_with_lead (attempt 1) and republished with context at attempt 2: "NTG hold 65.4% field
   tilt while chasing the game, but only 8 of 70 final-third passes reached the box."
 - engine: `metrics.chances_by_player`; rhythm claims carry `minutes`; territorial_stress claims carry
   box_entries.
@@ -936,13 +936,13 @@ Nothing was cut from the priority list.
   and every numeric param must appear in every rendered string, with no other number allowed.
 - Personalization modes: analyst/casual, language (falls back to en), favorite club (marked and first
   at the same clock), player focus, single metric. CLI: `python -m agents.personalize --mode casual
-  --lang es --player NOR_07`.
-- Same moment, two tones (45:00, NOR trailing):
-  - analyst: "NOR hold 65.4% field tilt while chasing the game, but only 8 of 70 final-third passes
+  --lang es --player NTG_07`.
+- Same moment, two tones (45:00, NTG trailing):
+  - analyst: "NTG hold 65.4% field tilt while chasing the game, but only 8 of 70 final-third passes
     reached the box."
-  - casual: "NOR have the ball up the pitch (65.4% of final-third passes) but just 8 of 70 got into
+  - casual: "NTG have the ball up the pitch (65.4% of final-third passes) but just 8 of 70 got into
     the box."
-  - casual, fr: "NOR a le ballon haut (65,4 % des passes dans le dernier tiers), mais seulement 8 sur
+  - casual, fr: "NTG a le ballon haut (65,4 % des passes dans le dernier tiers), mais seulement 8 sur
     70 sont entrées dans la surface."
 - tests/test_translation.py (11): same keys and placeholders in all languages, every rendered string in
   the showcase stream passes the guard in its language, decimal comma and labels, the guard catches a
@@ -1001,9 +1001,9 @@ Nothing was cut from the priority list.
 - HAR (shot_spam 0.5, "shoots early and often") is not listed as a shot-spam trap: its trailing low-xG share
   is at the league's. The shot-spam trap threshold is shot_spam >= 0.6.
 
-- Test change, not weakened: my Step 1 test asserted the AUR-NOR matchup confidence == "high". After
+- Test change, not weakened: my Step 1 test asserted the AUR-NTG matchup confidence == "high". After
   the defender side switched to completion rate (as Step 3 asks), the correct label is "medium" because
-  NOR's left-flank completion sample is 190 attempts (< 200). The assertion now pins "medium" exactly
+  NTG's left-flank completion sample is 190 attempts (< 200). The assertion now pins "medium" exactly
   and also asserts why (completion attempts < 200 <= attacker n).
 - Soft-lane threshold 6 pp (observed lift) with the stated recoverable true effect 5 pp: at 5 pp
   observed, ESF (center, +5.5) and JPH (left_flank, +4.9) would have been false positives on the
@@ -1026,7 +1026,7 @@ Nothing was cut from the priority list.
   says. The non-trap rate (5%) is within the limit.
 
 - Context rules block when the sentence lacks the context (REQUIRES missing) rather than only
-  attaching a chip. Reason: the step 6 example ("raw NOR 71% field tilt claim blocked by
+  attaching a chip. Reason: the step 6 example ("raw NTG 71% field tilt claim blocked by
   field_tilt_with_lead and republished with a context note") needs a block, and a sentence that
   states the shallow number alone is the misleading thing. A chip alone would leave the headline
   misleading. The step 5 tests now assert both halves (raw -> blocked with hint; with context ->
@@ -1061,7 +1061,7 @@ Nothing was cut from the priority list.
 - ESF (possession, shot_spam 0.8) shows LOWER low-xG share than the league over all minutes; the spam only
   shows when trailing. Expected evidence was stated conditionally rather than strengthening the plant.
 
-- In the showcase match on its own, AUR's top lane mismatch against NOR is left_half_space (41.9% of
+- In the showcase match on its own, AUR's top lane mismatch against NTG is left_half_space (41.9% of
   AUR's entries, interval 26-59%), not left_flank: a single match is a small sample. The season
   preview claim is left_flank.
 
@@ -1074,6 +1074,6 @@ Nothing was cut from the priority list.
 - tests/test_dashboard.py skips at import when Playwright is missing, so a default run without
   requirements-ui.txt reports "1 skipped". Harmless, but it could move to a conftest hook if a clean
   "0 skipped" matters.
-- The original code `NOR` is also a common abbreviation of a real club's name. CLAUDE.md forbids real
+- The original code `NTG` is also a common abbreviation of a real club's name. CLAUDE.md forbids real
   trademarks; a 3-letter code is probably fine, but I did not rename an existing team (that would change
   the small league and the showcase). Worth a human decision.

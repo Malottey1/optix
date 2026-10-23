@@ -135,7 +135,7 @@ def test_field_tilt_window_and_state_partition(ds):
 
 
 def test_profiles_have_league_comparison_and_sample_sizes(ds):
-    for code in ("AUR", "NOR", "CAL", "VES", "HAR"):
+    for code in ("AUR", "NTG", "CAL", "VES", "HAR"):
         for b in BRACKETS:
             p = team_style_profile(ds, tid(ds, code), b)
             for m in p["metrics"].values():
@@ -157,9 +157,9 @@ def test_recovers_aur_left_heavy_attack(ds, gt):
     assert lanes["left_flank"]["z"] >= 3
 
 
-def test_recovers_nor_soft_lane_from_attacker_pov(ds, gt):
-    planted = gt["teams"]["NOR"]["weak_lane_attacker_pov"]
-    prof = team_style_profile(ds, tid(ds, "NOR"))["lanes"]
+def test_recovers_ntg_soft_lane_from_attacker_pov(ds, gt):
+    planted = gt["teams"]["NTG"]["weak_lane_attacker_pov"]
+    prof = team_style_profile(ds, tid(ds, "NTG"))["lanes"]
     for set_name in ("entry_lanes_conceded", "chance_lanes_conceded"):
         lanes = prof[set_name]
         assert max(lanes, key=lambda l: lanes[l]["z"]) == planted, set_name
@@ -171,7 +171,7 @@ def test_recovers_nor_soft_lane_from_attacker_pov(ds, gt):
 def test_recovers_aur_behaviour_change_when_leading(ds, gt):
     assert "sitting deep" in gt["teams"]["AUR"]["style_seed"]
     shifts = {code: bracket_shift(ds, tid(ds, code), "leading", "level")
-              for code in ("AUR", "NOR", "CAL", "VES", "HAR")}
+              for code in ("AUR", "NTG", "CAL", "VES", "HAR")}
     aur = shifts["AUR"]
     assert aur["field_tilt"]["delta"] <= -0.1          # cedes territory once ahead
     assert aur["press_intensity"]["delta"] < 0         # stops pressing
@@ -186,7 +186,7 @@ def test_recovers_aur_behaviour_change_when_leading(ds, gt):
 def test_recovers_cal_as_high_press(ds, gt):
     assert "high press" in gt["teams"]["CAL"]["style_seed"]
     press = {code: team_style_profile(ds, tid(ds, code))["metrics"]["press_intensity"]
-             for code in ("AUR", "NOR", "CAL", "VES", "HAR")}
+             for code in ("AUR", "NTG", "CAL", "VES", "HAR")}
     ranked = sorted(press, key=lambda c: press[c]["value"], reverse=True)
     assert ranked[0] == "CAL"
     assert press["CAL"]["z"] >= 5
@@ -195,30 +195,30 @@ def test_recovers_cal_as_high_press(ds, gt):
 
 # ---------- matchup and claim ----------
 
-def test_top_matchup_is_aur_left_vs_nor_soft_left(ds, gt):
-    m = lane_matchup(ds, tid(ds, "AUR"), tid(ds, "NOR"))
-    assert m["top"]["lane"] == gt["teams"]["NOR"]["weak_lane_attacker_pov"] == "left_flank"
+def test_top_matchup_is_aur_left_vs_ntg_soft_left(ds, gt):
+    m = lane_matchup(ds, tid(ds, "AUR"), tid(ds, "NTG"))
+    assert m["top"]["lane"] == gt["teams"]["NTG"]["weak_lane_attacker_pov"] == "left_flank"
     assert m["top"]["attack_z"] > 0 and m["top"]["concede_z"] > 0
     assert m["n_attack"] > 0 and m["n_concede"] > 0
     by_id = {e["event_id"]: e for e in ds.events}
     for i in m["top"]["evidence_event_ids"]:
         e = by_id[i]
         # every evidence event is a final-third entry into the attacker's LEFT flank, made by AUR
-        # or conceded by NOR: both sides in the attacker's frame
-        assert e["team_id"] == tid(ds, "AUR") or e["opponent_team_id"] == tid(ds, "NOR")
+        # or conceded by NTG: both sides in the attacker's frame
+        assert e["team_id"] == tid(ds, "AUR") or e["opponent_team_id"] == tid(ds, "NTG")
         assert zones.lane_of(e["y_end"]) == "left_flank"
         assert e["x_start"] < zones.FINAL_THIRD_X <= e["x_end"]
 
 
 def test_matchup_claim_validates_and_matches_the_numbers(ds, claim_validator):
-    claim = matchup_claim(ds, tid(ds, "AUR"), tid(ds, "NOR"))
+    claim = matchup_claim(ds, tid(ds, "AUR"), tid(ds, "NTG"))
     assert not [e.message for e in claim_validator.iter_errors(claim)]
     assert claim["verification"]["status"] == "pending"
     assert claim["template_key"] == "matchup.weak_flank"
     assert claim["zone"] == {"lane": "left_flank", "third": "attacking"}
     assert claim["params"]["attack_share"] == claim["value"]["amount"]
     assert claim["params"]["league_share"] == claim["value"]["baseline"]
-    m = lane_matchup(ds, tid(ds, "AUR"), tid(ds, "NOR"))
+    m = lane_matchup(ds, tid(ds, "AUR"), tid(ds, "NTG"))
     assert claim["value"]["amount"] == round(100 * m["top"]["attack_share"], 1)
     assert claim["value"]["sample_size"] == m["n_attack"]
     assert claim["evidence_event_ids"] == m["top"]["evidence_event_ids"]
@@ -226,14 +226,14 @@ def test_matchup_claim_validates_and_matches_the_numbers(ds, claim_validator):
 
 def test_report_cli_json_is_a_valid_claim(generated, capsys, claim_validator):
     root, _ = generated
-    assert report_main(["--team", "AUR", "--opponent", "NOR", "--data", str(root / "season"), "--json"]) == 0
+    assert report_main(["--team", "AUR", "--opponent", "NTG", "--data", str(root / "season"), "--json"]) == 0
     claim = json.loads(capsys.readouterr().out)
     assert not list(claim_validator.iter_errors(claim))
 
 
 def test_report_cli_text(generated, capsys):
     root, _ = generated
-    report_main(["--team", "AUR", "--opponent", "NOR", "--data", str(root / "season")])
+    report_main(["--team", "AUR", "--opponent", "NTG", "--data", str(root / "season")])
     out = capsys.readouterr().out
     assert "top mismatch: left_flank" in out
     assert re.search(r"AUR when leading vs level", out)
@@ -241,14 +241,14 @@ def test_report_cli_text(generated, capsys):
 
 def test_engine_runs_on_the_showcase_match(generated, claim_validator):
     sc = load(generated[0] / "showcase")
-    claim = matchup_claim(sc, sc.team_by_code("AUR"), sc.team_by_code("NOR"), match_id="m_showcase")
+    claim = matchup_claim(sc, sc.team_by_code("AUR"), sc.team_by_code("NTG"), match_id="m_showcase")
     assert claim is not None and not list(claim_validator.iter_errors(claim))
     assert claim["match_id"] == "m_showcase"
 
 
 def test_matchup_claim_uses_season_scope_and_backed_params(ds):
     from contracts.checks import check_param_numbers
-    claim = matchup_claim(ds, tid(ds, "AUR"), tid(ds, "NOR"))
+    claim = matchup_claim(ds, tid(ds, "AUR"), tid(ds, "NTG"))
     assert claim["scope"] == "season" and "window" not in claim
     assert check_param_numbers(claim) == []
     v = claim["value"]
@@ -268,8 +268,8 @@ def test_matchup_claim_uses_season_scope_and_backed_params(ds):
 
 def test_soft_lane_from_completion_rate_on_small_league(ds, gt):
     from engine.profiles import SOFT_LANE_MIN_PP, soft_lane
-    nor = soft_lane(ds, tid(ds, "NOR"))
-    assert nor is not None and nor["lane"] == gt["teams"]["NOR"]["weak_lane_attacker_pov"]
+    nor = soft_lane(ds, tid(ds, "NTG"))
+    assert nor is not None and nor["lane"] == gt["teams"]["NTG"]["weak_lane_attacker_pov"]
     assert nor["effect_pp"] >= SOFT_LANE_MIN_PP and nor["interval"][0] > nor["league"]
     # no team without a planted weak lane is flagged
     for code, t in gt["teams"].items():
@@ -281,16 +281,16 @@ def test_showcase_uses_season_baseline(generated, ds, claim_validator):
     root, _ = generated
     sc = load(root / "showcase", baseline="season", season_dir=root / "season")
     assert sc.baseline is not None and sc.baseline.label == "season"
-    claim = matchup_claim(sc, sc.team_by_code("AUR"), sc.team_by_code("NOR"))
+    claim = matchup_claim(sc, sc.team_by_code("AUR"), sc.team_by_code("NTG"))
     assert not list(claim_validator.iter_errors(claim))
     src = claim["value"]["baseline_source"]
     season_n = sum(M.final_third_entries(ds.events, None).detail["lanes"].values())
     assert src == {"kind": "season", "n": season_n, "dataset": "season"}
     assert claim["scope"] == "match" and claim["match_id"] == "m_showcase" and claim["window"]["from_sec"] == 0
     # the baseline really is the season's, not the match's own
-    season_share = lane_matchup(ds, tid(ds, "AUR"), tid(ds, "NOR"))["lanes"][claim["zone"]["lane"]]["league_share"]
+    season_share = lane_matchup(ds, tid(ds, "AUR"), tid(ds, "NTG"))["lanes"][claim["zone"]["lane"]]["league_share"]
     assert claim["value"]["baseline"] == round(100 * season_share, 1)
-    selfbase = matchup_claim(load(root / "showcase"), "t_aur", "t_nor")
+    selfbase = matchup_claim(load(root / "showcase"), "t_aur", "t_ntg")
     assert selfbase["value"]["baseline_source"]["n"] < src["n"]
 
 

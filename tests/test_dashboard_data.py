@@ -76,8 +76,8 @@ def test_team_board_recovers_the_planted_styles(out):
     assert all(l["rule"] and l["n"] > 0 for t in teams.values() for l in t["labels"])
     aur = teams["AUR"]["entry_lanes"]
     assert max(aur, key=lambda l: aur[l]["effect"]) == "left_flank"           # AUR attacks down its left
-    assert teams["NOR"]["soft_lane"]["lane"] == "left_flank"                  # NOR is soft on that side
-    h = next(x for x in ui["teams"]["head_to_head"] if x["attacker"] == "AUR" and x["defender"] == "NOR")
+    assert teams["NTG"]["soft_lane"]["lane"] == "left_flank"                  # NTG is soft on that side
+    h = next(x for x in ui["teams"]["head_to_head"] if x["attacker"] == "AUR" and x["defender"] == "NTG")
     assert h["top"] == "left_flank" and h["claim"]["status"] != "blocked"
     assert len(ui["teams"]["head_to_head"]) == len(teams) * (len(teams) - 1)
 

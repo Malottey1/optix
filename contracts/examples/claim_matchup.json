@@ -1,5 +1,5 @@
 {
-  "claim_id": "clm_matchup_AUR_NOR_left_flank",
+  "claim_id": "clm_matchup_AUR_NTG_left_flank",
   "scope": "season",
   "match_id": "m_showcase",
   "claim_type": "matchup",
@@ -28,7 +28,7 @@
   },
   "template_key": "matchup.weak_flank",
   "params": {
-    "attacker": "AUR", "defender": "NOR", "lane": "left_flank",
+    "attacker": "AUR", "defender": "NTG", "lane": "left_flank",
     "attack_share": 38.3, "league_share": 22.9, "concede_share": 28.8
   },
   "verification": { "status": "pending", "attempt": 1 }

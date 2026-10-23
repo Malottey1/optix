@@ -61,7 +61,7 @@ TEAM_TRAPS = {
     # sits deep when leading
     "DCH": dict(sit_deep=0.88),
     "JPH": dict(sit_deep=0.90),
-    # soft lanes (attacker point of view), strength scales the weak-lane bonus (1.0 = NOR's plant)
+    # soft lanes (attacker point of view), strength scales the weak-lane bonus (1.0 = NTG's plant)
     "OKP": dict(weak_lane="right_flank", weak_strength=2.5),
     "HBC": dict(weak_lane="left_flank", weak_strength=2.0),
     "MDL": dict(weak_lane="right_half_space", weak_strength=1.5),
@@ -156,7 +156,7 @@ def extra_teams() -> list[TeamSpec]:
 
 def full_teams() -> list[TeamSpec]:
     """The five original teams exactly as they are, then the 15 generated ones."""
-    originals = {"AUR": "low_block_counter", "NOR": "possession", "CAL": "high_press",
+    originals = {"AUR": "low_block_counter", "NTG": "possession", "CAL": "high_press",
                  "VES": "wing_play", "HAR": "direct"}
     return [replace(t, archetype=originals[t.code]) for t in TEAMS] + extra_teams()
 

@@ -52,11 +52,11 @@ def test_every_rendered_string_carries_every_numeric_param(stream):
 
 
 def test_decimal_comma_and_translated_labels():
-    p = {"team": "NOR", "amount": 1.1, "shots": 19, "xg_per_shot": 0.058}
+    p = {"team": "NTG", "amount": 1.1, "shots": 19, "xg_per_shot": 0.058}
     assert "0,058" in render("xg.volume_vs_value", p, "es")["analyst"]
     assert "1,1" in render("xg.volume_vs_value", p, "fr")["casual"]
     assert "0.058" in render("xg.volume_vs_value", p, "en")["analyst"]
-    m = {"attacker": "AUR", "defender": "NOR", "lane": "left_flank", "attack_share": 38.3, "league_share": 22.9,
+    m = {"attacker": "AUR", "defender": "NTG", "lane": "left_flank", "attack_share": 38.3, "league_share": 22.9,
          "concede_completion": 81.1, "league_completion": 73.5}
     assert "flanco izquierdo" in render("matchup.weak_flank", m, "es")["analyst"]
     assert "flanc gauche" in render("matchup.weak_flank", m, "fr")["casual"]
@@ -64,12 +64,12 @@ def test_decimal_comma_and_translated_labels():
 
 
 def test_guard_catches_a_translation_that_changes_a_number():
-    p = {"team": "NOR", "amount": 1.1, "shots": 19, "xg_per_shot": 0.058}
-    assert number_guard("NOR : 1,1 xG sur 19 tirs, 0,058 xG par tir.", p, "fr") == []
-    assert number_guard("NOR : 1,1 xG sur 18 tirs, 0,058 xG par tir.", p, "fr") == \
+    p = {"team": "NTG", "amount": 1.1, "shots": 19, "xg_per_shot": 0.058}
+    assert number_guard("NTG : 1,1 xG sur 19 tirs, 0,058 xG par tir.", p, "fr") == []
+    assert number_guard("NTG : 1,1 xG sur 18 tirs, 0,058 xG par tir.", p, "fr") == \
         ["param shots=19 missing", "number 18 is not a param"]
     # a dot where French writes a comma is a different number string, so it is caught too
-    assert "param amount=1,1 missing" in number_guard("NOR : 1.1 xG sur 19 tirs, 0,058 xG par tir.", p, "fr")
+    assert "param amount=1,1 missing" in number_guard("NTG : 1.1 xG sur 19 tirs, 0,058 xG par tir.", p, "fr")
 
 
 def test_translation_only_after_verification(stream):
@@ -97,8 +97,8 @@ def test_analyst_and_casual_differ_but_share_numbers(stream):
 
 def test_player_focus_mode(stream):
     s, _ = stream
-    out = PersonalizationAgent().select(s.insights, UserProfile(player_focus="NOR_07", mode="analyst"))
-    assert out and all(i["player_ids"] == ["NOR_07"] for i in out)
+    out = PersonalizationAgent().select(s.insights, UserProfile(player_focus="NTG_07", mode="analyst"))
+    assert out and all(i["player_ids"] == ["NTG_07"] for i in out)
     assert any(i["insight_type"] == "volume_vs_value" for i in out)   # the volume passer's honest stat
 
 
@@ -111,10 +111,10 @@ def test_single_metric_mode(stream):
 
 def test_favorite_club_mode_orders_and_marks(stream):
     s, _ = stream
-    out = PersonalizationAgent().select(s.insights, UserProfile(favorite_club="NOR"))
+    out = PersonalizationAgent().select(s.insights, UserProfile(favorite_club="NTG"))
     assert len(out) == len(s.insights)
     assert {i["insight_id"] for i in out if i["display"]["favorite"]} == \
-        {i["insight_id"] for i in s.insights if i["teams"]["primary"] == "NOR"}
+        {i["insight_id"] for i in s.insights if i["teams"]["primary"] == "NTG"}
     for a, b in zip(out, out[1:]):
         if a["clock"]["start_sec"] == b["clock"]["start_sec"]:
             assert a["display"]["favorite"] or not b["display"]["favorite"]
@@ -128,5 +128,5 @@ def test_unknown_language_falls_back_to_english(stream):
 
 def test_personalize_cli_lines(stream):
     s, _ = stream
-    out = lines(s.insights, UserProfile(mode="casual", language="fr", favorite_club="NOR"))
+    out = lines(s.insights, UserProfile(mode="casual", language="fr", favorite_club="NTG"))
     assert len(out) == len(s.insights) and any("[context:" in x for x in out)

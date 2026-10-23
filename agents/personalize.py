@@ -1,7 +1,7 @@
 """Print a personalized view of an insight stream.
 
-    python -m agents.personalize --in out/insights.jsonl --mode casual --lang es --favorite NOR
-    python -m agents.personalize --player NOR_07          # player focus
+    python -m agents.personalize --in out/insights.jsonl --mode casual --lang es --favorite NTG
+    python -m agents.personalize --player NTG_07          # player focus
     python -m agents.personalize --metric volume_vs_value # single metric
 """
 from __future__ import annotations

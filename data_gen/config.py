@@ -56,7 +56,7 @@ TEAMS = [
     TeamSpec("t_aur", "AUR", "Aurelia Rovers", "left-heavy counter, protects a lead by sitting deep",
              (0.38, 0.22, 0.20, 0.12, 0.08), None, 1.05, 1.00, 0.40, 4.0, 0.62, 0.85, 0.90, 0.50, 0.0,
              formation="4-2-3-1"),
-    TeamSpec("t_nor", "NOR", "Northgate Town", "slow possession, soft against attacks down the attacker's left, shoots from range when chasing",
+    TeamSpec("t_ntg", "NTG", "Northgate Town", "slow possession, soft against attacks down the attacker's left, shoots from range when chasing",
              (0.15, 0.22, 0.26, 0.22, 0.15), "left_flank", 1.06, 0.97, 0.30, 6.0, 0.35, 0.15, 1.50, 0.15, 0.8,
              weak_strength=1.5, formation="4-3-3"),
     TeamSpec("t_cal", "CAL", "Calder Athletic", "high press, central play",
@@ -73,13 +73,13 @@ TEAM_BY_ID = {t.team_id: t for t in TEAMS}
 
 # Planted player traits keyed by (team code, role).
 PLAYER_TRAITS = {
-    # NOR right winger: high pass volume (a top-3 forward passer season-wide, not a runaway
+    # NTG right winger: high pass volume (a top-3 forward passer season-wide, not a runaway
     # leader), forward passes almost all end wide, rarely crosses.
-    ("NOR", "right_winger"): dict(usage=1.4, cross_mult=0.15, wide_forward=True,
+    ("NTG", "right_winger"): dict(usage=1.4, cross_mult=0.15, wide_forward=True,
                                   trap_flag="volume_passer"),
-    # NOR left winger: takes every corner, little open-play creativity (rarely on the ball, rarely
-    # crosses), so his chances created stay corner-led even though NOR now creates more overall.
-    ("NOR", "left_winger"): dict(usage=0.4, cross_mult=0.5, set_piece_taker=True,
+    # NTG left winger: takes every corner, little open-play creativity (rarely on the ball, rarely
+    # crosses), so his chances created stay corner-led even though NTG now creates more overall.
+    ("NTG", "left_winger"): dict(usage=0.4, cross_mult=0.5, set_piece_taker=True,
                                  trap_flag="corner_specialist"),
     ("AUR", "striker"): dict(finishing=1.15),
     ("CAL", "striker"): dict(finishing=1.10),
@@ -88,6 +88,6 @@ PLAYER_TRAITS = {
 # Applied on top of PLAYER_TRAITS for the showcase match only, so the demo shows the strong,
 # unmistakable version of a trap while the season keeps the realistic one.
 SHOWCASE_PLAYER_TRAITS = {
-    ("NOR", "right_winger"): dict(usage=3.8),
-    ("NOR", "left_winger"): dict(delivery=1.4),
+    ("NTG", "right_winger"): dict(usage=3.8),
+    ("NTG", "left_winger"): dict(delivery=1.4),
 }

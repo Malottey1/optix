@@ -95,7 +95,7 @@ and `measured` (the same metrics on this season), plus `showcase.player_override
 | Code | Hidden style seed |
 |---|---|
 | AUR | left-heavy counter, protects a lead by sitting deep |
-| NOR | slow possession, soft against attacks down the attacker's left, shoots from range when chasing |
+| NTG | slow possession, soft against attacks down the attacker's left, shoots from range when chasing |
 | CAL | high press, central play |
 | VES | wing play down both flanks |
 | HAR | direct long-ball, shoots early and often |
@@ -104,11 +104,11 @@ and `measured` (the same metrics on this season), plus `showcase.player_override
 
 | Trap | Where it lives | What the data shows |
 |---|---|---|
-| Field tilt while leading | AUR leads, NOR chases (any match; strongest in the showcase) | the chaser holds ~70% of final-third passes but makes very few box entries |
-| Shot spam | NOR when chasing a deep block | a dozen-plus shots at ~0.03 xG each |
-| Volume passer | NOR_07 (right winger) | season: a top-3 forward passer (not a runaway leader), ~90% ending on the flanks; showcase: the strong version, clear leader in the match |
-| Corner specialist | NOR_11 (left winger) | most of his chances created come from corners |
-| One-flank attack vs weak side | AUR attack vs NOR defence | AUR sends ~60% of entries down its left; NOR is soft on exactly that side |
+| Field tilt while leading | AUR leads, NTG chases (any match; strongest in the showcase) | the chaser holds ~70% of final-third passes but makes very few box entries |
+| Shot spam | NTG when chasing a deep block | a dozen-plus shots at ~0.03 xG each |
+| Volume passer | NTG_07 (right winger) | season: a top-3 forward passer (not a runaway leader), ~90% ending on the flanks; showcase: the strong version, clear leader in the match |
+| Corner specialist | NTG_11 (left winger) | most of his chances created come from corners |
+| One-flank attack vs weak side | AUR attack vs NTG defence | AUR sends ~60% of entries down its left; NTG is soft on exactly that side |
 
 ## Calibration
 
@@ -123,7 +123,7 @@ is empty after realism v2. Tuning changes behaviour parameters only, never score
 ## Showcase overrides
 
 The showcase match uses the season simulator and players, with `SHOWCASE_PLAYER_TRAITS` applied on
-top (NOR's right winger's usage and NOR's left winger's corner delivery), so the demo shows the
+top (NTG's right winger's usage and NTG's left winger's corner delivery), so the demo shows the
 unmistakable version of a trap while the
 season keeps the realistic one. The overrides are listed in `ground_truth.json`.
 
@@ -164,7 +164,7 @@ about 800,000 events (800,670 for seed 2026), about 120 MB, about 15 s on a lapt
   with seeded variation (`FULL_LEAGUE_TEAM_SEED`) in lane weights, att/dfn, press, tempo, directness,
   sit_deep, attacking_output, counter and shot_spam. Names and codes are invented.
 - `teams.csv` gains two columns in the full league: `weak_strength` (scales the weak-lane bonus;
-  1.0 = NOR's original plant) and `archetype`.
+  1.0 = NTG's original plant) and `archetype`.
 - Extra plants: volume passers GRM_07, QNT_11, KWC_07; corner specialists ESF_11, MDL_07, ASV_11; shot-spam
   teams ESF, LMF; sit-deep-when-leading teams DCH, JPH; soft lanes OKP (right_flank, 2.5), HBC (left_flank,
   2.0), MDL (right_half_space, 1.5), FWM (center, 1.0), RVD (left_half_space, 0.6), IRK (right_flank, 0.3).

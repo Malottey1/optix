@@ -116,7 +116,7 @@ describe("colour, zones, routes, stress, shots, arcs", () => {
   });
   it("shots inside a window are inclusive and per team", () => {
     const s = (id: string, t: number, team: string): ShotRow => [id, t, team, "p", 90, 50, 0.1, "saved", "open_play"];
-    const shots = [s("a", 10, "AUR"), s("b", 20, "NOR"), s("c", 30, "AUR"), s("d", 31, "AUR")];
+    const shots = [s("a", 10, "AUR"), s("b", 20, "NTG"), s("c", 30, "AUR"), s("d", 31, "AUR")];
     expect(shotsIn(shots, "AUR", 10, 30).map((x) => x[0])).toEqual(["a", "c"]);
   });
   it("slice arcs are closed paths and empty for zero radius", () => {
@@ -138,7 +138,7 @@ describe("zone grid", () => {
       [1, 10, 10, "AUR"],
       [2, 10, 10, "AUR"],
       [3, 90, 50, "AUR"],
-      [4, 90, 50, "NOR"],
+      [4, 90, 50, "NTG"],
       [99, 90, 50, "AUR"],
     ];
     const { shares, n } = zoneShares(tr, "AUR", 0, 10, [33.3, 66.7]);

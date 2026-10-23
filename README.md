@@ -62,8 +62,8 @@ Optional:
 
 ```bash
 python -m pytest -q                                      # tests (slow ones: -m slow)
-python -m engine.report --team AUR --opponent NOR        # style profiles and matchup, as text
-python -m agents.personalize --mode casual --lang es --favorite NOR   # personalized feed in the terminal
+python -m engine.report --team AUR --opponent NTG        # style profiles and matchup, as text
+python -m agents.personalize --mode casual --lang es --favorite NTG   # personalized feed in the terminal
 python -m data_gen.generate --league full                # 20 teams, 380 matches (data/full, ~15 s)
 cd web && npm run build && npm run preview               # production build in web/dist, served on :4173
 pip install -r requirements-ui.txt && python -m tools.check_web     # headless gates on every route + docs/screens-v3/

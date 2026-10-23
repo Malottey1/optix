@@ -1,6 +1,6 @@
 """Plain-text style and matchup report for two teams.
 
-    python -m engine.report --team AUR --opponent NOR [--data data/generated] [--json]
+    python -m engine.report --team AUR --opponent NTG [--data data/generated] [--json]
 
 Everything printed is computed from the event tables by engine/; nothing is read from the
 generator or ground truth.
@@ -96,7 +96,7 @@ def matchup_lines(ds, attacker_id, defender_id, baseline_ds=None) -> list[str]:
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--team", required=True, help="attacking team code, e.g. AUR")
-    ap.add_argument("--opponent", required=True, help="defending team code, e.g. NOR")
+    ap.add_argument("--opponent", required=True, help="defending team code, e.g. NTG")
     ap.add_argument("--data", default="data/generated", help="directory with the CSV tables")
     ap.add_argument("--match-id", default=None, help="match_id for the claim (default preview_<A>_<B>)")
     ap.add_argument("--json", action="store_true", help="print only the claim object as JSON")
