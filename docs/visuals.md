@@ -68,11 +68,24 @@ on any number that is neither.
   green sequential scale: forward passes = route pass quality (hot / passes) / league_hot_share
   (the engine's `pass_quality_ratio` per route, 2 dp; top of scale 2×); chances = xA per chance
   (sum / passes, 3 dp; top of scale twice the league value). Forward routes need at least 2
-  passes to be drawn (the caption gives shown / total); set-piece routes are dashed. League xA
-  per chance = Σ xA / Σ chances over every player's chance routes.
+  passes to be drawn; set-piece routes are dashed. League xA per chance = Σ xA / Σ chances over
+  every player's chance routes.
+- **Default view:** only the 8 busiest routes (by passes; ties by start zone, end zone, kind),
+  each bent by 5% of its length and offset 1.1 pitch units to the right of travel, so a route and
+  its reverse never overlap. "Show all routes (N)" draws every drawable route. The caption gives
+  the routes drawn and their passes out of the total; the hidden table always lists every route.
 - **Claims:** the volume passer (thick but grey: many forward passes, rarely central) and the
   set-piece creators (dashed corner routes).
 - **Caveat:** coarse 3 × 5 zones; season totals.
+
+### Live layout at 1600 px and wider
+At 1600 px+ (the `wide` breakpoint) the Live Center is a three-column dashboard under the score
+and scrubber: the rhythm strip runs full width under the scrubber (same time axis), then the
+Focus Pitch | Perimeter Lock, gauges, momentum | shot quality over the stream. At 1920x1080 and
+1600x900 every Live visual is on the first screen (`check_first_screen`). To fit 1600x900 some
+subtitles are hidden at that width (pitch, Perimeter Lock, rhythm, gauges, shot quality); their
+captions, aria labels and tables stay, and the pitch's caption card returns when the screen is at
+least 1000 px tall. Below 1600 px the layout is unchanged.
 
 ### V5 Pinned-in-own-half gauges (Live, ADAPT of "Territorial Stress")
 - **Question:** how long has each side been pinned back?
@@ -141,6 +154,9 @@ on any number that is neither.
   above; `check_consistency` compares each visual with the engine output (crosshair lane = the
   verified claim's lane for all 20 pairs and the Live cards; shot blocks = the claim window's shots
   and xG; gauges at full time = the spell totals; arrow count and width order = the pass counts;
-  pizza = an independent percentile computation); the mutation proof changes one visual's data in
-  a throwaway copy and shows the matching check fails. `tests/test_visuals_consistency.py` runs
+  pizza = an independent percentile computation); the routes are checked in the default view and
+  after "Show all routes"; the mutation proof changes one visual's data in a throwaway copy and
+  shows the matching check fails (six mutations, one of them aimed at the default route view).
+  `check_first_screen` asserts every Live visual is whole on the first screen at 1920x1080 and
+  1600x900 with no overlapping text. `tests/test_visuals_consistency.py` runs
   the proof in the slow suite.

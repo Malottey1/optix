@@ -1,5 +1,49 @@
 # Progress log
 
+## Visuals polish (branch `ui-visuals-polish`, from `ui-visuals` = main 32730c4)
+
+Green start: default suite 168 passed; `npm run build` ok.
+
+### Polish decisions
+
+- **Wide breakpoint:** `wide` = 1600 px (`--breakpoint-wide: 100rem`). Below it nothing changes.
+- **Rhythm strip under the scrubber at wide widths:** the rhythm pulse shares the match's time axis,
+  so it runs full width under the transport instead of under the pitch; that is what makes the
+  first screen fit at 1600x900. Grid at wide: pitch | Perimeter Lock, gauges, momentum | shot
+  quality over the stream (rows `auto auto auto 1fr`, the widget wrappers use `display: contents`
+  so each panel is placed directly).
+- **Dropped at wide only, to fit 900 px:** the subtitles of the pitch, Perimeter Lock, rhythm,
+  gauges and shot panel; the gauges' first note sentence; the second sentence of the rhythm
+  caption. Captions, aria labels and the hidden tables keep the explanation. The pitch caption
+  card (the drawn insight's sentence, the same as the stream's top card) is hidden at wide unless
+  the screen is at least 1000 px tall, so it shows at 1920x1080. The pitch is capped to the
+  viewport height (`100vh - 560px`, `- 680px` with the caption card).
+- **Compacted at wide:** scoreboard padding and score size, gauge height, shot blocks (118 px max).
+- **Momentum chart** is not one of the required visuals (the tug-of-war bar in the scoreboard is);
+  at wide it sits under the gauges and starts on the first screen at 1080p.
+- **V4 default view:** the 8 busiest routes; "Show all routes (N)" restores the previous full set
+  (forward routes with at least 2 passes; every chance route). Bend 5% of the route length (was
+  12%) plus a 1.1-unit offset to the right of travel. Ties are broken by start zone, end zone,
+  then kind, in the page and in the Python check, so the top 8 are the same set in both.
+- **Arrowheads** are larger and drawn past the line end with a dark outline, so direction reads on
+  thick routes.
+
+### Test changes
+
+- `check_web.check_consistency`: the pass-route check runs on the default view (8 busiest routes)
+  and again after clicking "Show all routes"; each view must match the data in count, pass counts
+  and width order. Not weakened: the full set is still checked, and the default view is new.
+- `check_web.MUTATIONS`: new "routes default view" mutation (the busiest route +3 passes per player)
+  that must fail the default view; the "routes" mutation must now fail the full view. Mutation
+  copies are refreshed from the current build each run (a reused copy could serve a stale build).
+- New `check_web.check_first_screen`: at 1920x1080 and 1600x900 the Focus Pitch, Perimeter Lock,
+  tug-of-war bar, gauges, rhythm pulse, shot panel and the stream's header are wholly inside the
+  first viewport; no overlapping text; SVG text at least 11 px.
+- Enforced budgets (were only reported): replay p95 at most 20 ms, now measured at 1440x900 and at
+  1920x1080; initial JS under 250 KB gzip.
+- `tests/test_dashboard.py`: asserts the first-screen report, both route views and both frame runs.
+- Vitest: top-8 cut, tie order, and the lane offset of a route and its reverse.
+
 ## Visuals (branch `ui-visuals`, from `ui-v2`)
 
 Started 2026-10-22 18:23. Football-native visuals in web/, each drawing a metric or claim the
