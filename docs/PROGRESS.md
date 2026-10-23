@@ -125,6 +125,21 @@ Green start: default suite 239 passed, 2 skipped (azure_live); `npm run build` p
   web/public/brand/og-1200x630.jpg (110 KB, JPEG so it stays inside the 300 KB budget for shipped
   images).
 
+**Step 6 (provenance)**
+- design/ASSETS.md lists every shipped asset: its source ("author's own photos and prompts,
+  AI-assisted; AI tool terms to be confirmed by the author"), the script that made it, the audit
+  result, and the fonts (Inter and Barlow Condensed, OFL 1.1). The icons and drawings were made for
+  this project.
+- The originals carry eXIf and iTXt chunks. The derivatives carry none, because every raster is
+  rebuilt from pixel data. tests/test_brand_assets.py (default suite) reads each file's container
+  (PNG chunks, WebP RIFF chunks, JPEG markers) for EXIF, XMP, ICC and text. The detector was proven
+  on scratch files carrying EXIF and text. The test also checks:
+  - the 300 KB budget per file (hero 220/90 KB);
+  - that the brand set is complete;
+  - transparent corners on crests and kits;
+  - the social image sizes and GitHub's 1 MB cap;
+  - that no original, review crop or players-trio file is tracked.
+
 ## Cleanup (branch `ui-visuals-fixes`, from main 1afdc0d)
 
 Green start: default suite 234 passed, 2 skipped (azure_live). Each task is its own commit.
