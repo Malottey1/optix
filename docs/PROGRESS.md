@@ -1,5 +1,35 @@
 # Progress log
 
+## Azure integration (branch `ui-visuals-azure`, from main 1a5e875)
+
+Green start: default suite 168 passed; `npm run build` ok. Each step below is its own commit.
+
+### Azure decisions
+
+**Step A (housekeeping, no number changes)**
+- **NOR -> NTG:** a mechanical rename over every tracked text file (codes `NOR` -> `NTG`, ids
+  `t_nor` -> `t_ntg`, `NOR_07` -> `NTG_07`, lowercase identifiers such as `nor_` in generator and
+  tests). The team name "Northgate Town" stays. Old screenshot folders (docs/screens, screens-v2)
+  are history and keep the old label; docs/screens-v3 is regenerated. One historical note that
+  explains *why* NOR was a problem keeps the old code.
+- **Why ordering cannot change:** no seed, hash or RNG stream depends on a team code or id (seeds
+  are integers, teams are iterated in config order AUR, NTG, CAL, VES, HAR), and in the full league
+  no code sorts between NOR and NTG (the next is OKP), so every sorted list keeps its order. The
+  equivalence proof (below, "A1 equivalence proof") measured it.
+- **Stale local season data:** `data/generated/` is gitignored. The first re-export of web data
+  after the rename used a stale local copy (still `t_nor`), so the two pre-match preview insights
+  could not join and the replay dropped from 35 to 33 insights. Regenerating `data/generated` with
+  `python -m data_gen.generate --seed 2026` (which also rewrote `data/showcase/` byte for byte
+  identical to the committed renamed files) restored all 35. The A commit carries the corrected export.
+- **"0x" wording:** a template variant chosen on a value (`agents/narrative.VARIANTS`):
+  `forward_passes.wide_low_threat` with `pass_quality_ratio == 0` renders
+  `forward_passes.wide_low_threat.none` ("not one of them reached a central danger zone"). Every
+  other multiplier reads "{ratio} times" / "veces" / "fois" instead of a glued "x".
+- **"la mayoría, 19,3 %":** the parenthesis is the league average, so it now says so in all three
+  languages ("league average", "media de la liga:", "moyenne de la ligue :"), not "most teams".
+- Tests: `test_no_template_glues_a_multiplier_x_to_a_number`,
+  `test_the_league_average_is_never_called_most_teams`, `test_a_zero_pass_quality_reads_not_one_of_them`.
+
 ## Visuals polish (branch `ui-visuals-polish`, from `ui-visuals` = main 32730c4)
 
 Green start: default suite 168 passed; `npm run build` ok.
@@ -1070,10 +1100,12 @@ Nothing was cut from the priority list.
   football register (e.g. "field tilt" is kept as a loan term in es/fr analyst mode).
 - When a volume passer has no forward pass into a central danger zone, the sentence reads "pass
   quality 0x the league rate". True, but a "none of them" phrasing would read better; it needs a
-  template variant chosen on a value, which I did not add.
+  template variant chosen on a value, which I did not add. (Resolved later: a value-chosen variant,
+  see "Azure decisions".)
 - tests/test_dashboard.py skips at import when Playwright is missing, so a default run without
   requirements-ui.txt reports "1 skipped". Harmless, but it could move to a conftest hook if a clean
   "0 skipped" matters.
-- The original code `NTG` is also a common abbreviation of a real club's name. CLAUDE.md forbids real
+- The original code `NOR` is also a common abbreviation of a real club's name. CLAUDE.md forbids real
   trademarks; a 3-letter code is probably fine, but I did not rename an existing team (that would change
-  the small league and the showcase). Worth a human decision.
+  the small league and the showcase). Worth a human decision. (Resolved later: renamed to `NTG`, see
+  "Azure decisions".)

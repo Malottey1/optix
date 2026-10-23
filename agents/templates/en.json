@@ -21,11 +21,11 @@
   },
   "matchup.weak_flank": {
     "analyst": "{attacker} send {attack_share}% of final-third entries down the {lane_label} (league {league_share}%), and {defender} let {concede_completion}% of entries there succeed (league {league_completion}%).",
-    "casual": "Watch the {lane_label}: {attacker} attack it {attack_share}% of the time (most teams {league_share}%), and {concede_completion}% of attacks there work against {defender} (usually {league_completion}%)."
+    "casual": "Watch the {lane_label}: {attacker} attack it {attack_share}% of the time (league average {league_share}%), and {concede_completion}% of attacks there work against {defender} (usually {league_completion}%)."
   },
   "matchup.weak_lane": {
     "analyst": "{attacker} send {attack_share}% of final-third entries into the {lane_label} (league {league_share}%), and {defender} let {concede_completion}% of entries there succeed (league {league_completion}%).",
-    "casual": "Watch the {lane_label}: {attacker} go through it {attack_share}% of the time (most teams {league_share}%), and {concede_completion}% of attacks there work against {defender} (usually {league_completion}%)."
+    "casual": "Watch the {lane_label}: {attacker} go through it {attack_share}% of the time (league average {league_share}%), and {concede_completion}% of attacks there work against {defender} (usually {league_completion}%)."
   },
   "field_tilt.stat": {
     "analyst": "{team} hold {amount}% field tilt in this spell.",
@@ -59,8 +59,12 @@
     "analyst": "{player} ({team}) has completed {amount} forward passes.",
     "casual": "{player} keeps moving {team} forward: {amount} forward passes so far."
   },
+  "forward_passes.wide_low_threat.none": {
+    "analyst": "{player} ({team}): {amount} forward passes, mostly wide; pass quality {pass_quality_ratio}: not one of them reached a central danger zone.",
+    "casual": "{player} plays plenty of forward passes ({amount}), but mostly out wide, and not one of them found a dangerous central area (pass quality {pass_quality_ratio})."
+  },
   "forward_passes.wide_low_threat": {
-    "analyst": "{player} ({team}): {amount} forward passes, mostly wide; pass quality {pass_quality_ratio}x the league rate into central danger zones.",
+    "analyst": "{player} ({team}): {amount} forward passes, mostly wide; pass quality {pass_quality_ratio} times the league rate into central danger zones.",
     "casual": "{player} plays plenty of forward passes ({amount}), but mostly out wide, finding dangerous central areas at {pass_quality_ratio} times the league rate."
   },
   "ppda.stat": {

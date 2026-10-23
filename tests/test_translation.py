@@ -130,3 +130,38 @@ def test_personalize_cli_lines(stream):
     s, _ = stream
     out = lines(s.insights, UserProfile(mode="casual", language="fr", favorite_club="NTG"))
     assert len(out) == len(s.insights) and any("[context:" in x for x in out)
+
+
+def test_no_template_glues_a_multiplier_x_to_a_number():
+    """'0.22x' reads like a hex prefix ('0x'); ratios are written out ('0.22 times')."""
+    for lang in languages():
+        for key, tones in templates(lang).items():
+            for tone, text in tones.items():
+                assert not re.search(r"\}[x×]", text), (lang, key, tone, text)
+    for lang, word in (("en", "times"), ("es", "veces"), ("fr", "fois")):
+        out = render("forward_passes.wide_low_threat", {"player": "P", "team": "NTG", "amount": 358,
+                                                        "pass_quality_ratio": 0.22}, lang)
+        for text in out.values():
+            assert not re.search(r"\d[x×]", text) and f" {word} " in text, (lang, text)
+
+
+def test_the_league_average_is_never_called_most_teams():
+    """A league share (19.3 %) is an average, not 'the majority' / 'most teams'."""
+    bad = {"en": ("most teams",), "es": ("la mayoría,",), "fr": ("la plupart des équipes",)}
+    params = {"attacker": "AUR", "defender": "NTG", "lane": "left_flank", "attack_share": 32.7, "league_share": 19.3,
+              "concede_completion": 71.5, "league_completion": 62.4}
+    for lang, phrases in bad.items():
+        for key in ("matchup.weak_lane", "matchup.weak_flank"):
+            for text in render(key, params, lang).values():
+                assert not any(p in text for p in phrases), (lang, key, text)
+    es = render("matchup.weak_lane", params, "es")["casual"]
+    assert "(media de la liga: 19,3 %)" in es, es
+
+
+def test_a_zero_pass_quality_reads_not_one_of_them():
+    params = {"player": "P", "team": "NTG", "amount": 358, "pass_quality_ratio": 0}
+    for lang, word in (("en", "not one of them"), ("es", "ninguno"), ("fr", "aucune")):
+        out = render("forward_passes.wide_low_threat", params, lang)
+        for text in out.values():
+            assert word in text and not number_guard(text, params, lang) and not re.search(r"\d[x×]", text), text
+    assert "not one" not in render("forward_passes.wide_low_threat", {**params, "pass_quality_ratio": 0.22}, "en")["analyst"]

@@ -21,11 +21,11 @@
   },
   "matchup.weak_flank": {
     "analyst": "{attacker} envía el {attack_share} % de sus entradas al último tercio por el {lane_label} (media de la liga {league_share} %), y {defender} permite que el {concede_completion} % de las entradas por ahí salgan bien (liga {league_completion} %).",
-    "casual": "Ojo al {lane_label}: {attacker} ataca por ahí el {attack_share} % de las veces (la mayoría, {league_share} %), y contra {defender} funciona el {concede_completion} % de esos ataques (lo normal, {league_completion} %)."
+    "casual": "Ojo al {lane_label}: {attacker} ataca por ahí el {attack_share} % de las veces (media de la liga: {league_share} %), y contra {defender} funciona el {concede_completion} % de esos ataques (lo normal, {league_completion} %)."
   },
   "matchup.weak_lane": {
     "analyst": "{attacker} envía el {attack_share} % de sus entradas al último tercio hacia el {lane_label} (media de la liga {league_share} %), y {defender} permite que el {concede_completion} % de las entradas por ahí salgan bien (liga {league_completion} %).",
-    "casual": "Ojo al {lane_label}: {attacker} entra por ahí el {attack_share} % de las veces (la mayoría, {league_share} %), y contra {defender} funciona el {concede_completion} % de esos ataques (lo normal, {league_completion} %)."
+    "casual": "Ojo al {lane_label}: {attacker} entra por ahí el {attack_share} % de las veces (media de la liga: {league_share} %), y contra {defender} funciona el {concede_completion} % de esos ataques (lo normal, {league_completion} %)."
   },
   "field_tilt.stat": {
     "analyst": "{team} tiene un {amount} % de dominio territorial (field tilt) en este tramo.",
@@ -59,8 +59,12 @@
     "analyst": "{player} ({team}) ha completado {amount} pases hacia delante.",
     "casual": "{player} hace avanzar a {team}: {amount} pases hacia delante hasta ahora."
   },
+  "forward_passes.wide_low_threat.none": {
+    "analyst": "{player} ({team}): {amount} pases hacia delante, casi todos a banda; calidad de pase {pass_quality_ratio}: ninguno llegó a una zona central de peligro.",
+    "casual": "{player} da muchos pases hacia delante ({amount}), pero casi siempre a banda, y ninguno llegó a una zona central peligrosa (calidad de pase {pass_quality_ratio})."
+  },
   "forward_passes.wide_low_threat": {
-    "analyst": "{player} ({team}): {amount} pases hacia delante, casi todos a banda; calidad de pase {pass_quality_ratio}x la de la liga hacia zonas centrales de peligro.",
+    "analyst": "{player} ({team}): {amount} pases hacia delante, casi todos a banda; calidad de pase {pass_quality_ratio} veces la de la liga hacia zonas centrales de peligro.",
     "casual": "{player} da muchos pases hacia delante ({amount}), pero casi siempre a banda: llega a zonas centrales peligrosas {pass_quality_ratio} veces lo que la media de la liga."
   },
   "ppda.stat": {

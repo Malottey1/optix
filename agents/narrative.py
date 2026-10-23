@@ -72,8 +72,21 @@ def number_guard(text: str, params: dict, language: str = "en") -> list:
     return problems
 
 
+# A template variant chosen on a value: (param, value) -> the variant's key suffix. A volume passer
+# with no forward pass into a central danger zone reads "not one of them", not "0 times the league".
+VARIANTS = {"forward_passes.wide_low_threat": ("pass_quality_ratio", 0, ".none")}
+
+
+def template_for(template_key: str, params: dict) -> str:
+    """The template key to fill: the claim's own key, or its value-chosen variant."""
+    v = VARIANTS.get(template_key)
+    if v and params.get(v[0]) == v[1]:
+        return template_key + v[2]
+    return template_key
+
+
 def render(template_key: str, params: dict, language: str) -> dict:
-    t = templates(language)[template_key]
+    t = templates(language)[template_for(template_key, params)]
     values = {k: fmt(v, language) for k, v in params.items()}
     if "lane" in params:
         values["lane_label"] = labels(language)["lane"][params["lane"]]
