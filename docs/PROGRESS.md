@@ -30,6 +30,25 @@ Green start: default suite 168 passed; `npm run build` ok. Each step below is it
 - Tests: `test_no_template_glues_a_multiplier_x_to_a_number`,
   `test_the_league_average_is_never_called_most_teams`, `test_a_zero_pass_quality_reads_not_one_of_them`.
 
+**A1 equivalence proof.** Every measurement ran twice, serially, from clean git worktrees:
+pre-rename main (1a5e875) and the rename commit alone (f9e3766, before any template change). The
+"before" outputs were normalised (`NOR` -> `NTG`, `t_nor` -> `t_ntg`, `nor_` -> `ntg_`), and only
+wall-clock fields were dropped (latency ms, `verified_at`, log timestamps, seconds taken).
+- **Byte-identical after normalising (25 files):** generated season, all 8 tables plus ground
+  truth; showcase match, all 8 tables plus ground truth; the showcase stream (insights, claims,
+  timeline, ui.json, agent log; 35 insights, 10 blocked attempts revised, 0 dropped);
+  realism.md (seed 2026); robustness.json (10 small leagues, 5 full leagues, 3 showcase searches);
+  verifier recall (recall.json for 5 leagues, recall.md).
+- **robustness.md** differs only in the "gen s" and "search time s" timing columns.
+- Regenerating `data/showcase` from the renamed generator reproduced the committed renamed CSVs
+  byte for byte.
+- **The robustness tool was already broken on main:** since 09c3836, `tools/robustness.py` imports
+  `tests.test_verifier_full._counts`, which no longer exists, and it fails in its full-league part.
+  For the proof, a scratch wrapper (not committed) ran it in one process with that one helper
+  stubbed. The verifier part of robustness is therefore empty in both runs; verifier recall is
+  measured in full by `tools/verifier_recall.py`, and that is identical. I did not fix the tool;
+  it is listed as an open issue.
+
 **Dependencies.** `requirements-azure.txt`, exact pins each released at least two weeks before
 2026-10-22 (checked on PyPI): agent-framework-core 1.20.0 (2026-10-02; 1.21.0 came out on the
 cut-off day, so I took the previous one), openai 3.24.0, azure-identity 1.26.0, OpenTelemetry
