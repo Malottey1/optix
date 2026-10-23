@@ -122,3 +122,18 @@ def test_runner_writes_stream_claims_and_logs(paths, tmp_path, insight_validator
     logs = [json.loads(line) for line in (out.parent / "agent_log.jsonl").read_text().splitlines()]
     assert {r["agent"] for r in logs} >= {"analyst", "verifier", "narrative", "orchestrator", "stream"}
     assert "insights ->" in capsys.readouterr().out
+
+
+def test_two_exports_are_byte_identical_and_runtime_fields_are_kept_aside(paths, tmp_path):
+    files = ("insights.jsonl", "claims.jsonl", "timeline.json", "ui.json")
+    for n in (1, 2):
+        run_main(["--match", MID, "--data", str(paths / "showcase"), "--season", str(paths / "season"),
+                  "--out", str(tmp_path / str(n) / "insights.jsonl")])
+    for f in files:
+        assert (tmp_path / "1" / f).read_bytes() == (tmp_path / "2" / f).read_bytes(), f
+    rows = [json.loads(line) for line in (tmp_path / "1" / "insights.jsonl").read_text().splitlines()]
+    assert all(r["clock"]["emitted_latency_ms"] is None for r in rows)
+    runtime = [json.loads(line) for line in (tmp_path / "1" / "runtime.jsonl").read_text().splitlines()]
+    lat = [r["emitted_latency_ms"] for r in runtime if r["kind"] == "insight"]
+    assert len(lat) == len(rows) and all(isinstance(x, int) and x < LATENCY_BUDGET_MS for x in lat)
+    assert all(r["verified_at"] for r in runtime if r["kind"] == "attempt")

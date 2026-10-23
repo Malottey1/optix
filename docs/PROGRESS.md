@@ -1,5 +1,25 @@
 # Progress log
 
+## Cleanup (branch `ui-visuals-fixes`, from main 1afdc0d)
+
+Green start: default suite 234 passed, 2 skipped (azure_live). Each task is its own commit.
+
+### Cleanup decisions
+
+**Task 2 (deterministic exports)**
+- Chose "exclude, keep aside" over a fixed clock: a frozen `verified_at` would be a made-up wall
+  time. `run_match` now moves `clock.emitted_latency_ms` (per insight) and
+  `verification.verified_at` (per attempt) into `runtime.jsonl` next to `--out` (out/ is
+  gitignored) and writes `null` in the exported files; both fields are nullable in the contracts.
+  `--keep-runtime-fields` restores the old inline behaviour.
+- Two consecutive exports give byte-identical insights.jsonl, claims.jsonl, timeline.json and
+  ui.json (checked by hand and by `test_two_exports_are_byte_identical_and_runtime_fields_are_kept_aside`,
+  which also checks the latency budget on the runtime values). The number-trace, golden-equality,
+  workflow and service tests pass on the re-exported data. The dashboard does not display latency
+  or `verified_at`, so nothing on screen changes.
+- The agent log (`out/agent_log.jsonl`) keeps its timestamps: it is a runtime log and is not
+  committed.
+
 ## Azure integration (branch `ui-visuals-azure`, from main 1a5e875)
 
 Green start: default suite 168 passed; `npm run build` ok. Each step below is its own commit.

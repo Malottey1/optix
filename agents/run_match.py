@@ -2,7 +2,8 @@
 
     python -m agents.run_match --match m_showcase --out out/insights.jsonl
 
-Also writes, next to --out: claims.jsonl (every verification attempt of every published claim),
+Also writes, next to --out: runtime.jsonl (wall-clock fields: latency per insight, verified_at per
+attempt; the exported files carry null there, see --keep-runtime-fields), claims.jsonl (every verification attempt of every published claim),
 timeline.json (teams, players, goals and the engine's per-minute momentum, for the dashboard),
 ui.json (team, player, ledger and report data for the dashboard, agents/dashboard_data.py) and
 agent_log.jsonl (structured logs). Data: --data (match directory, default data/showcase) with the
@@ -57,6 +58,23 @@ def timeline(ds, match_id) -> dict:
             "goals": goals, "players": players}
 
 
+def split_runtime_fields(insights: list, attempts: list) -> list:
+    """Move the wall-clock fields out of the exported stream (in place) and return them as rows for
+    runtime.jsonl: each insight's emitted_latency_ms and each attempt's verified_at become null in
+    the export (both are nullable in the contracts), so two exports of the same match are
+    byte-identical. The measured values stay available in runtime.jsonl."""
+    rows = []
+    for i in insights:
+        rows.append({"kind": "insight", "insight_id": i["insight_id"], "claim_id": i["claim_id"],
+                     "emitted_latency_ms": i["clock"]["emitted_latency_ms"]})
+        i["clock"]["emitted_latency_ms"] = None
+    for x in attempts:
+        v = x["claim"]["verification"]
+        rows.append({"kind": "attempt", "claim_id": x["claim"]["claim_id"], "verified_at": v.get("verified_at")})
+        v["verified_at"] = None
+    return rows
+
+
 def make_phraser(kind: str, ds):
     """The phraser for --phraser: TemplatePhraser, or AzureOpenAIPhraser (live when the Azure
     settings are present, else replaying data/phrasing-cache/ only)."""
@@ -82,6 +100,9 @@ def main(argv=None):
     ap.add_argument("--engine", choices=("direct", "workflow"), default="direct",
                     help="direct pipeline (default) or the Microsoft Agent Framework workflow (agents/workflow.py)")
     ap.add_argument("--audit", default=None, help="append one hash-chained record per publication to this JSONL file")
+    ap.add_argument("--keep-runtime-fields", action="store_true",
+                    help="keep wall-clock fields (emitted_latency_ms, verified_at) inline; by default they move "
+                         "to runtime.jsonl next to --out so the exported files are byte-identical run to run")
     a = ap.parse_args(argv)
     load_env()
     out = Path(a.out)
@@ -94,6 +115,9 @@ def main(argv=None):
     stream = InsightStream(ds, a.match, log=log, languages=tuple(a.languages.split(",")),
                            phraser=make_phraser(a.phraser, ds), engine=a.engine, audit=audit)
     insights = stream.run()
+    lat = [i["clock"]["emitted_latency_ms"] for i in insights]
+    if not a.keep_runtime_fields:
+        write_jsonl(out.parent / "runtime.jsonl", split_runtime_fields(insights, stream.attempts()))
     write_jsonl(out, insights)
     write_jsonl(out.parent / "claims.jsonl", stream.attempts())
     (out.parent / "timeline.json").write_text(json.dumps(timeline(ds, a.match), ensure_ascii=False, sort_keys=True),
@@ -101,7 +125,6 @@ def main(argv=None):
     attempts = {x["claim"]["claim_id"]: x for x in stream.attempts()}
     ui = dashboard_data.build(ds, ds.baseline, a.match, insights, attempts)
     (out.parent / "ui.json").write_text(json.dumps(ui, ensure_ascii=False, sort_keys=True, separators=(",", ":")), encoding="utf-8")
-    lat = [i["clock"]["emitted_latency_ms"] for i in insights]
     blocked = sum(1 for x in stream.attempts() if x["claim"]["verification"]["status"] == "blocked")
     print(f"{len(insights)} insights -> {out} ({blocked} blocked attempts revised, "
           f"{len(stream.orc.state.dropped)} claims dropped)")

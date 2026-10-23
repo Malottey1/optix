@@ -74,7 +74,7 @@ pip install -r requirements-ui.txt && python -m tools.check_web     # headless g
 
 What you get: `out/insights.jsonl` (timed insights, contracts/insight.schema.json), `out/claims.jsonl`
 (every verification attempt, including blocked ones), `out/timeline.json` and `out/agent_log.jsonl`
-(structured logs), `out/ui.json` (team, player, ledger and report data for the dashboard). Architecture: `docs/ARCHITECTURE.md`. Engine and Verifier: `docs/engine.md`.
+(structured logs), `out/ui.json` (team, player, ledger and report data for the dashboard) and `out/runtime.jsonl` (wall-clock fields: latency per insight, `verified_at` per attempt; the exported files carry `null` there so two exports are byte-identical; `--keep-runtime-fields` keeps them inline). Architecture: `docs/ARCHITECTURE.md`. Engine and Verifier: `docs/engine.md`.
 Dashboard (stack, pages, checks): `docs/dashboard.md`. Visuals (what each draws, formula, caveats, skipped ones): `docs/visuals.md`.
 
 ## Microsoft and Azure: status
