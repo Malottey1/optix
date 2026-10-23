@@ -37,6 +37,12 @@ Green start: default suite 234 passed, 2 skipped (azure_live). Each task is its 
   or an unfinished run leave them "built, not verified live". The live-service rows can never get
   this state.
 
+**Task 4 (known limitations)**
+- docs/known-limitations.md: the heuristic language check, no Event Hubs adapter, the Azure client
+  and App Insights not verified live (worded against docs/AZURE.md so it stays true if the status
+  changes), deployment never exercised, the NOR label in the old screenshot folders, the stale
+  section 4 of docs/robustness.md, and the null wall-clock fields in exports. Linked from the README.
+
 **Task 2 (deterministic exports)**
 - Chose "exclude, keep aside" over a fixed clock: a frozen `verified_at` would be a made-up wall
   time. `run_match` now moves `clock.emitted_latency_ms` (per insight) and
