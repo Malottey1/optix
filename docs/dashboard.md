@@ -1,3 +1,5 @@
+<img src="../web/public/brand/optix-logo.svg" alt="Optix" width="140" />
+
 # Dashboard
 
 The current dashboard is `web/`: Vite, React and TypeScript. It replays the showcase match on a clock

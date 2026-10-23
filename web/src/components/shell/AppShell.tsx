@@ -53,11 +53,11 @@ export function AppShell({ children }: { children: ReactNode }) {
       </a>
       <header className="sticky top-0 z-40 border-b border-line bg-bg/85 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-[1680px] items-center gap-4 px-4 sm:px-6">
-          <NavLink to="/live" className="flex min-w-0 items-center gap-2.5 rounded-lg">
-            <Logo />
-            <span className="min-w-0">
-              <span className="block text-[17px] font-bold leading-none tracking-tight text-ink">Optix</span>
-              <span className="mt-1 hidden truncate text-[11.5px] text-ink-3 sm:block">{t("brand_sub")}</span>
+          <NavLink to="/" end data-route="home" className="flex min-w-0 items-center gap-3 rounded-lg">
+            <Logo variant="wordmark" className="h-9 w-auto text-accent" />
+            <span className="sr-only">Optix, {t("nav_home")}</span>
+            <span className="mt-2 hidden min-w-0 truncate border-l border-line pl-3 text-[11.5px] leading-tight text-ink-3 sm:block">
+              {t("brand_sub")}
             </span>
           </NavLink>
           <nav aria-label="Main" className="ml-6 hidden items-center gap-1 lg:flex">

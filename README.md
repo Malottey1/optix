@@ -1,3 +1,10 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="web/public/brand/optix-logo-accent.svg" />
+    <img src="web/public/brand/optix-logo.svg" alt="Optix" width="220" />
+  </picture>
+</p>
+
 # Optix
 
 **We explain why a match is unfolding, and we catch stats that are true but misleading.**

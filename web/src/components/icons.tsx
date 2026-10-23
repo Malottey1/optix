@@ -1,5 +1,6 @@
 // Inline SVG icons (no icon font, no emoji). Decorative: aria-hidden; the control carries the label.
 import { cx } from "../lib/cx";
+import { MARK, WORDMARK } from "./brand/logoPaths";
 
 const PATHS = {
   live: "M12 9.2a2.8 2.8 0 1 0 0 5.6 2.8 2.8 0 0 0 0-5.6ZM5.6 5.6a9 9 0 0 0 0 12.8M18.4 5.6a9 9 0 0 1 0 12.8M8.5 8.5a5 5 0 0 0 0 7M15.5 8.5a5 5 0 0 1 0 7",
@@ -56,13 +57,14 @@ export function Icon({
   );
 }
 
-export function Logo({ className }: { className?: string }) {
+/** The traced Optix logo (tools/make_brand_assets.py), drawn inline so it takes currentColor. */
+export function Logo({ variant = "mark", className }: { variant?: "mark" | "wordmark"; className?: string }) {
+  const logo = variant === "mark" ? MARK : WORDMARK;
   return (
-    <svg viewBox="0 0 32 32" aria-hidden="true" className={cx("shrink-0", className ?? "h-8 w-8")}>
-      <rect width="32" height="32" rx="9" fill="var(--surface-3)" />
-      <circle cx="16" cy="16" r="8.5" fill="none" stroke="var(--accent)" strokeWidth="2.6" />
-      <path d="M16 7.5v5M16 19.5v5M7.5 16h5M19.5 16h5" stroke="var(--accent)" strokeWidth="1.6" opacity="0.55" />
-      <circle cx="16" cy="16" r="2.8" fill="var(--ink)" />
+    <svg viewBox={logo.viewBox} aria-hidden="true" fill="currentColor" className={cx("shrink-0", className)}>
+      {logo.paths.map((p, i) => (
+        <path key={i} d={p.d} transform={`translate(${p.t})`} />
+      ))}
     </svg>
   );
 }

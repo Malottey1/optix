@@ -30,6 +30,24 @@ Green start: default suite 239 passed, 2 skipped (azure_live); `npm run build` p
 - kit-sheet is not altered: no maker marks found. Concerns (NTG crest text "ORTHGATE TOW"/"NTS",
   resemblance notes) are in docs/brand-audit.md.
 
+**Step 2 (logo and icons)**
+- Both logos traced with vtracer (binary, spline) from a 50% threshold of the originals:
+  optix-mark.svg (3 paths) and optix-logo.svg (7 paths) with `fill="currentColor"`, plus `-accent`
+  files filled with the --accent value (#37e6a8; an SVG used as `<img>` cannot read CSS variables).
+  The same paths go to web/src/components/brand/logoPaths.ts, so the header draws the wordmark inline
+  in the accent and the icon set needs no runtime request.
+- Checked on the dark background at 16, 32, 64 and 256 px (design/review/logo-check-dark.png): the
+  arrow is a smudge at 16 px and a hairline at 32 px. **Favicons below 64 px use a small-size variant
+  without the arrow**, with the O and X strokes thickened (dilated by 31 px at source scale) and
+  filling the tile. From 180 px up the full mark with the arrow is used. All icons sit on a dark
+  rounded tile (--bg), so they also read on light browser chrome.
+- favicon.ico holds 16/32/48. The PNGs are 16/32/48, apple-touch-icon 180 (opaque) and 192/512, plus
+  manifest.webmanifest. Every raster is rebuilt from pixel data before saving, so no metadata is
+  carried over.
+- The header brand now links to #/ (Home, Step 4) and shows the wordmark. The README and
+  docs/dashboard.md show the logo (black on light, the accent on dark through `<picture>` in the
+  README).
+
 ## Cleanup (branch `ui-visuals-fixes`, from main 1afdc0d)
 
 Green start: default suite 234 passed, 2 skipped (azure_live). Each task is its own commit.

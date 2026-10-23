@@ -3,3 +3,4 @@ node_modules
 public/data
 package-lock.json
 src/types/generated
+src/components/brand/logoPaths.ts
