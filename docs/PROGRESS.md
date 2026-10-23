@@ -107,6 +107,24 @@ Green start: default suite 239 passed, 2 skipped (azure_live); `npm run build` p
   requires). A Vitest test checks that Home is the default route, that the proof values equal the
   ledger and stay the same in French, the hero attributes, and alt plus width/height on every image.
 
+**Step 5 (social and submission images)**
+- tools/make_brand_images.py writes each HTML template to a temp file and screenshots it with the
+  project's Chromium (chromium_path; no `playwright install`, no network). Fonts and images are read
+  from local files. The first try used set_content; from about:blank the local images and fonts did
+  not load, so the templates are now written to file:// pages.
+- design/social/:
+  - github-social 1280x640 (563 KB, under GitHub's 1 MB);
+  - og 1200x630;
+  - devpost 1500x1000 (3:2);
+  - video title card and end card, 1920x1080. The end card shows github.com/Malottey1/optix as text.
+- Looked at each card. The title card's eyebrow says "Synthetic match insights engine", not the
+  hackathon's name. A 256-colour palette for files over 1 MB banded the gradients badly, so it is
+  used only where a hard limit requires it (the GitHub card, which fits without it). The devpost
+  card (1.2 MB) and the title card (1.1 MB) stay full-colour PNG.
+- og/twitter meta tags in web/index.html with relative URLs. The image is
+  web/public/brand/og-1200x630.jpg (110 KB, JPEG so it stays inside the 300 KB budget for shipped
+  images).
+
 ## Cleanup (branch `ui-visuals-fixes`, from main 1afdc0d)
 
 Green start: default suite 234 passed, 2 skipped (azure_live). Each task is its own commit.
