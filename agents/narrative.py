@@ -12,6 +12,7 @@ import json
 import re
 from pathlib import Path
 
+from . import telemetry
 from .messages import RenderedText
 
 TEMPLATES_DIR = Path(__file__).resolve().parent / "templates"
@@ -96,20 +97,29 @@ def render(template_key: str, params: dict, language: str) -> dict:
 class NarrativeAgent:
     name = "narrative"
 
-    def __init__(self, log, languages_: tuple = ("en",)):
+    def __init__(self, log, languages_: tuple = ("en",), phraser=None):
+        from .phraser import TemplatePhraser
         self.log, self.languages = log, tuple(languages_)
+        self.phraser = phraser or TemplatePhraser()      # agents/phraser.py; the template is the default
+        self.last_phrase = None
 
     def write(self, claim: dict) -> RenderedText:
-        """Render a verified (published) claim in every configured language and tone."""
+        """Render a verified (published) claim in every configured language and tone. The phraser
+        only words it; the number guard then runs again on every sentence, whoever wrote it."""
         if claim["verification"]["status"] not in ("published", "published_with_context"):
             raise ValueError("only verified claims are narrated")
         key, params = claim["template_key"], claim["params"]
-        rendered, problems = {}, []
-        for lang in self.languages:
-            rendered[lang] = render(key, params, lang)
-            for tone, text in rendered[lang].items():
-                problems += [f"{lang}/{tone}: {p}" for p in number_guard(text, params, lang)]
-        ok = not problems
+        with telemetry.span("phraser.call", claim_id=claim["claim_id"], phraser=self.phraser.name) as put:
+            res = self.phraser.phrase(claim, self.languages)
+            rendered, problems = res.rendered, []
+            for lang in self.languages:
+                for tone, text in rendered[lang].items():
+                    problems += [f"{lang}/{tone}: {p}" for p in number_guard(text, params, lang)]
+            ok = not problems
+            put(source=res.source, guard_rejected=sorted(res.guard_rejected), number_guard_passed=ok,
+                guard_result="fallback" if res.guard_rejected else "accepted")
+        self.last_phrase = res
         self.log(self.name, "rendered", claim_id=claim["claim_id"], template_key=key,
-                 languages=list(self.languages), number_guard_passed=ok, problems=problems)
+                 languages=list(self.languages), number_guard_passed=ok, problems=problems,
+                 phraser=res.phraser, phrase_source=res.source, guard_rejected=res.guard_rejected)
         return RenderedText(key, dict(params), rendered, ok)

@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from engine.verifier import verdict, verify
 
+from . import telemetry
 from .messages import VerificationResult
 
 
@@ -19,10 +20,12 @@ class VerifierAgent:
 
     def check(self, proposal, state) -> VerificationResult:
         ds = self.season if proposal.dataset == "season" else state.view(self.ds)
-        out = verify(proposal.claim, ds)
-        v = verdict(proposal.claim, ds)
+        with telemetry.span("verifier.check", claim_id=proposal.claim["claim_id"], attempt=proposal.attempt) as put:
+            out = verify(proposal.claim, ds)
+            v = verdict(proposal.claim, ds)
+            ver = out["verification"]
+            put(status=ver["status"], fact_check=ver["fact_check"], rule_ids=ver["rule_ids"])
         res = VerificationResult(proposal, out, v)
-        ver = out["verification"]
         self.log(self.name, "verified", match_id=state.match_id, clock_sec=proposal.trigger_clock,
                  claim_id=out["claim_id"], attempt=ver["attempt"], status=ver["status"],
                  fact_check=ver["fact_check"], rule_ids=ver["rule_ids"], context_note=ver["context_note"],

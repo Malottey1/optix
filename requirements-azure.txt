@@ -1,0 +1,13 @@
+# Azure integration: phrasing model client, agent workflow, telemetry, the API service.
+# Exact pins, each released at least two weeks before it was added (2026-10-22). Not needed to run
+# the deterministic engine; the default pipeline and tests work without the Azure services.
+agent-framework-core==1.20.0
+openai==3.24.0
+azure-identity==1.26.0
+opentelemetry-api==1.44.0
+opentelemetry-sdk==1.44.0
+azure-monitor-opentelemetry-exporter==1.0.0b57
+fastapi==0.142.2
+uvicorn==0.54.0
+httpx==0.28.1
+pydantic==2.13.5

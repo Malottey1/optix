@@ -1,5 +1,6 @@
 # Default Python tests, then the web dashboard's lint, typecheck, unit tests and build.
-# No secrets; no deploy. The slow tests (multi-seed, full league, headless browser) stay local.
+# No secrets; no deploy; no live Azure calls (the azure_live tests skip without Azure settings, and
+# CI sets none). The slow tests (multi-seed, full league, headless browser) stay local.
 name: CI
 
 on:
@@ -17,7 +18,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
-      - run: python -m pip install -r requirements-dev.txt
+      - run: python -m pip install -r requirements-dev.txt -r requirements-azure.txt
       - run: python -m pytest -q
 
   web:

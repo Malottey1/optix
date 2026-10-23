@@ -56,7 +56,8 @@ the evidence drawer shows a foul's fouled player and a substitution's incoming p
 
 ## Agents
 
-Plain Python classes in `agents/`, run in-process by `agents.orchestrator.Orchestrator`. No agent
+Plain Python classes in `agents/`, run in-process by `agents.orchestrator.Orchestrator` (or as a
+Microsoft Agent Framework workflow, below). No agent
 computes a number: numbers come from `engine/` (metrics, claims, verifier); agents decide when to
 look, what to claim, how to revise and how to word it from templates.
 
@@ -67,6 +68,62 @@ look, what to claim, how to revise and how to word it from templates.
 | Verifier | `agents/verifier_agent.py` | `engine.verifier` on the claim object, against the season (preview) or the ingested events so far |
 | Narrative | `agents/narrative.py` | fills `agents/templates/<lang>.json` (analyst + casual per template_key) with the verified params; number guard |
 | Personalization | `agents/personalization.py` | selects from the stream by mode, language, favorite club, player focus, single metric; never regenerates |
+
+## Agent Framework workflow, phrasing layer, telemetry and audit
+
+The same agents can also run as a **Microsoft Agent Framework** workflow (`agents/workflow.py`,
+package `agent-framework-core`, `WorkflowBuilder` with typed messages and conditional edges):
+
+```mermaid
+flowchart LR
+  IN([EventBatch / Finish]) --> AN[Analyst executor]
+  AN -- Attempt --> VE[Verifier executor<br/>engine.verifier, deterministic<br/>tools: recompute_metric, fetch_evidence]
+  VE -- "Checked (blocked)<br/>conditional edge" --> AN
+  VE -- "Checked (approved)<br/>conditional edge" --> PH[Phraser executor<br/>template or Azure OpenAI<br/>+ output guard + number guard]
+  PH -- Phrased --> PU[Publisher executor<br/>insight, audit record]
+  PH -- "Next (dropped)" --> AN
+  PU -- Next --> AN
+  PU --> OUT([Published])
+```
+
+| Executor | Wraps | Decides |
+|---|---|---|
+| Analyst | `AnalystAgent` (+ Ingest) | which claims to propose; how to revise a blocked one (or drop it) |
+| Verifier | `VerifierAgent` -> `engine.verifier` | the verdict, in code. It calls two function tools (`recompute_metric`, `fetch_evidence`, `agent_framework.tool`) and logs their results; the tools are never given to a model |
+| Phraser | `NarrativeAgent` with a `Phraser` | only the wording: `TemplatePhraser` (default) or `AzureOpenAIPhraser` |
+| Publisher | `Orchestrator._publish` | nothing: records the publication (log, span, audit) and emits it |
+
+- One workflow run per ingested batch; the Analyst queues that batch's proposals and releases one
+  at a time (`Next`), so the order equals the direct pipeline's. With the template phraser the
+  stream, every attempt and every drop are identical (`tests/test_workflow.py`).
+- `python -m agents.run_match --engine workflow` runs it; `--engine direct` (default) keeps the
+  original orchestrator, used as the fallback and by the slow suites.
+
+**Phrasing layer** (`agents/phraser.py`, `agents/output_guard.py`). The model input is only the
+language-independent claim object (`model_input`: no evidence ids, no timestamps) plus the exact
+number strings each language must use; system prompt, temperature 0.2, JSON reply
+`{lang: sentence}`. The model writes only the viewer-facing "casual" tone; the "analyst" tone stays
+the exact template. Every reply passes the output guard per language: the number guard (every
+numeric param in that language's form, no other number), no team or player outside the claim, no
+prediction or betting phrases, 20-320 characters on one line, and a function-word language check.
+Any failure, malformed JSON, a failed call or the 60-call cap falls back to the template sentence
+for that language and records `guard_rejected` with the reasons (agent log, `phraser.call` span,
+audit record). Accepted replies are cached in `data/phrasing-cache/` (claim hash + deployment +
+prompt version, with origin) and re-guarded when replayed. Then the Narrative agent's number guard
+runs again on every sentence, whoever wrote it.
+
+**Telemetry** (`agents/telemetry.py`): OpenTelemetry spans `analyst.propose`, `verifier.check`
+(status = verdict, fact_check, rule_ids), `phraser.call` (phraser, sources, guard result,
+rejections), `publish`. Exported to Application Insights when `APPLICATIONINSIGHTS_CONNECTION_STRING`
+is set, else to a JSONL file (`OPTIX_TRACE_FILE`) or the console (`OPTIX_TRACE_CONSOLE=1`), else not
+exported. Without the OpenTelemetry package every span is a no-op.
+
+**Audit log** (`agents/audit.py`, `run_match --audit out/audit.jsonl`): append-only JSONL, one record
+per publication (claim, attempts with rule ids, value, evidence ids, rendered text, phraser, guard
+rejections), each record holding the previous record's hash. `python -m agents.audit verify FILE`
+recomputes the chain; any edited, removed or reordered record breaks it. Tamper-evident, not
+tamper-proof: whoever can rewrite the whole file can rebuild the chain, so keep the last hash elsewhere
+when that matters.
 
 ## Handoffs
 

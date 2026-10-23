@@ -19,7 +19,9 @@ from engine import flow as F
 from engine import threat as T
 from engine.tables import load, match_events
 
-from . import dashboard_data
+from . import dashboard_data, telemetry
+from .audit import AuditLog
+from .config import load_env
 from .log import AgentLog
 from .narrative import languages as available_languages
 from .stream import InsightStream
@@ -55,6 +57,17 @@ def timeline(ds, match_id) -> dict:
             "goals": goals, "players": players}
 
 
+def make_phraser(kind: str, ds):
+    """The phraser for --phraser: TemplatePhraser, or AzureOpenAIPhraser (live when the Azure
+    settings are present, else replaying data/phrasing-cache/ only)."""
+    from . import phraser as P
+    if kind == "template":
+        return P.TemplatePhraser()
+    known, names = P.known_entities(ds)
+    client = P.AzureChatClient() if P.azure_configured() else None
+    return P.AzureOpenAIPhraser(client, known, names, model=P.configured_model())
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--match", default="m_showcase")
@@ -63,13 +76,23 @@ def main(argv=None):
     ap.add_argument("--out", default="out/insights.jsonl")
     ap.add_argument("--languages", default=",".join(available_languages()),
                     help="comma-separated template languages (default: all available)")
+    ap.add_argument("--phraser", choices=("template", "azure"), default="template",
+                    help="template (default) or azure: the casual sentence from an Azure OpenAI deployment, "
+                         "guarded, falling back to the template; offline (cache only) without Azure settings")
+    ap.add_argument("--engine", choices=("direct", "workflow"), default="direct",
+                    help="direct pipeline (default) or the Microsoft Agent Framework workflow (agents/workflow.py)")
+    ap.add_argument("--audit", default=None, help="append one hash-chained record per publication to this JSONL file")
     a = ap.parse_args(argv)
+    load_env()
     out = Path(a.out)
     ds = load(a.data, baseline="season", season_dir=a.season)
     if a.match not in ds.matches:
         ap.error(f"match {a.match!r} not in {a.data}")
     log = AgentLog(out.parent / "agent_log.jsonl")
-    stream = InsightStream(ds, a.match, log=log, languages=tuple(a.languages.split(",")))
+    traces = telemetry.setup_tracing()
+    audit = AuditLog(a.audit) if a.audit else None
+    stream = InsightStream(ds, a.match, log=log, languages=tuple(a.languages.split(",")),
+                           phraser=make_phraser(a.phraser, ds), engine=a.engine, audit=audit)
     insights = stream.run()
     write_jsonl(out, insights)
     write_jsonl(out.parent / "claims.jsonl", stream.attempts())
@@ -82,6 +105,7 @@ def main(argv=None):
     blocked = sum(1 for x in stream.attempts() if x["claim"]["verification"]["status"] == "blocked")
     print(f"{len(insights)} insights -> {out} ({blocked} blocked attempts revised, "
           f"{len(stream.orc.state.dropped)} claims dropped)")
+    print(f"engine {a.engine}, phraser {a.phraser}, traces {traces}" + (f", audit {a.audit}" if audit else ""))
     if lat:
         print(f"latency ms: median {statistics.median(lat):.0f}, max {max(lat)}; "
               f"per-event max {max(stream.event_ms):.1f} ms")

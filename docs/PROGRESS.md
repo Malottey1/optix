@@ -30,6 +30,55 @@ Green start: default suite 168 passed; `npm run build` ok. Each step below is it
 - Tests: `test_no_template_glues_a_multiplier_x_to_a_number`,
   `test_the_league_average_is_never_called_most_teams`, `test_a_zero_pass_quality_reads_not_one_of_them`.
 
+**Dependencies.** `requirements-azure.txt`, exact pins each released at least two weeks before
+2026-10-22 (checked on PyPI): agent-framework-core 1.20.0 (2026-10-02; 1.21.0 came out on the
+cut-off day, so I took the previous one), openai 3.24.0, azure-identity 1.26.0, OpenTelemetry
+api/sdk 1.44.0 (azure-monitor-opentelemetry-exporter 1.0.0b57 requires ~=1.44; that exporter has
+only beta releases), fastapi 0.142.2, uvicorn 0.54.0, httpx 0.28.1, pydantic 2.13.5. Transitive
+dependencies are resolved by pip. The deterministic engine needs none of them; CI installs them for
+the tests.
+
+**Steps B-D share one commit.** The phraser, the workflow and the spans/audit all touch the same
+pipeline files (narrative, orchestrator, stream, run_match); splitting them into three commits would
+have meant committing intermediate states that never ran. They are one commit, after all their tests
+passed together.
+
+**Step B (phrasing layer)**
+- Current docs checked (Microsoft Learn, "Azure OpenAI ... Microsoft Entra ID"): `openai.AzureOpenAI`
+  with `azure_ad_token_provider=get_bearer_token_provider(DefaultAzureCredential(),
+  "https://cognitiveservices.azure.com/.default")`; the role to grant is Cognitive Services OpenAI
+  User. API-key fallback only when `AZURE_OPENAI_API_KEY` is set; the key is never logged.
+- **The model writes only the casual tone.** The analyst tone stays the exact template: it is the
+  precise wording the dashboard's ledger and the number tracer were built around, and keeping it fixed
+  halves the guarded surface. Phrasing metadata (source, rejections) goes to the agent log, the span
+  and the audit record, not into the insight contract, so contracts/ did not change.
+- Function-word language check: tuned until every template sentence of every key and tone reads as
+  its own language (a test enforces it), so the guard never rejects what the engine itself says.
+- With no Azure settings, `--phraser azure` runs offline: cache only, else template, with
+  `guard_rejected: "no model client (offline)"` recorded. Its stream equals the template stream.
+- Golden stream for the equality tests: the committed replay `web/public/data/insights.jsonl`
+  (latency field excluded).
+
+**Step C (Agent Framework workflow)**
+- Checked the installed 1.20.0 API directly: `WorkflowBuilder(start_executor=..., max_iterations=...,
+  output_from=[...])`, `add_edge(src, dst, condition=callable)`, `Executor(id)` with `@handler`
+  methods typed `(msg, ctx: WorkflowContext[Out])` / `WorkflowContext[Out, WorkflowOut]`,
+  `await workflow.run(msg)` -> `.get_outputs()`, `@tool` -> `FunctionTool.invoke(arguments=...,
+  skip_parsing=True)`. One difference from older samples: the start executor is a keyword argument
+  of the builder (no `set_start_executor`).
+- One run per ingested batch, proposals released one at a time, so the order equals the direct
+  pipeline; `max_iterations` 100000 (one superstep per hop; the finish batch has the most hops).
+- The function tools are called by the Verifier executor itself and only logged; the verdict is
+  `engine.verifier`, unchanged. No model gets tools.
+
+**Step D (telemetry, audit)**
+- `use_provider()` in agents/telemetry.py: OpenTelemetry lets the global provider be set once per
+  process, and `run_match` sets it, so tests inject an in-memory provider instead.
+- The Azure Monitor exporter branch is exercised with a well-formed fake connection string (the
+  exporter is built, nothing is sent); export to a real Application Insights resource is "built, not
+  verified live".
+- Audit is opt-in (`run_match --audit FILE`), since an append-only file grows on every run.
+
 ## Visuals polish (branch `ui-visuals-polish`, from `ui-visuals` = main 32730c4)
 
 Green start: default suite 168 passed; `npm run build` ok.
