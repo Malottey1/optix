@@ -1,10 +1,12 @@
 import type { ReactNode } from "react";
+import { Icon, type IconName } from "../../icons";
 import { cx } from "../../lib/cx";
 
-/** A titled surface. The title is an h2 unless `level` says otherwise. */
+/** A titled surface. The title is an h2 unless `level` says otherwise; `icon` (decorative) goes before it. */
 export function Panel({
   id,
   title,
+  icon,
   eyebrow,
   subtitle,
   actions,
@@ -16,6 +18,7 @@ export function Panel({
 }: {
   id?: string;
   title?: ReactNode;
+  icon?: IconName;
   eyebrow?: ReactNode;
   subtitle?: ReactNode;
   actions?: ReactNode;
@@ -39,7 +42,11 @@ export function Panel({
           <div className="min-w-0">
             {eyebrow && <p className="eyebrow mb-1">{eyebrow}</p>}
             {title && (
-              <H id={hid} className="text-[15px] font-semibold tracking-tight text-ink">
+              <H
+                id={hid}
+                className={cx("text-[15px] font-semibold tracking-tight text-ink", icon && "flex items-center gap-2")}
+              >
+                {icon && <Icon name={icon} size={18} className="text-ink-3" />}
                 {title}
               </H>
             )}

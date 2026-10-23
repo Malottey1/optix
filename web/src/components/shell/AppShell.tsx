@@ -3,7 +3,8 @@ import { useState, type ReactNode } from "react";
 import { NavLink } from "react-router";
 import { cx } from "../../lib/cx";
 import { useT, type Key } from "../../lib/i18n";
-import { Icon, Logo, type IconName } from "../icons";
+import { Icon, type IconName } from "../../icons";
+import { Logo } from "../icons";
 import { SettingsSheet } from "./SettingsSheet";
 
 export const ROUTES = ["live", "teams", "players", "tech"] as const;

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { cx } from "../../lib/cx";
-import { Icon } from "../icons";
+import { Icon, type IconName } from "../../icons";
 
 export function Chip({ children, className, title }: { children: ReactNode; className?: string; title?: string }) {
   return (
@@ -18,11 +18,11 @@ export function Chip({ children, className, title }: { children: ReactNode; clas
 
 export type Status = "published" | "published_with_context" | "revised" | "blocked";
 
-const STATUS: Record<Status, { cls: string; icon: "check" | "info" | "rewrite" | "block" }> = {
-  published: { cls: "bg-pass-soft text-pass border-pass/30", icon: "check" },
-  published_with_context: { cls: "bg-muted-soft text-muted border-muted/35", icon: "info" },
-  revised: { cls: "bg-revise-soft text-revise border-revise/35", icon: "rewrite" },
-  blocked: { cls: "bg-block-soft text-block border-block/35", icon: "block" },
+const STATUS: Record<Status, { cls: string; icon: IconName }> = {
+  published: { cls: "bg-pass-soft text-pass border-pass/30", icon: "verdict-passed" },
+  published_with_context: { cls: "bg-muted-soft text-muted border-muted/35", icon: "verdict-context" },
+  revised: { cls: "bg-revise-soft text-revise border-revise/35", icon: "verdict-revised" },
+  blocked: { cls: "bg-block-soft text-block border-block/35", icon: "verdict-blocked" },
 };
 
 export function StatusChip({ status, label, className }: { status: Status; label: ReactNode; className?: string }) {

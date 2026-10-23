@@ -4,7 +4,8 @@
 // retyped), and the Microsoft / Azure status list from ui.json (agents/azure_status.py).
 import { TeamBadge } from "../../components/brand/TeamBadge";
 import { Fragment, useState } from "react";
-import { Icon, type IconName } from "../../components/icons";
+import { Glyph } from "../../components/icons";
+import { Icon, type IconName } from "../../icons";
 import { Chip, StatusChip, type Status } from "../../components/ui/badge";
 import { Panel, Stat } from "../../components/ui/card";
 import { ScrollRegion } from "../../components/ui/scroll-region";
@@ -25,34 +26,34 @@ const OUTCOME: Record<LedgerOutcome, { status: Status; label: string }> = {
 
 const STEPS: { icon: IconName; title: string; body: string; tone?: "accent" }[] = [
   {
-    icon: "live",
+    icon: "pass",
     title: "Event stream",
     body: "Synthetic events, replayed one at a time. Ingest drops duplicates and rows with missing fields.",
   },
   {
-    icon: "chart",
+    icon: "metric-xt",
     title: "Analyst",
     body: "Computes every number in engine/ and proposes a claim object: metric, value, scope, evidence event ids. No prose.",
   },
   {
-    icon: "shield",
+    icon: "verdict-passed",
     title: "Verifier",
     body: "Fact check: recompute the value from the event log and check every evidence id. Context check: true but misleading given game state, sample size or metric limits?",
     tone: "accent",
   },
   {
-    icon: "layers",
+    icon: "evidence-drawer",
     title: "Narrative",
     body: "Fixed templates write the verified claim in English, Spanish and French, in an analyst and a casual tone.",
   },
   {
-    icon: "check",
+    icon: "trace-to-data",
     title: "Number guard",
     body: "Every number in every sentence must equal a number in the claim, in that language's own form.",
     tone: "accent",
   },
   {
-    icon: "flag",
+    icon: "live",
     title: "Insight stream",
     body: "A timed item with a semantic type, its evidence ids and the sentences. The dashboard picks the widget.",
   },
@@ -84,13 +85,13 @@ function Pipeline() {
                   s.tone === "accent" ? "bg-accent-soft text-accent" : "bg-surface-3 text-ink-2",
                 )}
               >
-                <Icon name={s.icon} className="h-4 w-4" />
+                <Icon name={s.icon} size={16} />
               </span>
               <h3 className="text-[14.5px] font-semibold text-ink">{s.title}</h3>
             </div>
             <p className="mt-2 text-[12.5px] leading-relaxed text-ink-3">{s.body}</p>
             {i < STEPS.length - 1 && (
-              <Icon
+              <Glyph
                 name="arrow"
                 className="absolute -right-[13px] top-1/2 z-10 hidden h-4 w-4 -translate-y-1/2 text-ink-3 xl:block"
               />
@@ -99,7 +100,7 @@ function Pipeline() {
         ))}
       </ol>
       <p className="mt-3 flex items-center gap-2 text-[12.5px] text-revise">
-        <Icon name="rewrite" className="h-4 w-4" />
+        <Icon name="verdict-revised" size={16} />
         Blocked → the Analyst revises the claim by the rule's hint → verified again with the next attempt number.
       </p>
       <dl className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -199,7 +200,7 @@ function Walkthrough() {
             ))}
           </ul>
           <p className="mt-2 flex items-center gap-1.5 text-[12px] font-semibold text-accent">
-            <Icon name="check" className="h-4 w-4" />
+            <Icon name="verdict-passed" size={16} />
             Number guard {ins.text.number_guard_passed ? "passed" : "not recorded"}
           </p>
         </li>
@@ -511,16 +512,20 @@ function VisualGuide() {
   );
 }
 
-const STATE_STYLE: Record<AzureStatus["state"], { icon: "check" | "cloud"; cls: string; label: string }> = {
-  "verified live": { icon: "check", cls: "border-line bg-surface-2", label: "Verified live" },
-  "verified by tests": { icon: "check", cls: "border-line bg-surface-2", label: "Verified by tests" },
-  "verified by CI build/lint": { icon: "check", cls: "border-line bg-surface-2", label: "Verified by CI build" },
+const STATE_STYLE: Record<AzureStatus["state"], { icon: IconName | null; cls: string; label: string }> = {
+  "verified live": { icon: "verdict-passed", cls: "border-line bg-surface-2", label: "Verified live" },
+  "verified by tests": { icon: "verdict-passed", cls: "border-line bg-surface-2", label: "Verified by tests" },
+  "verified by CI build/lint": {
+    icon: "verdict-passed",
+    cls: "border-line bg-surface-2",
+    label: "Verified by CI build",
+  },
   "built, not verified live": {
-    icon: "cloud",
+    icon: null,
     cls: "border-dashed border-line-strong",
     label: "Built, not verified live",
   },
-  "not built": { icon: "cloud", cls: "border-dashed border-line-strong opacity-80", label: "Not built" },
+  "not built": { icon: null, cls: "border-dashed border-line-strong opacity-80", label: "Not built" },
 };
 
 function AzureStatusPanel() {
@@ -539,7 +544,7 @@ function AzureStatusPanel() {
             <li key={r.id} data-azure={r.id} data-state={r.state} className={`rounded-xl border px-4 py-3 ${st.cls}`}>
               <div className="flex flex-wrap items-center gap-2">
                 <Chip>
-                  <Icon name={st.icon} className="h-3.5 w-3.5" />
+                  {st.icon ? <Icon name={st.icon} size={14} /> : <Glyph name="cloud" className="h-3.5 w-3.5" />}
                   {st.label}
                 </Chip>
                 <b className="text-[14px] text-ink">{r.name}</b>

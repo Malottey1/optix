@@ -58,6 +58,7 @@ export function StressGauges() {
   return (
     <Panel
       id="stress"
+      icon="metric-territorial-stress"
       title="Pinned in own half"
       subtitle="Time the opponent kept the ball in this team's half without losing it (the engine's territorial-stress spells), adding up as the match plays."
       subtitleClassName="wide:hidden"
@@ -182,6 +183,7 @@ export function RhythmPulse() {
   return (
     <Panel
       id="rhythm"
+      icon="metric-rhythm"
       title="Rhythm"
       subtitle="Possession changes per minute: tall, jagged peaks are transition chaos; a flat line is one side keeping the ball."
       subtitleClassName="wide:hidden"

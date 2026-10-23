@@ -1,5 +1,5 @@
 """Headless check of the built dashboard (web/dist): serve it, open every route at desktop and phone
-width in Chromium, save screenshots to docs/screens-v4/, and report every gate:
+width in Chromium, save screenshots to docs/screens-v5/, and report every gate:
 
   * no console error, page error, failed request, HTTP error, or request to a host other than
     localhost; no horizontal scroll; no overlapping text; Tab reaches every control;
@@ -26,7 +26,7 @@ width in Chromium, save screenshots to docs/screens-v4/, and report every gate:
   * the Live Center's first screen at 1920x1080 and 1600x900 shows every Live visual whole, with no
     overlapping text (check_first_screen);
   * replay frame p95 at most 20 ms (at 1440x900 and 1920x1080) and initial JS under 250 KB gzip;
-  * Home (#/) is checked like every route, and also at 1920x1080 and 1600x900;
+  * every route, Home (#/) included, is checked at 1440 and 390 px and also at 1920x1080 and 1600x900;
   * images (check_images): every <img> has alt (alt="" only with a visible name beside it) and
     width/height, the Home hero has fetchpriority=high, no shipped image carries EXIF/XMP/ICC/text,
     no file is over 300 KB (the hero 220 KB at 1600 px, 90 KB at 800 px); crests and mini-marks
@@ -57,7 +57,8 @@ ROOT = Path(__file__).resolve().parent.parent
 WEB = ROOT / "web"
 ROUTES = ("home", "live", "teams", "players", "tech")
 PATH = {"home": ""}                      # hash path of a route when it is not the route's own name
-EXTRA_SIZES = {"home": {"1080p": (1920, 1080), "900p": (1600, 900)}}
+# every route is also checked at the demo-video sizes (all gates, plus a first-screen shot)
+EXTRA_SIZES = {r: {"1080p": (1920, 1080), "900p": (1600, 900)} for r in ROUTES}
 WIDTHS = {"desktop": (1440, 900), "mobile": (390, 844)}
 QUERY = {"live": "t=2760"}               # half-time stoppage: the rewritten Perimeter Lock card on top
 AXE_FAIL = {"serious", "critical"}
@@ -872,7 +873,8 @@ def run(dist: Path | None = None, screens_dir: Path | None = None, screens: bool
             for wn, size in EXTRA_SIZES.get(route, {}).items():
                 report["routes"].append(check_route(browser, base, route, wn, src, shots, axe_src, size=size))
         if shots:
-            report["screens_1080p"] = screens_1080p(browser, base, shots, [r for r in routes if r not in ("live", "home")])
+            report["screens_1080p"] = screens_1080p(
+                browser, base, shots, [r for r in routes if "1080p" not in EXTRA_SIZES.get(r, {})])
         report["image_files"] = check_image_files(dist)
         if "home" in routes:
             report["badges"] = check_badges(browser, base, shots)
@@ -980,7 +982,7 @@ def failures(report) -> list:
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--dist", default=str(WEB / "dist"))
-    ap.add_argument("--out", default=str(ROOT / "docs" / "screens-v4"), help="screenshot directory")
+    ap.add_argument("--out", default=str(ROOT / "docs" / "screens-v5"), help="screenshot directory")
     ap.add_argument("--no-screens", action="store_true")
     ap.add_argument("--routes", default=",".join(ROUTES))
     ap.add_argument("--json", default=None, help="also write the full report here")

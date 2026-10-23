@@ -4,7 +4,8 @@
 // is read from ui.json's verification ledger, nothing is typed in.
 import { Link } from "react-router";
 import { TeamBadge } from "../../components/brand/TeamBadge";
-import { Icon } from "../../components/icons";
+import { Glyph } from "../../components/icons";
+import { Icon, type IconName } from "../../icons";
 import { useData } from "../../data/context";
 import { num } from "../../lib/format";
 import { useT, type Key } from "../../lib/i18n";
@@ -56,14 +57,14 @@ function Hero() {
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Link to="/live" className={`${cta} bg-accent text-accent-ink hover:brightness-110`}>
-              <Icon name="live" className="h-[18px] w-[18px]" />
+              <Icon name="live" size={18} />
               {t("home_cta_live")}
             </Link>
             <Link
               to="/tech"
               className={`${cta} border border-line-strong bg-bg/80 text-ink hover:border-accent-line hover:text-accent`}
             >
-              <Icon name="shield" className="h-[18px] w-[18px]" />
+              <Icon name="verdict-passed" size={18} />
               {t("home_cta_tech")}
             </Link>
           </div>
@@ -91,7 +92,7 @@ function Clubs() {
           className="inline-flex items-center gap-1 text-[13px] font-semibold text-accent hover:underline"
         >
           {t("home_clubs_link")}
-          <Icon name="arrow" className="h-4 w-4" />
+          <Glyph name="arrow" className="h-4 w-4" />
         </Link>
       </div>
       <ul className="mt-4 grid grid-cols-1 gap-2 min-[430px]:grid-cols-2 md:grid-cols-5">
@@ -213,10 +214,10 @@ function ArtTranslate() {
   );
 }
 
-const FEATURES: { art: () => React.JSX.Element; title: Key; body: Key }[] = [
-  { art: ArtFacts, title: "home_f1_title", body: "home_f1_body" },
-  { art: ArtEvidence, title: "home_f2_title", body: "home_f2_body" },
-  { art: ArtTranslate, title: "home_f3_title", body: "home_f3_body" },
+const FEATURES: { art: () => React.JSX.Element; icon: IconName; title: Key; body: Key }[] = [
+  { art: ArtFacts, icon: "trace-to-data", title: "home_f1_title", body: "home_f1_body" },
+  { art: ArtEvidence, icon: "evidence-drawer", title: "home_f2_title", body: "home_f2_body" },
+  { art: ArtTranslate, icon: "verdict-passed", title: "home_f3_title", body: "home_f3_body" },
 ];
 
 function Features() {
@@ -227,10 +228,13 @@ function Features() {
         {t("home_features")}
       </h2>
       <ul className="grid grid-cols-1 gap-flow md:grid-cols-3">
-        {FEATURES.map(({ art: Art, title, body }) => (
+        {FEATURES.map(({ art: Art, icon, title, body }) => (
           <li key={title} className="flex flex-col gap-3 rounded-2xl border border-line bg-surface-1 pad elev-1">
             <Art />
-            <h3 className="text-[17px] font-bold tracking-tight text-ink">{t(title)}</h3>
+            <h3 className="flex items-center gap-2 text-[17px] font-bold tracking-tight text-ink">
+              <Icon name={icon} size={20} className="text-accent" />
+              {t(title)}
+            </h3>
             <p className="text-[14px] leading-relaxed text-ink-2">{t(body)}</p>
           </li>
         ))}

@@ -17,6 +17,7 @@ export function LiveShots() {
   return (
     <Panel
       id="live-shots"
+      icon="metric-xg"
       title="Shot quality"
       subtitle="Every shot so far; a block's area is its xG, so ten tiny blocks can weigh less than one big one."
       subtitleClassName="wide:hidden"

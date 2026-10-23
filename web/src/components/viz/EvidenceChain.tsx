@@ -1,8 +1,10 @@
 // V7 Action Route Circuit Nodes (adapted): the claim's evidence events in clock order, as a chain of
-// nodes. Node shape AND colour encode the event type; each node is a button that pins the event on
+// nodes. Node icon AND colour encode the event type (the event icons of src/icons; types the icon
+// sheet has no icon for keep a ring); each node is a button that pins the event on
 // the drawer's pitch. The engine has no sequence detection, so this is the evidence chain behind
 // the claim, not a detected move. The event table below it stays as the text version.
 import { memo } from "react";
+import { eventIcon, Icon } from "../../icons";
 import { cx } from "../../lib/cx";
 import { clock, words } from "../../lib/format";
 import type { EvidenceRow, Period } from "../../types/ui";
@@ -13,13 +15,16 @@ const TYPE_STYLE: Record<string, { shape: Shape; color: string }> = {
   shot: { shape: "triangle", color: "var(--revise)" },
   possession_change: { shape: "square", color: "var(--muted-accent)" },
   tackle: { shape: "diamond", color: "var(--home)" },
+  pressure: { shape: "diamond", color: "var(--away)" },
   interception: { shape: "diamond", color: "var(--home)" },
   foul: { shape: "cross", color: "var(--block)" },
 };
 const styleOf = (t: string) => TYPE_STYLE[t] ?? { shape: "ring" as Shape, color: "var(--ink-2)" };
 
-export function NodeShape({ type, size = 16 }: { type: string; size?: number }) {
+export function NodeShape({ type, outcome, size = 16 }: { type: string; outcome?: string | null; size?: number }) {
   const { shape, color } = styleOf(type);
+  const icon = eventIcon(type, outcome);
+  if (icon) return <Icon name={icon} size={size} className="shrink-0" style={{ color }} />;
   const c = size / 2;
   const r = size / 2 - 2;
   return (
@@ -92,7 +97,7 @@ export const EvidenceChain = memo(function EvidenceChain({
                 )}
               >
                 <span className="flex h-5 w-5 items-center justify-center rounded-full bg-surface-1">
-                  <NodeShape type={e.event_type} />
+                  <NodeShape type={e.event_type} outcome={e.outcome} />
                 </span>
                 <span className="num w-[3.8rem] shrink-0 text-ink-3">
                   {e.match_id === matchId ? clock(e.clock_sec, periods) : clock(e.clock_sec)}

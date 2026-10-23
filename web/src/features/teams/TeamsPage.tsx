@@ -4,7 +4,8 @@
 // strip of grass is the mirror (left and right swap), shown beside it.
 import { TeamBadge } from "../../components/brand/TeamBadge";
 import { useState } from "react";
-import { Icon } from "../../components/icons";
+import { Glyph } from "../../components/icons";
+import { attackLaneIcon, Icon, laneIcon, styleLabelIcon } from "../../icons";
 import { MismatchCrosshairs } from "../../components/viz/MismatchCrosshairs";
 import { StateSwaps } from "../../components/viz/StateSwaps";
 import { ZoneShift } from "../../components/viz/ZoneShift";
@@ -64,9 +65,10 @@ function LabelChip({ team, l, lang }: { team: TeamProfile; l: StyleLabel; lang: 
           typical ? "border-line bg-surface-1 text-ink-3" : "border-muted/40 bg-muted-soft text-ink",
         )}
       >
+        <Icon name={styleLabelIcon(l.id, l.direction)} size={14} className={typical ? "text-ink-3" : "text-ink-2"} />
         <span className="font-medium text-ink-3">{LABEL_NAME[l.id] ?? l.id}</span>
         {typical ? "typical" : l.label}
-        <Icon name="info" className="h-3.5 w-3.5 text-ink-3" />
+        <Icon name="verdict-context" size={14} className="text-ink-3" />
       </button>
     </Tip>
   );
@@ -106,7 +108,10 @@ function LaneLift({
           return (
             <tr key={r.lane} data-lane={r.lane} className={cx(hi && "text-ink")}>
               <th scope="row" className={cx("w-[38%] py-1 pr-2 text-left font-medium", hi ? "text-ink" : "text-ink-2")}>
-                {LANE_NAMES[r.lane]}
+                <span className="inline-flex items-center gap-1.5">
+                  <Icon name={laneIcon(r.lane)} size={16} className={hi ? "text-ink" : "text-ink-3"} />
+                  {LANE_NAMES[r.lane]}
+                </span>
               </th>
               <td className="py-1">
                 <svg viewBox="0 0 100 10" preserveAspectRatio="none" className="block h-2.5 w-full" aria-hidden="true">
@@ -212,6 +217,7 @@ function TeamCard({ team, lanes }: { team: TeamProfile; lanes: string[] }) {
       <div className="mt-4 border-t border-line pt-3">
         <p className="eyebrow">Attacks from</p>
         <p className="mt-1 text-[13px] text-ink-2">
+          <Icon name={attackLaneIcon(top)} size={16} className="mr-1 inline-block align-[-3px] text-ink-2" />
           <b className="text-ink">{LANE_NAMES[top]}</b>: <span className="num">{pct(e.share, lang)}</span> of
           final-third entries (league <span className="num">{pct(e.league, lang)}</span>)
         </p>
@@ -229,7 +235,8 @@ function TeamCard({ team, lanes }: { team: TeamProfile; lanes: string[] }) {
         <p className="eyebrow">Concedes</p>
         {soft ? (
           <p className="mt-1 text-[13px] leading-snug text-ink-2" data-soft-lane={soft.lane}>
-            Soft lane: <b className="text-revise">{LANE_NAMES[soft.lane]}</b> (attacker's view; {team.code}'s own{" "}
+            Soft lane: <Icon name={laneIcon(soft.lane)} size={16} className="inline-block align-[-3px] text-ink-2" />{" "}
+            <b className="text-revise">{LANE_NAMES[soft.lane]}</b> (attacker's view; {team.code}'s own{" "}
             {LANE_NAMES[MIRROR[soft.lane]!]!.toLowerCase()}). Opponents complete{" "}
             <span className="num">{pct(soft.rate, lang)}</span> of entries there (league{" "}
             <span className="num">{pct(soft.league, lang)}</span>, n{" "}
@@ -260,7 +267,7 @@ function TeamCard({ team, lanes }: { team: TeamProfile; lanes: string[] }) {
 
 function HeadToHead() {
   const m = useData();
-  const { lang } = useT();
+  const { lang, t: tr } = useT();
   const T = m.ui.teams;
   const codes = T.teams.map((t) => t.code);
   const showcase = T.head_to_head.find(
@@ -299,13 +306,8 @@ function HeadToHead() {
             ))}
           </select>
         </label>
-        <Button
-          size="icon"
-          aria-label="Swap attacker and defender"
-          onClick={() => (setAtt(dfn), setDfn(att))}
-          className="mb-0.5"
-        >
-          <Icon name="swap" className="h-[18px] w-[18px]" />
+        <Button size="icon" aria-label={tr("swap_sides")} onClick={() => (setAtt(dfn), setDfn(att))} className="mb-0.5">
+          <Glyph name="swap" className="h-[18px] w-[18px]" />
         </Button>
         <label className="flex flex-col gap-1 text-[12px] font-semibold text-ink-3">
           Defender
@@ -442,6 +444,7 @@ export default function TeamsPage() {
       <HeadToHead />
       <Panel
         id="states"
+        icon="metric-field-tilt"
         title="When the score changes"
         subtitle="Territory and pressing when trailing and when leading. A side that goes ahead and sits deep gives up territory, so the trailing opponent's field tilt rises without meaning it is on top: that is why the Verifier adds box entries to a field-tilt claim from a trailing side."
       >

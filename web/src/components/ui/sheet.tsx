@@ -2,7 +2,7 @@
 import * as Dialog from "@radix-ui/react-dialog";
 import type { ReactNode } from "react";
 import { cx } from "../../lib/cx";
-import { Icon } from "../icons";
+import { Glyph } from "../icons";
 
 export function Sheet({
   open,
@@ -55,7 +55,7 @@ export function Sheet({
               aria-label={closeLabel}
               className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-line text-ink-2 hover:border-line-strong hover:text-ink"
             >
-              <Icon name="close" className="h-4 w-4" />
+              <Glyph name="close" className="h-4 w-4" />
             </Dialog.Close>
           </header>
           <div className="flex-1 overflow-y-auto overscroll-contain px-5 py-5">{children}</div>

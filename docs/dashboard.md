@@ -112,7 +112,8 @@ View options for screenshots and tests: `#/live?t=2760&select=ins_0009&lang=es&p
 
 `python -m tools.check_web` (needs `pip install -r requirements-ui.txt` and a built `web/dist`) serves
 `web/dist` and opens every route at 1440 px and 390 px in headless Chromium, with axe-core injected.
-It writes `docs/screens-v4/<route>_<desktop|mobile|1080p>.png` (Home also at 1600x900, and
+It writes `docs/screens-v5/<route>_<desktop|mobile|1080p|900p>.png` (every route is also checked at
+1920x1080 and 1600x900; plus
 `badges_24_32.png`), each under 300 KB; lazy images are scrolled into view before a full-page shot.
 It fails on any of:
 - a console error, page error, failed request, HTTP error, or request to a host other than localhost;

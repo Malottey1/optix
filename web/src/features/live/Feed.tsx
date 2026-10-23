@@ -4,7 +4,8 @@
 // rule's one-sentence reason. "Open evidence" opens the drawer with the exact events.
 import { AnimatePresence, m as motion } from "motion/react";
 import { memo, useRef, useState } from "react";
-import { Icon } from "../../components/icons";
+import { Glyph } from "../../components/icons";
+import { Icon, insightIcon } from "../../icons";
 import { TeamBadge } from "../../components/brand/TeamBadge";
 import { Chip, StatusChip, TeamDot, type Status } from "../../components/ui/badge";
 import { Panel } from "../../components/ui/card";
@@ -37,7 +38,7 @@ function EvidenceSummary({ ins }: { ins: Insight }) {
   const w = final?.window;
   return (
     <p className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] text-ink-3" data-role="evidence-summary">
-      <Icon name="evidence" className="h-3.5 w-3.5" />
+      <Icon name="evidence-drawer" size={14} />
       <span>
         <b className="num font-semibold text-ink-2">{num(n, lang)}</b> {n === 1 ? t("event") : t("events")}
       </span>
@@ -181,7 +182,17 @@ export const InsightCard = memo(function InsightCard({
           <TeamBadge code={ins.teams.primary} size={24} named />
           {ins.teams.primary}
         </span>
-        <Chip>{typeLabel(ins.insight_type)}</Chip>
+        <Chip>
+          <Icon
+            name={insightIcon(
+              ins.insight_type,
+              m.chain(ins.claim_id).at(-1)?.claim.metric,
+              typeof ins.payload.metrics?.lane === "string" ? ins.payload.metrics.lane : null,
+            )}
+            size={14}
+          />
+          {typeLabel(ins.insight_type)}
+        </Chip>
         <StatusChip status={status} label={t(STATUS_KEY[status])} className="ml-auto" />
       </div>
       <button
@@ -241,7 +252,7 @@ export const InsightCard = memo(function InsightCard({
           className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-line px-3 py-1.5 font-semibold text-ink-2 hover:border-accent-line hover:text-ink"
         >
           {t("open_evidence")}
-          <Icon name="arrow" className="h-3.5 w-3.5" />
+          <Glyph name="arrow" className="h-3.5 w-3.5" />
         </button>
       </div>
       {evidenceOpen && <EvidenceInline ins={ins} />}

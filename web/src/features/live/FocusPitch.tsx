@@ -3,7 +3,8 @@
 // location with a short trail of the events before it. The ball and trail move through refs.
 import { AnimatePresence, m as motion } from "motion/react";
 import { useRef } from "react";
-import { Icon } from "../../components/icons";
+import { Glyph } from "../../components/icons";
+import { Icon, insightIcon } from "../../icons";
 import { Arrowheads, InsightLayer, PitchLines, PX, PY, sideColor } from "../../components/pitch/Pitch";
 import { Chip, StatusChip, TeamDot } from "../../components/ui/badge";
 import { Panel } from "../../components/ui/card";
@@ -104,7 +105,17 @@ function Caption({ ins }: { ins: Insight | null }) {
             <TeamDot side={m.sideOf(ins.teams.primary)} />
             {ins.teams.primary}
           </span>
-          <Chip>{typeLabel(ins.insight_type)}</Chip>
+          <Chip>
+            <Icon
+              name={insightIcon(
+                ins.insight_type,
+                m.chain(ins.claim_id).at(-1)?.claim.metric,
+                typeof ins.payload.metrics?.lane === "string" ? ins.payload.metrics.lane : null,
+              )}
+              size={14}
+            />
+            {typeLabel(ins.insight_type)}
+          </Chip>
           <StatusChip status={status} label={label} />
         </div>
         <p
@@ -137,7 +148,7 @@ export function FocusPitch() {
         <span className="inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full border border-line bg-surface-2 px-2.5 py-1 text-[12px] font-semibold text-ink-2">
           <TeamDot side={side} />
           {team} {t("attacking")}
-          <Icon name="arrow" className="h-3.5 w-3.5" />
+          <Glyph name="arrow" className="h-3.5 w-3.5" />
         </span>
       }
     >
@@ -169,7 +180,7 @@ export function FocusPitch() {
           <Caption ins={ins} />
         </figcaption>
         <p className="mt-2.5 flex items-center gap-1.5 text-[12px] text-ink-3 wide:mt-2">
-          <Icon name="ball" className="h-3.5 w-3.5" />
+          <Glyph name="ball" className="h-3.5 w-3.5" />
           {t("ball_note")}
         </p>
       </figure>

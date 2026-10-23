@@ -21,7 +21,7 @@ export function PerimeterLock() {
   const ins = id ? m.byId[id]! : null;
   if (!ins) {
     return (
-      <Panel id="perimeter" title={t("perimeter")} subtitle={t("perimeter_note")}>
+      <Panel id="perimeter" icon="metric-field-tilt" title={t("perimeter")} subtitle={t("perimeter_note")}>
         <Empty className="flex min-h-[150px] items-center justify-center">{t("lock_none")}</Empty>
       </Panel>
     );
@@ -34,6 +34,7 @@ export function PerimeterLock() {
   return (
     <Panel
       id="perimeter"
+      icon="metric-field-tilt"
       title={t("perimeter")}
       subtitle={t("perimeter_note")}
       subtitleClassName="wide:hidden"

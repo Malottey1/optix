@@ -2,7 +2,7 @@
 // and the replay speed. The slider re-renders on a two-second grid of match time, not per frame.
 import * as Slider from "@radix-ui/react-slider";
 import { memo } from "react";
-import { Icon } from "../../components/icons";
+import { Icon } from "../../icons";
 import { Button } from "../../components/ui/button";
 import { Segmented } from "../../components/ui/segmented";
 import { useData } from "../../data/context";
@@ -95,7 +95,7 @@ export function Transport() {
         onClick={() => setPlaying(!playing)}
         className="min-w-[112px]"
       >
-        <Icon name={playing ? "pause" : "play"} className="h-4 w-4" />
+        <Icon name={playing ? "pause" : "play"} size={16} />
         <span>{playing ? t("pause") : t("play")}</span>
       </Button>
       <Button
@@ -106,19 +106,24 @@ export function Transport() {
           seek(0);
         }}
       >
-        <Icon name="restart" className="h-[18px] w-[18px]" strokeWidth={2} />
+        <Icon name="restart" size={18} />
       </Button>
-      <div className="order-last w-full sm:order-none sm:w-auto sm:flex-1">
-        <Scrubber />
+      <div className="order-last flex w-full items-center gap-2 sm:order-none sm:w-auto sm:flex-1">
+        <Icon name="scrub" size={16} className="text-ink-3" />
+        <div className="min-w-0 flex-1">
+          <Scrubber />
+        </div>
       </div>
-      <Segmented<Speed>
-        label={t("speed")}
-        name="speed"
-        value={speed}
-        onChange={setSpeed}
-        className="ml-auto sm:ml-0"
-        options={(Object.keys(SPEEDS) as Speed[]).map((k) => ({ value: k, label: t(k) }))}
-      />
+      <div className="ml-auto flex items-center gap-2 sm:ml-0">
+        <Icon name="speed" size={16} className="text-ink-3" />
+        <Segmented<Speed>
+          label={t("speed")}
+          name="speed"
+          value={speed}
+          onChange={setSpeed}
+          options={(Object.keys(SPEEDS) as Speed[]).map((k) => ({ value: k, label: t(k) }))}
+        />
+      </div>
     </div>
   );
 }

@@ -2,7 +2,7 @@
 // round caps and joins, no fill except small dots, colour from currentColor (the card and lane
 // icons use the --card-yellow, --card-red and --lane-fill tokens). Decorative by default
 // (aria-hidden); with a `title` it becomes role="img" with that accessible name.
-import { useId } from "react";
+import { useId, type CSSProperties } from "react";
 import { cx } from "../lib/cx";
 import type { IconName } from "./names";
 import { ICONS } from "./registry";
@@ -12,11 +12,13 @@ export function Icon({
   size = 20,
   title,
   className,
+  style,
 }: {
   name: IconName;
   size?: number;
   title?: string;
   className?: string;
+  style?: CSSProperties;
 }) {
   const id = useId();
   const Glyph = ICONS[name];
@@ -27,6 +29,7 @@ export function Icon({
       height={size}
       data-icon={name}
       className={cx("shrink-0", className)}
+      style={style}
       fill="none"
       stroke="currentColor"
       strokeWidth={1.75}

@@ -49,7 +49,7 @@ the sheet (close, arrow, swap, ball marker, cloud) stay in `components/icons.tsx
 | insight_type | Icon |
 |---|---|
 | matchup_mismatch | the lane icon of the claim's lane (fallback `lane-centre`) |
-| perimeter_lock | `metric-territorial-stress` |
+| perimeter_lock | `metric-field-tilt` (its standard stat) |
 | threat_pass | `metric-xt` |
 | momentum_shift, turning_point | `metric-momentum` |
 | rhythm_wave | `metric-rhythm` |

@@ -14,6 +14,7 @@ by a script from a copy.
 | `design/source/kit-sheet.png` | five crests, home and away shirts | author's own prompts, AI-assisted; AI tool terms to be confirmed by the author | no maker marks found; crest concerns noted; **used** |
 | `design/source/logo-mark.png` | Optix mark (O, X, arrow) | author's own design | n/a; **used** (traced) |
 | `design/source/logo-wordmark.png` | Optix wordmark | author's own design | n/a; **used** (traced) |
+| `design/source/icon-sheet.png` | "OPTIX ICON SET": 54 icons in 8 groups | author's design sheet, AI-assisted; AI tool terms to be confirmed by the author | reference only: the icons are **redrawn by hand** as SVG; nothing of the raster is embedded or traced |
 
 The audit and what the author must visually confirm are in [docs/brand-audit.md](../docs/brand-audit.md).
 The clubs (Aurelia Rovers, Northgate Town, Calder Athletic, Veston United, Harbor Wanderers) and
@@ -31,6 +32,8 @@ the players are fictional.
 | `web/public/brand/hero-lineup-{1600,800}.webp` | hero-lineup-clean | `tools/make_brand_assets.py hero` |
 | `web/public/brand/og-1200x630.jpg` | the OG card below | `tools/make_brand_images.py` |
 | `design/social/*.png` (GitHub social, OG, devpost thumbnail, video title and end cards) | the logo, crests and hero above | `tools/make_brand_images.py` |
+| `web/src/icons/glyphs/*.tsx` (54 icons) | icon-sheet, as a drawing reference | drawn by hand as SVG path data (docs/icons.md); no raster, no tracing |
+| `docs/screens-v5/icons-{16,24,64}.png` | the icons above | `python -m tools.icon_sheet` |
 | `README.md` hero screenshot (`docs/screens-v4/home_desktop.png`) | the running app | `python -m tools.check_web` |
 
 The mark-removal tool is `tools/brand_audit.py`. Rerunning any tool needs the local originals and
@@ -49,7 +52,8 @@ XMP, ICC and PNG text chunks, and checks the size budgets: at most 300 KB per fi
 |---|---|---|
 | Inter (variable) via `@fontsource-variable/inter` | SIL Open Font License 1.1 | bundled by Vite from node_modules; also used by the social-card templates |
 | Barlow Condensed via `@fontsource/barlow-condensed` | SIL Open Font License 1.1 | as above |
-| Interface icons (`web/src/components/icons.tsx`) | drawn for this project | inline SVG; no icon set or font |
+| Icon set (`web/src/icons`) | drawn for this project from the author's sheet | inline SVG components; no icon font, no third-party set |
+| Interface glyphs (`web/src/components/icons.tsx`) | drawn for this project | inline SVG |
 | Home feature drawings (`web/src/features/home/HomePage.tsx`) | drawn for this project | inline SVG in the app's tokens; no stock art |
 
 No third-party logos, no real club or league marks and no stock photography are shipped.

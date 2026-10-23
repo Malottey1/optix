@@ -49,6 +49,28 @@ is in docs/icons-progress.md.
 - The Python distinctness test needs Playwright, so like tests/test_dashboard.py it is skipped in CI
   (which installs requirements-dev only) and runs locally. The Vitest manifest test runs everywhere.
 
+**A2 (replacements)**
+- Header and tab bar, settings, transport (play, pause, restart; new scrub and speed icons beside the
+  timeline and the speed switch), verdict chips (StatusChip, so the ledger and filters too), Tech
+  pipeline steps and Azure states, the evidence summary, the evidence chain (event icons; carry,
+  duel, block, clearance and other types without an icon keep the ring), Feed and Focus Pitch type
+  chips (`insightIcon`: lane for matchups, else by type, else by claim metric), Team Board style
+  labels (`styleLabelIcon`, by label and direction), lane rows, "Attacks from" (wing play / central
+  play / lane) and the soft lane, Live panel titles (metric glyphs through a new `Panel icon` prop),
+  Home CTAs and feature-card titles.
+- Perimeter Lock uses metric-field-tilt (its standard stat is field tilt); metric-territorial-stress
+  is kept for "Pinned in own half", which is the engine's territorial-stress spell.
+- The swap button's accessible name is now translated (`swap_sides`, en/es/fr). The other icon-only
+  controls (restart, close, settings on phones) already had translated names.
+- check_web: every route is now also checked at 1920x1080 and 1600x900 (it was Home only), with all
+  the gates; screenshots go to docs/screens-v5.
+
+**A3 (gates)** all pass: lint, typecheck, Vitest 118 (55 + 63 icon tests), build, check_web
+--ref out --mutation-proof on five routes at 1440, 390, 1920x1080 and 1600x900, frames p95 16.7 /
+16.8 ms, initial JS 167.5 KB gzip (+3.0 KB on 164.5; no lazy loading needed), image gate 0 problems,
+default suite 286 passed / 2 skipped (azure_live), secret scan 0, repo-size largest
+design/social/devpost-thumbnail-1500x1000.png (1.29 MB).
+
 ## Brand (branch `ui-visuals-brand`, from `ui-visuals-fixes` 9a573d9)
 
 Green start: default suite 239 passed, 2 skipped (azure_live); `npm run build` passes.

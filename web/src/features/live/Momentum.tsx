@@ -141,7 +141,7 @@ export function Momentum() {
   const lead = v > 0 ? tl.home.code : v < 0 ? tl.away.code : null;
   const p2 = tl.periods[1];
   return (
-    <Panel id="momentum" title={t("momentum")} subtitle={t("momentum_note")}>
+    <Panel id="momentum" icon="metric-momentum" title={t("momentum")} subtitle={t("momentum_note")}>
       <div className="flex items-end justify-between gap-3">
         <div className="display text-[40px] font-bold leading-none text-ink" data-testid="momentum-value">
           {num(Math.abs(v), lang)}
