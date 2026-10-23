@@ -115,6 +115,14 @@ passed together.
   2020-02-02, roleAssignments 2022-04-01. The App Insights connection string is passed as a Container
   Apps secret, not a plain env value. infra/deploy.md lists the commands for you; none were run.
 
+**Step G (live check)**
+- **Not run: no Azure configuration present.** No `AZURE_OPENAI_*` variables, no `.env`, and no Azure
+  CLI on this machine, so `tools/azure_live_check.py` wrote docs/azure-live-check.md saying so, with
+  the steps. Zero live calls were made in this whole run.
+- Live tests (`tests/test_azure_live.py`) carry the `azure_live` marker and a skip condition; they
+  are the only skips in the default suite (2) and are reported separately. The live tool caps itself
+  at 10 calls (the phraser's process cap is 60).
+
 ## Visuals polish (branch `ui-visuals-polish`, from `ui-visuals` = main 32730c4)
 
 Green start: default suite 168 passed; `npm run build` ok.

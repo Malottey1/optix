@@ -2,6 +2,7 @@
 pythonpath = ["."]
 testpaths = ["tests"]
 markers = [
+    "azure_live: calls a real Azure OpenAI deployment; skipped unless AZURE_OPENAI_ENDPOINT, AZURE_OPENAI_DEPLOYMENT are set and `az account show` succeeds",
     "slow: long-running tests (multi-seed calibration, full 20-team league); run with `pytest -m slow` or `pytest -m \"\"` for everything",
 ]
 addopts = "-m 'not slow'"
