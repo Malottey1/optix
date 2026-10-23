@@ -1,0 +1,14 @@
+# Local run of the container: dashboard + API on http://127.0.0.1:8000/
+# Azure settings are optional and read from a local, gitignored .env (see .env.example).
+services:
+  optix:
+    build: .
+    image: optix:local
+    ports:
+      - "127.0.0.1:8000:8000"
+    env_file:
+      - path: .env
+        required: false
+    read_only: true
+    tmpfs:
+      - /tmp

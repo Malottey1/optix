@@ -99,6 +99,22 @@ passed together.
   show Replay.
 - E3 (Event Hubs adapter) not built: optional, and the time went to the gates.
 
+**Step F (container and IaC; build and lint only)**
+- Dockerfile: node 22.20.0 (bookworm-slim) builds web/dist; python 3.13.7-slim runs
+  `uvicorn service.app:app` on 8000 as uid 10001, HEALTHCHECK on /healthz, only
+  requirements-azure.txt installed. docker-compose binds 127.0.0.1:8000, read-only root, optional `.env`.
+- **Not built here:** the Docker CLI exists but its daemon was not running, and starting Docker
+  Desktop was outside the brief. **Not linted here:** neither `az` nor `bicep` is installed.
+  `tests/test_infra.py` checks the files statically instead (multi-stage, non-root, healthcheck,
+  exact base-image versions, one role assignment, no keys, nothing in CI/tools runs a deploy).
+- Bicep (infra/main.bicep): Log Analytics + workspace-based Application Insights, Container Apps
+  environment + app with a system-assigned identity, and one role assignment, **Cognitive Services
+  OpenAI User** (5e0bd9bd-7b93-4f28-af87-19fc36ad61bd, checked on the Learn built-in roles page),
+  scoped to one existing Azure OpenAI / Foundry account. API versions: containerApps and
+  managedEnvironments 2026-07-01 (latest GA on Learn), workspaces 2023-09-01, components
+  2020-02-02, roleAssignments 2022-04-01. The App Insights connection string is passed as a Container
+  Apps secret, not a plain env value. infra/deploy.md lists the commands for you; none were run.
+
 ## Visuals polish (branch `ui-visuals-polish`, from `ui-visuals` = main 32730c4)
 
 Green start: default suite 168 passed; `npm run build` ok.
