@@ -1,0 +1,11 @@
+{
+ "head_branch": "ui-visuals-fixes",
+ "head_sha": "a317ae67ce85df0004e13e36c62b447ddd63e75a",
+ "jobs": {
+  "bicep-build": "success",
+  "docker-build": "success"
+ },
+ "run_id": 39892235299,
+ "url": "https://github.com/Malottey1/optix/actions/runs/39892235299",
+ "workflow": "CI"
+}

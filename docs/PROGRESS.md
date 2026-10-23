@@ -36,6 +36,10 @@ Green start: default suite 234 passed, 2 skipped (azure_live). Each task is its 
   "verified by CI build/lint" only when that file records `success` for their job; no file, a failed
   or an unfinished run leave them "built, not verified live". The live-service rows can never get
   this state.
+- CI run 39892235299 (commit a317ae6): python, web, docker-build and bicep-build all succeeded. The
+  container answered `{"status":"ok","service":"optix","matches":1}` inside the job; the Bicep job
+  printed no warnings or errors. Recorded with `tools.ci_record`; the container image and the Bicep
+  now read "verified by CI build/lint" in docs/AZURE.md, the README and the Tech Blueprint.
 
 **Task 4 (known limitations)**
 - docs/known-limitations.md: the heuristic language check, no Event Hubs adapter, the Azure client
