@@ -2,6 +2,7 @@
 // first attempt to the translated, number-guarded sentence), the verification ledger of every claim
 // in the showcase stream, the measured numbers parsed from the generated reports in docs/ (never
 // retyped), and the Microsoft / Azure status list from ui.json (agents/azure_status.py).
+import { TeamBadge } from "../../components/brand/TeamBadge";
 import { Fragment, useState } from "react";
 import { Icon, type IconName } from "../../components/icons";
 import { Chip, StatusChip, type Status } from "../../components/ui/badge";
@@ -274,7 +275,16 @@ function Ledger() {
                     >
                       <td className="num whitespace-nowrap px-3 py-1.5">{clock(r.clock_sec, m.timeline.periods)}</td>
                       <td className="px-3 py-1.5">{r.insight_type ? typeLabel(r.insight_type) : "—"}</td>
-                      <td className="px-3 py-1.5">{r.team ?? "—"}</td>
+                      <td className="px-3 py-1.5">
+                        {r.team ? (
+                          <span className="inline-flex items-center gap-1.5">
+                            <TeamBadge code={r.team} size={24} named />
+                            {r.team}
+                          </span>
+                        ) : (
+                          "—"
+                        )}
+                      </td>
                       <td className="px-3 py-1.5">
                         <code className="text-[11.5px]">{r.metric}</code>
                       </td>

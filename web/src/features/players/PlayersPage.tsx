@@ -2,6 +2,7 @@
 // data only (ui.json, engine/metrics.py, engine/threat.py). No fatigue, GPS, speed or fitness
 // figure exists in the data or on this page. The Verifier's player rules add the context that
 // stops a volume passer or a set-piece taker from being misread.
+import { TeamBadge } from "../../components/brand/TeamBadge";
 import { scaleLinear } from "d3-scale";
 import { useMemo, useState } from "react";
 import { Chip, StatusChip } from "../../components/ui/badge";
@@ -43,7 +44,8 @@ function ContextCard({ p, c, featured }: { p: PlayerRow; c: PlayerCheck; feature
     >
       <div className="flex flex-wrap items-center gap-2">
         <StatusChip status="revised" label={RULE_TITLE[c.rule] ?? words(c.rule)} />
-        <span className="ml-auto text-[12px] font-semibold text-ink-3">
+        <span className="ml-auto inline-flex items-center gap-1.5 text-[12px] font-semibold text-ink-3">
+          <TeamBadge code={p.team} size={24} named />
           {p.team} · {p.position}
         </span>
       </div>
@@ -203,7 +205,8 @@ function VolumeQuality({ players, flagged }: { players: PlayerRow[]; flagged: Se
             {shown ? (
               <>
                 <p className="font-semibold text-ink">{shown.name}</p>
-                <p className="text-ink-3">
+                <p className="inline-flex items-center gap-1.5 text-ink-3">
+                  <TeamBadge code={shown.team} size={24} named />
                   {shown.team} · {shown.position}
                 </p>
                 <p className="mt-2">
@@ -428,7 +431,12 @@ function PlayerTable({ players, flagged }: { players: PlayerRow[]; flagged: Set<
                 <th scope="row" className="whitespace-nowrap px-3 py-1.5 text-left font-semibold text-ink">
                   {p.name}
                 </th>
-                <td className="px-3 py-1.5">{p.team}</td>
+                <td className="px-3 py-1.5">
+                  <span className="inline-flex items-center gap-1.5">
+                    <TeamBadge code={p.team} size={24} named />
+                    {p.team}
+                  </span>
+                </td>
                 <td className="px-3 py-1.5 text-ink-3">{p.position}</td>
                 <td className={cx(td, "font-semibold")}>{num(p.involvement, lang)}</td>
                 <td className={td}>{pct(p.team_share, lang)}</td>

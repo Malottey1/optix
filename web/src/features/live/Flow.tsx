@@ -201,7 +201,11 @@ export function RhythmPulse() {
                 at <span className="num">{clock(peakRow[2], tl.periods)}</span>
               </>
             ) : null}
-            .<span className="wide:hidden"> Height is the possession changes in a minute, mirrored around the centre line.</span>
+            .
+            <span className="wide:hidden">
+              {" "}
+              Height is the possession changes in a minute, mirrored around the centre line.
+            </span>
           </>
         }
         table={{

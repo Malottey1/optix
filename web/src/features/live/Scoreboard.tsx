@@ -2,6 +2,7 @@
 // The clock text moves every frame through a ref; everything else re-renders only on a goal,
 // a phase change or a new momentum minute.
 import { useRef } from "react";
+import { TeamBadge } from "../../components/brand/TeamBadge";
 import { TeamDot } from "../../components/ui/badge";
 import { useData } from "../../data/context";
 import { lastAtOrBefore } from "../../data/model";
@@ -144,7 +145,11 @@ export function Scoreboard() {
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <TeamDot side="home" className="hidden sm:inline-block" />
-            <span className="display text-[30px] font-bold leading-none text-ink sm:text-[44px] wide:text-[38px]">{tl.home.code}</span>
+            <TeamBadge code={tl.home.code} size={44} named className="hidden sm:block wide:h-10 wide:w-10" />
+            <TeamBadge code={tl.home.code} size={28} named className="sm:hidden" />
+            <span className="display text-[30px] font-bold leading-none text-ink sm:text-[44px] wide:text-[38px]">
+              {tl.home.code}
+            </span>
           </div>
           <div className="mt-1 hidden truncate text-[14px] text-ink-3 sm:block wide:mt-0.5">{tl.home.name}</div>
           <Scorers side="home" />
@@ -174,7 +179,11 @@ export function Scoreboard() {
         </div>
         <div className="min-w-0 text-right">
           <div className="flex items-center justify-end gap-2">
-            <span className="display text-[30px] font-bold leading-none text-ink sm:text-[44px] wide:text-[38px]">{tl.away.code}</span>
+            <span className="display text-[30px] font-bold leading-none text-ink sm:text-[44px] wide:text-[38px]">
+              {tl.away.code}
+            </span>
+            <TeamBadge code={tl.away.code} size={28} named className="sm:hidden" />
+            <TeamBadge code={tl.away.code} size={44} named className="hidden sm:block wide:h-10 wide:w-10" />
             <TeamDot side="away" className="hidden sm:inline-block" />
           </div>
           <div className="mt-1 hidden truncate text-[14px] text-ink-3 sm:block wide:mt-0.5">{tl.away.name}</div>

@@ -34,6 +34,16 @@
   --away: #ff9a52;
   --away-soft: rgba(255, 154, 82, 0.16);
 
+  /* Club accents for the five fictional clubs. Used only beside a crest or code (TeamBadge mini-mark),
+   * never alone and never for a verdict. Each is at least 3:1 on --bg and on --surface-2, and the
+   * dark code text on each disc is at least 4.5:1 (tokens.test.ts). NTG red is darker and more
+   * saturated than --block, and "blocked" always carries its icon and label as well. */
+  --team-aur: #e3b341;
+  --team-ntg: #ee4b45;
+  --team-cal: #3fb86b;
+  --team-ves: #5b85ff;
+  --team-har: #6fc6f2;
+
   --pitch: #0b1a19;
   --pitch-stripe: #0d1f1d;
   --pitch-line: rgba(214, 236, 228, 0.3);

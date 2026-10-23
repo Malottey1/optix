@@ -153,7 +153,92 @@ def icons():
     print("icons: favicon.ico (16/32/48 small mark), 16/32/48/180/192/512 png, manifest")
 
 
-STEPS = {"logos": logos, "icons": icons}
+# ---------------------------------------------------------------- team crests and kits
+
+# Column centres of the five clubs on the kit sheet (AUR, NTG, CAL, VES, HAR) and the rows of crests,
+# home shirts and away shirts, in full-resolution pixels (2304x1728). The crest row stops above the
+# club names.
+KIT_COLUMNS = [278, 728, 1152, 1574, 2022]
+KIT_ROWS = {"badge": (180, 416, 175), "home": (505, 1012, 238), "away": (1050, 1590, 238)}
+BG_TOL = 26  # colour distance (sum of |dR|+|dG|+|dB|) from the backdrop where a fill may start
+FLOOD_STEP = 3  # largest per-channel step between neighbouring backdrop pixels
+
+
+def cut_out(a: np.ndarray, cx: int, row: tuple) -> Image.Image:
+    """One item from the sheet on a transparent background.
+
+    Flood fill from the window border along the smooth backdrop (so white shirt bodies and
+    white crest details inside the outline stay), keep the connected shape under the centre, then a
+    soft edge: boundary pixels get alpha from their distance to the backdrop colour and are un-blended
+    from it (no grey halo on a dark page)."""
+    import cv2
+    y0, y1, hw = row
+    win = a[y0:y1, max(0, cx - hw):cx + hw].astype(np.float32)
+    border = np.concatenate([win[:4].reshape(-1, 3), win[-4:].reshape(-1, 3),
+                             win[:, :4].reshape(-1, 3), win[:, -4:].reshape(-1, 3)])
+    bg = np.median(border, 0)
+    dist = np.abs(win - bg).sum(2)
+    # Floating-range flood fill: each step may differ from its neighbour by a few levels, so the
+    # backdrop's soft gradient is followed but the faint shading at a white shirt's edge is not.
+    img = win.astype(np.uint8).copy()
+    h, w = img.shape[:2]
+    mask = np.zeros((h + 2, w + 2), np.uint8)
+    # The item's outline (Canny on a lightly blurred copy, thickened) is a wall the fill cannot cross:
+    # a white shirt's shading is as smooth as the backdrop, its outline is not.
+    gray = cv2.GaussianBlur(cv2.cvtColor(img, cv2.COLOR_RGB2GRAY), (0, 0), 1.2)
+    wall = cv2.dilate(cv2.Canny(gray, 6, 18), np.ones((3, 3), np.uint8), iterations=1)
+    mask[1:-1, 1:-1][wall > 0] = 1
+    seeds = [(x, 0) for x in range(0, w, 3)] + [(x, h - 1) for x in range(0, w, 3)] + \
+            [(0, y) for y in range(0, h, 3)] + [(w - 1, y) for y in range(0, h, 3)]
+    for x, y in seeds:
+        if mask[y + 1, x + 1] == 0 and dist[y, x] < BG_TOL:
+            cv2.floodFill(img, mask, (x, y), (0, 0, 0), (FLOOD_STEP,) * 3, (FLOOD_STEP,) * 3,
+                          4 | cv2.FLOODFILL_MASK_ONLY | (255 << 8))
+    fg = (mask[1:-1, 1:-1] != 255).astype(np.uint8)
+    fg = cv2.morphologyEx(fg, cv2.MORPH_OPEN, np.ones((3, 3), np.uint8))
+    n, lab, stats, _ = cv2.connectedComponentsWithStats(fg, 8)
+    big = 1 + int(np.argmax(stats[1:, cv2.CC_STAT_AREA]))
+    fg = (lab == big).astype(np.uint8)
+    fg = cv2.morphologyEx(fg, cv2.MORPH_CLOSE, np.ones((5, 5), np.uint8))
+    # soft edge on the outer ring only
+    inner = cv2.erode(fg, np.ones((3, 3), np.uint8), iterations=1)
+    ring = (fg - inner).astype(bool)
+    alpha = fg.astype(np.float32)
+    alpha[ring] = np.clip(dist[ring] / (BG_TOL * 3), 0.0, 1.0)
+    rgb = win.copy()
+    am = np.maximum(alpha, 1e-3)[..., None]
+    rgb[ring] = np.clip((win[ring] - (1 - am[ring]) * bg) / am[ring], 0, 255)
+    ys, xs = np.nonzero(fg)
+    pad = 2
+    yy0, yy1, xx0, xx1 = max(0, ys.min() - pad), ys.max() + pad + 1, max(0, xs.min() - pad), xs.max() + pad + 1
+    rgba = np.dstack([rgb, alpha * 255])[yy0:yy1, xx0:xx1].astype(np.uint8)
+    return Image.fromarray(rgba, "RGBA")
+
+
+def _square(im: Image.Image, size: int) -> Image.Image:
+    c = im.copy()
+    c.thumbnail((size, size), Image.LANCZOS)
+    out = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    out.alpha_composite(c, ((size - c.width) // 2, (size - c.height) // 2))
+    return out
+
+
+def teams():
+    a = np.array(Image.open(SRC / "kit-sheet.png").convert("RGB"))
+    TEAMS.mkdir(parents=True, exist_ok=True)
+    for code, cx in zip(CODES, KIT_COLUMNS):
+        crest = cut_out(a, cx, KIT_ROWS["badge"])
+        for s in (48, 96, 192):
+            save(_square(crest, s), TEAMS / f"badge-{code}-{s}.webp", format="WEBP", quality=92, method=6)
+        for kit in ("home", "away"):
+            shirt = cut_out(a, cx, KIT_ROWS[kit])
+            if shirt.width > 640:
+                shirt = shirt.resize((640, round(shirt.height * 640 / shirt.width)), Image.LANCZOS)
+            save(shirt, TEAMS / f"kit-{code}-{kit}.webp", format="WEBP", quality=86, method=6)
+        print(f"{code}: crest {crest.size}, kits home/away")
+
+
+STEPS = {"logos": logos, "icons": icons, "teams": teams}
 
 
 def main(argv):

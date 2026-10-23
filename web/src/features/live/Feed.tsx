@@ -5,6 +5,7 @@
 import { AnimatePresence, m as motion } from "motion/react";
 import { memo, useRef, useState } from "react";
 import { Icon } from "../../components/icons";
+import { TeamBadge } from "../../components/brand/TeamBadge";
 import { Chip, StatusChip, TeamDot, type Status } from "../../components/ui/badge";
 import { Panel } from "../../components/ui/card";
 import { Segmented } from "../../components/ui/segmented";
@@ -177,6 +178,7 @@ export const InsightCard = memo(function InsightCard({
         </time>
         <span className="inline-flex items-center gap-1.5 font-semibold text-ink-2">
           <TeamDot side={m.sideOf(ins.teams.primary)} />
+          <TeamBadge code={ins.teams.primary} size={24} named />
           {ins.teams.primary}
         </span>
         <Chip>{typeLabel(ins.insight_type)}</Chip>

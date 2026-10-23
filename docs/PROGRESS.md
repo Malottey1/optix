@@ -48,6 +48,39 @@ Green start: default suite 239 passed, 2 skipped (azure_live); `npm run build` p
   docs/dashboard.md show the logo (black on light, the accent on dark through `<picture>` in the
   README).
 
+**Step 3 (crests and kits)**
+- Cut from the kit sheet by column (five clubs) and row (crest, home, away). The backdrop is removed
+  by a floating-range flood fill from the window border, walled off by the item's Canny outline.
+  Without the wall, the fill ran into the white away shirts, whose shading is as smooth as the grey
+  backdrop. The largest shape is kept and closed. Its outer ring gets alpha from the distance to the
+  backdrop colour and is un-blended from it, so there is no grey halo on dark
+  (design/review/badge-check-dark.png, badge-edge-zoom.png). The faint light rim at the top of the
+  shield crests is the crest's printed bevel, not a fringe. Interior whites are kept.
+- badge-<code>-48/96/192.webp and kit-<code>-home/away.webp (native width, about 435 px). The crests
+  are only about 220 px tall on the sheet, so 192 is the largest useful size.
+- **Mini-mark below 40 px.** At 24 px the crest lettering is unreadable, VES and HAR are both blue and
+  differ only by outline, and NTG's own crest text is wrong. So `TeamBadge` draws a disc in the club
+  accent with the code (Barlow Condensed) below 40 px, and the crest from 40 px up. The disc is also
+  the fallback when an image fails or a code is unknown.
+- Club accents in tokens.css (--team-aur/ntg/cal/ves/har). tokens.test.ts checks each is at least 3:1
+  on --bg and --surface-2, that the dark code text on each disc is at least 4.5:1, and that none
+  equals a verdict colour. They are used only inside the mini-mark and as a 3 px bar beside the crest
+  on Team Board cards.
+- **NTG red versus "blocked":** NTG is #ee4b45 (darker, more saturated), blocked is #ff7a7a. A club
+  accent is never alone: it is always a disc carrying the code, or a bar beside the crest. "Blocked"
+  always has its block icon and label. Chart colours (home/away, verdicts) are unchanged; the home and
+  away dots stay beside the crests, because they key the charts.
+- Placed in:
+  - the Live scoreboard (crest at 44 px from sm, mini-mark on phones);
+  - insight cards (the matchup cards included);
+  - Team Board cards (crest, accent bar, lazy kits with a caption) and the head-to-head header (crests
+    beside the attacker and defender pickers);
+  - Player Deck cards, the hover panel and table rows;
+  - Tech ledger rows.
+  All use alt="" because the code or name is beside the badge.
+- Prettier was run on the touched feature files and also reformatted two files that were already
+  unformatted (Flow.tsx, Scoreboard.tsx); whitespace only.
+
 ## Cleanup (branch `ui-visuals-fixes`, from main 1afdc0d)
 
 Green start: default suite 234 passed, 2 skipped (azure_live). Each task is its own commit.

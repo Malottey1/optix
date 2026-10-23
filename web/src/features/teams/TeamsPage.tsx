@@ -2,6 +2,7 @@
 // numbers come from ui.json (engine/profiles.py, engine/style_labels.py, engine/matchup.py).
 // Lanes are always named from the attacker's point of view; the defender's own name for the same
 // strip of grass is the mirror (left and right swap), shown beside it.
+import { TeamBadge } from "../../components/brand/TeamBadge";
 import { useState } from "react";
 import { Icon } from "../../components/icons";
 import { MismatchCrosshairs } from "../../components/viz/MismatchCrosshairs";
@@ -146,6 +147,32 @@ function LaneLift({
   );
 }
 
+/** Home and away shirts (illustrative artwork, from the kit sheet), small and lazy-loaded. */
+function Kits({ code, name }: { code: string; name: string }) {
+  const c = code.toLowerCase();
+  return (
+    <figure className="mt-3 flex items-end gap-3" data-kits={code}>
+      {(["home", "away"] as const).map((k) => (
+        <span key={k} className="flex flex-col items-center gap-1">
+          <img
+            src={`./brand/teams/kit-${c}-${k}.webp`}
+            width={64}
+            height={72}
+            loading="lazy"
+            decoding="async"
+            alt={`${name} ${k} shirt`}
+            className="h-[72px] w-16 object-contain"
+          />
+          <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-3">{k}</span>
+        </span>
+      ))}
+      <figcaption className="ml-1 self-center text-[11.5px] leading-snug text-ink-3">
+        Kits: illustrative artwork for a fictional club.
+      </figcaption>
+    </figure>
+  );
+}
+
 function TeamCard({ team, lanes }: { team: TeamProfile; lanes: string[] }) {
   const { lang } = useT();
   const top = lanes.reduce(
@@ -160,9 +187,17 @@ function TeamCard({ team, lanes }: { team: TeamProfile; lanes: string[] }) {
       className="flex min-w-0 flex-col rounded-2xl border border-line bg-surface-1 pad elev-1"
     >
       <header className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <h3 className="display text-[30px] font-bold leading-none text-ink">{team.code}</h3>
-          <p className="mt-1 truncate text-[13px] text-ink-3">{team.name}</p>
+        <div className="flex min-w-0 items-center gap-3">
+          <TeamBadge code={team.code} size={56} named />
+          <span
+            aria-hidden="true"
+            className="h-10 w-[3px] shrink-0 rounded-full"
+            style={{ background: `var(--team-${team.code.toLowerCase()})` }}
+          />
+          <div className="min-w-0">
+            <h3 className="display text-[30px] font-bold leading-none text-ink">{team.code}</h3>
+            <p className="mt-1 truncate text-[13px] text-ink-3">{team.name}</p>
+          </div>
         </div>
         <span className="shrink-0 rounded-full bg-surface-3 px-2 py-0.5 text-[11.5px] text-ink-2">
           <span className="num font-semibold">{num(team.matches, lang)}</span> matches
@@ -173,6 +208,7 @@ function TeamCard({ team, lanes }: { team: TeamProfile; lanes: string[] }) {
           <LabelChip key={l.id} team={team} l={l} lang={lang} />
         ))}
       </div>
+      <Kits code={team.code} name={team.name} />
       <div className="mt-4 border-t border-line pt-3">
         <p className="eyebrow">Attacks from</p>
         <p className="mt-1 text-[13px] text-ink-2">
@@ -252,6 +288,7 @@ function HeadToHead() {
       subtitle="Where the attacker's habit meets the defender's soft spot, over the season. Lanes are named from the attacker's point of view: the defender's own right flank is the attacker's left flank, so both sides of a lane describe the same strip of grass."
     >
       <div className="flex flex-wrap items-end gap-3">
+        <TeamBadge code={att} size={44} named className="mb-0.5" />
         <label className="flex flex-col gap-1 text-[12px] font-semibold text-ink-3">
           Attacker
           <select id="h2h-attacker" className={sel} value={att} onChange={(e) => pick("att", e.target.value)}>
@@ -280,6 +317,7 @@ function HeadToHead() {
             ))}
           </select>
         </label>
+        <TeamBadge code={dfn} size={44} named className="mb-0.5" />
         <div className="ml-auto flex flex-wrap items-center gap-2">
           {h.claim ? (
             <StatusChip
