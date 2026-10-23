@@ -70,6 +70,136 @@ docs/patterns-progress.md. Plan and audit: docs/patterns-plan.md.
     "Unplanted cases" and "Verifier context rules" (tools and docs);
   - code comments ("focus trap" in ui/sheet.tsx, "on purpose" in two comments) are not UI text and
     are left alone.
+- Showcase search (Step 2): a serial scan of the trap-only search from 0 to the 20000-try cap, running
+  the full stream on every candidate that passed the five traps (8 such candidates; peak RSS 0.8 GB).
+  None had four new families AND two revised or blocked naive claims: offsets 8827 and 8911 had four
+  families but at most one revised naive claim. Per the brief this relaxes to three families. The
+  first candidate, offset 6914 (AUR 4-0 NTG), meets that: low block (AUR), rest defence and flank
+  isolation (NTG), and three naive claims revised by the new rules (field tilt twice, final-third
+  volume). With planting on it is also the first offset a trap-only search from 0 finds, so
+  the hint keeps the slow "search from 0 lands on the hint" test valid. The hint is now keyed by
+  (seed, motif scale): {(2026, 0.0): 1383, (2026, 1.0): 6914}, so scale 0 still finds the
+  pre-patterns showcase byte for byte (the byte-identity test caught a single shared hint).
+- Publishing choices in the Analyst (detectors unchanged, so recall is measured on the definitions):
+  - the starved finisher is full-match only (`full_match_only` in the config): the touch lines are
+    full-match lines, and at half time first-half touches were being compared with them;
+  - flank isolation is published only when >= 10% of the team's final-third passes are in the
+    spells (MIN_ISOLATION_F3_SHARE): the brief's definition counts touchline spells anywhere, and
+    "0% of their final-third passes came in 1 spell" says nothing;
+  - zero counts get their own phrasing (`.no_shot` for bait and switch and flank isolation,
+    `.no_cross` for cut-backs), never "0 shots, 0 xG";
+  - within a match, a family + team (+ player) already surfaced at half time is surfaced again at
+    full time only when its magnitude moved >= 25% (the same rule as cross-match novelty);
+  - two pattern rules firing on one naive claim use a combined revision template
+    (field_tilt.low_block_and_counters); a combination without one is dropped, never phrased with
+    one rule's numbers missing (the showcase lost a claim to the number guard before this).
+- Tuning attempt 1 (starved finisher): min_xg 0.25 added. Without it, a forward with 25 touches,
+  two unpressured shots and 0.11 xG qualified (xG per touch cleared 5x the position median because
+  the median is tiny). The template also shows the league's lower-quartile touch line for forwards,
+  so "only N touches" carries its comparison. Measured effect: Step 6.
+- Measurement (Step 6, tools/pattern_recall.py, docs/pattern-recall.md): 10 full leagues (seeds
+  2026-2030 at 1.0x and 0.5x), serial, one league in memory; the engine's id-keyed caches are cleared
+  between leagues (without that the first run climbed 1.2 -> 1.5 GB after two leagues and was
+  stopped). Peak RSS 1.8 GB, 172 s with the leagues already generated (first run with generation:
+  311 s, 2.2 GB). Detector versus independent recompute: 0 mismatches.
+- Tuning attempts on the tuning seeds only (2026-2028), hold-out untouched:
+  - P4 low block, attempt 1 (earlier): min_opp_shots 4 -> 3: recall 0.44, FP 3.2%. Diagnosis of the
+    misses: the window that came closest failed on the opponent's shot count most often, then blocks
+    and the outside-box share. Attempt 2: min_opp_shots 3 -> 2 (the brief sets no minimum): recall
+    0.53, FP 5.3%. Attempt 3: also block_pctl 0.75 -> 0.60: recall 0.56, FP 7.2%. Still under 0.60
+    after three attempts, so P4 is **experimental**; attempt 2's thresholds are kept (the better
+    trade-off). Hold-out: 0.44 recall, 4.4% FP.
+  - P6 rest defence, attempt 1 (earlier): min_tilt 0.65 -> 0.60 and a 30-minute window. No further
+    attempt: the misses are planted counters in matches where the team held 30-50% of the territory,
+    so the definition's precondition (territorial dominance; the brief says >= 65%) is not met and
+    the detector is right not to fire. Lowering the tilt further would change what the pattern is.
+    P6 is **experimental** (tuning 0.60, hold-out 0.48, FP about 7%).
+  - P7 starved finisher: attempt 1 is the min_xg floor above; tuning 0.80, hold-out 0.88, FP 5.1%.
+- Novelty (tools/pattern_diversity.py, docs/pattern-diversity.md): a pure down-weight only reordered
+  the cards (the per-summary cap rarely binds), so VES repeated its cut-backs in 50% of its cards.
+  Ranking now holds back a candidate whose score ends below SURFACE_MIN_SCORE (0.6): an unchanged
+  repeat of either of the team's previous two matches scores 0.5 (pattern) or 0.45 (naive claim).
+  A repeat whose magnitude moved >= 25% is not down-weighted. With novelty both bars are met (most
+  common family 22.2%, worst per-team repetition VES 39.5%); without novelty VES is 47.8%. Pipeline
+  recall (the planted cases the stream surfaced) is lower with novelty for the signature families
+  (bait and switch 1.00 -> 0.71): the price of not repeating a team's signature every week. The
+  standalone showcase has no history, so no novelty adjustment applies to it.
+- Bug fixed: `MatchState.view()` dropped the dataset's baseline, so a match streamed from a season
+  dataset with no separate baseline compared itself with the match so far (league lines from one
+  partial match). The view now keeps `baseline_of(ds)`. The showcase (season baseline) is unchanged.
+- Experimental policy applied: P4 (elastic low block) and P6 (rest defence) missed the hold-out
+  recall bar after three tuning attempts, so both are `enabled=False` by default and publish no card
+  (the brief: "excluded from the demo stream"). Their context rules stay on: they only block a naive
+  territory claim and ask for numbers the Verifier recomputes, and switching them off would let an
+  unqualified "N% of the territory" through where the low block or the counters hold. The brief also
+  asks the showcase for three new families; no candidate in the 20000-try scan had three validated
+  families (at most two: offsets 8827, 8911, 11293, 13865), so the showcase stays at 6914 and counts
+  families shown as a card (P3) or through a rule that rewrote a naive claim (P4, P6). Team Board
+  signatures use enabled families only (detect_team's default). The Tech catalogue shows
+  "experimental, off in the stream".
+  A naive claim rewritten by a P4 or P6 rule is still a tactical_pattern card whose chip names the
+  rule's family (e.g. "NTG had 80% of the territory, yet 71.4% of their 7 shots were from
+  distance..."): it is the field-tilt claim with the numbers the rule asked for, recomputed by the
+  Verifier, not a P4 or P6 claim. Showcase after the change: 47 insights (was 49), 12 revised, 0
+  dropped.
+- Diversity after switching P4 and P6 off (docs/pattern-diversity.md): both bars were missed
+  (cut-back 27.3% of cards, VES repetition 45.7%). Both measures count distinct (team, family) pairs
+  per match, so per-match family caps cannot move them; the lever is the novelty rule. A count
+  magnitude going from 1 to 2 passed the 25% "changed" test, so a signature family came back
+  whenever its count wobbled. A change now also needs an absolute step of 2 (NOVELTY_MIN_STEP; a
+  percentage magnitude such as 60 -> 75 is unaffected). Result: VES repetition 35.0% (bar met);
+  the cut-back is still 26.9% (bar 25%, missed). It is left missed and reported: the cut-back is
+  common because real cut-backs occur in about 6% of unplanted team-matches, and pushing it down
+  would mean ranking one family below the others for being true more often.
+- Stale league found and fixed: robustness run inline peaked at 3.03 GB (over the 2.5 GB rule),
+  because each full-league job generated its league in memory and then loaded it again. With
+  --reuse-leagues it reads the leagues tools.pattern_recall already wrote (the brief: reuse
+  generated league data); peak 2.36 GB. Comparing that run with the fresh one showed seed 2026
+  differing while 2027-2030 matched exactly: data/generated-2026/full had been written at 07:36,
+  before the generator commit 4e67d84 (motif shot-volume fix), and pattern_recall had reused it.
+  The stale league was moved to the session scratchpad (not deleted); league_dir now writes a
+  generator_stamp.txt (hash of data_gen/*.py) and regenerates any league whose stamp differs, and
+  robustness uses the same function. docs/pattern-recall.md and docs/robustness.md were re-measured
+  on fresh leagues. The tuning-attempt figures above used the stale 2026 league; re-measured with
+  the kept thresholds, tuning recall is P4 0.44 (was 0.53), P6 0.63 (was 0.60), P7 0.82 (0.80), P8
+  0.90 (0.93); hold-out figures are unchanged (2029-2030 were fresh). No status changed.
+- Robustness (tools/robustness.py): its showcase search used a 6000-try cap, below the showcase's
+  try 6914 with motifs planted, so the cap is now the generator's 20000 default
+  (--showcase-max-tries). It runs with --jobs 0, a new in-process mode that clears the engine caches
+  after each league, to keep within the "at most 2 processes, no multiprocessing" rule; the process
+  pool is still the default when --jobs is above 0.
+
+### Test changes (patterns)
+
+- tests/test_translation.py: the placeholder test iterates over template variants (a key may hold a
+  list); every assertion is kept and two are added (same number of variants per language, every
+  plural form follows a param of its own sentence). The "no glued x" test iterates variants.
+- tests/test_phraser.py, tests/test_agents.py: the template checks iterate `narrative.variants()`
+  instead of assuming one pair per key; plural forms are resolved before the language check, as at
+  render time. Same assertions on more sentences.
+- tests/test_engine.py `test_profiles_have_league_comparison_and_sample_sizes`: with planting on,
+  CAL trails in the 2026 season but concedes no chance while trailing, so that lane sample is empty.
+  The engine reports it correctly (n 0, share None, confidence low); the test assumed every sample was
+  non-empty. It now asserts exactly that for an empty sample and the sum of 1 for every other.
+- tests/test_data_gen.py (slow) `test_showcase_search_hint_matches_a_search_from_zero`: reads the
+  hint for (seed, default motif scale); same assertion.
+- tests/test_verifier.py: the rule-count assertion was a literal 9; it is now 9 + len(PATTERN_RULES)
+  (the eight pattern context rules are new), and a new assertion checks every pattern rule is
+  registered with REQUIRES and a revision hint. No existing rule check was removed.
+- tests/test_dashboard_data.py `test_measured_numbers_are_parsed_from_the_three_reports` is now
+  `..._four_reports`: docs/pattern-recall.md joins the measured reports the Tech page parses, so the
+  expected set gains it; every table check now runs on it as well.
+- tests/test_pattern_claims.py `test_showcase_surfaces_new_families_and_revised_naive_claims`:
+  with P4 and P6 disabled the showcase shows one new family as a card, so the three-family check
+  counts families shown as cards or through a rule that rewrote a naive claim, and a new assertion
+  checks no disabled family has a card. A new test runs the showcase with P4 and P6 switched on and
+  applies the same recheck and mutation checks to their claims, so their recomputes stay covered.
+- tests/test_pattern_claims.py novelty and half-time tests (written in this branch): the "moved"
+  examples change from 3 -> 4 and 2 -> 3 (one more instance, now noise) to 3 -> 5 and 2 -> 4, and
+  new assertions check that 3 -> 4 and 1 -> 2 are held back as repeats.
+- web/src/types/guards.ts (not a test, but it gates the Vitest fixtures): INSIGHT_TYPES gains
+  `tactical_pattern`, the new contract type; without it the stream guard rejected the showcase
+  stream. Vitest 118 -> 123 (5 new PatternRoute tests).
 
 ## Icons (branch `ui-visuals-icons`, from `ui-visuals-brand` f376c6b; local tag `pre-icons`)
 

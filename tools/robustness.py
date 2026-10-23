@@ -2,8 +2,11 @@
 
     python -m tools.robustness                      # writes docs/robustness.md
     python -m tools.robustness --jobs 4 --out /tmp/robustness.md
+    python -m tools.robustness --jobs 0             # serial, in this process (low-memory machines)
+    python -m tools.robustness --jobs 0 --json F --reuse --redo-full --reuse-leagues
+                                                    # full leagues read from data/generated-<seed>/full
 
-Four parts, every league generated fresh (no network, nothing written under data/):
+Four parts, every league generated fresh unless --reuse-leagues (nothing written under data/):
   1. the small league under 10 seeds: how many seeds put each calibration target in range;
   2. the full league under 3 seeds: targets in range, planted-pattern recovery by type,
      champion and bottom points;
@@ -137,21 +140,32 @@ def verifier_counts(cases: dict) -> dict:
     return dict(out)
 
 
-def _full_job(seed: int) -> dict:
+def _league_dir(seed: int) -> Path:
+    """The full league tools.pattern_recall generated for this seed (data/generated-<seed>/full),
+    regenerated there first if the generator changed since (its generator_stamp.txt)."""
+    from .pattern_recall import league_dir
+    return league_dir(seed, 1.0)
+
+
+def _full_job(seed: int, reuse_league: bool = False) -> dict:
     from engine.tables import load
     from tests.verifier_cases import counts_of
     from tests.test_full_league import _tables
     t0 = time.perf_counter()
     with tempfile.TemporaryDirectory() as d:
         out = Path(d)
-        gt = main_full(seed, out)
-        gen_sec = time.perf_counter() - t0
+        if reuse_league:
+            out, gen_sec = _league_dir(seed), None      # same generator code, seed and motif scale
+            gt = json.loads((out / "ground_truth.json").read_text())
+        else:
+            gt = main_full(seed, out)
+            gen_sec = round(time.perf_counter() - t0, 1)
         res = calibration.check(calibration.season_stats(_tables(out)))
         ds = load(out)
         pts = sorted(_points(ds.matches).values())
         counts = verifier_counts(counts_of(ds, gt))
         recovery = _recovery(ds, gt)
-    return dict(seed=seed, gen_sec=round(gen_sec, 1),
+    return dict(seed=seed, gen_sec=gen_sec,
                 targets={k: dict(applicable=r["applicable"], passed=r["passed"], measured=r["measured"])
                          for k, r in res.items()},
                 champion=pts[-1], bottom=pts[0], recovery=recovery,
@@ -251,7 +265,7 @@ def render(small: dict, full: list, showcase: list, extra: list = ()) -> str:
         rec = [x for x in sl["lanes"] if x["recoverable"]]
         L.append(f"| {f['seed']} | {n_app - len(out)}/{n_app} | {', '.join(out) or 'none'} | {_yes(rec)} | {_yes(sl['lanes'])} "
                  f"| {len(sl['false_pos'])}/{sl['unplanted']} | {_yes(rc['volume_passer'])} | {_yes(rc['corner_specialist'])} "
-                 f"| {_yes(rc['shot_spam'])} | {_yes(rc['sit_deep_when_leading'])} | {f['champion']} | {f['bottom']} | {f['gen_sec']} |")
+                 f"| {_yes(rc['shot_spam'])} | {_yes(rc['sit_deep_when_leading'])} | {f['champion']} | {f['bottom']} | {f['gen_sec'] if f['gen_sec'] is not None else 'reused'} |")
     for f in full:
         out = {k: r for k, r in f["targets"].items() if r["applicable"] and not r["passed"]}
         for k, r in out.items():
@@ -318,23 +332,49 @@ def _fmt(v):
     return f"{v:.3f}" if abs(v) < 10 else f"{v:.1f}"
 
 
+class _Inline:
+    """A stand-in for the process pool that runs each job when submitted (serial, one process)."""
+
+    class _Done:
+        def __init__(self, value):
+            self.value = value
+
+        def result(self):
+            return self.value
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        return False
+
+    def submit(self, fn, *args):
+        from .pattern_recall import reset_caches
+        out = self._Done(fn(*args))
+        reset_caches()                         # one league's caches at a time, as in a worker process
+        return out
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--out", type=Path, default=ROOT / "docs" / "robustness.md")
     ap.add_argument("--json", type=Path, default=None, help="also write the raw results here")
     ap.add_argument("--reuse", action="store_true", help="reuse results already in --json")
-    ap.add_argument("--jobs", type=int, default=6)
-    ap.add_argument("--showcase-max-tries", type=int, default=6000)
+    ap.add_argument("--jobs", type=int, default=6, help="worker processes; 0 runs every job in this process")
+    ap.add_argument("--showcase-max-tries", type=int, default=20000)
+    ap.add_argument("--reuse-leagues", action="store_true",
+                    help="read the full leagues in data/generated-<seed>/full instead of generating them")
+    ap.add_argument("--redo-full", action="store_true", help="with --reuse: recompute the full leagues")
     a = ap.parse_args(argv)
     t0 = time.perf_counter()
     cache = json.loads(a.json.read_text()) if a.reuse and a.json and a.json.exists() else {}
-    have_full = {f["seed"]: f for f in cache.get("full", [])}
+    have_full = {} if a.redo_full else {f["seed"]: f for f in cache.get("full", [])}
     have_sc = {s["seed"]: s for s in cache.get("showcase", [])}
     have_small = {int(k): v for k, v in cache.get("small", {}).items()}
-    with ProcessPoolExecutor(a.jobs) as ex:
+    with (ProcessPoolExecutor(a.jobs) if a.jobs else _Inline()) as ex:
         # longest jobs first; anything in the --reuse cache is not recomputed
         sc = {s: ex.submit(_showcase_job, s, a.showcase_max_tries) for s in SHOWCASE_SEEDS if s not in have_sc}
-        fu = {s: ex.submit(_full_job, s) for s in FULL_SEEDS + VERIFIER_EXTRA_SEEDS if s not in have_full}
+        fu = {s: ex.submit(_full_job, s, a.reuse_leagues) for s in FULL_SEEDS + VERIFIER_EXTRA_SEEDS if s not in have_full}
         sm = {s: ex.submit(_small_job, s) for s in SMALL_SEEDS if s not in have_small}
         have_small.update({s: f.result() for s, f in sm.items()})
         have_full.update({s: f.result() for s, f in fu.items()})

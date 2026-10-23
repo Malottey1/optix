@@ -44,7 +44,7 @@ pressure, P17 style-direct-play.
 | P10 Controlled funneling | not built |
 | P11 Pressed presser | not built |
 | P12 Third-man wall pass | not built |
-| P13 Press trap (turnovers after short passes into a wide zone) | not built |
+| P13 Wide-zone turnovers (turnovers after short passes into a wide zone) | not built |
 | P14 Restless rotation (player) | not built |
 | P15 Set-piece dependence | not built |
 | P16 Press-resistant passer (player) | not built |

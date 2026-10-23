@@ -1,0 +1,536 @@
+{
+ "2026@0.5": {
+  "counts": {
+   "pat_bait_switch": {
+    "cases": 14,
+    "fps": 0,
+    "hits": 14,
+    "negatives": 722
+   },
+   "pat_counter_press": {
+    "cases": 13,
+    "fps": 2,
+    "hits": 11,
+    "negatives": 722
+   },
+   "pat_cutback": {
+    "cases": 24,
+    "fps": 48,
+    "hits": 24,
+    "negatives": 722
+   },
+   "pat_elastic_low_block": {
+    "cases": 11,
+    "fps": 35,
+    "hits": 5,
+    "negatives": 722
+   },
+   "pat_flank_isolation": {
+    "cases": 20,
+    "fps": 3,
+    "hits": 20,
+    "negatives": 684
+   },
+   "pat_rest_defence": {
+    "cases": 7,
+    "fps": 57,
+    "hits": 7,
+    "negatives": 722
+   },
+   "pat_starved_finisher": {
+    "cases": 9,
+    "fps": 44,
+    "hits": 9,
+    "negatives": 722
+   },
+   "pat_tactical_fouling": {
+    "fps": 42,
+    "negatives": 722
+   }
+  },
+  "matches": 380,
+  "mismatches": 0
+ },
+ "2026@1.0": {
+  "counts": {
+   "pat_bait_switch": {
+    "cases": 24,
+    "fps": 0,
+    "hits": 24,
+    "negatives": 722
+   },
+   "pat_counter_press": {
+    "cases": 28,
+    "fps": 3,
+    "hits": 27,
+    "negatives": 722
+   },
+   "pat_cutback": {
+    "cases": 30,
+    "fps": 44,
+    "hits": 30,
+    "negatives": 722
+   },
+   "pat_elastic_low_block": {
+    "cases": 15,
+    "fps": 34,
+    "hits": 5,
+    "negatives": 722
+   },
+   "pat_flank_isolation": {
+    "cases": 45,
+    "fps": 4,
+    "hits": 45,
+    "negatives": 684
+   },
+   "pat_rest_defence": {
+    "cases": 16,
+    "fps": 54,
+    "hits": 9,
+    "negatives": 722
+   },
+   "pat_starved_finisher": {
+    "cases": 15,
+    "fps": 28,
+    "hits": 13,
+    "negatives": 722
+   },
+   "pat_tactical_fouling": {
+    "cases": 5,
+    "fps": 35,
+    "hits": 3,
+    "negatives": 722
+   }
+  },
+  "matches": 380,
+  "mismatches": 0
+ },
+ "2027@0.5": {
+  "counts": {
+   "pat_bait_switch": {
+    "cases": 22,
+    "fps": 0,
+    "hits": 22,
+    "negatives": 722
+   },
+   "pat_counter_press": {
+    "cases": 11,
+    "fps": 0,
+    "hits": 9,
+    "negatives": 722
+   },
+   "pat_cutback": {
+    "cases": 21,
+    "fps": 41,
+    "hits": 21,
+    "negatives": 722
+   },
+   "pat_elastic_low_block": {
+    "cases": 17,
+    "fps": 42,
+    "hits": 5,
+    "negatives": 722
+   },
+   "pat_flank_isolation": {
+    "cases": 28,
+    "fps": 5,
+    "hits": 28,
+    "negatives": 684
+   },
+   "pat_rest_defence": {
+    "cases": 11,
+    "fps": 56,
+    "hits": 8,
+    "negatives": 722
+   },
+   "pat_starved_finisher": {
+    "cases": 8,
+    "fps": 36,
+    "hits": 8,
+    "negatives": 722
+   },
+   "pat_tactical_fouling": {
+    "cases": 3,
+    "fps": 36,
+    "hits": 2,
+    "negatives": 722
+   }
+  },
+  "matches": 380,
+  "mismatches": 0
+ },
+ "2027@1.0": {
+  "counts": {
+   "pat_bait_switch": {
+    "cases": 30,
+    "fps": 0,
+    "hits": 30,
+    "negatives": 722
+   },
+   "pat_counter_press": {
+    "cases": 28,
+    "fps": 1,
+    "hits": 25,
+    "negatives": 722
+   },
+   "pat_cutback": {
+    "cases": 30,
+    "fps": 39,
+    "hits": 30,
+    "negatives": 722
+   },
+   "pat_elastic_low_block": {
+    "cases": 21,
+    "fps": 45,
+    "hits": 9,
+    "negatives": 722
+   },
+   "pat_flank_isolation": {
+    "cases": 50,
+    "fps": 8,
+    "hits": 50,
+    "negatives": 684
+   },
+   "pat_rest_defence": {
+    "cases": 14,
+    "fps": 49,
+    "hits": 10,
+    "negatives": 722
+   },
+   "pat_starved_finisher": {
+    "cases": 19,
+    "fps": 43,
+    "hits": 14,
+    "negatives": 722
+   },
+   "pat_tactical_fouling": {
+    "cases": 9,
+    "fps": 48,
+    "hits": 9,
+    "negatives": 722
+   }
+  },
+  "matches": 380,
+  "mismatches": 0
+ },
+ "2028@0.5": {
+  "counts": {
+   "pat_bait_switch": {
+    "cases": 14,
+    "fps": 0,
+    "hits": 14,
+    "negatives": 722
+   },
+   "pat_counter_press": {
+    "cases": 12,
+    "fps": 1,
+    "hits": 10,
+    "negatives": 722
+   },
+   "pat_cutback": {
+    "cases": 20,
+    "fps": 37,
+    "hits": 20,
+    "negatives": 722
+   },
+   "pat_elastic_low_block": {
+    "cases": 15,
+    "fps": 36,
+    "hits": 4,
+    "negatives": 722
+   },
+   "pat_flank_isolation": {
+    "cases": 30,
+    "fps": 5,
+    "hits": 30,
+    "negatives": 684
+   },
+   "pat_rest_defence": {
+    "cases": 7,
+    "fps": 53,
+    "hits": 5,
+    "negatives": 722
+   },
+   "pat_starved_finisher": {
+    "cases": 13,
+    "fps": 42,
+    "hits": 8,
+    "negatives": 722
+   },
+   "pat_tactical_fouling": {
+    "fps": 38,
+    "negatives": 722
+   }
+  },
+  "matches": 380,
+  "mismatches": 0
+ },
+ "2028@1.0": {
+  "counts": {
+   "pat_bait_switch": {
+    "cases": 23,
+    "fps": 0,
+    "hits": 23,
+    "negatives": 722
+   },
+   "pat_counter_press": {
+    "cases": 23,
+    "fps": 0,
+    "hits": 21,
+    "negatives": 722
+   },
+   "pat_cutback": {
+    "cases": 33,
+    "fps": 36,
+    "hits": 33,
+    "negatives": 722
+   },
+   "pat_elastic_low_block": {
+    "cases": 19,
+    "fps": 35,
+    "hits": 10,
+    "negatives": 722
+   },
+   "pat_flank_isolation": {
+    "cases": 49,
+    "fps": 7,
+    "hits": 49,
+    "negatives": 684
+   },
+   "pat_rest_defence": {
+    "cases": 13,
+    "fps": 54,
+    "hits": 8,
+    "negatives": 722
+   },
+   "pat_starved_finisher": {
+    "cases": 23,
+    "fps": 37,
+    "hits": 20,
+    "negatives": 722
+   },
+   "pat_tactical_fouling": {
+    "cases": 7,
+    "fps": 36,
+    "hits": 7,
+    "negatives": 722
+   }
+  },
+  "matches": 380,
+  "mismatches": 0
+ },
+ "2029@0.5": {
+  "counts": {
+   "pat_bait_switch": {
+    "cases": 16,
+    "fps": 0,
+    "hits": 16,
+    "negatives": 722
+   },
+   "pat_counter_press": {
+    "cases": 10,
+    "fps": 0,
+    "hits": 9,
+    "negatives": 722
+   },
+   "pat_cutback": {
+    "cases": 20,
+    "fps": 34,
+    "hits": 20,
+    "negatives": 722
+   },
+   "pat_elastic_low_block": {
+    "cases": 14,
+    "fps": 34,
+    "hits": 8,
+    "negatives": 722
+   },
+   "pat_flank_isolation": {
+    "cases": 32,
+    "fps": 4,
+    "hits": 32,
+    "negatives": 684
+   },
+   "pat_rest_defence": {
+    "cases": 5,
+    "fps": 57,
+    "hits": 4,
+    "negatives": 722
+   },
+   "pat_starved_finisher": {
+    "cases": 11,
+    "fps": 48,
+    "hits": 10,
+    "negatives": 722
+   },
+   "pat_tactical_fouling": {
+    "fps": 50,
+    "negatives": 722
+   }
+  },
+  "matches": 380,
+  "mismatches": 0
+ },
+ "2029@1.0": {
+  "counts": {
+   "pat_bait_switch": {
+    "cases": 28,
+    "fps": 1,
+    "hits": 28,
+    "negatives": 722
+   },
+   "pat_counter_press": {
+    "cases": 27,
+    "fps": 1,
+    "hits": 26,
+    "negatives": 722
+   },
+   "pat_cutback": {
+    "cases": 25,
+    "fps": 38,
+    "hits": 25,
+    "negatives": 722
+   },
+   "pat_elastic_low_block": {
+    "cases": 17,
+    "fps": 34,
+    "hits": 12,
+    "negatives": 722
+   },
+   "pat_flank_isolation": {
+    "cases": 49,
+    "fps": 13,
+    "hits": 49,
+    "negatives": 684
+   },
+   "pat_rest_defence": {
+    "cases": 16,
+    "fps": 48,
+    "hits": 7,
+    "negatives": 722
+   },
+   "pat_starved_finisher": {
+    "cases": 20,
+    "fps": 42,
+    "hits": 17,
+    "negatives": 722
+   },
+   "pat_tactical_fouling": {
+    "cases": 3,
+    "fps": 35,
+    "hits": 3,
+    "negatives": 722
+   }
+  },
+  "matches": 380,
+  "mismatches": 0
+ },
+ "2030@0.5": {
+  "counts": {
+   "pat_bait_switch": {
+    "cases": 13,
+    "fps": 0,
+    "hits": 13,
+    "negatives": 722
+   },
+   "pat_counter_press": {
+    "cases": 17,
+    "fps": 0,
+    "hits": 15,
+    "negatives": 722
+   },
+   "pat_cutback": {
+    "cases": 19,
+    "fps": 44,
+    "hits": 19,
+    "negatives": 722
+   },
+   "pat_elastic_low_block": {
+    "cases": 17,
+    "fps": 29,
+    "hits": 8,
+    "negatives": 722
+   },
+   "pat_flank_isolation": {
+    "cases": 26,
+    "fps": 4,
+    "hits": 26,
+    "negatives": 684
+   },
+   "pat_rest_defence": {
+    "cases": 11,
+    "fps": 42,
+    "hits": 5,
+    "negatives": 722
+   },
+   "pat_starved_finisher": {
+    "cases": 7,
+    "fps": 39,
+    "hits": 5,
+    "negatives": 722
+   },
+   "pat_tactical_fouling": {
+    "cases": 1,
+    "fps": 37,
+    "hits": 1,
+    "negatives": 722
+   }
+  },
+  "matches": 380,
+  "mismatches": 0
+ },
+ "2030@1.0": {
+  "counts": {
+   "pat_bait_switch": {
+    "cases": 23,
+    "fps": 0,
+    "hits": 23,
+    "negatives": 722
+   },
+   "pat_counter_press": {
+    "cases": 29,
+    "fps": 0,
+    "hits": 28,
+    "negatives": 722
+   },
+   "pat_cutback": {
+    "cases": 28,
+    "fps": 43,
+    "hits": 28,
+    "negatives": 722
+   },
+   "pat_elastic_low_block": {
+    "cases": 24,
+    "fps": 29,
+    "hits": 6,
+    "negatives": 722
+   },
+   "pat_flank_isolation": {
+    "cases": 40,
+    "fps": 10,
+    "hits": 40,
+    "negatives": 684
+   },
+   "pat_rest_defence": {
+    "cases": 13,
+    "fps": 52,
+    "hits": 7,
+    "negatives": 722
+   },
+   "pat_starved_finisher": {
+    "cases": 20,
+    "fps": 31,
+    "hits": 18,
+    "negatives": 722
+   },
+   "pat_tactical_fouling": {
+    "cases": 11,
+    "fps": 29,
+    "hits": 10,
+    "negatives": 722
+   }
+  },
+  "matches": 380,
+  "mismatches": 0
+ }
+}

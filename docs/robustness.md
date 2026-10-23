@@ -8,44 +8,44 @@ Seeds in range per target (season-shape targets need 20 teams and are n/a here).
 
 | Target | Range | In range | Min | Max |
 |---|---|---|---|---|
-| goals_per_match | 2.6-3.3 | 10/10 | 2.600 | 3.425 |
-| home_win_share | 0.4-0.49 | 10/10 | 0.350 | 0.525 |
-| draw_share | 0.2-0.28 | 10/10 | 0.125 | 0.350 |
-| away_win_share | 0.28-0.36 | 10/10 | 0.200 | 0.450 |
-| home_goal_edge | 0.15-0.45 | 10/10 | 0.025 | 0.725 |
-| goals_dispersion | 0.95-1.3 | 9/10 | 0.907 | 1.625 |
-| goals_first_15_share | 0.08-0.16 | 10/10 | 0.095 | 0.206 |
-| goals_last_15_share | 0.19-0.3 | 10/10 | 0.173 | 0.260 |
-| shots_per_team | 11.0-14.0 | 10/10 | 13.3 | 14.7 |
-| on_target_share | 0.32-0.37 | 10/10 | 0.323 | 0.369 |
-| blocked_share | 0.2-0.3 | 10/10 | 0.238 | 0.280 |
-| conversion | 0.09-0.12 | 10/10 | 0.094 | 0.122 |
-| xg_per_shot | 0.09-0.12 | 10/10 | 0.106 | 0.122 |
-| goals_vs_xg | -0.1-0.1 | 10/10 | -0.148 | 0.083 |
-| inside_box_share | 0.6-0.72 | 10/10 | 0.642 | 0.693 |
-| header_share | 0.11-0.19 | 10/10 | 0.132 | 0.169 |
-| mean_shot_distance_m | 15.5-18.5 | 10/10 | 17.6 | 18.8 |
-| penalties_per_match | 0.2-0.32 | 10/10 | 0.150 | 0.400 |
-| set_piece_goal_share | 0.2-0.33 | 10/10 | 0.158 | 0.261 |
-| corners_per_team | 4.5-5.8 | 10/10 | 5.412 | 6.312 |
-| crosses_per_team | 10.0-20.0 | 10/10 | 11.5 | 12.4 |
-| cross_completion | 0.2-0.3 | 10/10 | 0.257 | 0.310 |
-| passes_per_team | 400.0-520.0 | 10/10 | 436.5 | 447.4 |
-| pass_accuracy | 0.79-0.85 | 10/10 | 0.781 | 0.791 |
-| back_pass_share | 0.1-0.2 | 10/10 | 0.154 | 0.161 |
-| final_third_pass_share | 0.18-0.3 | 10/10 | 0.295 | 0.307 |
-| tackles_per_team | 14.0-21.0 | 10/10 | 18.2 | 19.8 |
-| interceptions_per_team | 7.0-12.0 | 10/10 | 9.750 | 10.7 |
-| clearances_per_team | 14.0-26.0 | 10/10 | 17.8 | 19.1 |
-| fouls_per_team | 9.5-12.5 | 10/10 | 9.062 | 9.900 |
-| yellows_per_match | 3.3-4.6 | 10/10 | 3.525 | 4.200 |
-| reds_per_match | 0.04-0.15 | 10/10 | 0.075 | 0.225 |
-| offsides_per_team | 1.4-2.6 | 10/10 | 1.738 | 2.188 |
-| added_time_min | 7.0-13.0 | 10/10 | 11.2 | 12.3 |
-| added_time_first_half_min | 1.0-4.0 | 10/10 | 3.474 | 4.117 |
-| added_time_second_half_min | 4.0-10.0 | 10/10 | 7.695 | 8.285 |
-| ball_in_play_min | 54.0-60.0 | 10/10 | 58.2 | 59.8 |
-| subs_per_team | 3.0-5.0 | 10/10 | 4.188 | 4.550 |
+| goals_per_match | 2.6-3.3 | 9/10 | 2.725 | 3.850 |
+| home_win_share | 0.4-0.49 | 10/10 | 0.325 | 0.550 |
+| draw_share | 0.2-0.28 | 10/10 | 0.175 | 0.350 |
+| away_win_share | 0.28-0.36 | 10/10 | 0.250 | 0.425 |
+| home_goal_edge | 0.15-0.45 | 10/10 | -0.125 | 0.650 |
+| goals_dispersion | 0.95-1.3 | 10/10 | 0.812 | 1.563 |
+| goals_first_15_share | 0.08-0.16 | 10/10 | 0.113 | 0.183 |
+| goals_last_15_share | 0.19-0.3 | 10/10 | 0.176 | 0.325 |
+| shots_per_team | 11.0-14.0 | 10/10 | 13.1 | 14.7 |
+| on_target_share | 0.32-0.37 | 10/10 | 0.340 | 0.381 |
+| blocked_share | 0.2-0.3 | 10/10 | 0.246 | 0.281 |
+| conversion | 0.09-0.12 | 10/10 | 0.100 | 0.134 |
+| xg_per_shot | 0.09-0.12 | 10/10 | 0.113 | 0.125 |
+| goals_vs_xg | -0.1-0.1 | 10/10 | -0.138 | 0.140 |
+| inside_box_share | 0.6-0.72 | 10/10 | 0.659 | 0.704 |
+| header_share | 0.11-0.19 | 10/10 | 0.136 | 0.182 |
+| mean_shot_distance_m | 15.5-18.5 | 10/10 | 17.5 | 18.1 |
+| penalties_per_match | 0.2-0.32 | 9/10 | 0.200 | 0.650 |
+| set_piece_goal_share | 0.2-0.33 | 10/10 | 0.136 | 0.266 |
+| corners_per_team | 4.5-5.8 | 9/10 | 5.625 | 6.450 |
+| crosses_per_team | 10.0-20.0 | 10/10 | 11.3 | 12.2 |
+| cross_completion | 0.2-0.3 | 10/10 | 0.251 | 0.300 |
+| passes_per_team | 400.0-520.0 | 10/10 | 439.1 | 447.3 |
+| pass_accuracy | 0.79-0.85 | 10/10 | 0.785 | 0.795 |
+| back_pass_share | 0.1-0.2 | 10/10 | 0.151 | 0.157 |
+| final_third_pass_share | 0.18-0.3 | 10/10 | 0.303 | 0.310 |
+| tackles_per_team | 14.0-21.0 | 10/10 | 17.9 | 20.0 |
+| interceptions_per_team | 7.0-12.0 | 10/10 | 9.188 | 10.4 |
+| clearances_per_team | 14.0-26.0 | 10/10 | 17.6 | 18.7 |
+| fouls_per_team | 9.5-12.5 | 10/10 | 9.287 | 9.787 |
+| yellows_per_match | 3.3-4.6 | 10/10 | 3.325 | 4.150 |
+| reds_per_match | 0.04-0.15 | 9/10 | 0.025 | 0.300 |
+| offsides_per_team | 1.4-2.6 | 10/10 | 1.788 | 2.075 |
+| added_time_min | 7.0-13.0 | 10/10 | 11.3 | 12.5 |
+| added_time_first_half_min | 1.0-4.0 | 10/10 | 3.557 | 4.069 |
+| added_time_second_half_min | 4.0-10.0 | 10/10 | 7.412 | 8.490 |
+| ball_in_play_min | 54.0-60.0 | 10/10 | 58.6 | 59.5 |
+| subs_per_team | 3.0-5.0 | 10/10 | 4.138 | 4.588 |
 | ppda_league | 8.0-16.0 | n/a | | |
 | possession_sd_pp | 5.0-8.5 | n/a | | |
 | team_pass_spread | 1.45-2.4 | n/a | | |
@@ -56,7 +56,7 @@ Seeds in range per target (season-shape targets need 20 teams and are n/a here).
 | corr_possession_pass_accuracy | 0.5-1.0 | n/a | | |
 | corr_ppda_possession | -1.0--0.2 | n/a | | |
 
-38 targets apply to the small league; 9/10 seeds have every one in range.
+38 targets apply to the small league; 7/10 seeds have every one in range.
 
 Targets failing on more than 2 of 10 seeds: none.
 
@@ -64,22 +64,22 @@ Targets failing on more than 2 of 10 seeds: none.
 
 | Seed | Targets in range | Outside range | Soft lanes (true effect >= 7 pp) | Soft lanes (all planted) | Soft-lane false positives | Volume passers | Corner specialists | Shot-spam teams | Deep-when-leading teams | Champion pts | Bottom pts | Generation s |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 2026 | 47/47 | none | 6/6 | 6/8 | 0/12 | 4/4 | 4/4 | 3/3 | 3/3 | 84 | 21 | 38.0 |
-| 2027 | 47/47 | none | 6/6 | 6/8 | 0/12 | 4/4 | 4/4 | 3/3 | 3/3 | 86 | 25 | 38.1 |
-| 2028 | 47/47 | none | 6/6 | 6/8 | 0/12 | 4/4 | 4/4 | 3/3 | 3/3 | 93 | 24 | 38.1 |
+| 2026 | 47/47 | none | 6/6 | 7/8 | 0/12 | 4/4 | 4/4 | 3/3 | 3/3 | 92 | 26 | reused |
+| 2027 | 47/47 | none | 6/6 | 7/8 | 0/12 | 4/4 | 4/4 | 3/3 | 3/3 | 84 | 24 | reused |
+| 2028 | 47/47 | none | 6/6 | 6/8 | 0/12 | 4/4 | 4/4 | 3/3 | 3/3 | 86 | 28 | reused |
 
 Soft lanes by plant (true effect is the lower bound from the generator's own pass probabilities, tests/soft_lane_truth.py; found = the engine's soft_lane names the planted lane):
 
 | Team | Strength | Seed 2026 effect pp / found | Seed 2027 effect pp / found | Seed 2028 effect pp / found |
 |---|---|---|---|---|
-| NTG | 1.5 | 11.2 / yes | 11.7 / yes | 12.0 / yes |
+| NTG | 1.5 | 11.3 / yes | 11.3 / yes | 11.8 / yes |
 | HAR | 1.0 | 8.6 / yes | 8.5 / yes | 8.4 / yes |
-| FWM | 1.0 | 8.1 / yes | 8.1 / yes | 8.4 / yes |
-| HBC | 2.0 | 13.3 / yes | 14.1 / yes | 13.4 / yes |
-| IRK | 0.3 | 2.6 / no | 2.6 / no | 2.6 / no |
-| MDL | 1.5 | 10.9 / yes | 11.2 / yes | 11.6 / yes |
-| OKP | 2.5 | 14.3 / yes | 14.0 / yes | 14.6 / yes |
-| RVD | 0.6 | 5.2 / no | 5.3 / no | 5.1 / no |
+| FWM | 1.0 | 7.9 / yes | 8.2 / yes | 8.3 / yes |
+| HBC | 2.0 | 13.5 / yes | 13.7 / yes | 13.5 / yes |
+| IRK | 0.3 | 2.6 / no | 2.5 / no | 2.5 / no |
+| MDL | 1.5 | 10.7 / yes | 11.2 / yes | 11.5 / yes |
+| OKP | 2.5 | 14.1 / yes | 13.6 / yes | 14.1 / yes |
+| RVD | 0.6 | 5.1 / yes | 5.2 / yes | 5.1 / no |
 
 Player and team plant misses: none.
 
@@ -89,23 +89,23 @@ Search from offset 0; a match qualifies when all five traps fire with every thre
 
 | Planted-case threshold | Seed 2026 | Seed 2027 | Seed 2028 |
 |---|---|---|---|
-| field_tilt_while_leading.chaser_field_tilt (>= 0.68) | 0.794 (+17%) | 0.858 (+26%) | 0.774 (+14%) |
-| field_tilt_while_leading.chaser_f3_passes (>= 60) | 127 (+112%) | 151 (+152%) | 89 (+48%) |
-| field_tilt_while_leading.box_entry_share (<= 0.15) | 0.11 (+26%) | 0.093 (+38%) | 0.112 (+25%) |
-| shot_spam.low_xg_shots (>= 12) | 25 (+108%) | 15 (+25%) | 24 (+100%) |
-| shot_spam.low_xg_share (>= 0.75) | 0.893 (+19%) | 0.833 (+11%) | 0.828 (+10%) |
-| volume_passer.forward_passes (>= 25) | 44 (+76%) | 44 (+76%) | 37 (+48%) |
+| field_tilt_while_leading.chaser_field_tilt (>= 0.68) | 0.812 (+19%) | 0.82 (+21%) | 0.773 (+14%) |
+| field_tilt_while_leading.chaser_f3_passes (>= 60) | 121 (+102%) | 105 (+75%) | 109 (+82%) |
+| field_tilt_while_leading.box_entry_share (<= 0.15) | 0.116 (+23%) | 0.114 (+24%) | 0.119 (+20%) |
+| shot_spam.low_xg_shots (>= 12) | 17 (+42%) | 23 (+92%) | 25 (+108%) |
+| shot_spam.low_xg_share (>= 0.75) | 0.85 (+13%) | 0.852 (+14%) | 0.962 (+28%) |
+| volume_passer.forward_passes (>= 25) | 43 (+72%) | 42 (+68%) | 53 (+112%) |
 | volume_passer.rank_in_match (<= 1) | 1 (+100%) | 1 (+100%) | 1 (+100%) |
-| volume_passer.wide_share (>= 0.8) | 0.909 (+14%) | 0.955 (+19%) | 0.946 (+18%) |
-| corner_specialist.from_corners (>= 4) | 5 (+25%) | 5 (+25%) | 5 (+25%) |
-| corner_specialist.corner_vs_open_play (>= 2) | 5 (+150%) | 5 (+150%) | 5 (+150%) |
-| one_flank_vs_weak_lane.entries_into_final_third (>= 10) | 48 (+380%) | 50 (+400%) | 39 (+290%) |
-| one_flank_vs_weak_lane.left_side_share (>= 0.5) | 0.646 (+29%) | 0.64 (+28%) | 0.692 (+38%) |
-| one_flank_vs_weak_lane.weak_lane_completion_ratio (>= 1.0) | 1.268 (+27%) | 1.149 (+15%) | 1.2 (+20%) |
-| minimum margin | 14% | 11% | 10% |
-| score AUR-NTG | 4-1 | 2-0 | 1-1 |
-| seeds tried | 1384 | 2724 | 1090 |
-| search time s | 70.3 | 116.9 | 56.8 |
+| volume_passer.wide_share (>= 0.8) | 0.907 (+13%) | 0.905 (+13%) | 0.943 (+18%) |
+| corner_specialist.from_corners (>= 4) | 6 (+50%) | 5 (+25%) | 6 (+50%) |
+| corner_specialist.corner_vs_open_play (>= 4) | 6 (+50%) | 5 (+150%) | 6 (+200%) |
+| one_flank_vs_weak_lane.entries_into_final_third (>= 10) | 49 (+390%) | 36 (+260%) | 49 (+390%) |
+| one_flank_vs_weak_lane.left_side_share (>= 0.5) | 0.612 (+22%) | 0.556 (+11%) | 0.592 (+18%) |
+| one_flank_vs_weak_lane.weak_lane_completion_ratio (>= 1.0) | 1.274 (+27%) | 1.109 (+11%) | 1.108 (+11%) |
+| minimum margin | 13% | 11% | 11% |
+| score AUR-NTG | 4-0 | 3-2 | 3-0 |
+| seeds tried | 6915 | 575 | 4392 |
+| search time s | 191.7 | 17.4 | 125.2 |
 
 ## 4. Verifier context rules pooled over 3 full leagues (seeds 2026, 2027, 2028)
 
@@ -113,16 +113,16 @@ Cases as in tests/test_verifier_full.py. Recall = fired / true cases; false-fire
 
 | Rule | True cases | Recall | 95% CI | Unplanted cases | False-fire rate | 95% CI | Precision | Per-seed recall |
 |---|---|---|---|---|---|---|---|---|
-| shot_spam | 88 | 0.64 | 0.53-0.73 | 1938 | 0.051 | 0.042-0.061 | 0.36 | 21/31, 21/30, 14/27 |
-| field_tilt_with_lead | 62 | 0.73 | 0.60-0.82 | 1938 | 0.042 | 0.034-0.052 | 0.36 | 15/16, 12/21, 18/25 |
-| set_piece_inflation | 12 | 1.00 | 0.76-1.00 | 1062 | 0.040 | 0.030-0.054 | 0.22 | 4/4, 4/4, 4/4 |
-| wide_forward_passes | 12 | 1.00 | 0.76-1.00 | 1293 | 0.001 | 0.000-0.004 | 0.92 | 4/4, 4/4, 4/4 |
+| shot_spam | 78 | 0.60 | 0.49-0.70 | 1938 | 0.053 | 0.044-0.064 | 0.31 | 16/28, 19/29, 12/21 |
+| field_tilt_with_lead | 69 | 0.52 | 0.41-0.64 | 1938 | 0.029 | 0.023-0.038 | 0.39 | 8/21, 10/20, 18/28 |
+| set_piece_inflation | 12 | 1.00 | 0.76-1.00 | 1078 | 0.041 | 0.031-0.054 | 0.21 | 4/4, 4/4, 4/4 |
+| wide_forward_passes | 12 | 1.00 | 0.76-1.00 | 1294 | 0.000 | 0.000-0.003 | 1.00 | 4/4, 4/4, 4/4 |
 
 The same pooled over 5 full leagues (adding seeds 2029, 2030, used for this table only):
 
 | Rule | True cases | Recall | 95% CI | Unplanted cases | False-fire rate | 95% CI | Precision | Per-seed recall |
 |---|---|---|---|---|---|---|---|---|
-| shot_spam | 149 | 0.64 | 0.56-0.71 | 3230 | 0.048 | 0.041-0.056 | 0.38 | 21/31, 21/30, 14/27, 22/31, 17/30 |
-| field_tilt_with_lead | 107 | 0.69 | 0.60-0.77 | 3230 | 0.039 | 0.033-0.046 | 0.37 | 15/16, 12/21, 18/25, 14/25, 15/20 |
-| set_piece_inflation | 20 | 1.00 | 0.84-1.00 | 1768 | 0.041 | 0.032-0.051 | 0.22 | 4/4, 4/4, 4/4, 4/4, 4/4 |
-| wide_forward_passes | 20 | 1.00 | 0.84-1.00 | 2154 | 0.001 | 0.000-0.003 | 0.91 | 4/4, 4/4, 4/4, 4/4, 4/4 |
+| shot_spam | 145 | 0.57 | 0.49-0.65 | 3230 | 0.055 | 0.048-0.064 | 0.32 | 16/28, 19/29, 12/21, 19/31, 17/36 |
+| field_tilt_with_lead | 114 | 0.49 | 0.40-0.58 | 3230 | 0.030 | 0.025-0.036 | 0.37 | 8/21, 10/20, 18/28, 11/25, 9/20 |
+| set_piece_inflation | 20 | 1.00 | 0.84-1.00 | 1785 | 0.041 | 0.033-0.051 | 0.22 | 4/4, 4/4, 4/4, 4/4, 4/4 |
+| wide_forward_passes | 20 | 1.00 | 0.84-1.00 | 2157 | 0.000 | 0.000-0.002 | 1.00 | 4/4, 4/4, 4/4, 4/4, 4/4 |

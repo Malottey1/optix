@@ -67,6 +67,7 @@ FAMILY_CAP = 3                 # surfaced claims per family per match
 PER_SUMMARY = 6                # candidates surfaced at each half-time / full-time summary
 NOVELTY_WEIGHT = 0.5           # a family+team shown in the team's previous two matches ...
 NOVELTY_CHANGE = 0.25          # ... unless its magnitude changed by at least this much
+NOVELTY_MIN_STEP = 2.0         # ... and by at least this much in absolute terms (a count of 1 -> 2 is noise)
 SURFACE_MIN_SCORE = 0.6       # below this (a down-weighted repeat) a candidate is held back
 MIN_ISOLATION_F3_SHARE = 10.0  # % of final-third passes in touchline spells to publish P3
 PATTERN_TEMPLATES = {f: "pattern." + f[4:] for f in PAT.FAMILIES}
@@ -141,7 +142,7 @@ def family_of(spec: dict) -> str:
 
 
 def _changed(new: float, old) -> bool:
-    return bool(old) and abs(new - old) / abs(old) >= NOVELTY_CHANGE
+    return bool(old) and abs(new - old) / abs(old) >= NOVELTY_CHANGE and abs(new - old) >= NOVELTY_MIN_STEP
 
 
 def rank_candidates(cands: list, history: dict | None, counts: dict, cap: int = FAMILY_CAP,

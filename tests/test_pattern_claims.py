@@ -347,8 +347,11 @@ def test_novelty_down_weights_a_repeat_unless_the_magnitude_moved():
     same = rank_candidates([_c("a", score=1.0), _c("b", score=0.6)], hist, {}, per_summary=1)
     assert same[0]["family"] == "b"                                                 # 1.0 * 0.5 < 0.6
     assert [c["family"] for c in rank_candidates([_c("a", score=1.0)], hist, {})] == []   # held back
-    moved = rank_candidates([_c("a", mag=4.0, score=1.0), _c("b", score=0.6)], hist, {}, per_summary=1)
-    assert moved[0]["family"] == "a"                                                # +33%: no penalty
+    moved = rank_candidates([_c("a", mag=5.0, score=1.0), _c("b", score=0.6)], hist, {}, per_summary=1)
+    assert moved[0]["family"] == "a"                                                # +67%, +2: no penalty
+    # +33% but one more instance: noise in a small count, still a repeat
+    assert rank_candidates([_c("a", mag=4.0, score=1.0)], hist, {}) == []
+    assert rank_candidates([_c("a", mag=2.0, score=1.0)], {"t_a": [{"a": 1.0}]}, {}) == []
     assert rank_candidates([_c("a"), _c("b", score=0.6)], None, {}, per_summary=1)[0]["family"] == "a"
 
 
@@ -356,7 +359,8 @@ def test_full_time_does_not_repeat_half_time_unless_it_moved():
     shown = {}
     assert rank_candidates([_c("a", mag=2.0)], None, {}, shown=shown)
     assert rank_candidates([_c("a", mag=2.0)], None, {}, shown=shown) == []
-    assert rank_candidates([_c("a", mag=3.0)], None, {}, shown=shown)
+    assert rank_candidates([_c("a", mag=3.0)], None, {}, shown=shown) == []        # +1: not a move
+    assert rank_candidates([_c("a", mag=4.0)], None, {}, shown=shown)
 
 
 def test_partial_matches_skip_full_match_only_families():
