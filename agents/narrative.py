@@ -29,8 +29,15 @@ def _file(language: str) -> dict:
 
 
 def templates(language: str) -> dict:
-    """template_key -> {"analyst", "casual"} for one language."""
+    """template_key -> {"analyst", "casual"}, or a list of such variants, for one language."""
     return {k: v for k, v in _file(language).items() if not k.startswith("_")}
+
+
+def variants(language: str) -> list:
+    """(template_key, index, {"analyst", "casual"}) for every phrasing of every key: a key holds
+    one pair or a list of variants (pattern families)."""
+    return [(k, i, pair) for k, v in templates(language).items()
+            for i, pair in enumerate(v if isinstance(v, list) else [v])]
 
 
 def labels(language: str) -> dict:
@@ -86,12 +93,40 @@ def template_for(template_key: str, params: dict) -> str:
     return template_key
 
 
-def render(template_key: str, params: dict, language: str) -> dict:
+PLURAL = re.compile(r"\{(\w+)\|([^|{}]*)\|([^|{}]*)\}")
+
+
+def _plural(text: str, params: dict, language: str) -> str:
+    """{name|one|other}: the word form for the count in params[name] (en/es: one only for 1; fr:
+    one for 0 and 1). The number itself is written separately as {name}."""
+    def pick(m):
+        v = params.get(m.group(1))
+        one = v is not None and (abs(v) < 2 if language == "fr" else v == 1)
+        return m.group(2) if one else m.group(3)
+    return PLURAL.sub(pick, text)
+
+
+def _variant(seed, n: int) -> int:
+    """A stable variant index for a claim id (sha256, so it does not change between runs)."""
+    if not seed or n <= 1:
+        return 0
+    import hashlib
+    return int(hashlib.sha256(str(seed).encode()).hexdigest()[:8], 16) % n
+
+
+def render(template_key: str, params: dict, language: str, variant_seed: str | None = None) -> dict:
+    """The sentence in both tones. A template may be a list of variants: the one used is chosen by
+    a stable hash of variant_seed (the claim id), so repeated patterns do not read identically
+    across matches while the same claim always reads the same."""
     t = templates(language)[template_for(template_key, params)]
     values = {k: fmt(v, language) for k, v in params.items()}
     if "lane" in params:
         values["lane_label"] = labels(language)["lane"][params["lane"]]
-    return {tone: t[tone].format_map(values) for tone in TONES}
+    if "side" in params:
+        values["side_label"] = labels(language)["side"][params["side"]]
+    if isinstance(t, list):                    # phrasing variants: chosen by the claim id, never at random
+        t = t[_variant(variant_seed, len(t))]
+    return {tone: _plural(t[tone], params, language).format_map(values) for tone in TONES}
 
 
 class NarrativeAgent:

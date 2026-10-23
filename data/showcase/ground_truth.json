@@ -531,53 +531,53 @@
     }
   },
   "measured": {
-    "goals_per_match": 3.0,
-    "home_win_share": 0.475,
-    "draw_share": 0.175,
-    "away_win_share": 0.35,
-    "home_goal_edge": 0.4,
-    "goals_dispersion": 1.4833,
-    "passes_per_team": 443.925,
-    "pass_accuracy": 0.7909,
-    "back_pass_share": 0.1608,
-    "final_third_pass_share": 0.2949,
-    "corners_per_team": 5.5,
-    "crosses_per_team": 11.9875,
-    "cross_completion": 0.2732,
-    "tackles_per_team": 19.8375,
-    "interceptions_per_team": 10.45,
-    "clearances_per_team": 18.025,
-    "fouls_per_team": 9.4125,
-    "offsides_per_team": 1.8875,
-    "subs_per_team": 4.55,
-    "yellows_per_match": 4.025,
+    "goals_per_match": 3.325,
+    "home_win_share": 0.325,
+    "draw_share": 0.275,
+    "away_win_share": 0.4,
+    "home_goal_edge": 0.275,
+    "goals_dispersion": 1.5631,
+    "passes_per_team": 444.5375,
+    "pass_accuracy": 0.795,
+    "back_pass_share": 0.1569,
+    "final_third_pass_share": 0.3045,
+    "corners_per_team": 6.075,
+    "crosses_per_team": 12.0875,
+    "cross_completion": 0.2554,
+    "tackles_per_team": 19.6,
+    "interceptions_per_team": 10.0375,
+    "clearances_per_team": 17.8375,
+    "fouls_per_team": 9.2875,
+    "offsides_per_team": 2.075,
+    "subs_per_team": 4.5875,
+    "yellows_per_match": 3.725,
     "reds_per_match": 0.2,
-    "shots_per_team": 14.0,
-    "on_target_share": 0.3295,
-    "blocked_share": 0.2545,
-    "conversion": 0.1071,
-    "xg_per_shot": 0.1076,
-    "goals_vs_xg": -0.004,
-    "inside_box_share": 0.6571,
-    "header_share": 0.1482,
-    "mean_shot_distance_m": 18.4006,
-    "penalties_per_match": 0.15,
-    "set_piece_goal_share": 0.1583,
-    "goals_first_15_share": 0.1583,
-    "goals_last_15_share": 0.25,
-    "added_time_first_half_min": 3.8163,
-    "added_time_second_half_min": 7.7787,
-    "added_time_min": 11.595,
-    "ball_in_play_min": 59.1167,
-    "ppda_league": 14.7845,
-    "possession_sd_pp": 4.446,
-    "team_pass_spread": 1.2894,
-    "champion_points": 38,
-    "bottom_points": 8,
-    "players_used_per_team": 22,
-    "corr_possession_shots": 0.6904,
-    "corr_possession_pass_accuracy": 0.9872,
-    "corr_ppda_possession": 0.2163
+    "shots_per_team": 13.9,
+    "on_target_share": 0.3417,
+    "blocked_share": 0.2563,
+    "conversion": 0.1196,
+    "xg_per_shot": 0.1227,
+    "goals_vs_xg": -0.0252,
+    "inside_box_share": 0.7041,
+    "header_share": 0.1394,
+    "mean_shot_distance_m": 17.5967,
+    "penalties_per_match": 0.225,
+    "set_piece_goal_share": 0.218,
+    "goals_first_15_share": 0.1128,
+    "goals_last_15_share": 0.2707,
+    "added_time_first_half_min": 3.5571,
+    "added_time_second_half_min": 8.4896,
+    "added_time_min": 12.0467,
+    "ball_in_play_min": 58.6262,
+    "ppda_league": 15.0381,
+    "possession_sd_pp": 4.3612,
+    "team_pass_spread": 1.3062,
+    "champion_points": 41,
+    "bottom_points": 11,
+    "players_used_per_team": 21.8,
+    "corr_possession_shots": 0.3611,
+    "corr_possession_pass_accuracy": 0.9344,
+    "corr_ppda_possession": -0.0392
   },
   "pitch_frame": "x 0-100 toward the opponent goal; every event is in the acting team's attacking frame",
   "teams": {
@@ -666,8 +666,8 @@
   },
   "showcase": {
     "match_id": "m_showcase",
-    "sim_seed": 20261383,
-    "seeds_tried": 1384,
+    "sim_seed": 20266914,
+    "seeds_tried": 6915,
     "home": "t_aur",
     "away": "t_ntg",
     "scripted": "AUR scores their first chance of quality after minute 10",
@@ -681,163 +681,161 @@
     },
     "score": [
       4,
-      1
+      0
     ],
     "traps": {
       "field_tilt_while_leading": {
         "window_sec": [
-          775,
-          6081
+          1149,
+          6023
         ],
-        "chaser_field_tilt": 0.794,
-        "chaser_f3_passes": 127,
+        "chaser_field_tilt": 0.812,
+        "chaser_f3_passes": 121,
         "chaser_box_entries": 14,
-        "chaser_perimeter_passes": 112,
+        "chaser_perimeter_passes": 104,
         "evidence_event_ids": [
-          "m_showcase_e00343",
-          "m_showcase_e00344",
-          "m_showcase_e00362",
-          "m_showcase_e00363",
-          "m_showcase_e00385",
-          "m_showcase_e00386",
-          "m_showcase_e00403",
-          "m_showcase_e00475",
-          "m_showcase_e00507",
-          "m_showcase_e00512",
-          "m_showcase_e00554",
-          "m_showcase_e00637",
-          "m_showcase_e00260",
-          "m_showcase_e00951",
-          "m_showcase_e01059"
+          "m_showcase_e00406",
+          "m_showcase_e00434",
+          "m_showcase_e00436",
+          "m_showcase_e00448",
+          "m_showcase_e00449",
+          "m_showcase_e00451",
+          "m_showcase_e00455",
+          "m_showcase_e00459",
+          "m_showcase_e00461",
+          "m_showcase_e00462",
+          "m_showcase_e00464",
+          "m_showcase_e00466",
+          "m_showcase_e00408",
+          "m_showcase_e00453",
+          "m_showcase_e00456"
         ],
         "passed": true
       },
       "shot_spam": {
-        "shots": 28,
-        "low_xg_shots": 25,
-        "mean_xg": 0.038,
-        "total_xg": 1.05,
+        "shots": 20,
+        "low_xg_shots": 17,
+        "mean_xg": 0.051,
+        "total_xg": 1.03,
         "evidence_event_ids": [
-          "m_showcase_e00329",
-          "m_showcase_e00388",
-          "m_showcase_e00476",
-          "m_showcase_e00513",
-          "m_showcase_e00638",
-          "m_showcase_e00685",
-          "m_showcase_e00739",
-          "m_showcase_e00783",
-          "m_showcase_e00806",
-          "m_showcase_e00853",
-          "m_showcase_e00949",
-          "m_showcase_e00953",
-          "m_showcase_e01157",
-          "m_showcase_e01275",
-          "m_showcase_e01279",
-          "m_showcase_e01306",
-          "m_showcase_e01312",
-          "m_showcase_e01315",
-          "m_showcase_e01400",
-          "m_showcase_e01486"
+          "m_showcase_e00184",
+          "m_showcase_e00410",
+          "m_showcase_e00688",
+          "m_showcase_e00769",
+          "m_showcase_e00811",
+          "m_showcase_e00884",
+          "m_showcase_e00927",
+          "m_showcase_e00986",
+          "m_showcase_e01232",
+          "m_showcase_e01289",
+          "m_showcase_e01387",
+          "m_showcase_e01426",
+          "m_showcase_e01461",
+          "m_showcase_e01704",
+          "m_showcase_e01772",
+          "m_showcase_e01854",
+          "m_showcase_e01902"
         ],
         "passed": true
       },
       "volume_passer": {
-        "forward_passes": 44,
+        "forward_passes": 43,
         "rank_in_match": 1,
-        "wide_share": 0.909,
+        "wide_share": 0.907,
         "evidence_event_ids": [
-          "m_showcase_e00075",
-          "m_showcase_e00083",
-          "m_showcase_e00148",
-          "m_showcase_e00403",
-          "m_showcase_e00421",
-          "m_showcase_e00438",
-          "m_showcase_e00469",
-          "m_showcase_e00475",
-          "m_showcase_e00545",
-          "m_showcase_e00585",
-          "m_showcase_e00632",
-          "m_showcase_e00637",
-          "m_showcase_e00660",
-          "m_showcase_e00667",
-          "m_showcase_e00672"
+          "m_showcase_e00030",
+          "m_showcase_e00053",
+          "m_showcase_e00115",
+          "m_showcase_e00146",
+          "m_showcase_e00179",
+          "m_showcase_e00182",
+          "m_showcase_e00228",
+          "m_showcase_e00246",
+          "m_showcase_e00281",
+          "m_showcase_e00301",
+          "m_showcase_e00387",
+          "m_showcase_e00406",
+          "m_showcase_e00429",
+          "m_showcase_e00453",
+          "m_showcase_e00565"
         ],
         "passed": true
       },
       "corner_specialist": {
-        "chances_created": 6,
-        "from_corners": 5,
-        "open_play": 1,
+        "chances_created": 8,
+        "from_corners": 6,
+        "open_play": 2,
         "evidence_event_ids": [
-          "m_showcase_e00260",
-          "m_showcase_e00951",
-          "m_showcase_e01277",
-          "m_showcase_e01398",
-          "m_showcase_e01917"
+          "m_showcase_e00984",
+          "m_showcase_e01230",
+          "m_showcase_e01291",
+          "m_showcase_e01385",
+          "m_showcase_e01571",
+          "m_showcase_e01815"
         ],
         "passed": true
       },
       "one_flank_vs_weak_lane": {
-        "entries_into_final_third": 48,
-        "left_side_share": 0.646,
+        "entries_into_final_third": 49,
+        "left_side_share": 0.612,
         "defender_weak_lane": "left_flank",
-        "weak_lane_completion": 0.792,
+        "weak_lane_completion": 0.875,
         "reverse_completion": 0.571,
-        "weak_lane_completion_ratio": 1.268,
+        "weak_lane_completion_ratio": 1.274,
         "evidence_event_ids": [
-          "m_showcase_e00160",
-          "m_showcase_e00454",
-          "m_showcase_e00575",
-          "m_showcase_e00598",
-          "m_showcase_e00609",
-          "m_showcase_e00747",
-          "m_showcase_e00825",
-          "m_showcase_e00868",
-          "m_showcase_e00960",
-          "m_showcase_e01001",
-          "m_showcase_e01045",
-          "m_showcase_e01124"
+          "m_showcase_e00081",
+          "m_showcase_e00093",
+          "m_showcase_e00095",
+          "m_showcase_e00262",
+          "m_showcase_e00376",
+          "m_showcase_e00420",
+          "m_showcase_e00712",
+          "m_showcase_e00963",
+          "m_showcase_e01021",
+          "m_showcase_e01035",
+          "m_showcase_e01104",
+          "m_showcase_e01168"
         ],
-        "reference_completion": 0.624,
+        "reference_completion": 0.687,
         "passed": true
       }
     },
     "trap_margins": {
       "field_tilt_while_leading.chaser_field_tilt": {
-        "value": 0.794,
+        "value": 0.812,
         "threshold": 0.68,
         "kind": ">=",
-        "margin": 0.168
+        "margin": 0.194
       },
       "field_tilt_while_leading.chaser_f3_passes": {
-        "value": 127,
+        "value": 121,
         "threshold": 60,
         "kind": ">=",
-        "margin": 1.117
+        "margin": 1.017
       },
       "field_tilt_while_leading.box_entry_share": {
-        "value": 0.11,
+        "value": 0.116,
         "threshold": 0.15,
         "kind": "<=",
-        "margin": 0.265
+        "margin": 0.229
       },
       "shot_spam.low_xg_shots": {
-        "value": 25,
+        "value": 17,
         "threshold": 12,
         "kind": ">=",
-        "margin": 1.083
+        "margin": 0.417
       },
       "shot_spam.low_xg_share": {
-        "value": 0.893,
+        "value": 0.85,
         "threshold": 0.75,
         "kind": ">=",
-        "margin": 0.19
+        "margin": 0.133
       },
       "volume_passer.forward_passes": {
-        "value": 44,
+        "value": 43,
         "threshold": 25,
         "kind": ">=",
-        "margin": 0.76
+        "margin": 0.72
       },
       "volume_passer.rank_in_match": {
         "value": 1,
@@ -846,42 +844,267 @@
         "margin": 1.0
       },
       "volume_passer.wide_share": {
-        "value": 0.909,
+        "value": 0.907,
         "threshold": 0.8,
         "kind": ">=",
-        "margin": 0.136
+        "margin": 0.134
       },
       "corner_specialist.from_corners": {
-        "value": 5,
+        "value": 6,
         "threshold": 4,
         "kind": ">=",
-        "margin": 0.25
+        "margin": 0.5
       },
       "corner_specialist.corner_vs_open_play": {
-        "value": 5,
-        "threshold": 2,
+        "value": 6,
+        "threshold": 4,
         "kind": ">=",
-        "margin": 1.5
+        "margin": 0.5
       },
       "one_flank_vs_weak_lane.entries_into_final_third": {
-        "value": 48,
+        "value": 49,
         "threshold": 10,
         "kind": ">=",
-        "margin": 3.8
+        "margin": 3.9
       },
       "one_flank_vs_weak_lane.left_side_share": {
-        "value": 0.646,
+        "value": 0.612,
         "threshold": 0.5,
         "kind": ">=",
-        "margin": 0.292
+        "margin": 0.224
       },
       "one_flank_vs_weak_lane.weak_lane_completion_ratio": {
-        "value": 1.268,
+        "value": 1.274,
         "threshold": 1.0,
         "kind": ">=",
-        "margin": 0.268
+        "margin": 0.274
       }
     },
-    "min_margin": 0.1
+    "min_margin": 0.1,
+    "motif_instances": {
+      "pat_elastic_low_block|AUR|": 4,
+      "pat_flank_isolation|NTG|": 2,
+      "pat_rest_defence|NTG|": 10
+    }
+  },
+  "planted_motifs": {
+    "scale": 1.0,
+    "rates": {
+      "pat_bait_switch": 0.02,
+      "pat_cutback": 0.03,
+      "pat_flank_isolation": 0.05,
+      "pat_elastic_low_block": 0.12,
+      "pat_counter_press": 0.08,
+      "pat_rest_defence": 0.2,
+      "pat_starved_finisher": 0.35,
+      "pat_tactical_fouling": 0.1
+    },
+    "teams": {
+      "AUR": {
+        "pat_bait_switch": 1.0,
+        "pat_elastic_low_block": 1.0
+      },
+      "NTG": {
+        "pat_rest_defence": 1.0,
+        "pat_flank_isolation": 0.6
+      },
+      "CAL": {
+        "pat_counter_press": 1.0,
+        "pat_tactical_fouling": 0.6
+      },
+      "VES": {
+        "pat_cutback": 1.0,
+        "pat_flank_isolation": 0.5
+      }
+    },
+    "players": {
+      "VES_09": {
+        "team": "VES",
+        "role": "striker",
+        "motifs": {
+          "pat_starved_finisher": 1.0
+        }
+      }
+    },
+    "sides": {
+      "VES|pat_flank_isolation": "left"
+    },
+    "instances": {
+      "m_001": {
+        "pat_flank_isolation|VES|": 1,
+        "pat_starved_finisher|VES|VES_09": 2
+      },
+      "m_002": {
+        "pat_bait_switch|AUR|": 3,
+        "pat_rest_defence|NTG|": 1
+      },
+      "m_003": {
+        "pat_bait_switch|AUR|": 3,
+        "pat_counter_press|CAL|": 1,
+        "pat_tactical_fouling|CAL|": 2
+      },
+      "m_004": {
+        "pat_cutback|VES|": 1,
+        "pat_flank_isolation|VES|": 1,
+        "pat_rest_defence|NTG|": 2,
+        "pat_starved_finisher|VES|VES_09": 1
+      },
+      "m_005": {
+        "pat_flank_isolation|NTG|": 1
+      },
+      "m_006": {
+        "pat_counter_press|CAL|": 3,
+        "pat_flank_isolation|VES|": 2,
+        "pat_starved_finisher|VES|VES_09": 1,
+        "pat_tactical_fouling|CAL|": 1
+      },
+      "m_007": {
+        "pat_bait_switch|AUR|": 2,
+        "pat_cutback|VES|": 2,
+        "pat_flank_isolation|VES|": 1,
+        "pat_starved_finisher|VES|VES_09": 2
+      },
+      "m_008": {
+        "pat_counter_press|CAL|": 1,
+        "pat_tactical_fouling|CAL|": 4
+      },
+      "m_009": {
+        "pat_counter_press|CAL|": 1,
+        "pat_rest_defence|NTG|": 6,
+        "pat_tactical_fouling|CAL|": 1
+      },
+      "m_010": {
+        "pat_bait_switch|AUR|": 3,
+        "pat_elastic_low_block|AUR|": 3
+      },
+      "m_011": {
+        "pat_cutback|VES|": 2,
+        "pat_starved_finisher|VES|VES_09": 1
+      },
+      "m_012": {
+        "pat_bait_switch|AUR|": 1
+      },
+      "m_013": {
+        "pat_bait_switch|AUR|": 3,
+        "pat_counter_press|CAL|": 3,
+        "pat_tactical_fouling|CAL|": 1
+      },
+      "m_014": {
+        "pat_cutback|VES|": 1,
+        "pat_flank_isolation|NTG|": 1,
+        "pat_starved_finisher|VES|VES_09": 1
+      },
+      "m_016": {
+        "pat_counter_press|CAL|": 2,
+        "pat_cutback|VES|": 1,
+        "pat_flank_isolation|VES|": 1,
+        "pat_starved_finisher|VES|VES_09": 1,
+        "pat_tactical_fouling|CAL|": 1
+      },
+      "m_017": {
+        "pat_cutback|VES|": 1,
+        "pat_elastic_low_block|AUR|": 2
+      },
+      "m_018": {
+        "pat_counter_press|CAL|": 2,
+        "pat_tactical_fouling|CAL|": 2
+      },
+      "m_019": {
+        "pat_counter_press|CAL|": 3,
+        "pat_flank_isolation|NTG|": 1
+      },
+      "m_020": {
+        "pat_bait_switch|AUR|": 2
+      },
+      "m_021": {
+        "pat_counter_press|CAL|": 1,
+        "pat_tactical_fouling|CAL|": 2
+      },
+      "m_022": {
+        "pat_cutback|VES|": 1,
+        "pat_flank_isolation|VES|": 1,
+        "pat_rest_defence|NTG|": 3
+      },
+      "m_023": {
+        "pat_bait_switch|AUR|": 1,
+        "pat_cutback|VES|": 2,
+        "pat_flank_isolation|VES|": 1,
+        "pat_starved_finisher|VES|VES_09": 1
+      },
+      "m_024": {
+        "pat_flank_isolation|NTG|": 1
+      },
+      "m_025": {
+        "pat_counter_press|CAL|": 2,
+        "pat_rest_defence|NTG|": 1
+      },
+      "m_026": {
+        "pat_bait_switch|AUR|": 1,
+        "pat_elastic_low_block|AUR|": 7
+      },
+      "m_027": {
+        "pat_cutback|VES|": 1,
+        "pat_flank_isolation|VES|": 1,
+        "pat_starved_finisher|VES|VES_09": 4
+      },
+      "m_028": {
+        "pat_counter_press|CAL|": 2,
+        "pat_tactical_fouling|CAL|": 4
+      },
+      "m_029": {
+        "pat_bait_switch|AUR|": 1,
+        "pat_rest_defence|NTG|": 1
+      },
+      "m_030": {
+        "pat_counter_press|CAL|": 5,
+        "pat_cutback|VES|": 2,
+        "pat_starved_finisher|VES|VES_09": 1,
+        "pat_tactical_fouling|CAL|": 2
+      },
+      "m_031": {
+        "pat_counter_press|CAL|": 2,
+        "pat_tactical_fouling|CAL|": 1
+      },
+      "m_032": {
+        "pat_cutback|VES|": 2,
+        "pat_flank_isolation|VES|": 2,
+        "pat_starved_finisher|VES|VES_09": 2
+      },
+      "m_033": {
+        "pat_bait_switch|AUR|": 3,
+        "pat_cutback|VES|": 3,
+        "pat_flank_isolation|VES|": 2,
+        "pat_starved_finisher|VES|VES_09": 1
+      },
+      "m_034": {
+        "pat_flank_isolation|NTG|": 6,
+        "pat_rest_defence|NTG|": 5
+      },
+      "m_035": {
+        "pat_counter_press|CAL|": 1,
+        "pat_rest_defence|NTG|": 2,
+        "pat_tactical_fouling|CAL|": 3
+      },
+      "m_036": {
+        "pat_bait_switch|AUR|": 1
+      },
+      "m_037": {
+        "pat_cutback|VES|": 3,
+        "pat_flank_isolation|VES|": 1,
+        "pat_starved_finisher|VES|VES_09": 1
+      },
+      "m_038": {
+        "pat_bait_switch|AUR|": 2,
+        "pat_counter_press|CAL|": 3,
+        "pat_tactical_fouling|CAL|": 2
+      },
+      "m_040": {
+        "pat_counter_press|CAL|": 4,
+        "pat_cutback|VES|": 3,
+        "pat_flank_isolation|VES|": 1,
+        "pat_starved_finisher|VES|VES_09": 1,
+        "pat_tactical_fouling|CAL|": 2
+      }
+    }
   }
 }

@@ -107,7 +107,9 @@ def showcase_is_realistic(sim: MatchSim) -> bool:
 # Where the seed search starts, per generator seed. A full search from 0 takes ~2 minutes, so we
 # record the first offset that a search from 0 finds; tests/test_data_gen.py (slow) re-runs the
 # search from 0 and checks it lands on the same offset. Set to 0 after changing the simulator.
-SHOWCASE_SEARCH_START = {2026: 1383}
+# Keyed by (seed, motif scale): planting changes the matches, so each scale has its own first hit
+# (scale 0 keeps the pre-patterns showcase byte for byte).
+SHOWCASE_SEARCH_START = {(2026, 0.0): 1383, (2026, 1.0): 6914}
 
 
 def showcase_reference(seed: int, tables=None, motif_scale: float = MOTIF_SCALE) -> float:
@@ -116,13 +118,13 @@ def showcase_reference(seed: int, tables=None, motif_scale: float = MOTIF_SCALE)
     return traps.lane_entry_completion(tables["events"], TEAM_BY_ID["t_ntg"].weak_lane)
 
 
-def build_showcase(seed: int, players, max_tries: int = 6000, start: int | None = None, reference_completion=None,
+def build_showcase(seed: int, players, max_tries: int = 20000, start: int | None = None, reference_completion=None,
                    motif_scale: float = MOTIF_SCALE):
     """Same simulator as the season, with a scripted early AUR goal. We then search seeds until
     all five traps fire in the one match, each threshold cleared with SHOWCASE_MIN_MARGIN, inside
     the SHOWCASE_REALISM envelope, so the demo match is reproducible, unedited, plausible and not
     balanced on a knife edge."""
-    start = SHOWCASE_SEARCH_START.get(seed, 0) if start is None else start
+    start = SHOWCASE_SEARCH_START.get((seed, float(motif_scale)), 0) if start is None else start
     if reference_completion is None:
         reference_completion = showcase_reference(seed, motif_scale=motif_scale)
     for k in range(start, start + max_tries):

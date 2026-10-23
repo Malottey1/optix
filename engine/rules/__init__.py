@@ -27,8 +27,22 @@ class RuleResult:
     detail: dict
 
 
-from . import (causal_claim, causal_red_card, field_tilt_with_lead, ppda_alone, set_piece_inflation,  # noqa: E402
-               shot_spam, single_match_fatigue, small_sample_xg, wide_forward_passes)
+from . import (causal_claim, causal_red_card, ctx_attack_side_vs_finish_side, ctx_crosses_vs_cutbacks,  # noqa: E402
+               ctx_dominance_with_transition_exposure, ctx_fouls_clustered_after_losses,
+               ctx_losses_vs_immediate_regain, ctx_low_volume_high_quality, ctx_tilt_without_access,
+               ctx_volume_without_central_access, field_tilt_with_lead, ppda_alone, set_piece_inflation, shot_spam,
+               single_match_fatigue, small_sample_xg, wide_forward_passes)
 
 RULES = [causal_claim, causal_red_card, single_match_fatigue, field_tilt_with_lead, shot_spam,
-         set_piece_inflation, wide_forward_passes, small_sample_xg, ppda_alone]
+         set_piece_inflation, wide_forward_passes, small_sample_xg, ppda_alone,
+         # pattern trap rules (engine/patterns): a naive claim the pattern shows to be misleading
+         ctx_attack_side_vs_finish_side, ctx_crosses_vs_cutbacks, ctx_volume_without_central_access,
+         ctx_tilt_without_access, ctx_losses_vs_immediate_regain, ctx_dominance_with_transition_exposure,
+         ctx_low_volume_high_quality, ctx_fouls_clustered_after_losses]
+PATTERN_RULES = {"ctx_attack_side_vs_finish_side": "pat_bait_switch", "ctx_crosses_vs_cutbacks": "pat_cutback",
+                 "ctx_volume_without_central_access": "pat_flank_isolation",
+                 "ctx_tilt_without_access": "pat_elastic_low_block",
+                 "ctx_losses_vs_immediate_regain": "pat_counter_press",
+                 "ctx_dominance_with_transition_exposure": "pat_rest_defence",
+                 "ctx_low_volume_high_quality": "pat_starved_finisher",
+                 "ctx_fouls_clustered_after_losses": "pat_tactical_fouling"}

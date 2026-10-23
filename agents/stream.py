@@ -13,9 +13,11 @@ from .orchestrator import Orchestrator
 
 
 class InsightStream:
-    def __init__(self, match_ds, match_id, log=None, languages=("en",), phraser=None, engine="direct", audit=None):
+    def __init__(self, match_ds, match_id, log=None, languages=("en",), phraser=None, engine="direct", audit=None,
+                 history=None):
         """engine: "direct" (agents/orchestrator.py, the default and fallback) or "workflow" (the
-        same agents as a Microsoft Agent Framework workflow, agents/workflow.py)."""
+        same agents as a Microsoft Agent Framework workflow, agents/workflow.py). history: the
+        families each team showed in its previous matches, for novelty ranking (None = standalone)."""
         self.match_id = match_id
         if engine == "workflow":
             from .workflow import WorkflowOrchestrator as cls
@@ -24,7 +26,7 @@ class InsightStream:
         else:
             raise ValueError(f"unknown engine {engine!r}")
         self.orc = cls(match_ds, match_id, log=log, languages=languages, on_published=self._emit,
-                       phraser=phraser, audit=audit)
+                       phraser=phraser, audit=audit, history=history)
         self.ds = match_ds
         self.insights: list = []
         self.received: dict = {}           # event_id -> perf_counter when it arrived

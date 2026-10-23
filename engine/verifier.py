@@ -26,6 +26,7 @@ from datetime import datetime, timezone
 from contracts.checks import check_param_numbers
 
 from . import claims as C
+from . import patterns as PAT
 from .rules import RULES, RuleResult
 from .tables import Dataset
 
@@ -75,12 +76,25 @@ def fact_check(claim: dict, ds: Dataset):
     if missing:
         return False, [f"unknown event ids: {missing[:5]}"], ["missing_evidence"], None, None
     metric = claim["metric"]
-    if metric not in C.COMPUTE:
+    if metric not in C.COMPUTE and metric not in PAT.MODULES:
         return False, [f"metric {metric} cannot be recomputed"], ["value_mismatch"], None, None
     try:
         scope = C.resolve_scope(ds, claim["scope"], claim.get("match_id"), claim.get("window"))
-        vals, pred = C.compute(ds, metric, claim["scope"], claim["subject"], claim.get("params"),
-                               claim.get("match_id"), claim.get("window"))
+        if metric in PAT.MODULES:
+            # a pattern claim: the independent recompute walks the raw events from the evidence
+            # anchors and re-checks every condition (it never calls the detector)
+            w = claim.get("window") or {}
+            vals, bad = PAT.recompute(ds, metric, claim["match_id"], claim["subject"], ids, scope.events,
+                                      (w.get("from_sec"), w.get("to_sec")) if w else None)
+            if vals is None or bad:
+                problems.append(f"evidence does not support the pattern: {bad[:5]}")
+                rules.append("missing_evidence")
+                if vals is None:
+                    return False, problems, sorted(set(rules)), None, scope
+            pred = lambda e: True                       # noqa: E731  (membership in scope is checked below)
+        else:
+            vals, pred = C.compute(ds, metric, claim["scope"], claim["subject"], claim.get("params"),
+                                   claim.get("match_id"), claim.get("window"))
     except (KeyError, TypeError) as exc:
         return False, [f"cannot resolve claim: {exc}"], ["missing_evidence"], None, None
     # a season scope is every event, so only narrower scopes need the membership check

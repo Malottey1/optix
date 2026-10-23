@@ -11,7 +11,7 @@ from engine.tables import Dataset, match_events
 
 from . import (bait_switch, counter_press, cutback, elastic_low_block, flank_isolation, rest_defence,
                starved_finisher, tactical_fouling)
-from .config import CONFIG, FAMILIES, enabled
+from .config import CONFIG, FAMILIES, FULL_MATCH_ONLY, ICONS, enabled
 from .helpers import Finding
 
 MODULES = {m.FAMILY: m for m in (bait_switch, cutback, flank_isolation, elastic_low_block, counter_press,
@@ -94,4 +94,4 @@ def recompute(ds: Dataset, family: str, match_id: str, subject: dict, anchors: l
 
 
 __all__ = ["CONFIG", "FAMILIES", "Finding", "MODULES", "UNITS", "VALUE_KEYS", "detect_match", "detect_team",
-           "recompute", "enabled"]
+           "recompute", "enabled", "FULL_MATCH_ONLY", "ICONS"]

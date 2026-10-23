@@ -6,6 +6,10 @@
       "center": "centre",
       "right_half_space": "demi-espace droit",
       "right_flank": "flanc droit"
+    },
+    "side": {
+      "left": "côté gauche",
+      "right": "côté droit"
     }
   },
   "_rules": {
@@ -17,7 +21,15 @@
     "ppda_alone": "Le PPDA seul peut placer une équipe passive au niveau d'une équipe qui presse dans ces données ; la phrase ajoute maintenant l'intensité du pressing.",
     "causal_claim": "Les données d'événements montrent ce qui s'est passé, pas pourquoi, donc une affirmation de cause n'est jamais publiée.",
     "causal_red_card": "Les données d'événements ne peuvent pas montrer qu'un carton rouge a causé un résultat, donc l'affirmation n'est jamais publiée.",
-    "single_match_fatigue": "Il n'y a pas de données de tracking et un match est un échantillon trop petit pour diagnostiquer la fatigue, donc l'affirmation n'est jamais publiée."
+    "single_match_fatigue": "Il n'y a pas de données de tracking et un match est un échantillon trop petit pour diagnostiquer la fatigue, donc l'affirmation n'est jamais publiée.",
+    "ctx_attack_side_vs_finish_side": "La plupart des entrées sont passées par un côté, mais après les renversements la plupart des tirs sont venus de l'autre ; la phrase dit désormais d'où les tirs sont partis.",
+    "ctx_crosses_vs_cutbacks": "Les centres étaient nombreux, mais les passes en retrait depuis la ligne de but ont donné de meilleurs tirs ; la phrase met désormais les deux côte à côte.",
+    "ctx_volume_without_central_access": "Une grande partie du volume dans le dernier tiers s'est jouée le long d'une ligne de touche ; la phrase donne désormais ces séquences et les entrées dans la surface.",
+    "ctx_tilt_without_access": "Le territoire a été pris face à un bloc bas qui a concédé des tirs de loin ; la phrase dit désormais d'où venaient les tirs.",
+    "ctx_losses_vs_immediate_regain": "Beaucoup de ces pertes ont été suivies d'une récupération en quelques secondes ; la phrase donne désormais les récupérations à côté des pertes.",
+    "ctx_dominance_with_transition_exposure": "L'équipe qui avait le territoire a aussi concédé des tirs en contre ; la phrase donne désormais ces tirs à côté du territoire.",
+    "ctx_low_volume_high_quality": "Peu de ballons, mais des tirs sans pression : parler d'un match discret serait trompeur, donc rien n'est publié.",
+    "ctx_fouls_clustered_after_losses": "Beaucoup des fautes sont venues juste après une perte de balle au milieu ; la phrase donne désormais ce nombre à côté du total."
   },
   "matchup.weak_flank": {
     "analyst": "{attacker} envoie {attack_share} % de ses entrées dans le dernier tiers par le {lane_label} (moyenne de la ligue {league_share} %), et {defender} laisse réussir {concede_completion} % des entrées de ce côté (ligue {league_completion} %).",
@@ -90,5 +102,215 @@
   "milestone.pass_count": {
     "analyst": "{player} ({team}) atteint {amount} passes réussies dans ce match.",
     "casual": "{player} a déjà réussi {amount} passes pour {team} dans ce match."
+  },
+  "pattern.bait_switch": [
+    {
+      "analyst": "{team} a fait circuler le ballon en {build_passes} {build_passes|passe|passes} courtes en moyenne sur le {side_label} avant de renverser le jeu {amount} {amount|fois|fois} ; {shots} {shots|tir a suivi|tirs ont suivi}, {xg} xG.",
+      "casual": "{team} a gardé le ballon sur le {side_label}, puis a renversé : {amount} {amount|renversement|renversements} après environ {build_passes} {build_passes|passe|passes}, pour {shots} {shots|tir|tirs} et {xg} xG."
+    },
+    {
+      "analyst": "Construction sur le {side_label}, finition de l'autre côté : {team} compte {amount} {amount|renversement|renversements} de jeu après {build_passes} {build_passes|passe|passes} en moyenne, pour {shots} {shots|tir|tirs} ({xg} xG).",
+      "casual": "{team} a joué {build_passes} {build_passes|passe|passes} en moyenne sur le {side_label}, puis a joué long de l'autre côté {amount} {amount|fois|fois} : {shots} {shots|tir|tirs}, {xg} xG."
+    },
+    {
+      "analyst": "{amount} {amount|fois|fois} {team} a fait tourner sur le {side_label} ({build_passes} {build_passes|passe|passes} en moyenne) puis a renversé ; ces actions ont donné {shots} {shots|tir|tirs} et {xg} xG.",
+      "casual": "Passes courtes sur le {side_label} ({build_passes} en moyenne), puis un long renversement : {team} l'a fait {amount} {amount|fois|fois}, pour {shots} {shots|tir|tirs} et {xg} xG."
+    }
+  ],
+  "pattern.cutback": [
+    {
+      "analyst": "{team} a atteint la ligne de but et a remis en retrait {amount} {amount|fois|fois} : {xg_per_shot} xG par tir, contre {cross_xg_per_shot} sur ses centres.",
+      "casual": "Les meilleures occasions de {team} sont venues de passes en retrait : {amount}, à {xg_per_shot} xG par tir, contre {cross_xg_per_shot} sur les centres."
+    },
+    {
+      "analyst": "Passes en retrait depuis la ligne de but : {amount} pour {team}, chacune suivie d'un tir à {xg_per_shot} xG en moyenne ; ses tirs après centre étaient à {cross_xg_per_shot}.",
+      "casual": "{team} est allé jusqu'à la ligne de but et a remis en retrait {amount} {amount|fois|fois} ; ces tirs valaient {xg_per_shot} xG en moyenne, les centres seulement {cross_xg_per_shot}."
+    },
+    {
+      "analyst": "{amount} {amount|passe en retrait|passes en retrait} depuis la ligne de but pour {team}, à {xg_per_shot} xG par tir, au-dessus des {cross_xg_per_shot} de ses centres.",
+      "casual": "En retrait depuis la ligne de but : {team} l'a fait {amount} {amount|fois|fois}, à {xg_per_shot} xG par tir contre {cross_xg_per_shot} sur les centres."
+    }
+  ],
+  "pattern.cutback.no_cross": [
+    {
+      "analyst": "{team} a atteint la ligne de but et a remis en retrait {amount} {amount|fois|fois}, à {xg_per_shot} xG par tir ; aucun centre n'a mené à un tir.",
+      "casual": "Les occasions de {team} sont venues de passes en retrait : {amount}, à {xg_per_shot} xG par tir, et aucune sur centre."
+    },
+    {
+      "analyst": "Passes en retrait depuis la ligne de but : {amount} pour {team}, chacune suivie d'un tir à {xg_per_shot} xG en moyenne ; ses centres n'ont donné aucun tir.",
+      "casual": "{team} est allé jusqu'à la ligne de but et a remis en retrait {amount} {amount|fois|fois} ; ces tirs valaient {xg_per_shot} xG en moyenne."
+    },
+    {
+      "analyst": "{amount} {amount|passe en retrait|passes en retrait} depuis la ligne de but pour {team}, à {xg_per_shot} xG par tir, alors que ses centres n'ont mené à aucun tir.",
+      "casual": "En retrait depuis la ligne de but : {team} l'a fait {amount} {amount|fois|fois}, à {xg_per_shot} xG par tir."
+    }
+  ],
+  "pattern.flank_isolation": [
+    {
+      "analyst": "{team} compte {amount} {amount|séquence|séquences} de dix passes ou plus le long d'une ligne de touche, soit {f3_share} % de ses passes dans le dernier tiers ; {shots} {shots|tir a suivi|tirs ont suivi}.",
+      "casual": "{team} a gardé le ballon le long de la touche en {amount} longues {amount|séquence|séquences} : {f3_share} % de ses passes dans le dernier tiers, et {shots} {shots|tir|tirs}."
+    },
+    {
+      "analyst": "Circulation le long de la touche : {amount} {amount|séquence|séquences} de {team} dans le couloir extérieur sans passe vers l'axe, {f3_share} % de ses passes dans le dernier tiers, {shots} {shots|tir|tirs}.",
+      "casual": "Beaucoup de ballon sur l'extérieur pour {team} : {amount} {amount|séquence|séquences} le long de la touche, {f3_share} % de ses passes dans le dernier tiers et {shots} {shots|tir|tirs}."
+    },
+    {
+      "analyst": "{f3_share} % des passes de {team} dans le dernier tiers sont venues en {amount} {amount|séquence|séquences} le long de la touche sans passe dans l'axe ; ces actions ont donné {shots} {shots|tir|tirs}.",
+      "casual": "{team} a joué le long de la touche en {amount} {amount|séquence|séquences}, {f3_share} % de ses passes dans le dernier tiers, pour {shots} {shots|tir|tirs}."
+    }
+  ],
+  "pattern.elastic_low_block": [
+    {
+      "analyst": "Pendant {minutes} {minutes|minute|minutes} {opponent} a eu {opp_tilt} % du territoire, mais {outside_share} % de ses {opp_shots} {opp_shots|tir|tirs} sont partis de l'extérieur de la surface et {team} a réalisé {amount} {amount|contre ou dégagement|contres et dégagements}.",
+      "casual": "{team} a défendu bas pendant {minutes} {minutes|minute|minutes} : {opponent} avait {opp_tilt} % du territoire, {outside_share} % de ses {opp_shots} {opp_shots|tir|tirs} venaient de loin, et {team} a contré ou dégagé {amount} fois."
+    },
+    {
+      "analyst": "Bloc bas de {team} pendant {minutes} {minutes|minute|minutes} : {amount} {amount|contre ou dégagement|contres et dégagements}, {opponent} à {opp_tilt} % du territoire avec {outside_share} % de {opp_shots} {opp_shots|tir|tirs} hors de la surface.",
+      "casual": "{opponent} a eu le ballon dans la moitié de {team} ({opp_tilt} % du territoire) pendant {minutes} {minutes|minute|minutes}, mais {outside_share} % de {opp_shots} {opp_shots|tir|tirs} venaient de loin ; {team} a contré ou dégagé {amount} fois."
+    },
+    {
+      "analyst": "{team} a laissé {opp_tilt} % du territoire à {opponent} pendant {minutes} {minutes|minute|minutes} ; {outside_share} % des {opp_shots} {opp_shots|tir|tirs} de {opponent} sont partis de l'extérieur de la surface et {team} compte {amount} {amount|contre ou dégagement|contres et dégagements}.",
+      "casual": "Le territoire pour {opponent} ({opp_tilt} %), peu de choses près du but : en {minutes} {minutes|minute|minutes}, {outside_share} % de ses {opp_shots} {opp_shots|tir|tirs} venaient de loin et {team} a contré ou dégagé {amount} fois."
+    }
+  ],
+  "pattern.counter_press": [
+    {
+      "analyst": "{team} a récupéré le ballon en quelques secondes {amount} {amount|fois|fois} après l'avoir perdu dans le dernier tiers ({losses} {losses|perte|pertes} là-haut) ; médiane de {median_regain_sec} {median_regain_sec|seconde|secondes}.",
+      "casual": "Perdu, récupéré : {team} l'a fait {amount} {amount|fois|fois} dans le dernier tiers, sur {losses} {losses|perte|pertes}, en {median_regain_sec} {median_regain_sec|seconde|secondes} environ."
+    },
+    {
+      "analyst": "Récupérations immédiates de {team} : {amount} de ses {losses} {losses|perte|pertes} dans le dernier tiers ont été suivies d'une récupération sous pression dans le camp adverse, médiane de {median_regain_sec} {median_regain_sec|seconde|secondes}.",
+      "casual": "{team} a récupéré le ballon tout de suite à répétition : {amount} fois sur {losses} {losses|perte|pertes} dans le dernier tiers, en {median_regain_sec} {median_regain_sec|seconde|secondes} environ."
+    },
+    {
+      "analyst": "{amount} {amount|perte|pertes} dans le dernier tiers suivies d'une récupération immédiate de {team}, sur {losses}, chacune après une pression dans le tiers défensif adverse, médiane de {median_regain_sec} {median_regain_sec|seconde|secondes}.",
+      "casual": "Quand {team} a perdu le ballon haut, il l'a récupéré {amount} {amount|fois|fois} (sur {losses}), en {median_regain_sec} {median_regain_sec|seconde|secondes} environ."
+    }
+  ],
+  "pattern.rest_defence": [
+    {
+      "analyst": "{team} a eu {tilt} % du territoire mais a concédé {amount} {amount|tir|tirs} en contre, {xg} xG, chacun quelques secondes après une perte de balle.",
+      "casual": "{team} avait {tilt} % du territoire, mais {opponent} a répondu en contre : {amount} {amount|tir|tirs}, {xg} xG."
+    },
+    {
+      "analyst": "Territoire et exposition : {tilt} % pour {team}, et {amount} {amount|tir concédé|tirs concédés} quelques secondes après une récupération de {opponent} dans sa propre moitié ({xg} xG).",
+      "casual": "{team} a dominé le territoire ({tilt} %) mais a concédé {amount} {amount|tir|tirs} en contre-attaque pour {xg} xG."
+    },
+    {
+      "analyst": "{amount} {amount|tir|tirs} en contre-attaque {amount|concédé|concédés} par {team} ({xg} xG) avec {tilt} % du territoire.",
+      "casual": "Avec {tilt} % du territoire, {team} a tout de même laissé {amount} {amount|tir|tirs} en contre, {xg} xG."
+    }
+  ],
+  "pattern.starved_finisher": [
+    {
+      "analyst": "{player} ({team}) n'a eu que {amount} {amount|ballon|ballons} (quartile inférieur de la ligue pour les attaquants : {touch_line}) mais {unpressured_shots} {unpressured_shots|tir|tirs} sans pression ; {xg} xG au total.",
+      "casual": "Peu de ballons, mais des tirs sans pression : {player} a touché le ballon {amount} {amount|fois|fois} (quartile inférieur de la ligue pour les attaquants : {touch_line}) pour {team}, avec {unpressured_shots} {unpressured_shots|tir libre de marquage|tirs libres de marquage} et {xg} xG."
+    },
+    {
+      "analyst": "Peu de ballons, des tirs sans pression : {player} ({team}) compte {amount} {amount|ballon touché|ballons touchés} (quartile inférieur de la ligue pour les attaquants : {touch_line}), {unpressured_shots} {unpressured_shots|tir|tirs} sans pression et {xg} xG.",
+      "casual": "{player} a très peu vu le ballon avec {team} ({amount} {amount|ballon|ballons} (quartile inférieur de la ligue pour les attaquants : {touch_line})) mais a tiré {unpressured_shots} {unpressured_shots|fois|fois} sans pression, {xg} xG."
+    },
+    {
+      "analyst": "{unpressured_shots} {unpressured_shots|tir|tirs} sans pression et {xg} xG pour {amount} {amount|ballon touché|ballons touchés} (quartile inférieur de la ligue pour les attaquants : {touch_line}) : {player} ({team}) a rarement eu le ballon, mais les occasions sont venues.",
+      "casual": "{player} ({team}) : {amount} {amount|ballon|ballons} (quartile inférieur de la ligue pour les attaquants : {touch_line}), {unpressured_shots} {unpressured_shots|tir libre|tirs libres}, {xg} xG."
+    }
+  ],
+  "pattern.tactical_fouling": [
+    {
+      "analyst": "{team} a commis {amount} {amount|faute|fautes} quelques secondes après une perte de balle au milieu, soit {rate} % de {losses} {losses|perte|pertes} à cet endroit (ligue {league_rate} %).",
+      "casual": "Des fautes après une perte de balle : {team} en a commis {amount} juste après avoir perdu le ballon au milieu, {rate} % de {losses} {losses|perte|pertes} (ligue {league_rate} %)."
+    },
+    {
+      "analyst": "Après {losses} {losses|perte|pertes} au milieu, {team} a commis une faute en quelques secondes {amount} {amount|fois|fois} : {rate} % contre {league_rate} % en ligue.",
+      "casual": "{team} a souvent fait faute juste après avoir perdu le ballon au milieu : {amount} {amount|fois|fois} sur {losses}, {rate} % (ligue {league_rate} %)."
+    },
+    {
+      "analyst": "{amount} {amount|faute|fautes} de {team} sont venues juste après une perte de balle au milieu : {rate} % de {losses} {losses|perte|pertes} de ce type, ligue {league_rate} %.",
+      "casual": "Perte au milieu, puis faute : {amount} {amount|fois|fois} pour {team}, {rate} % de {losses} {losses|perte|pertes}, ligue {league_rate} %."
+    }
+  ],
+  "attack_side.stat": {
+    "analyst": "{team} a fait passer {amount} % de ses entrées dans le dernier tiers par le {side_label}.",
+    "casual": "{team} attaque surtout par le {side_label} : {amount} % de ses entrées dans le dernier tiers."
+  },
+  "attack_side.finished_other_side": {
+    "analyst": "{team} a fait passer {amount} % de ses entrées dans le dernier tiers par le {side_label}, mais {opposite_shot_share} % de ses {team_shots} {team_shots|tir|tirs} sont venus de l'autre côté.",
+    "casual": "{team} a construit par le {side_label} ({amount} % des entrées), mais {opposite_shot_share} % de ses {team_shots} {team_shots|tir|tirs} sont partis de l'autre côté."
+  },
+  "crosses.stat": {
+    "analyst": "{team} a tenté {amount} {amount|centre|centres}.",
+    "casual": "{team} a envoyé {amount} {amount|centre|centres} dans la surface."
+  },
+  "crosses.with_cutbacks": {
+    "analyst": "{team} a tenté {amount} {amount|centre|centres} à {cross_xg_per_shot} xG par tir, tandis que {cutbacks} {cutbacks|passe en retrait a donné|passes en retrait ont donné} {cutback_xg_per_shot} xG par tir.",
+    "casual": "{amount} {amount|centre|centres} de {team} ({cross_xg_per_shot} xG par tir), mais les {cutbacks} {cutbacks|passe en retrait|passes en retrait} ont donné de meilleures occasions, à {cutback_xg_per_shot} xG par tir."
+  },
+  "f3_volume.stat": {
+    "analyst": "{team} a réussi {amount} {amount|passe|passes} dans le dernier tiers.",
+    "casual": "{team} a eu le ballon dans le dernier tiers : {amount} {amount|passe réussie|passes réussies}."
+  },
+  "f3_volume.touchline_spells": {
+    "analyst": "{team} a réussi {amount} {amount|passe|passes} dans le dernier tiers, dont {isolation_share} % en {isolation_spells} {isolation_spells|séquence|séquences} le long de la touche, avec {box_entries} {box_entries|entrée|entrées} dans la surface.",
+    "casual": "{amount} {amount|passe|passes} dans le dernier tiers pour {team}, mais {isolation_share} % en {isolation_spells} {isolation_spells|séquence|séquences} le long de la touche et seulement {box_entries} dans la surface."
+  },
+  "field_tilt.low_block_outside_box": {
+    "analyst": "{team} a eu {amount} % du territoire, mais {outside_shot_share} % de ses {team_shots} {team_shots|tir|tirs} sont partis de l'extérieur de la surface, à {team_xg_per_shot} xG par tir.",
+    "casual": "{team} a eu {amount} % du territoire face à un bloc bas, mais {outside_shot_share} % de ses {team_shots} {team_shots|tir|tirs} venaient de loin ({team_xg_per_shot} xG par tir)."
+  },
+  "field_tilt.counters_conceded": {
+    "analyst": "{team} a eu {amount} % du territoire et a concédé {counter_shots_conceded} {counter_shots_conceded|tir|tirs} en contre-attaque pour {counter_xg_conceded} xG.",
+    "casual": "{team} avait {amount} % du territoire, mais a encaissé {counter_shots_conceded} {counter_shots_conceded|tir|tirs} en contre ({counter_xg_conceded} xG)."
+  },
+  "f3_losses.stat": {
+    "analyst": "{team} a perdu le ballon {amount} {amount|fois|fois} dans le dernier tiers.",
+    "casual": "{team} a rendu le ballon {amount} {amount|fois|fois} dans le dernier tiers."
+  },
+  "f3_losses.won_back": {
+    "analyst": "{team} a perdu le ballon {amount} {amount|fois|fois} dans le dernier tiers et l'a récupéré {regains_4s} {regains_4s|fois|fois} en quelques secondes ({regain_share} %).",
+    "casual": "{team} a perdu le ballon {amount} {amount|fois|fois} haut, mais l'a récupéré tout de suite {regains_4s} {regains_4s|fois|fois} ({regain_share} %)."
+  },
+  "fouls.stat": {
+    "analyst": "{team} a commis {amount} {amount|faute|fautes}.",
+    "casual": "{team} a concédé {amount} {amount|faute|fautes}."
+  },
+  "fouls.after_losses": {
+    "analyst": "{team} a commis {amount} {amount|faute|fautes}, dont {fouls_after_losses} quelques secondes après une perte de balle au milieu ({after_loss_share} %).",
+    "casual": "{amount} {amount|faute|fautes} de {team} ; {fouls_after_losses} juste après une perte de balle au milieu ({after_loss_share} %)."
+  },
+  "touches.quiet": {
+    "analyst": "{player} ({team}) a eu un match discret : {amount} {amount|ballon touché|ballons touchés}.",
+    "casual": "Match discret pour {player} : seulement {amount} {amount|ballon|ballons} avec {team}."
+  },
+  "pattern.bait_switch.no_shot": [
+    {
+      "analyst": "{team} a fait circuler le ballon en {build_passes} {build_passes|passe|passes} courtes en moyenne sur le {side_label} avant de renverser le jeu {amount} {amount|fois|fois} ; aucun tir n'a suivi.",
+      "casual": "{team} a gardé le ballon sur le {side_label} environ {build_passes} {build_passes|passe|passes}, puis a renversé : {amount} {amount|fois|fois}, sans tir."
+    },
+    {
+      "analyst": "Construction sur le {side_label}, renversement de l'autre côté : {team} compte {amount} {amount|renversement|renversements} de jeu après {build_passes} {build_passes|passe|passes} en moyenne, sans aucun tir.",
+      "casual": "{team} a joué {build_passes} {build_passes|passe|passes} en moyenne sur le {side_label}, puis a joué long de l'autre côté {amount} {amount|fois|fois} ; aucun tir n'a suivi."
+    },
+    {
+      "analyst": "{amount} {amount|fois|fois} {team} a fait tourner sur le {side_label} ({build_passes} {build_passes|passe|passes} en moyenne) puis a renversé ; ces actions n'ont pas mené à un tir.",
+      "casual": "Passes courtes sur le {side_label} ({build_passes} en moyenne), puis un long renversement : {team} l'a fait {amount} {amount|fois|fois}, sans tir."
+    }
+  ],
+  "pattern.flank_isolation.no_shot": [
+    {
+      "analyst": "{team} compte {amount} {amount|séquence|séquences} de dix passes ou plus le long d'une ligne de touche, soit {f3_share} % de ses passes dans le dernier tiers ; aucune n'a mené à un tir.",
+      "casual": "{team} a gardé le ballon le long de la touche en {amount} longues {amount|séquence|séquences} : {f3_share} % de ses passes dans le dernier tiers, et aucun tir."
+    },
+    {
+      "analyst": "Circulation le long de la touche : {amount} {amount|séquence|séquences} de {team} dans le couloir extérieur sans passe vers l'axe, {f3_share} % de ses passes dans le dernier tiers, sans tir.",
+      "casual": "Beaucoup de ballon sur l'extérieur pour {team} : {amount} {amount|séquence|séquences} le long de la touche, {f3_share} % de ses passes dans le dernier tiers, sans tir."
+    },
+    {
+      "analyst": "{f3_share} % des passes de {team} dans le dernier tiers sont venues en {amount} {amount|séquence|séquences} le long de la touche sans passe dans l'axe ; ces actions n'ont mené à aucun tir.",
+      "casual": "{team} a joué le long de la touche en {amount} {amount|séquence|séquences}, {f3_share} % de ses passes dans le dernier tiers, sans tir."
+    }
+  ],
+  "field_tilt.low_block_and_counters": {
+    "analyst": "{team} a eu {amount} % du territoire, mais {outside_shot_share} % de ses {team_shots} {team_shots|tir|tirs} sont partis de l'extérieur de la surface ({team_xg_per_shot} xG par tir), et a concédé {counter_shots_conceded} {counter_shots_conceded|tir|tirs} en contre-attaque pour {counter_xg_conceded} xG.",
+    "casual": "{team} avait {amount} % du territoire, mais {outside_shot_share} % de ses {team_shots} {team_shots|tir|tirs} venaient de loin ({team_xg_per_shot} xG par tir) et a encaissé {counter_shots_conceded} {counter_shots_conceded|tir|tirs} en contre ({counter_xg_conceded} xG)."
   }
 }

@@ -14,7 +14,7 @@ from data_gen.generate import main as generate
 from engine import metrics as M
 from engine.claims import build_claim
 from engine.matchup import matchup_claim
-from engine.rules import RULES, field_tilt_with_lead
+from engine.rules import PATTERN_RULES, RULES, field_tilt_with_lead
 from engine.tables import load, match_events, score_diff
 from engine.verifier import verdict, verify
 
@@ -134,7 +134,9 @@ def test_attempt_number_is_kept(data):
 
 def test_every_rule_is_registered_once():
     ids = [r.RULE_ID for r in RULES]
-    assert len(ids) == len(set(ids)) == 9
+    # nine general rules and one trap rule per tactical pattern family (engine/rules/ctx_*.py)
+    assert len(ids) == len(set(ids)) == 9 + len(PATTERN_RULES)
+    assert set(PATTERN_RULES) <= set(ids) and len(set(PATTERN_RULES.values())) == len(PATTERN_RULES)
 
 
 def test_field_tilt_with_lead_fires_on_ntg_in_showcase(data):

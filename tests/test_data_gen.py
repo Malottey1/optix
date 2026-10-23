@@ -412,9 +412,10 @@ def test_showcase_traps_clear_thresholds_with_margin(data):
 @pytest.mark.slow
 def test_showcase_search_hint_matches_a_search_from_zero():
     """SHOWCASE_SEARCH_START only skips work: a search from 0 must find the same first seed."""
+    from data_gen.config import MOTIF_SCALE
     from data_gen.generate import SHOWCASE_SEARCH_START, build_showcase
     from data_gen.config import SHOWCASE_PLAYER_TRAITS
     players = make_players(SEED, SHOWCASE_PLAYER_TRAITS)
     _, _, s_hint, _ = build_showcase(SEED, players)
     _, _, s_zero, _ = build_showcase(SEED, players, start=0)
-    assert s_hint == s_zero == SEED * 10_000 + SHOWCASE_SEARCH_START[SEED]
+    assert s_hint == s_zero == SEED * 10_000 + SHOWCASE_SEARCH_START[(SEED, MOTIF_SCALE)]

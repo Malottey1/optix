@@ -8,7 +8,7 @@ import pytest
 from agents import output_guard
 from agents.narrative import fmt, numeric_params, render
 from agents.phraser import (AzureOpenAIPhraser, PhrasingCache, TemplatePhraser, claim_hash, known_entities,
-                            model_input)
+                            model_input, variant_seed)
 from agents.stream import InsightStream
 from data_gen.generate import main as generate
 from engine.tables import load
@@ -60,7 +60,7 @@ def test_every_template_casual_sentence_passes_the_output_guard(ds, claims):
     known, names = known_entities(ds)
     for c in claims:
         for lang in LANGS:
-            text = render(c["template_key"], c["params"], lang)["casual"]
+            text = render(c["template_key"], c["params"], variant_seed=variant_seed(c), language=lang)["casual"]
             assert output_guard.check(text, c, lang, known, names) == [], (c["claim_id"], lang, text)
 
 
@@ -95,7 +95,8 @@ def _target(claims):
 
 
 def _good(claim):
-    return {lang: render(claim["template_key"], claim["params"], lang)["casual"] for lang in LANGS}
+    return {lang: render(claim["template_key"], claim["params"], variant_seed=variant_seed(claim), language=lang)["casual"]
+            for lang in LANGS}
 
 
 def _phrase(ds, claim, reply, tmp_path):
@@ -130,7 +131,7 @@ def test_adversarial_english_reply_is_rejected_and_falls_back(ds, claims, tmp_pa
     bad = dict(good, en=ADVERSARIAL[attack](c, ds, good["en"]))
     assert bad["en"] != good["en"]
     res, client, _ = _phrase(ds, c, json.dumps(bad), tmp_path)
-    tmpl = render(c["template_key"], c["params"], "en")
+    tmpl = render(c["template_key"], c["params"], variant_seed=variant_seed(c), language="en")
     assert res.rendered["en"] == tmpl                       # fell back to the exact template
     assert res.guard_rejected["en"] and res.source["en"] == "template"
     assert res.source["es"] == res.source["fr"] == "model"  # the clean languages are kept
@@ -144,7 +145,7 @@ def test_spanish_reply_with_a_decimal_point_is_rejected(ds, claims, tmp_path):
     assert fmt(d, "es") in good["es"]
     bad = dict(good, es=good["es"].replace(fmt(d, "es"), fmt(d, "en")))
     res, _, _ = _phrase(ds, c, json.dumps(bad), tmp_path)
-    assert res.rendered["es"] == render(c["template_key"], c["params"], "es")
+    assert res.rendered["es"] == render(c["template_key"], c["params"], variant_seed=variant_seed(c), language="es")
     assert any("numbers" in p for p in res.guard_rejected["es"])
 
 
@@ -153,7 +154,7 @@ def test_reply_in_the_wrong_language_is_rejected(ds, claims, tmp_path):
     good = _good(c)
     res, _, _ = _phrase(ds, c, json.dumps(dict(good, fr=good["es"])), tmp_path)
     assert any(p.startswith("language") or p.startswith("numbers") for p in res.guard_rejected["fr"])
-    assert res.rendered["fr"] == render(c["template_key"], c["params"], "fr")
+    assert res.rendered["fr"] == render(c["template_key"], c["params"], variant_seed=variant_seed(c), language="fr")
 
 
 @pytest.mark.parametrize("reply", ["not json {", "[1, 2]", "", json.dumps({"en": 5})])
@@ -183,7 +184,7 @@ def test_accepted_reply_replaces_only_the_casual_tone_and_is_cached(ds, claims, 
     assert res.guard_rejected == {}
     for lang in LANGS:
         assert res.rendered[lang]["casual"] == reworded[lang]
-        assert res.rendered[lang]["analyst"] == render(c["template_key"], c["params"], lang)["analyst"]
+        assert res.rendered[lang]["analyst"] == render(c["template_key"], c["params"], variant_seed=variant_seed(c), language=lang)["analyst"]
     rec = ph.cache.get("fake-model", c)
     assert rec["sentences"] == reworded and rec["claim_hash"] == claim_hash(c)
     assert rec["origin"]["source"] == "azure-openai" and rec["prompt_version"]
@@ -200,7 +201,7 @@ def test_a_tampered_cache_entry_is_still_guarded(ds, claims, tmp_path):
     cache = PhrasingCache(tmp_path / "cache")
     cache.put("fake-model", c, {"en": "They will win, odds on, 99 percent."}, {"source": "test"})
     res = AzureOpenAIPhraser(None, known, names, cache=cache, model="fake-model").phrase(c, ("en",))
-    assert res.rendered["en"] == render(c["template_key"], c["params"], "en") and res.guard_rejected["en"]
+    assert res.rendered["en"] == render(c["template_key"], c["params"], variant_seed=variant_seed(c), language="en") and res.guard_rejected["en"]
 
 
 def test_call_cap(ds, claims, tmp_path):
@@ -230,12 +231,15 @@ def test_stream_with_a_hostile_model_is_the_template_stream(ds, template_stream,
 def test_every_template_reads_as_its_own_language():
     """The guard's language check accepts every template sentence of every key and tone."""
     import string
-    from agents.narrative import labels, templates
+    from agents.narrative import _plural, labels, variants
     for lang in LANGS:
-        for key, t in templates(lang).items():
+        for key, _, t in variants(lang):
             for tone, tmpl in t.items():
+                tmpl = _plural(tmpl, {}, lang)          # plural forms resolved as at render time
                 fields = {f for _, f, _, _ in string.Formatter().parse(tmpl) if f}
                 vals = {f: "Kaito Ruvel" for f in fields}
                 if "lane_label" in fields:
                     vals["lane_label"] = next(iter(labels(lang)["lane"].values()))
+                if "side_label" in fields:
+                    vals["side_label"] = next(iter(labels(lang)["side"].values()))
                 assert output_guard.language_of(tmpl.format_map(vals)) == lang, (lang, key, tone)

@@ -58,6 +58,13 @@ def model_input(claim: dict) -> dict:
     return out
 
 
+def variant_seed(claim: dict) -> str:
+    """The claim id without its attempt suffix: every attempt of one claim, and the same claim in a
+    re-run, reads with the same variant."""
+    cid = claim.get("claim_id", "")
+    return cid.rsplit("_a", 1)[0] if "_a" in cid else cid
+
+
 def claim_hash(claim: dict) -> str:
     return hashlib.sha256(json.dumps(model_input(claim), sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:24]
 
@@ -81,7 +88,8 @@ class TemplatePhraser:
     name = "template"
 
     def phrase(self, claim: dict, languages: tuple) -> PhraseResult:
-        rendered = {lang: render(claim["template_key"], claim["params"], lang) for lang in languages}
+        rendered = {lang: render(claim["template_key"], claim["params"], lang, variant_seed=variant_seed(claim))
+                    for lang in languages}
         return PhraseResult(rendered, self.name, {lang: "template" for lang in languages})
 
 

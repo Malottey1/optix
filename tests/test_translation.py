@@ -3,7 +3,8 @@ import re
 
 import pytest
 
-from agents.narrative import NarrativeAgent, fmt, labels, languages, number_guard, numeric_params, render, templates
+from agents.narrative import (NarrativeAgent, fmt, labels, languages, number_guard, numeric_params, render, templates,
+                             variants)
 from agents.personalization import PersonalizationAgent, UserProfile
 from agents.personalize import lines
 from agents.stream import InsightStream
@@ -13,6 +14,7 @@ from engine.tables import load
 
 MID = "m_showcase"
 PLACEHOLDER = re.compile(r"\{(\w+)\}")
+PLURAL_NAME = re.compile(r"\{(\w+)\|")
 
 
 @pytest.fixture(scope="module")
@@ -32,9 +34,17 @@ def test_three_languages_with_the_same_templates_and_placeholders():
         tr = templates(lang)
         assert set(tr) == set(en), lang
         for key, t in en.items():
-            for tone in ("analyst", "casual"):
-                assert set(PLACEHOLDER.findall(tr[key][tone])) == set(PLACEHOLDER.findall(t[tone])), (lang, key, tone)
-        assert set(labels(lang)["lane"]) == set(labels("en")["lane"])
+            # a key holds one {analyst, casual} pair or a list of variants (pattern families); the
+            # languages must have the same number of variants, each with the same placeholders
+            en_vs, tr_vs = (t if isinstance(t, list) else [t]), (tr[key] if isinstance(tr[key], list) else [tr[key]])
+            assert len(tr_vs) == len(en_vs), (lang, key)
+            for k, (a, b) in enumerate(zip(en_vs, tr_vs)):
+                for tone in ("analyst", "casual"):
+                    assert set(PLACEHOLDER.findall(b[tone])) == set(PLACEHOLDER.findall(a[tone])), (lang, key, k, tone)
+                    for s in (a[tone], b[tone]):    # a plural form only ever follows a param it renders
+                        assert set(PLURAL_NAME.findall(s)) <= set(PLACEHOLDER.findall(s)), (lang, key, k, tone)
+        for group in ("lane", "side"):
+            assert set(labels(lang)[group]) == set(labels("en")[group])
 
 
 def test_every_rendered_string_carries_every_numeric_param(stream):
@@ -135,7 +145,7 @@ def test_personalize_cli_lines(stream):
 def test_no_template_glues_a_multiplier_x_to_a_number():
     """'0.22x' reads like a hex prefix ('0x'); ratios are written out ('0.22 times')."""
     for lang in languages():
-        for key, tones in templates(lang).items():
+        for key, _, tones in variants(lang):
             for tone, text in tones.items():
                 assert not re.search(r"\}[x×]", text), (lang, key, tone, text)
     for lang, word in (("en", "times"), ("es", "veces"), ("fr", "fois")):

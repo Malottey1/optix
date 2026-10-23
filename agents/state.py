@@ -8,7 +8,7 @@ from __future__ import annotations
 from collections import defaultdict
 from dataclasses import dataclass, field, replace
 
-from engine.tables import Dataset
+from engine.tables import Dataset, baseline_of
 
 
 @dataclass
@@ -39,8 +39,9 @@ class MatchState:
 
     def view(self, ds: Dataset) -> Dataset:
         """The match dataset restricted to ingested events so far (what the Verifier may see).
-        Rebuilt only when new events arrived since the last call."""
+        Rebuilt only when new events arrived since the last call. League baselines stay those of
+        `ds` (its season, or ds itself), never the partial match."""
         if self._view_n != len(self.events):
-            self._view = replace(ds, events=list(self.events))
+            self._view = replace(ds, events=list(self.events), baseline=baseline_of(ds))
             self._view_n = len(self.events)
         return self._view

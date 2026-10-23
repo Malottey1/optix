@@ -4,7 +4,9 @@ Definition, for a player in `positions` (forwards) in one match:
   * touches (TOUCH_TYPES: his passes, carries, dribbles, shots and duels) at or below the league's
     touches_pctl quantile for his position over full matches, or <= max_touches;
   * >= min_unpressured_shots shots with under_pressure = 0;
-  * xG per touch >= xg_per_touch_mult x the league median for his position.
+  * xG per touch >= xg_per_touch_mult x the league median for his position;
+  * xG of all his shots >= min_xg (a few touches and a couple of speculative shots is not the pattern).
+Full matches only (full_match_only): the touch lines are full-match lines.
 Evidence: his unpressured shots. Numbers: touches, shots, xG, xG per touch, the position's touch
 line and median xG per touch.
 Known limits: minutes are in lineups.csv but not in the engine tables, so a substitute's touches
@@ -68,7 +70,7 @@ def detect(ds: Dataset, events, team_id, c=None) -> list:
         free = [e for e in events if e["event_type"] == "shot" and e["player_id"] == pid and not e["under_pressure"]]
         n = t[pid]
         if (n <= line or n <= c["max_touches"]) and len(free) >= c["min_unpressured_shots"] \
-                and xg[pid] / n >= c["xg_per_touch_mult"] * med:
+                and xg[pid] / n >= c["xg_per_touch_mult"] * med and xg[pid] >= c["min_xg"]:
             out.append(Finding(FAMILY, team_id, [[e["event_id"] for e in free]],
                                dict(amount=n, shots=sum(1 for e in events if e["event_type"] == "shot" and e["player_id"] == pid),
                                     unpressured_shots=len(free), xg=xg[pid], xg_per_touch=xg[pid] / n,
@@ -95,5 +97,6 @@ def recompute(ds: Dataset, player_id, anchors, scope_events, c=None):
     vals = dict(amount=n, shots=len(shots), unpressured_shots=len(free), xg=xg, xg_per_touch=xg / n,
                 touch_line=line, league_xg_per_touch=med)
     ok = ((n <= line or n <= c["max_touches"]) and len(free) >= c["min_unpressured_shots"]
-          and xg / n >= c["xg_per_touch_mult"] * med and len(anchors) == len(free))
+          and xg / n >= c["xg_per_touch_mult"] * med and xg >= c["min_xg"]
+          and list(anchors) == [e["event_id"] for e in free])
     return (vals, []) if ok else (vals, ["pattern_does_not_hold"])

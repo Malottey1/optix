@@ -1,0 +1,60 @@
+{
+  "claim_id": "clm_m_showcase_pat_rest_defence_t_ntg_907_2707_a1",
+  "claim_type": "pattern",
+  "evidence_event_ids": [
+    "m_showcase_e00560",
+    "m_showcase_e00563",
+    "m_showcase_e00626",
+    "m_showcase_e00629",
+    "m_showcase_e00734",
+    "m_showcase_e00737",
+    "m_showcase_e00844",
+    "m_showcase_e00847"
+  ],
+  "game_state": {
+    "bracket": "trailing_2plus",
+    "score_diff_for_subject": -2
+  },
+  "match_id": "m_showcase",
+  "metric": "pat_rest_defence",
+  "params": {
+    "amount": 4,
+    "opponent": "AUR",
+    "team": "NTG",
+    "tilt": 67.9,
+    "xg": 0.5
+  },
+  "scope": "window",
+  "subject": {
+    "id": "t_ntg",
+    "kind": "team",
+    "team_code": "NTG"
+  },
+  "supporting_values": {
+    "league_per_100": 1.8,
+    "losses": 25,
+    "per_100_losses": 16.0,
+    "tilt": 67.9,
+    "xg": 0.5
+  },
+  "template_key": "pattern.rest_defence",
+  "value": {
+    "amount": 4,
+    "sample_size": 8,
+    "unit": "count"
+  },
+  "verification": {
+    "actual_value": 4,
+    "attempt": 1,
+    "context_check": "ok",
+    "context_note": null,
+    "fact_check": "pass",
+    "rule_ids": [],
+    "status": "published",
+    "verified_at": "2026-10-23T10:00:00+00:00"
+  },
+  "window": {
+    "from_sec": 907,
+    "to_sec": 2707
+  }
+}

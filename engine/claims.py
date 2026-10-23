@@ -20,15 +20,26 @@ from .matchup import lane_matchup
 from .tables import Dataset, baseline_of, bracket5, match_events, score_diff, team_events
 from .zones import FINAL_THIRD_X, LANES, WIDE_LANES, in_box, lane_of
 
+SIDE_LANES = {"left": ("left_flank", "left_half_space"), "right": ("right_half_space", "right_flank")}
+
 AMOUNT_DP = {"percent": 1, "ratio": 2, "xg": 2, "xt": 3, "count": 0, "seconds": 0,
              "per_min": 2, "score_0_100": 1, "per_10min": 2, "m_per_s": 1}
 SUPPORT_DP = {"xg_per_shot": 3, "cluster_xg": 2, "open_play_xa": 2, "set_piece_xa": 2,
-              "pass_quality_ratio": 2, "press_intensity": 3, "league_xg_per_shot": 3}
+              "pass_quality_ratio": 2, "press_intensity": 3, "league_xg_per_shot": 3,
+              # pattern and naive-claim values (engine/patterns)
+              "xg": 2, "cross_xg_per_shot": 3, "cutback_xg_per_shot": 3, "xg_per_touch": 3,
+              "league_xg_per_touch": 4, "median_xg": 3, "team_xg_per_shot": 3, "counter_xg_conceded": 2,
+              "cross_xg": 2}
 INT_KEYS = {"shots", "low_xg_shots", "team_f3_passes", "opponent_f3_passes", "box_entries", "open_play",
             "set_piece", "passes_allowed", "defensive_actions", "cluster_start_sec", "cluster_end_sec",
             "spell_events", "spell_start_sec", "concede_sample_size", "completion_attempts", "wide_count",
-            "pass_count", "minutes"}
+            "pass_count", "minutes",
+            # pattern and naive-claim values (engine/patterns)
+            "losses", "other_losses", "shots_after_fouls", "shots_after_other", "unpressured_shots", "opp_shots",
+            "f3_passes", "build_left", "seconds", "cross_shots", "entries", "cutbacks", "cutback_shots",
+            "regains_4s", "fouls_after_losses", "counter_shots_conceded", "isolation_spells", "team_shots"}
 MAX_EVIDENCE = 15
+PATTERN_MAX_EVIDENCE = 240          # a pattern claim keeps every anchor (the recompute starts from them)
 
 
 def rnd(value: float, dp: int):
@@ -84,6 +95,17 @@ def _field_tilt(sc, subject, params):
     f3 = tilt.detail["team_f3_passes"]
     vals = dict(amount=_pct(tilt.value), team_f3_passes=f3, opponent_f3_passes=tilt.detail["opponent_f3_passes"],
                 box_entries=box.value, box_entry_share=_pct(box.value / f3) if f3 else 0.0)
+    if params.get("with_access"):          # rule ctx_tilt_without_access: where the shots came from
+        sh = [e for e in ev if e["event_type"] == "shot" and e["team_id"] == tid]
+        out = [e for e in sh if not in_box(e["x_start"], e["y_start"])]
+        xg = sum(sc.ds.shots[e["event_id"]]["xg"] for e in sh)
+        vals.update(team_shots=len(sh), outside_shot_share=_pct(len(out) / len(sh)) if sh else 0.0,
+                    team_xg_per_shot=xg / len(sh) if sh else 0.0)
+    if params.get("with_transition"):      # rule ctx_dominance_with_transition_exposure
+        from .patterns import rest_defence as RD
+        pairs = RD.counter_shots(ev, tid, RD.cfg(RD.FAMILY))
+        vals.update(counter_shots_conceded=len(pairs),
+                    counter_xg_conceded=sum(sc.ds.shots[s_["event_id"]]["xg"] for _, s_ in pairs))
     return vals, lambda e: (e["team_id"] == tid and e["event_type"] == "pass" and e["outcome"] == "success"
                             and (e["x_start"] >= FINAL_THIRD_X or in_box(e["x_end"], e["y_end"])))
 
@@ -227,6 +249,115 @@ def _subset(ds: Dataset, match_id: str) -> Dataset:
     return _SUBSETS[key][1]
 
 
+# ---------- naive claims the pattern trap rules check (engine/rules/ctx_*.py) ----------
+
+def _attack_side(sc, subject, params):
+    """Share of the team's final-third entries (completed passes from outside into the final third)
+    that end on `side` (left = left flank + left half-space). with_finish adds where its shots were
+    taken: the share of its shots from the opposite side (y on the other side of the lanes)."""
+    tid, side = subject["id"], params["side"]
+    ev = _team_scope_events(sc, tid)
+    ent = M.final_third_entries(ev, tid)
+    on = sum(ent.detail["lanes"][l] for l in SIDE_LANES[side])
+    vals = dict(amount=_pct(on / ent.value) if ent.value else 0.0, entries=ent.value)
+    if params.get("with_finish"):
+        sh = [e for e in ev if e["event_type"] == "shot" and e["team_id"] == tid]
+        far = [e for e in sh if (e["y_start"] >= 60 if side == "left" else e["y_start"] < 40)]
+        vals.update(team_shots=len(sh), opposite_shot_share=_pct(len(far) / len(sh)) if sh else 0.0)
+    lanes = SIDE_LANES[side]
+    return vals, lambda e: (e["event_type"] == "pass" and e["team_id"] == tid and e["outcome"] == "success"
+                            and e["x_start"] < FINAL_THIRD_X <= e["x_end"] and lane_of(e["y_end"]) in lanes)
+
+
+def _crosses(sc, subject, params):
+    """The team's crosses (passes table pass_type cross), the shots they assisted and their xG.
+    with_cutbacks adds the cut-back pattern's shots and xG per shot (engine/patterns/cutback.py)."""
+    from .patterns import cutback as CB
+    tid = subject["id"]
+    ev = _team_scope_events(sc, tid)
+    cr = [e for e in ev if e["event_type"] == "pass" and e["team_id"] == tid
+          and sc.ds.passes[e["event_id"]]["pass_type"] == "cross"]
+    cs = CB.cross_shots(ev, tid, sc.ds.passes, sc.ds.shots)
+    cx = [sc.ds.shots[e["event_id"]]["xg"] for e in cs]
+    vals = dict(amount=len(cr), cross_shots=len(cs), cross_xg=sum(cx),
+                cross_xg_per_shot=sum(cx) / len(cx) if cx else 0.0)
+    if params.get("with_cutbacks"):
+        f = CB.detect(ev, tid, sc.ds.passes, sc.ds.shots)
+        vals.update(cutbacks=f.values["amount"] if f else 0, cutback_xg_per_shot=f.values["xg_per_shot"] if f else 0.0)
+    return vals, lambda e: (e["event_type"] == "pass" and e["team_id"] == tid
+                            and sc.ds.passes[e["event_id"]]["pass_type"] == "cross")
+
+
+def _f3_volume(sc, subject, params):
+    """Completed passes that start in the final third (metrics.final_third_passes). with_isolation
+    adds the flank-isolation spells and the share of these passes played inside them, and the box
+    entries (engine/patterns/flank_isolation.py)."""
+    from .patterns import flank_isolation as FI
+    tid = subject["id"]
+    ev = _team_scope_events(sc, tid)
+    r = M.final_third_passes(ev, tid)
+    vals = dict(amount=r.value)
+    if params.get("with_isolation"):
+        f = FI.detect(ev, tid, sc.ds.passes, sc.ds.shots)
+        vals.update(isolation_spells=f.values["amount"] if f else 0, isolation_share=f.values["f3_share"] if f else 0.0,
+                    box_entries=M.box_entries(ev, tid).value)
+    return vals, lambda e: (e["event_type"] == "pass" and e["team_id"] == tid and e["outcome"] == "success"
+                            and e["x_start"] >= FINAL_THIRD_X)
+
+
+def _f3_losses(sc, subject, params):
+    """The team's open-play losses in its attacking third (the opponent's possession_change at
+    x <= 33.3 in the opponent's frame). with_regains adds how many it won back within 4 seconds."""
+    tid = subject["id"]
+    ev = _team_scope_events(sc, tid)
+    lo = [e for e in ev if e["event_type"] == "possession_change" and e["opponent_team_id"] == tid
+          and 100 - e["x_start"] >= FINAL_THIRD_X]
+    vals = dict(amount=len(lo))
+    if params.get("with_regains"):
+        pos = {e["event_id"]: k for k, e in enumerate(ev)}
+        n = 0
+        for e in lo:
+            for x in ev[pos[e["event_id"]] + 1:]:
+                if x["clock_sec"] > e["clock_sec"] + 4:
+                    break
+                if x["event_type"] == "possession_change":
+                    n += x["team_id"] == tid
+                    break
+        vals.update(regains_4s=n, regain_share=_pct(n / len(lo)) if lo else 0.0)
+    return vals, lambda e: (e["event_type"] == "possession_change" and e["opponent_team_id"] == tid
+                            and 100 - e["x_start"] >= FINAL_THIRD_X)
+
+
+TOUCH_TYPES = ("pass", "carry", "dribble", "shot", "duel")
+
+
+def _touches(sc, subject, params):
+    """A player's touches: his passes, carries, dribbles, shots and duels in scope. with_shots adds
+    his shots and their xG."""
+    pid = subject["id"]
+    mine = [e for e in sc.events if e["player_id"] == pid and e["event_type"] in TOUCH_TYPES]
+    vals = dict(amount=len(mine))
+    if params.get("with_shots"):
+        sh = [e for e in mine if e["event_type"] == "shot"]
+        vals.update(shots=len(sh), xg=sum(sc.ds.shots[e["event_id"]]["xg"] for e in sh))
+    return vals, lambda e: e["player_id"] == pid and e["event_type"] in TOUCH_TYPES
+
+
+def _fouls(sc, subject, params):
+    """The team's fouls. with_after_losses adds the fouls within 5 seconds of losing the ball in the
+    middle third (the definition of engine/patterns/tactical_fouling.py) and their share."""
+    from .patterns import tactical_fouling as TF
+    tid = subject["id"]
+    ev = _team_scope_events(sc, tid)
+    fo = [e for e in ev if e["event_type"] == "foul" and e["team_id"] == tid]
+    vals = dict(amount=len(fo))
+    if params.get("with_after_losses"):
+        rows = TF._mid_losses(ev, tid, TF.cfg(TF.FAMILY))
+        n = sum(1 for r in rows if r[1])
+        vals.update(fouls_after_losses=n, after_loss_share=_pct(n / len(fo)) if fo else 0.0)
+    return vals, lambda e: e["event_type"] == "foul" and e["team_id"] == tid
+
+
 COMPUTE = {
     "field_tilt": _field_tilt,
     "xg": _xg,
@@ -241,6 +372,12 @@ COMPUTE = {
     "xt_added": _xt_added,
     "milestone_count": _milestone,
     "zone_mismatch": _zone_mismatch,
+    "attack_side_share": _attack_side,
+    "crosses": _crosses,
+    "final_third_passes": _f3_volume,
+    "final_third_losses": _f3_losses,
+    "player_touches": _touches,
+    "fouls": _fouls,
 }
 # evidence shown first when a claim cites only MAX_EVIDENCE events: the events that carry the point
 EVIDENCE_FIRST = {
@@ -248,7 +385,9 @@ EVIDENCE_FIRST = {
 }
 UNITS = {"field_tilt": "percent", "xg": "xg", "npxg": "xg", "chances_created": "count", "forward_passes": "count",
          "ppda": "ratio", "shot_cluster_score": "count", "territorial_stress": "seconds", "momentum": "score_0_100",
-         "rhythm_index": "per_min", "xt_added": "xt", "milestone_count": "count", "zone_mismatch": "percent"}
+         "rhythm_index": "per_min", "xt_added": "xt", "milestone_count": "count", "zone_mismatch": "percent",
+         "attack_side_share": "percent", "crosses": "count", "final_third_passes": "count",
+         "final_third_losses": "count", "player_touches": "count", "fouls": "count"}
 
 
 def compute(ds: Dataset, metric: str, scope: str, subject: dict, params: dict | None = None,
@@ -317,3 +456,41 @@ def build_claim(ds: Dataset, metric: str, scope: str, subject: dict, *, claim_ty
         "verification": {"status": "pending", **rendered},
     }
     return claim
+
+
+# ---------- pattern claims (engine/patterns) ----------
+
+def build_pattern_claim(ds: Dataset, finding, match_id: str, t_end: int, *, template_key: str,
+                        param_values: tuple = ("amount",), extra_params: dict | None = None,
+                        claim_id: str | None = None, attempt: int = 1) -> dict:
+    """A pending claim from a detector finding. The numbers are the detector's, rounded with the
+    same table as every claim; the Verifier recomputes them independently from the evidence anchors
+    (engine.patterns.recompute), never by calling the detector."""
+    from . import patterns as PAT
+    window = tuple(finding.window) if finding.window else (0, t_end)
+    sc = resolve_scope(ds, "window", match_id, window)
+    subject = ({"kind": "player", "id": finding.player_id} if finding.player_id
+               else {"kind": "team", "id": finding.team_id})
+    vals = finding.values
+    amount = rnd(vals["amount"], AMOUNT_DP[PAT.UNITS[finding.family]])
+    supporting = {k: rnd(v, support_dp(k)) for k, v in vals.items() if k != "amount" and v is not None}
+    p_out = dict(extra_params or {})
+    for k in param_values:
+        p_out[k] = amount if k == "amount" else supporting[k]
+    ev = finding.evidence
+    return {
+        "claim_id": claim_id or f"clm_{finding.family}_{subject['id']}_{match_id}_{window[0]}_{window[1]}",
+        "scope": "window",
+        "match_id": match_id,
+        "window": {"from_sec": int(window[0]), "to_sec": int(window[1])},
+        "claim_type": "pattern",
+        "metric": finding.family,
+        "subject": dict(subject, team_code=ds.code(finding.team_id)),
+        "value": {"amount": amount, "unit": PAT.UNITS[finding.family], "sample_size": len(ev)},
+        "game_state": _game_state(ds, finding.team_id, sc),
+        "evidence_event_ids": ev[:PATTERN_MAX_EVIDENCE],
+        "supporting_values": supporting,
+        "template_key": template_key,
+        "params": p_out,
+        "verification": {"status": "pending", "attempt": attempt},
+    }

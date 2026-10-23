@@ -121,6 +121,10 @@ def recompute(by_id, ordered, passes, shots, team_id, anchors, c=None):
             bad.append(f["event_id"])
             continue
         ids = [e["event_id"] for e in seg]
+        if not (pos[a["event_id"]] <= pos[b["event_id"]] < pos[s["event_id"]] <= pos[f["event_id"]]) \
+                or not {b["event_id"], s["event_id"], f["event_id"]} <= set(ids):
+            bad += anchors[g:g + STRIDE]                 # anchors out of order or outside the possession
+            continue
         ib, isw, ifi = ids.index(b["event_id"]), ids.index(s["event_id"]), ids.index(f["event_id"])
         build = [e for e in seg[:ib + 1] if e["event_type"] != "carry"]
         ok_build = (len(build) >= c["min_build"]

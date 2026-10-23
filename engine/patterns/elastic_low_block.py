@@ -137,7 +137,7 @@ def detect(ds: Dataset, match_id: str, d_id: str, upto: int | None = None, c=Non
 def recompute(ds: Dataset, match_id: str, d_id: str, window, anchors, c=None):
     """Independent recompute over the claim window: recounts every condition from the raw events
     (its own loops; the league lines are the same league numbers). Every anchor must be one of
-    D's blocks or clearances, or one of A's shots, inside the window."""
+    D's blocks or clearances, or one of A's shots, inside the window, and all of them are there."""
     c = c or cfg(FAMILY)
     a, b = window
     m = ds.matches[match_id]
@@ -147,6 +147,12 @@ def recompute(ds: Dataset, match_id: str, d_id: str, window, anchors, c=None):
     bad = [i for i in anchors if i not in ids or not (
         (ids[i]["team_id"] == d_id and ids[i]["event_type"] in DEFENSIVE)
         or (ids[i]["team_id"] == a_id and ids[i]["event_type"] == "shot"))]
+    # the evidence is the whole set, in the detector's order: every block and clearance of D in the
+    # window, then every shot of A; a missing or extra event is caught here, not only a wrong one
+    full = [e["event_id"] for e in w if e["team_id"] == d_id and e["event_type"] in DEFENSIVE] + \
+           [e["event_id"] for e in w if e["team_id"] == a_id and e["event_type"] == "shot"]
+    if not bad and list(anchors) != full:
+        bad = sorted(set(anchors) ^ set(full)) or ["evidence_out_of_order"]
     a_f3 = sum(1 for e in w if e["event_type"] == "pass" and e["outcome"] == "success" and e["team_id"] == a_id
                and e["x_start"] >= 66.7)
     d_f3 = sum(1 for e in w if e["event_type"] == "pass" and e["outcome"] == "success" and e["team_id"] == d_id

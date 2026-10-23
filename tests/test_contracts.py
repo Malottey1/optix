@@ -42,6 +42,8 @@ def test_schema_is_valid(schema_name):
     [
         ("claim.schema.json", "claim_matchup.json"),
         ("insight.schema.json", "insight_perimeter_lock.json"),
+        ("claim.schema.json", "claim_pattern_rest_defence.json"),
+        ("insight.schema.json", "insight_tactical_pattern.json"),
     ],
 )
 def test_example_conforms(schema_name, example_name):

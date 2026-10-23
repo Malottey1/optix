@@ -35,7 +35,7 @@
         "matchup_mismatch", "perimeter_lock", "threat_pass", "momentum_shift",
         "turning_point", "rhythm_wave", "volume_vs_value", "set_piece_inflation",
         "player_focus", "milestone", "red_card_segment", "pounce_sequence",
-        "underperformance_stack", "recap_line"
+        "underperformance_stack", "tactical_pattern", "recap_line"
       ],
       "description": "Semantic type. The frontend maps it to a widget; the backend never names widgets."
     },
@@ -113,7 +113,19 @@
           "type": "object",
           "additionalProperties": { "type": ["number", "string", "null"] }
         },
-        "confidence": { "type": ["string", "null"], "enum": ["low", "medium", "high", null] }
+        "confidence": { "type": ["string", "null"], "enum": ["low", "medium", "high", null] },
+        "family": {
+          "type": ["string", "null"],
+          "description": "tactical_pattern: the pattern family (pat_*) shown; for a revised naive claim, the family its trap rule belongs to."
+        },
+        "claim_metric": { "type": "string", "description": "tactical_pattern: the claim's metric (a pat_* family, or the naive metric a trap rule revised)." },
+        "window": {
+          "type": ["object", "null"],
+          "additionalProperties": false,
+          "required": ["from_sec", "to_sec"],
+          "description": "tactical_pattern: the match clock span the claim covers.",
+          "properties": { "from_sec": { "type": "integer", "minimum": 0 }, "to_sec": { "type": "integer", "minimum": 0 } }
+        }
       }
     },
     "text": {

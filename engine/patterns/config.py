@@ -30,22 +30,27 @@ CONFIG = {
         enabled=True, delivery_within=2, min_back_x=5.0, shot_within=2, min_instances=1),
     "pat_flank_isolation": dict(
         enabled=True, window=10, strip_share=0.75, min_windows=1),
+    # experimental (docs/pattern-recall.md): hold-out recall below 0.60 after three tuning attempts.
+    # Disabled: no card of its own; its context rule still qualifies territory claims.
     "pat_elastic_low_block": dict(
-        enabled=True, window_sec=900, step_sec=300, min_opp_tilt=0.65, min_outside_share=0.70,
-        min_opp_shots=3, block_pctl=0.75, max_momentum=50.0, min_spell_sec=900),
+        enabled=False, window_sec=900, step_sec=300, min_opp_tilt=0.65, min_outside_share=0.70,
+        min_opp_shots=2, block_pctl=0.75, max_momentum=50.0, min_spell_sec=900),
     "pat_counter_press": dict(
         enabled=True, regain_sec=4, min_pressures=2, min_regains=2, min_rate_vs_league=1.5),
+    # experimental, as above (hold-out recall 0.48); its context rule stays on
     "pat_rest_defence": dict(
-        enabled=True, min_tilt=0.60, counter_sec=10, own_half_x=50.0, min_counter_shots=2, window_sec=1800,
+        enabled=False, min_tilt=0.60, counter_sec=10, own_half_x=50.0, min_counter_shots=2, window_sec=1800,
         step_sec=300),
     "pat_starved_finisher": dict(
         enabled=True, touches_pctl=0.25, max_touches=15, min_unpressured_shots=2, xg_per_touch_mult=5.0,
-        positions=("FW",)),
+        min_xg=0.25, positions=("FW",), full_match_only=True),
     "pat_tactical_fouling": dict(
         enabled=True, foul_sec=5, transition_sec=10, min_fouls=3, min_rate_vs_league=2.5),
 }
 
 FAMILIES = tuple(CONFIG)
+# families whose lines are full-match lines (touch counts): not detected on a partial match
+FULL_MATCH_ONLY = tuple(f for f in FAMILIES if CONFIG[f].get("full_match_only"))
 # the registry icon of each family (web/src/icons); the frontend owns the mapping, this is for docs
 ICONS = {f: "pattern-" + f[4:].replace("_", "-") for f in FAMILIES}
 

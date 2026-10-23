@@ -45,6 +45,9 @@ events -> Analyst (deterministic metrics)
 5. Translation happens after verification. The number guard checks that every numeric param still appears in each translated string.
 6. Coordinates are a 0-100 by 0-100 pitch from the **attacking team's point of view**.
 7. Team codes are fictional.
+8. A `pattern` claim (`claim_type: "pattern"`, metric `pat_*`, docs/patterns.md) lists its evidence
+   as fixed anchors per instance, in order. The Verifier recomputes the numbers from those events
+   with code that never calls the detector; a missing, extra, reordered or foreign event blocks it.
 
 ## Match clock
 
@@ -67,6 +70,7 @@ Seconds from first-half kickoff. Second half starts at 2700.
 | `red_card_segment` | `metrics`: per-10-minute rates per segment; `confidence` set; descriptive only |
 | `pounce_sequence` | `points`: only provable events (lost duel, switch of play, shot) |
 | `underperformance_stack` | `metrics`: ranked factors with weights; `confidence` always set |
+| `tactical_pattern` | `family` (a `pat_*` id, or for a revised naive claim the family its rule belongs to); `claim_metric`; `window`; `points`: the claim's evidence events in order (up to 24); `metrics`: the claim's value and supporting values. The frontend draws arrows, the other side's shot blocks or a route of event nodes, and falls back to the route for a family it does not know |
 | `recap_line` | any |
 
 ## Player-focus mode

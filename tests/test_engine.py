@@ -142,6 +142,11 @@ def test_profiles_have_league_comparison_and_sample_sizes(ds):
                 assert m["n"] > 0 and m["league"] is not None and m["z"] is not None
             for lanes in p["lanes"].values():
                 assert set(lanes) == set(zones.LANES)
+                if all(v["n"] == 0 for v in lanes.values()):
+                    # an empty sample (e.g. no chance conceded while trailing) has no shares, only the league
+                    assert all(v["share"] is None and v["confidence"] == "low" and v["league"] is not None
+                               for v in lanes.values())
+                    continue
                 assert sum(v["share"] for v in lanes.values()) == pytest.approx(1.0)
 
 

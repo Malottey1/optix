@@ -1,0 +1,144 @@
+{
+  "claim_id": "clm_m_showcase_pat_rest_defence_t_ntg_907_2707_a1",
+  "clock": {
+    "duration_sec": 15,
+    "emitted_latency_ms": null,
+    "start_sec": 2883
+  },
+  "context_chip": null,
+  "evidence_event_ids": [
+    "m_showcase_e00560",
+    "m_showcase_e00563",
+    "m_showcase_e00626",
+    "m_showcase_e00629",
+    "m_showcase_e00734",
+    "m_showcase_e00737",
+    "m_showcase_e00844",
+    "m_showcase_e00847"
+  ],
+  "insight_id": "ins_0018",
+  "insight_type": "tactical_pattern",
+  "match_id": "m_showcase",
+  "payload": {
+    "claim_metric": "pat_rest_defence",
+    "confidence": null,
+    "family": "pat_rest_defence",
+    "metrics": {
+      "league_per_100": 1.8,
+      "losses": 25,
+      "pat_rest_defence": 4,
+      "per_100_losses": 16.0,
+      "tilt": 67.9,
+      "xg": 0.5
+    },
+    "points": [
+      {
+        "event_id": "m_showcase_e00560",
+        "kind": "possession_change",
+        "value": null,
+        "x": 35.7,
+        "x_end": null,
+        "y": 46.0,
+        "y_end": null
+      },
+      {
+        "event_id": "m_showcase_e00563",
+        "kind": "shot",
+        "value": null,
+        "x": 87.5,
+        "x_end": null,
+        "y": 42.1,
+        "y_end": null
+      },
+      {
+        "event_id": "m_showcase_e00626",
+        "kind": "possession_change",
+        "value": null,
+        "x": 42.1,
+        "x_end": null,
+        "y": 7.2,
+        "y_end": null
+      },
+      {
+        "event_id": "m_showcase_e00629",
+        "kind": "shot",
+        "value": null,
+        "x": 84.2,
+        "x_end": null,
+        "y": 46.5,
+        "y_end": null
+      },
+      {
+        "event_id": "m_showcase_e00734",
+        "kind": "possession_change",
+        "value": null,
+        "x": 30.4,
+        "x_end": null,
+        "y": 52.1,
+        "y_end": null
+      },
+      {
+        "event_id": "m_showcase_e00737",
+        "kind": "shot",
+        "value": null,
+        "x": 89.7,
+        "x_end": null,
+        "y": 65.0,
+        "y_end": null
+      },
+      {
+        "event_id": "m_showcase_e00844",
+        "kind": "possession_change",
+        "value": null,
+        "x": 22.2,
+        "x_end": null,
+        "y": 31.9,
+        "y_end": null
+      },
+      {
+        "event_id": "m_showcase_e00847",
+        "kind": "shot",
+        "value": null,
+        "x": 86.0,
+        "x_end": null,
+        "y": 55.9,
+        "y_end": null
+      }
+    ],
+    "window": {
+      "from_sec": 907,
+      "to_sec": 2707
+    }
+  },
+  "player_ids": [],
+  "teams": {
+    "primary": "NTG",
+    "secondary": "AUR"
+  },
+  "text": {
+    "number_guard_passed": true,
+    "params": {
+      "amount": 4,
+      "opponent": "AUR",
+      "team": "NTG",
+      "tilt": 67.9,
+      "xg": 0.5
+    },
+    "rendered": {
+      "en": {
+        "analyst": "Territory with exposure: 67.9% for NTG, and 4 shots conceded within seconds of AUR winning the ball in their own half (0.5 xG).",
+        "casual": "NTG were on top in territory (67.9%) but conceded 4 counter-attack shots worth 0.5 xG."
+      },
+      "es": {
+        "analyst": "Territorio con exposición: el 67,9% para NTG, y 4 tiros concedidos a los pocos segundos de que AUR recuperara en su propio campo (0,5 xG).",
+        "casual": "NTG dominó el territorio (67,9%) pero concedió 4 tiros al contragolpe por 0,5 xG."
+      },
+      "fr": {
+        "analyst": "Territoire et exposition : 67,9 % pour NTG, et 4 tirs concédés quelques secondes après une récupération de AUR dans sa propre moitié (0,5 xG).",
+        "casual": "NTG a dominé le territoire (67,9 %) mais a concédé 4 tirs en contre-attaque pour 0,5 xG."
+      }
+    },
+    "template_key": "pattern.rest_defence"
+  },
+  "verification_status": "published"
+}

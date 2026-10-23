@@ -22,14 +22,14 @@ from .verifier_agent import VerifierAgent
 
 class Orchestrator:
     def __init__(self, match_ds: Dataset, match_id: str, log: AgentLog | None = None,
-                 languages: tuple = ("en",), on_published=None, phraser=None, audit=None):
+                 languages: tuple = ("en",), on_published=None, phraser=None, audit=None, history=None):
         self.ds = match_ds
         self.season = baseline_of(match_ds)
         m = match_ds.matches[match_id]
         self.state = MatchState(match_id, m["home_team_id"], m["away_team_id"])
         self.log = log or AgentLog()
         self.ingest = IngestAgent(self.log, match_ds.passes, match_ds.shots)
-        self.analyst = AnalystAgent(self.log, match_ds, self.season)
+        self.analyst = AnalystAgent(self.log, match_ds, self.season, history)
         self.verifier = VerifierAgent(self.log, match_ds, self.season)
         self.narrative = NarrativeAgent(self.log, languages, phraser)
         self.on_published = on_published        # callback(Published, trigger_event) for streaming

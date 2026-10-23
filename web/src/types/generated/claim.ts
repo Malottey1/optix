@@ -17,9 +17,9 @@ export type IntermediateClaimObject = {
    */
   match_id?: string | null;
   /**
-   * 'causal' claims are always blocked by the Verifier (rule causal_claim); the type exists so they can be detected and rejected.
+   * 'causal' claims are always blocked by the Verifier (rule causal_claim); the type exists so they can be detected and rejected. 'pattern' is a tactical pattern found by engine/patterns (metric pat_*); its evidence is the ordered anchor events of each instance.
    */
-  claim_type: "stat" | "comparison" | "trend" | "matchup" | "milestone" | "descriptive_change" | "causal";
+  claim_type: "stat" | "comparison" | "trend" | "matchup" | "milestone" | "descriptive_change" | "pattern" | "causal";
   metric:
     | "xg"
     | "npxg"
@@ -41,7 +41,21 @@ export type IntermediateClaimObject = {
     | "shot_speed"
     | "possession_changes_per_min"
     | "red_card_segment_delta"
-    | "milestone_count";
+    | "milestone_count"
+    | "attack_side_share"
+    | "crosses"
+    | "final_third_passes"
+    | "final_third_losses"
+    | "player_touches"
+    | "fouls"
+    | "pat_bait_switch"
+    | "pat_cutback"
+    | "pat_flank_isolation"
+    | "pat_elastic_low_block"
+    | "pat_counter_press"
+    | "pat_rest_defence"
+    | "pat_starved_finisher"
+    | "pat_tactical_fouling";
   subject: {
     kind: "team" | "player" | "match" | "zone";
     id: string;
@@ -154,6 +168,14 @@ export type IntermediateClaimObject = {
       | "causal_claim"
       | "causal_red_card"
       | "single_match_fatigue"
+      | "ctx_attack_side_vs_finish_side"
+      | "ctx_crosses_vs_cutbacks"
+      | "ctx_volume_without_central_access"
+      | "ctx_tilt_without_access"
+      | "ctx_losses_vs_immediate_regain"
+      | "ctx_dominance_with_transition_exposure"
+      | "ctx_low_volume_high_quality"
+      | "ctx_fouls_clustered_after_losses"
       | "missing_evidence"
       | "value_mismatch"
     )[];

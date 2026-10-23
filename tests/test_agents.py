@@ -11,7 +11,7 @@ from agents.analyst import MAX_ATTEMPTS
 from agents.ingest import IngestAgent
 from agents.log import AgentLog
 from agents.messages import ClaimProposal
-from agents.narrative import fmt, number_guard, render, templates
+from agents.narrative import fmt, number_guard, render, templates, variants
 from agents.orchestrator import Orchestrator
 from agents.personalization import PersonalizationAgent, UserProfile
 from agents.state import MatchState
@@ -175,7 +175,7 @@ def test_verifier_only_sees_ingested_events(sc):
 # ---------- narrative ----------
 
 def test_every_template_has_both_tones_and_only_param_numbers():
-    for key, t in templates("en").items():
+    for key, _, t in variants("en"):
         assert set(t) == {"analyst", "casual"}, key
         for tone in t.values():
             assert not number_guard(tone, {}), (key, tone)     # no hard-coded numbers in templates

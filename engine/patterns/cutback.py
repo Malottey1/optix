@@ -98,7 +98,7 @@ def recompute(by_id, ordered, passes, shots, team_id, anchors, scope_events, c=N
                  and d["x_end"] >= 94 and (d["y_end"] <= 25 or d["y_end"] >= 75))
         cb_ok = (cb["event_type"] == "pass" and cb["outcome"] == "success" and cb["x_end"] <= cb["x_start"] - c["min_back_x"]
                  and 82 <= cb["x_end"] <= 92 and 38 <= cb["y_end"] <= 62)
-        gaps_ok = (cb["event_id"] in ids and 0 < ids.index(cb["event_id"]) <= c["delivery_within"]
+        gaps_ok = (cb["event_id"] in ids and sh["event_id"] in ids and 0 < ids.index(cb["event_id"]) <= c["delivery_within"]
                    and 0 < ids.index(sh["event_id"]) - ids.index(cb["event_id"]) <= c["shot_within"])
         if not (same and de_ok and cb_ok and gaps_ok and sh["event_type"] == "shot"):
             bad += anchors[g:g + STRIDE]

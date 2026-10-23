@@ -37,6 +37,7 @@ export interface TimedInsightOverlayStreamItem {
     | "red_card_segment"
     | "pounce_sequence"
     | "underperformance_stack"
+    | "tactical_pattern"
     | "recap_line";
   teams: {
     /**
@@ -104,6 +105,21 @@ export interface TimedInsightOverlayStreamItem {
       [k: string]: number | string | null | undefined;
     };
     confidence?: "low" | "medium" | "high" | null;
+    /**
+     * tactical_pattern: the pattern family (pat_*) shown; for a revised naive claim, the family its trap rule belongs to.
+     */
+    family?: string | null;
+    /**
+     * tactical_pattern: the claim's metric (a pat_* family, or the naive metric a trap rule revised).
+     */
+    claim_metric?: string;
+    /**
+     * tactical_pattern: the match clock span the claim covers.
+     */
+    window?: {
+      from_sec: number;
+      to_sec: number;
+    } | null;
   };
   /**
    * Text is rendered from the verified claim's template_key + params. Translation happens after verification; the number guard confirms every numeric param still appears in each translation.

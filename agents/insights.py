@@ -8,12 +8,14 @@ from __future__ import annotations
 
 from engine import flow as F
 from engine import threat as T
+from engine.rules import PATTERN_RULES
 from engine.tables import baseline_of, match_events
 from engine.zones import FINAL_THIRD_X, in_box, lane_bounds
 
 DURATION_SEC = {"matchup_mismatch": 20, "perimeter_lock": 15, "threat_pass": 10, "momentum_shift": 12,
                 "rhythm_wave": 15, "volume_vs_value": 15, "set_piece_inflation": 15, "player_focus": 12,
-                "milestone": 8, "recap_line": 12}
+                "milestone": 8, "recap_line": 12, "tactical_pattern": 15}
+PATTERN_POINTS = 24
 SERIES_LEN = 15
 MAX_POINTS = 15
 
@@ -21,6 +23,8 @@ MAX_POINTS = 15
 def insight_type(pub) -> str:
     """Final semantic type: what the verified claim turned out to say, not only what was asked."""
     c, rules = pub.result.claim, pub.result.claim["verification"]["rule_ids"]
+    if c["metric"].startswith("pat_") or any(r in PATTERN_RULES for r in rules):
+        return "tactical_pattern"
     if "field_tilt_with_lead" in rules:
         return "perimeter_lock"
     if "set_piece_inflation" in rules:
@@ -46,7 +50,8 @@ def _point(e, kind=None, value=None):
 def payload(pub, view, kind: str, match_id: str) -> dict:
     c = pub.result.claim
     by_id = {e["event_id"]: e for e in (baseline_of(view).events if c["scope"] == "season" else view.events)}
-    pts = [by_id[i] for i in c["evidence_event_ids"] if i in by_id][:MAX_POINTS]
+    cap = PATTERN_POINTS if kind == "tactical_pattern" else MAX_POINTS
+    pts = [by_id[i] for i in c["evidence_event_ids"] if i in by_id][:cap]
     p = {"metrics": _metrics(c), "confidence": c["value"].get("confidence")}
     if kind == "matchup_mismatch":
         lo, hi = lane_bounds(c["params"]["lane"])
@@ -73,6 +78,12 @@ def payload(pub, view, kind: str, match_id: str) -> dict:
     elif kind == "rhythm_wave":
         evs = match_events(view)[match_id]
         p["series"] = F.rhythm(evs, end_minute=c["window"]["to_sec"] // 60, length=SERIES_LEN).value
+    elif kind == "tactical_pattern":
+        rule = next((r for r in c["verification"]["rule_ids"] if r in PATTERN_RULES), None)
+        p["family"] = c["metric"] if c["metric"].startswith("pat_") else PATTERN_RULES.get(rule)
+        p["claim_metric"] = c["metric"]
+        p["window"] = dict(c["window"]) if c.get("window") else None
+        p["points"] = [_point(e) for e in pts]
     elif kind in ("volume_vs_value", "set_piece_inflation", "player_focus", "milestone") and pts:
         p["points"] = [_point(e) for e in pts if e["event_type"] in ("pass", "shot")]
     return p
