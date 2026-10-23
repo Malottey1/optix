@@ -91,3 +91,33 @@ SHOWCASE_PLAYER_TRAITS = {
     ("NTG", "right_winger"): dict(usage=3.8),
     ("NTG", "left_winger"): dict(delivery=1.4),
 }
+
+
+# ---------- planted tactical motifs (data_gen/motifs.py; recovered by engine/patterns) ----------
+# Hidden style seeds like the ones above: propensity per team (1.0 = signature strength) for each
+# pattern family. A motif runs at an existing decision point with probability
+# MOTIF_RATES[motif] x propensity x a game-state factor (data_gen/motifs.py). All at zero gives
+# byte-identical data to the pre-patterns generator (docs/patterns.md, "Byte-identity proof").
+MOTIFS = {
+    "AUR": {"pat_bait_switch": 1.0, "pat_elastic_low_block": 1.0},        # signature; low block while leading
+    "NTG": {"pat_rest_defence": 1.0, "pat_flank_isolation": 0.6},         # counters conceded while chasing
+    "CAL": {"pat_counter_press": 1.0, "pat_tactical_fouling": 0.6},       # regains after losses; fouls after losses
+    "VES": {"pat_cutback": 1.0, "pat_flank_isolation": 0.5},              # cut-backs; isolation on one flank
+}
+MOTIF_SIDES = {("VES", "pat_flank_isolation"): "left"}
+# 1.0 in every generated dataset; 0 switches planting off (the byte-identity proof), 0.5 is the
+# detection-limit run. The CLI flag --motif-scale overrides it.
+MOTIF_SCALE = 1.0
+# player-level: (team code, role) -> {motif: propensity}
+PLAYER_MOTIFS = {("VES", "striker"): {"pat_starved_finisher": 1.0}}
+# chance per eligible decision point at propensity 1.0 (eligibility in data_gen/motifs.py)
+MOTIF_RATES = {
+    "pat_bait_switch": 0.02, "pat_cutback": 0.03, "pat_flank_isolation": 0.05, "pat_elastic_low_block": 0.12,
+    "pat_counter_press": 0.08, "pat_rest_defence": 0.20, "pat_starved_finisher": 0.35, "pat_tactical_fouling": 0.10,
+}
+# Natural shot appetite kept by a team while a motif adds shots (multiplier per unit propensity):
+# its own motifs, and "opp:" entries for a team facing that motif (AUR's counters against a trailing
+# NTG, the range shots against a leading AUR). Measured so shots per team and goals per match stay
+# in their calibration ranges with planting on (docs/patterns.md).
+SHOT_COMP = {"pat_cutback": 0.85, "pat_counter_press": 0.90, "pat_bait_switch": 0.95,
+             "opp:pat_rest_defence": 0.55, "opp:pat_elastic_low_block": 0.55, "opp:pat_tactical_fouling": 0.95}

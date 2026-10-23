@@ -10,7 +10,7 @@ docs/PROGRESS.md under "Pattern decisions"; the plan and audit in docs/patterns-
 | Setup (tag, branch, green start) | done | | tag pre-patterns on 144ba45 |
 | Banned wording (config, linter, guard, UI scan) | done | | 82 tests |
 | Step 1 audit (docs/patterns-plan.md) | | | |
-| Step 2 planting + byte-identity proof | | | |
+| Step 2 planting + byte-identity proof | proof passed; planting tuned; showcase search pending (needs Step 3) | | |
 | Step 3 engine, Verifier, Analyst | | | |
 | Step 4 templates, guards, i18n | | | |
 | Step 5 UI and exports | | | |

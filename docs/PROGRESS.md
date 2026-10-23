@@ -14,6 +14,46 @@ docs/patterns-progress.md. Plan and audit: docs/patterns-plan.md.
   `data/generated-2026-base/` and `data/generated-2027-base/` (season + showcase each, gitignored by
   the new `data/generated-*/` rule). The 2026 showcase there is byte-identical to the committed
   data/showcase. Peak RSS 141 MB (2026) and 152 MB (2027, showcase search from 0: 2724 tries, 69 s).
+- Byte-identity proof (first gate of Step 2): PASSED. With every motif propensity at zero
+  (`--motif-scale 0`) the 2026 season, the 2026 showcase, the 2026 full league, and the 2027 season
+  and showcase are byte-identical to the pre-patterns generator (every table and ground_truth.json,
+  `diff -rq`). tests/test_motifs.py keeps it: hashes of the 2026 and 2027 files recorded before any
+  motif code (tests/data/pre_patterns_hashes.json); 2026 runs in the default suite, 2027 is slow.
+  How: motifs run only through `MatchSim.motifs`, which is None when nothing is planted; each
+  (motif, team) has its own `random.Random(f"{match seed}:{motif}:{team}")`, consulted only when the
+  propensity is above zero; while a script runs the simulator's generator is swapped for it. No
+  new key is written to ground_truth.json when nothing is planted.
+- Detectors measured on the pre-planting full league (seed 2026, 760 team-matches; peak RSS
+  1.45 GB, 18 s): bait and switch 0, cut-back 6.4%, flank isolation 0, low block 2.8%,
+  counter-press 0, rest defence 2.0%, starved finisher 9.2%, fouls after losses 25.1% of
+  team-matches. Detector numbers equal the independent recompute on every finding (0 mismatches).
+  Why three are zero: the simulator logs at most one pressure per opponent action, so two pressures
+  inside 4 s happen 44 times in 24,280 attacking-third losses; 15+ short passes in a row happen in
+  36 possessions per league; no possession has more than 8 passes along a touchline strip.
+- Planting is therefore needed for P1, P3 and P5 (base rate about 0; aim: >= 25 planted cases per
+  league) and is used at signature strength for the others. Where a base rate exists, the planted
+  rate per planted team-match is reported against it in docs/patterns.md.
+- Threshold tuning on seed 2026 (full league), logged:
+  - flank isolation min_windows 2 -> 1 (a single planted spell is one window; 0.4% false positives);
+  - low block min_opp_shots 4 -> 3 (A's shots in 15 minutes were the condition that failed most);
+  - counter-press min_regains 3 -> 2;
+  - rest defence min_tilt 0.65 -> 0.60 and a rolling 30-minute window (the brief allows "per match
+    or window"): NTG's tilt in its chasing windows was 0.57-0.64 in most planted matches;
+  - starved finisher xg_per_touch_mult 3 -> 5 (false positives 9.0% -> 5.7%);
+  - fouls after losses min_fouls 2 -> 3, min_rate_vs_league 1.5 -> 2.5 (false positives 25.6% -> 4.0%).
+- A planted case is a team-match in which the script completed at least the number of instances the
+  definition needs (1, or 2 for counter-press, rest defence and starved finisher, 3 for fouls after
+  losses); one planted foul cannot make a three-foul pattern.
+- Realism with planting on: the first version added shots on top of the natural ones (small league
+  shots per team 14.0 -> 16.4, over the 11-14 target). Fixes, without touching any target:
+  - the starved finisher became a conversion: a shot the simulator already decided to take is
+    re-routed to the planted forward (one pass into the box, his unpressured shot);
+  - motifs that add shots lower the natural shot appetite of the team that gets them (SHOT_COMP:
+    own motifs, and a team facing NTG's counters or AUR's low block); only when that motif is active,
+    so the zero case is untouched;
+  - rates lowered for the low block (0.30 -> 0.12) and fouls after losses (0.15 -> 0.10).
+  Result: every calibration target passes on seeds 2026, 2027 and 2028 (small league), and
+  tests/test_realism.py plus tests/test_data_gen.py (non-slow) pass.
 - Banned wording: one file, contracts/banned_language.json (en/es/fr), one matcher
   (contracts/banned.py, whole words, case-insensitive, phrases match across spaces). Wired into the
   template linter (tests/test_banned_language.py), the phraser output guard (each banned word in

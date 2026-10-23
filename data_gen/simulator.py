@@ -27,6 +27,7 @@ import math
 import random
 
 from .config import (FINAL_THIRD_X, LANE_CENTERS, LANES, PITCH_LEN_M, PITCH_WID_M, TeamSpec, in_box, lane_of)
+from .motifs import Motifs
 from .squads import FORMATIONS, Lineup, Player, build_squad, name_pool
 
 HALF_SECONDS = 2700
@@ -117,8 +118,10 @@ class _Slot:
 
 class MatchSim:
     def __init__(self, rng: random.Random, match_id: str, home: TeamSpec, away: TeamSpec,
-                 players: dict, force_goal: dict | None = None):
-        """`players`: team_id -> Lineup, or -> squad list (the first-choice XI then plays)."""
+                 players: dict, force_goal: dict | None = None, motifs: dict | None = None, motif_seed=None):
+        """`players`: team_id -> Lineup, or -> squad list (the first-choice XI then plays).
+        `motifs`: planted motif propensities (data_gen/motifs.active), None = nothing planted;
+        `motif_seed`: the match seed the motif generators derive from."""
         self.rng, self.mid = rng, match_id
         self.teams = {home.team_id: home, away.team_id: away}
         self.home_id, self.away_id = home.team_id, away.team_id
@@ -155,6 +158,8 @@ class MatchSim:
         self.windows_left = {tid: 3 for tid in self.teams}
         self.sub_plan = {tid: self._plan_subs(tid) for tid in self.teams}
         self.form = {tid: rng.lognormvariate(0, 0.32) for tid in self.teams}
+        self.motifs = Motifs(self, motifs, match_id if motif_seed is None else motif_seed) if motifs else None
+        self.usage_mult = self.motifs.usage if self.motifs else {}
 
     # ---------- helpers ----------
     def other(self, tid: str) -> str:
@@ -225,7 +230,10 @@ class MatchSim:
                         best, best_gap = (p, lp, reach), gap
                     continue
             cands.append(p)
-            w.append(math.exp(-d / scale) * (p.usage if usage else 1.0))
+            wt = math.exp(-d / scale) * (p.usage if usage else 1.0)
+            if usage and self.usage_mult:
+                wt *= self.usage_mult.get(p.player_id, 1.0)
+            w.append(wt)
         if cands:
             return self.rng.choices(cands, w)[0], x, y
         p, lp, reach = best
@@ -808,6 +816,12 @@ class MatchSim:
         protect_from = round(3 * (1 - t.sit_deep))     # a real low-block side clears its lines at once
         last_pass = st.get("last_pass")
         via_weak = False
+        if self.motifs is not None:
+            m = self.motifs.at_start(tid, x, y, holder, pattern, restart, idx)
+            if m is not None:
+                if m[0] == "return":
+                    return m[1]
+                _, x, y, holder, last_pass, idx, pattern = m
         while self.clock < self.end_at and n_steps < 90:
             n_steps += 1
             opp_deep = self.deep(o_id)
@@ -844,8 +858,15 @@ class MatchSim:
                     d, dx, dy = self.pick(o_id, 100 - x, 100 - y, 100 - x, scale=10, usage=False)
                     return self.foul(o_id, d, dx, dy, holder, x, y)
                 # shot?
-                if rng.random() < self.shot_prob(tid, x, y, opp_deep) * (1 + WEAK_CREATE * o.weak_strength * via_weak):
+                sp = self.shot_prob(tid, x, y, opp_deep) * (1 + WEAK_CREATE * o.weak_strength * via_weak)
+                if self.motifs is not None:
+                    sp *= self.motifs.shot_factor(tid)
+                if rng.random() < sp:
                     self.tick(t, 0.4)
+                    if self.motifs is not None:
+                        m = self.motifs.at_shot(tid, x, y, holder, pattern, idx)
+                        if m is not None:
+                            return m[1]
                     res = self.take_shot(tid, holder, x, y, False, pattern, last_pass, pressed, idx)
                     return self.after_shot(tid, res, x, y)
                 # take-on?
@@ -862,6 +883,14 @@ class MatchSim:
                     self.tick(t, 0.6)
                     self.emit(tid, holder.player_id, "carry", x, y, nx, ny, pattern=pattern, idx=idx)
                     x, y = nx, ny
+                    continue
+            # ---- planted motifs (data_gen/motifs.py), only when a propensity is above zero ----
+            if self.motifs is not None and restart is None:
+                m = self.motifs.in_play(tid, x, y, holder, pattern, last_pass, pressed, idx)
+                if m is not None:
+                    if m[0] == "return":
+                        return m[1]
+                    _, x, y, holder, last_pass, idx, pattern = m
                     continue
             # ---- choose the pass ----
             in_final = x >= FINAL_THIRD_X

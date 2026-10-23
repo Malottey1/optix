@@ -14,8 +14,9 @@ import random
 from datetime import date
 from pathlib import Path
 
-from . import calibration, schedule, traps
-from .config import SHOWCASE_PLAYER_TRAITS, TEAMS, TEAM_BY_ID
+from . import calibration, motifs, schedule, traps
+from .config import (MOTIF_RATES, MOTIF_SCALE, MOTIF_SIDES, MOTIFS, PLAYER_MOTIFS, SHOWCASE_PLAYER_TRAITS, TEAM_BY_ID,
+                     TEAMS)
 from .league import EXPECTED_EVIDENCE, EXTRA_PLAYER_TRAITS, full_teams, team_traps
 from .simulator import MatchSim, build_players
 from .squads import SquadManager, name_pool
@@ -59,9 +60,10 @@ def make_players(seed: int, overrides: dict | None = None, teams=None):
 
 
 def simulate(seed: int, match_id: str, home_id: str, away_id: str, players, force_goal=None,
-             teams_by_id=None):
+             teams_by_id=None, motif_scale: float = MOTIF_SCALE):
     tb = teams_by_id or TEAM_BY_ID
-    sim = MatchSim(random.Random(seed), match_id, tb[home_id], tb[away_id], players, force_goal)
+    sim = MatchSim(random.Random(seed), match_id, tb[home_id], tb[away_id], players, force_goal,
+                   motifs=motifs.active((tb[home_id], tb[away_id]), motif_scale), motif_seed=seed)
     sim.run()
     return sim
 
@@ -108,24 +110,25 @@ def showcase_is_realistic(sim: MatchSim) -> bool:
 SHOWCASE_SEARCH_START = {2026: 1383}
 
 
-def showcase_reference(seed: int, tables=None) -> float:
+def showcase_reference(seed: int, tables=None, motif_scale: float = MOTIF_SCALE) -> float:
     """The season's completion rate of entries into NTG's weak lane (the dashboard's baseline)."""
-    tables = tables or season_tables(*small_season(seed, make_players(seed)))
+    tables = tables or season_tables(*small_season(seed, make_players(seed), motif_scale))
     return traps.lane_entry_completion(tables["events"], TEAM_BY_ID["t_ntg"].weak_lane)
 
 
-def build_showcase(seed: int, players, max_tries: int = 6000, start: int | None = None, reference_completion=None):
+def build_showcase(seed: int, players, max_tries: int = 6000, start: int | None = None, reference_completion=None,
+                   motif_scale: float = MOTIF_SCALE):
     """Same simulator as the season, with a scripted early AUR goal. We then search seeds until
     all five traps fire in the one match, each threshold cleared with SHOWCASE_MIN_MARGIN, inside
     the SHOWCASE_REALISM envelope, so the demo match is reproducible, unedited, plausible and not
     balanced on a knife edge."""
     start = SHOWCASE_SEARCH_START.get(seed, 0) if start is None else start
     if reference_completion is None:
-        reference_completion = showcase_reference(seed)
+        reference_completion = showcase_reference(seed, motif_scale=motif_scale)
     for k in range(start, start + max_tries):
         s = seed * 10_000 + k
         sim = simulate(s, SHOWCASE_ID, "t_aur", "t_ntg", players,
-                       force_goal=dict(team_id="t_aur", after_sec=600))
+                       force_goal=dict(team_id="t_aur", after_sec=600), motif_scale=motif_scale)
         if not showcase_is_realistic(sim):
             continue
         checks = showcase_checks(sim, players, reference_completion)
@@ -147,16 +150,19 @@ def season_tables(sims, fixtures) -> dict:
     return dict(matches=rows_m, events=rows_e, passes=rows_p, shots=rows_s, lineups=rows_l)
 
 
-def play_season(seed: int, fixtures, players, teams_by_id=None, seed_mult: int = 1000):
+def play_season(seed: int, fixtures, players, teams_by_id=None, seed_mult: int = 1000, motif_scale: float = MOTIF_SCALE):
     """Simulate the fixtures in date order. A SquadManager carries availability between matches:
-    suspensions (a red card, five yellows), injuries and light rotation after a congested week."""
+    suspensions (a red card, five yellows), injuries and light rotation after a congested week.
+    motif_scale multiplies the planted motif propensities (0 = none planted)."""
     tb = teams_by_id or TEAM_BY_ID
     mgr = SquadManager(players, random.Random(seed + 11))
     sims = []
     for i, fx in enumerate(fixtures):
         d = date.fromisoformat(fx["date"])
         lus = {tid: mgr.matchday(tb[tid], d) for tid in (fx["home"], fx["away"])}
-        sim = MatchSim(random.Random(seed * seed_mult + i), f"m_{i + 1:03d}", tb[fx["home"]], tb[fx["away"]], lus)
+        s = seed * seed_mult + i
+        sim = MatchSim(random.Random(s), f"m_{i + 1:03d}", tb[fx["home"]], tb[fx["away"]], lus,
+                       motifs=motifs.active((tb[fx["home"]], tb[fx["away"]]), motif_scale), motif_seed=s)
         sim.run()
         for tid in (fx["home"], fx["away"]):
             mine = {s.player_id for s in players[tid]}
@@ -192,22 +198,51 @@ def fixtures_for(team_ids, seed: int, cycles: int = 1) -> list[dict]:
     return schedule.calendar(rounds, random.Random(seed + 8))
 
 
-def small_season(seed: int, players):
+def small_season(seed: int, players, motif_scale: float = MOTIF_SCALE):
     """The 5-team season (two double round robins, 40 matches, 16 per team): sims and fixtures."""
     fixtures = fixtures_for([t.team_id for t in TEAMS], seed, cycles=2)
-    return play_season(seed, fixtures, players), fixtures
+    return play_season(seed, fixtures, players, motif_scale=motif_scale), fixtures
 
 
-def main(seed: int, out: Path, showcase_out: Path):
+def planted_motifs(sims, teams, players, scale: float) -> dict | None:
+    """Ground truth of the planted motifs: propensities (team and player level, after `scale`) and
+    the completed instances per match. None when nothing was planted (the file is then unchanged)."""
+    team_cfg = {t.code: {k: round(v * scale, 4) for k, v in MOTIFS.get(t.code, {}).items() if v * scale > 0}
+                for t in teams}
+    team_cfg = {k: v for k, v in team_cfg.items() if v}
+    pl = {}
+    for (code, role), pm in PLAYER_MOTIFS.items():
+        tid = next((t.team_id for t in teams if t.code == code), None)
+        p = next((p for p in players.get(tid, []) if p.role == role and p.first_choice), None)
+        pm = {k: round(v * scale, 4) for k, v in pm.items() if v * scale > 0}
+        if p is not None and pm:
+            pl[p.player_id] = dict(team=code, role=role, motifs=pm)
+    if not team_cfg and not pl:
+        return None
+    code = {t.team_id: t.code for t in teams}
+    inst = {}
+    for sim in sims:
+        if sim.motifs is None:
+            continue
+        rows = {f"{m}|{code[t]}|{pid}": n for (m, t, pid), n in sorted(sim.motifs.log.items())}
+        if rows:
+            inst[sim.mid] = rows
+    return dict(scale=scale, rates=MOTIF_RATES, teams=team_cfg, players=pl,
+                sides={f"{c}|{m}": v for (c, m), v in MOTIF_SIDES.items() if c in team_cfg and m in team_cfg[c]},
+                instances=inst)
+
+
+def main(seed: int, out: Path, showcase_out: Path, motif_scale: float = MOTIF_SCALE):
     players = make_players(seed)
-    sims, fixtures = small_season(seed, players)
+    sims, fixtures = small_season(seed, players, motif_scale)
     tables = write_dataset(out, sims, players, fixtures)
 
     sc_players = make_players(seed, SHOWCASE_PLAYER_TRAITS)
     # the demo's soft side must beat the season's completion rate into that lane, the baseline the
     # dashboard compares the match with
     sc_sim, checks, sc_seed, tries = build_showcase(seed, sc_players,
-                                                    reference_completion=showcase_reference(seed, tables))
+                                                    reference_completion=showcase_reference(seed, tables),
+                                                    motif_scale=motif_scale)
     write_dataset(showcase_out, [sc_sim], sc_players,
                   [dict(matchweek=1, date="2026-08-15", kickoff="17:30", home="t_aur", away="t_ntg")])
 
@@ -230,6 +265,11 @@ def main(seed: int, out: Path, showcase_out: Path):
                       score=[sc_sim.score["t_aur"], sc_sim.score["t_ntg"]], traps=checks,
                       trap_margins=traps.trap_margins(checks), min_margin=SHOWCASE_MIN_MARGIN),
     )
+    pm = planted_motifs(sims, TEAMS, players, motif_scale)
+    if pm:
+        gt["planted_motifs"] = pm
+        sc = planted_motifs([sc_sim], TEAMS, sc_players, motif_scale)
+        gt["showcase"]["motif_instances"] = sc["instances"].get(SHOWCASE_ID, {})
     for d in (out, showcase_out):
         (d / "ground_truth.json").write_text(json.dumps(gt, indent=2))
     return gt
@@ -238,14 +278,14 @@ def main(seed: int, out: Path, showcase_out: Path):
 FULL_TEAM_COLS = TEAM_COLS + ["archetype"]
 
 
-def main_full(seed: int, out: Path) -> dict:
+def main_full(seed: int, out: Path, motif_scale: float = MOTIF_SCALE) -> dict:
     """The 20-team league: double round robin (380 matches, 38 per team). The showcase match is
     not touched; it stays the small league's scripted match."""
     teams = full_teams()
     by_id = {t.team_id: t for t in teams}
     players = make_players(seed, EXTRA_PLAYER_TRAITS, teams)
     fixtures = fixtures_for([t.team_id for t in teams], seed)
-    sims = play_season(seed, fixtures, players, by_id, seed_mult=10_000)
+    sims = play_season(seed, fixtures, players, by_id, seed_mult=10_000, motif_scale=motif_scale)
     tables = write_dataset(out, sims, players, fixtures, teams, FULL_TEAM_COLS)
     stats = calibration.season_stats(tables)
     gt = dict(
@@ -265,6 +305,9 @@ def main_full(seed: int, out: Path) -> dict:
                          for ps in players.values() for p in ps if p.trap_flag},
         expected_evidence=EXPECTED_EVIDENCE,
     )
+    pm = planted_motifs(sims, teams, players, motif_scale)
+    if pm:
+        gt["planted_motifs"] = pm
     (out / "ground_truth.json").write_text(json.dumps(gt, indent=2))
     return gt
 
@@ -278,15 +321,17 @@ if __name__ == "__main__":
     ap.add_argument("--out", type=Path, default=None,
                     help="default data/generated (small) or data/full (full)")
     ap.add_argument("--showcase-out", type=Path, default=Path("data/showcase"))
+    ap.add_argument("--motif-scale", type=float, default=MOTIF_SCALE,
+                    help="planted motif strength: 1 = the dataset, 0 = none (byte-identity proof), 0.5 = detection limit")
     a = ap.parse_args()
     t0 = time.perf_counter()
     if a.league == "full":
         out = a.out or Path("data/full")
-        g = main_full(a.seed, out)
+        g = main_full(a.seed, out, a.motif_scale)
         print(f"wrote {g['n_matches']} matches, {g['n_teams']} teams, {g['n_events']} events to {out} "
               f"in {time.perf_counter() - t0:.1f}s")
     else:
         out = a.out or Path("data/generated")
-        g = main(a.seed, out, a.showcase_out)
+        g = main(a.seed, out, a.showcase_out, a.motif_scale)
         print(f"wrote {g['n_matches']} matches to {out}; showcase seed {g['showcase']['sim_seed']} "
               f"after {g['showcase']['seeds_tried']} tries, score {g['showcase']['score']}")
