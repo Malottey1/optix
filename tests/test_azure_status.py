@@ -6,7 +6,7 @@ from pathlib import Path
 from agents import azure_status as A
 
 ROOT = Path(__file__).resolve().parent.parent
-STATES = {A.VERIFIED_LIVE, A.VERIFIED_TESTS, A.BUILT, A.NOT_BUILT}
+STATES = {A.VERIFIED_LIVE, A.VERIFIED_TESTS, A.VERIFIED_CI, A.BUILT, A.NOT_BUILT}
 
 
 def test_docs_azure_md_is_the_generated_table():
@@ -51,3 +51,27 @@ def test_readme_status_block_is_generated():
     text = (ROOT / "README.md").read_text(encoding="utf-8")
     assert A.with_readme_block(text) == text, "run: python -m agents.azure_status --write"
     assert "Planned Azure integration" not in text
+
+
+def test_ci_state_only_after_a_recorded_successful_run(monkeypatch):
+    rows = lambda: {r["id"]: r for r in A.status()}
+    monkeypatch.setattr(A, "ci_record", lambda root=A.ROOT: None)
+    assert rows()["container"]["state"] == A.BUILT and rows()["iac"]["state"] == A.BUILT
+    rec = {"run_id": 1, "url": "u", "head_sha": "abcdef0", "jobs": {"docker-build": "failure", "bicep-build": None}}
+    monkeypatch.setattr(A, "ci_record", lambda root=A.ROOT: rec)
+    assert rows()["container"]["state"] == A.BUILT and rows()["iac"]["state"] == A.BUILT
+    rec["jobs"] = {"docker-build": "success", "bicep-build": "success"}
+    r = rows()
+    assert r["container"]["state"] == r["iac"]["state"] == A.VERIFIED_CI
+    assert r["phraser"]["state"] == A.BUILT                       # CI never verifies a live service
+    assert not re.search(r"\d", r["container"]["note"] + r["iac"]["note"])
+
+
+def test_ci_record_refuses_an_unfinished_run():
+    import pytest
+    from tools.ci_record import record_from
+    with pytest.raises(SystemExit):
+        record_from({"status": "in_progress"})
+    rec = record_from({"status": "completed", "databaseId": 7, "headSha": "s", "url": "u",
+                       "jobs": [{"name": "docker-build", "conclusion": "success"}, {"name": "web", "conclusion": "success"}]})
+    assert rec["jobs"] == {"docker-build": "success", "bicep-build": None}

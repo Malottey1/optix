@@ -504,6 +504,7 @@ function VisualGuide() {
 const STATE_STYLE: Record<AzureStatus["state"], { icon: "check" | "cloud"; cls: string; label: string }> = {
   "verified live": { icon: "check", cls: "border-line bg-surface-2", label: "Verified live" },
   "verified by tests": { icon: "check", cls: "border-line bg-surface-2", label: "Verified by tests" },
+  "verified by CI build/lint": { icon: "check", cls: "border-line bg-surface-2", label: "Verified by CI build" },
   "built, not verified live": {
     icon: "cloud",
     cls: "border-dashed border-line-strong",
@@ -535,9 +536,7 @@ function AzureStatusPanel() {
               </div>
               <p className="mt-1 text-[12.5px] font-semibold text-ink-2">{r.tech}</p>
               <p className="mt-1 text-[13px] leading-relaxed text-ink-3">{r.note}</p>
-              {r.live !== "not applicable" && (
-                <p className="mt-1 text-[12.5px] text-ink-3">Live check: {r.live}</p>
-              )}
+              {r.live !== "not applicable" && <p className="mt-1 text-[12.5px] text-ink-3">Live check: {r.live}</p>}
             </li>
           );
         })}

@@ -25,6 +25,18 @@ Green start: default suite 234 passed, 2 skipped (azure_live). Each task is its 
 - `tests/test_robustness_tool.py` runs the job end to end on the small league (about 25 s, default
   suite) and checks the key mapping, so a removed helper breaks a test instead of the tool.
 
+**Task 3 (infrastructure verified in CI)**
+- Two CI jobs: `docker-build` builds the image (`docker build --tag optix:ci .`, never pushed), runs
+  it and waits for `/healthz`; `bicep-build` runs `az bicep install`, then `az bicep build` on
+  infra/main.bicep and `az bicep build-params` on infra/main.bicepparam. No secrets, no registry
+  login, no `az login`, no deployment.
+- "Confirmed" means a fact in the repo: `python -m tools.ci_record <run id>` reads a finished run
+  with `gh run view` (read-only) and writes infra/ci-verified.json (run id, commit, URL, the two
+  jobs' conclusions). `agents/azure_status.py` gives the container and the Bicep the new state
+  "verified by CI build/lint" only when that file records `success` for their job; no file, a failed
+  or an unfinished run leave them "built, not verified live". The live-service rows can never get
+  this state.
+
 **Task 2 (deterministic exports)**
 - Chose "exclude, keep aside" over a fixed clock: a frozen `verified_at` would be a made-up wall
   time. `run_match` now moves `clock.emitted_latency_ms` (per insight) and

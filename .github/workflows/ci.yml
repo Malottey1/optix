@@ -1,4 +1,5 @@
-# Default Python tests, then the web dashboard's lint, typecheck, unit tests and build.
+# Default Python tests, then the web dashboard's lint, typecheck, unit tests and build; the Docker
+# image is built (not pushed) and the Bicep is compiled.
 # No secrets; no deploy; no live Azure calls (the azure_live tests skip without Azure settings, and
 # CI sets none). The slow tests (multi-seed, full league, headless browser) stay local.
 name: CI
@@ -40,3 +41,27 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
+
+  # Infrastructure is built and linted only: no registry login, no push, no `az login`, no deploy.
+  docker-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: docker build (not pushed)
+        run: docker build --tag optix:ci .
+      - name: container answers /healthz
+        run: |
+          docker run --detach --name optix-ci --publish 127.0.0.1:8000:8000 optix:ci
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:8000/healthz && exit 0; sleep 1; done
+          docker logs optix-ci; exit 1
+
+  bicep-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: install Bicep for the preinstalled Azure CLI
+        run: az bicep install
+      - name: az bicep build
+        run: az bicep build --file infra/main.bicep --stdout > /dev/null
+      - name: az bicep build-params
+        run: az bicep build-params --file infra/main.bicepparam --stdout > /dev/null
