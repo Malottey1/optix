@@ -279,6 +279,40 @@ export interface UiData {
   track: TrackEntry[];
   visuals: Visuals;
   azure_status: AzureStatus[];
+  patterns?: PatternsSection;
+}
+
+/** The tactical pattern catalogue and each team's signature patterns (agents/dashboard_data.py). */
+export interface PatternsSection {
+  catalogue: PatternEntry[];
+  signature: Record<string, SignatureRow[]>;
+  players: Record<string, { family: string; icon: string; matches: number; team_played: number }[]>;
+  not_built: { id: string | null; name: string; icon: string | null; status: string }[];
+  signature_rule: { min_share: number; min_lift: number };
+}
+
+export interface PatternEntry {
+  family: string;
+  icon: string;
+  rule_ids: string[];
+  /** false: an experimental family, left out of the stream (its context rule still runs) */
+  enabled: boolean;
+  status: "validated" | "experimental" | "not measured";
+  recall_tuning?: number | null;
+  recall_holdout?: number | null;
+  fp_tuning?: number | null;
+  fp_holdout?: number | null;
+  recall_half?: number | null;
+  cases_holdout?: number;
+}
+
+export interface SignatureRow {
+  family: string;
+  icon: string;
+  matches: number;
+  played: number;
+  share: number;
+  others_share: number;
 }
 
 /** One Microsoft / Azure component and its state, derived from repo facts (agents/azure_status.py). */

@@ -1,8 +1,10 @@
 // The one visual an insight card carries, chosen by the claim behind it: the lane crosshairs for a
 // matchup claim (V1, on the claim's own lane), the shot blocks for an xG claim (V2, exactly the
 // shots in the claim's window and team) and the rhythm strip for a rhythm claim (V6, the payload's
-// own series). Other cards point at the Focus Pitch, which already draws their evidence.
+// own series), and for a tactical pattern its evidence as arrows or a route of event nodes (the
+// deep block: the other side's shot blocks in its window). Other cards point at the Focus Pitch.
 import { MismatchCrosshairs } from "../../components/viz/MismatchCrosshairs";
+import { PatternRoute } from "../../components/viz/PatternRoute";
 import { ShotBlocks } from "../../components/viz/ShotBlocks";
 import { useData } from "../../data/context";
 import { clock } from "../../lib/format";
@@ -48,6 +50,39 @@ export function CardVisual({ ins }: { ins: Insight }) {
           periods={m.timeline.periods}
           windowLabel={`${clock(w.from_sec, m.timeline.periods)}–${clock(w.to_sec, m.timeline.periods)}`}
           compact
+          claimId={ins.claim_id}
+        />
+      </div>
+    );
+  }
+  if (ins.insight_type === "tactical_pattern") {
+    const family = ins.payload.family ?? null;
+    const w = ins.payload.window;
+    if (family === "pat_elastic_low_block" && w && ins.teams.secondary) {
+      // the deep block's evidence is the other side's shots: the shot blocks of exactly that window
+      const team = ins.teams.secondary;
+      return (
+        <div className="mt-3" data-card-visual="shot-blocks">
+          <ShotBlocks
+            shots={shotsIn(m.ui.visuals.shots, team, w.from_sec, w.to_sec)}
+            team={team}
+            color={m.sideOf(team) === "home" ? "var(--home)" : "var(--away)"}
+            periods={m.timeline.periods}
+            windowLabel={`${clock(w.from_sec, m.timeline.periods)}–${clock(w.to_sec, m.timeline.periods)}`}
+            compact
+            claimId={ins.claim_id}
+          />
+        </div>
+      );
+    }
+    return (
+      <div className="mt-3" data-card-visual="pattern">
+        <PatternRoute
+          family={family}
+          points={ins.payload.points ?? []}
+          rows={m.ui.evidence}
+          periods={m.timeline.periods}
+          color={m.sideOf(ins.teams.primary) === "home" ? "var(--home)" : "var(--away)"}
           claimId={ins.claim_id}
         />
       </div>

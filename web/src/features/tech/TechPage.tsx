@@ -1,19 +1,20 @@
 // #/tech: how a sentence earns its place on screen (with one real claim followed from its blocked
 // first attempt to the translated, number-guarded sentence), the verification ledger of every claim
 // in the showcase stream, the measured numbers parsed from the generated reports in docs/ (never
-// retyped), and the Microsoft / Azure status list from ui.json (agents/azure_status.py).
+// retyped), the tactical pattern catalogue and the Microsoft / Azure status list from ui.json
+// (agents/azure_status.py).
 import { TeamBadge } from "../../components/brand/TeamBadge";
 import { Fragment, useState } from "react";
 import { Glyph } from "../../components/icons";
-import { Icon, type IconName } from "../../icons";
+import { Icon, patternIcon, type IconName } from "../../icons";
 import { Chip, StatusChip, type Status } from "../../components/ui/badge";
 import { Panel, Stat } from "../../components/ui/card";
 import { ScrollRegion } from "../../components/ui/scroll-region";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs";
 import { useData } from "../../data/context";
 import { cx } from "../../lib/cx";
-import { cell, clock, num, words } from "../../lib/format";
-import { LANG_NAMES, useT } from "../../lib/i18n";
+import { cell, clock, num, pct, words } from "../../lib/format";
+import { LANG_NAMES, patternLabel, useT } from "../../lib/i18n";
 import { LANGS, type AzureStatus, type LedgerOutcome } from "../../types/ui";
 import { reasonFor, textOf } from "../live/shared";
 
@@ -528,6 +529,82 @@ const STATE_STYLE: Record<AzureStatus["state"], { icon: IconName | null; cls: st
   "not built": { icon: null, cls: "border-dashed border-line-strong opacity-80", label: "Not built" },
 };
 
+const PATTERN_STATUS: Record<string, Status> = {
+  validated: "published",
+  experimental: "published_with_context",
+  "not measured": "blocked",
+};
+
+/** The tactical pattern catalogue: measured status and recovery numbers from ui.json
+ * (docs/data/pattern_recall.json, written by tools.pattern_recall), the rules that test each
+ * family's naive claim, and the patterns not built or skipped, with the reason. */
+function PatternCatalogue() {
+  const m = useData();
+  const { lang } = useT();
+  const p = m.ui.patterns;
+  if (!p) return null;
+  return (
+    <Panel
+      id="patterns"
+      title="Tactical patterns"
+      subtitle="Each pattern is a detector over the event log with an independent recompute the Verifier uses. Recall is on planted cases, the false-positive rate on teams with nothing planted; hold-out leagues were never used to set thresholds (docs/pattern-recall.md). An experimental pattern publishes no card of its own; its rule still checks the naive claim."
+    >
+      <ScrollRegion label="Pattern catalogue">
+        <table className="w-full min-w-[720px] text-left text-[13px]" data-table="patterns">
+          <thead className="text-[12px] text-ink-3">
+            <tr>
+              <th className="px-3 py-1.5 font-semibold">Pattern</th>
+              <th className="px-3 py-1.5 font-semibold">Status</th>
+              <th className="px-3 py-1.5 font-semibold">Recall, hold-out</th>
+              <th className="px-3 py-1.5 font-semibold">False positives, hold-out</th>
+              <th className="px-3 py-1.5 font-semibold">Recall at half strength</th>
+              <th className="px-3 py-1.5 font-semibold">Rule for the naive claim</th>
+            </tr>
+          </thead>
+          <tbody>
+            {p.catalogue.map((r) => (
+              <tr key={r.family} data-family={r.family} data-status={r.status} className="border-t border-line">
+                <td className="px-3 py-1.5">
+                  <span className="inline-flex items-center gap-1.5 font-semibold text-ink">
+                    <Icon name={patternIcon(r.family)} size={16} />
+                    {patternLabel(r.family, lang)}
+                  </span>
+                </td>
+                <td className="px-3 py-1.5">
+                  <StatusChip
+                    status={PATTERN_STATUS[r.status] ?? "blocked"}
+                    label={r.enabled ? r.status : `${r.status}, off in the stream`}
+                  />
+                </td>
+                <td className="num px-3 py-1.5">{pct(r.recall_holdout, lang)}</td>
+                <td className="num px-3 py-1.5">{pct(r.fp_holdout, lang)}</td>
+                <td className="num px-3 py-1.5">{pct(r.recall_half, lang)}</td>
+                <td className="px-3 py-1.5 font-mono text-[12px] text-ink-3">{r.rule_ids.join(", ") || "—"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </ScrollRegion>
+      <p className="mt-3 text-[12.5px] leading-relaxed text-ink-3">
+        Not built:{" "}
+        {p.not_built
+          .filter((r) => r.status === "not built")
+          .map((r) => words(r.name))
+          .join(", ")}
+        .
+        {p.not_built
+          .filter((r) => r.status !== "not built")
+          .map((r) => (
+            <span key={r.name}>
+              {" "}
+              {words(r.name)}: {r.status}.
+            </span>
+          ))}
+      </p>
+    </Panel>
+  );
+}
+
 function AzureStatusPanel() {
   const m = useData();
   const rows = m.ui.azure_status;
@@ -575,6 +652,7 @@ export default function TechPage() {
       <Walkthrough />
       <Ledger />
       <Measured />
+      <PatternCatalogue />
       <VisualGuide />
       <AzureStatusPanel />
     </div>

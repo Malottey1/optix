@@ -126,6 +126,29 @@ def test_claims_endpoint_returns_the_attempt_chain(app):
     assert body["attempts"][0]["claim"]["verification"]["status"] == "blocked"
 
 
+def test_pattern_cards_stream_and_their_claims_carry_evidence_and_the_verification_record(app):
+    """The tactical pattern cards arrive over SSE unchanged; /api/claims returns, for a pattern claim
+    and for a naive claim a pattern rule rewrote, the evidence ids and every verification attempt."""
+    from engine.rules import PATTERN_RULES
+    store = MatchStore(DATA)
+    ev = _run(_events(app, f"/api/match/{store.match_id}/stream?speed=600"))
+    cards = [d for e, d in ev if e == "insight" and d["insight_type"] == "tactical_pattern"]
+    assert cards == [i for i in store.insights if i["insight_type"] == "tactical_pattern"] and cards
+    own = next(c for c in cards if c["payload"]["claim_metric"].startswith("pat_"))
+    rewritten = next(c for c in cards if not c["payload"]["claim_metric"].startswith("pat_"))
+
+    async def go(cid):
+        async with _client(app) as c:
+            return (await c.get(f"/api/claims/{cid}")).json()
+    for card in (own, rewritten):
+        body = _run(go(card["claim_id"]))
+        last = body["attempts"][-1]
+        assert last["claim"]["evidence_event_ids"] == card["evidence_event_ids"]
+        assert last["claim"]["verification"]["status"] in ("published", "published_with_context")
+    first = _run(go(rewritten["claim_id"]))["attempts"][0]["claim"]["verification"]
+    assert first["status"] == "blocked" and set(first["rule_ids"]) & set(PATTERN_RULES)
+
+
 def test_no_cors_headers_and_no_api_docs(app):
     async def go():
         async with _client(app) as c:

@@ -34,9 +34,26 @@ const TYPE_ICON: Record<string, IconName> = {
   player_focus: "players",
 };
 
-/** Icon of an insight card: the lane for matchups, the type where it has one, else the claim's metric. */
-export function insightIcon(type: string, metric?: string | null, lane?: string | null): IconName {
+const PATTERN_ICON: Record<string, IconName> = {
+  pat_bait_switch: "pattern-bait-switch",
+  pat_cutback: "pattern-cutback",
+  pat_flank_isolation: "pattern-flank-isolation",
+  pat_elastic_low_block: "pattern-elastic-low-block",
+  pat_counter_press: "pattern-counter-press",
+  pat_rest_defence: "pattern-rest-defence",
+  pat_starved_finisher: "pattern-starved-finisher",
+  pat_tactical_fouling: "pattern-tactical-fouling",
+};
+
+/** Icon of a tactical pattern family (engine/patterns/config.py ICONS); unknown families get the evidence glyph. */
+export const patternIcon = (family: string | null | undefined): IconName =>
+  PATTERN_ICON[family ?? ""] ?? "evidence-drawer";
+
+/** Icon of an insight card: the lane for matchups, the family for patterns, the type where it has one,
+ * else the claim's metric. */
+export function insightIcon(type: string, metric?: string | null, lane?: string | null, family?: string | null): IconName {
   if (type === "matchup_mismatch") return laneIcon(lane);
+  if (type === "tactical_pattern") return patternIcon(family);
   return TYPE_ICON[type] ?? METRIC_ICON[metric ?? ""] ?? "evidence-drawer";
 }
 

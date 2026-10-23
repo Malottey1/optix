@@ -5,7 +5,7 @@
 import { TeamBadge } from "../../components/brand/TeamBadge";
 import { useState } from "react";
 import { Glyph } from "../../components/icons";
-import { attackLaneIcon, Icon, laneIcon, styleLabelIcon } from "../../icons";
+import { attackLaneIcon, Icon, laneIcon, patternIcon, styleLabelIcon } from "../../icons";
 import { MismatchCrosshairs } from "../../components/viz/MismatchCrosshairs";
 import { StateSwaps } from "../../components/viz/StateSwaps";
 import { ZoneShift } from "../../components/viz/ZoneShift";
@@ -19,7 +19,7 @@ import { Tip } from "../../components/ui/tooltip";
 import { useData } from "../../data/context";
 import { cx } from "../../lib/cx";
 import { num, pct, signed } from "../../lib/format";
-import { useT } from "../../lib/i18n";
+import { patternLabel, useT } from "../../lib/i18n";
 import type { Lang, StyleLabel, TeamProfile } from "../../types/ui";
 import { textOf } from "../live/shared";
 
@@ -178,6 +178,36 @@ function Kits({ code, name }: { code: string; name: string }) {
   );
 }
 
+/** The families found in a large share of the team's season matches, well above the other teams
+ * (agents/dashboard_data.py, patterns.signature; the rule is in patterns.signature_rule). */
+function SignaturePatterns({ code }: { code: string }) {
+  const m = useData();
+  const { lang } = useT();
+  const rows = m.ui.patterns?.signature[code];
+  if (!rows) return null;
+  return (
+    <div className="mt-3 border-t border-line pt-3" data-signature-patterns={code}>
+      <p className="eyebrow">Signature patterns</p>
+      {rows.length ? (
+        <ul className="mt-1.5 space-y-1 text-[13px] text-ink-2">
+          {rows.map((r) => (
+            <li key={r.family} data-family={r.family} className="flex items-center gap-1.5">
+              <Icon name={patternIcon(r.family)} size={16} className="shrink-0 text-ink-2" />
+              <b className="text-ink">{patternLabel(r.family, lang)}</b>
+              <span className="text-ink-3">
+                <span className="num">{pct(r.share, lang)}</span> of matches (others{" "}
+                <span className="num">{pct(r.others_share, lang)}</span>)
+              </span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="mt-1 text-[13px] text-ink-3">None passes the signature rule this season.</p>
+      )}
+    </div>
+  );
+}
+
 function TeamCard({ team, lanes }: { team: TeamProfile; lanes: string[] }) {
   const { lang } = useT();
   const top = lanes.reduce(
@@ -214,6 +244,7 @@ function TeamCard({ team, lanes }: { team: TeamProfile; lanes: string[] }) {
         ))}
       </div>
       <Kits code={team.code} name={team.name} />
+      <SignaturePatterns code={team.code} />
       <div className="mt-4 border-t border-line pt-3">
         <p className="eyebrow">Attacks from</p>
         <p className="mt-1 text-[13px] text-ink-2">

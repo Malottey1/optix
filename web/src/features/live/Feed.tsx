@@ -5,7 +5,7 @@
 import { AnimatePresence, m as motion } from "motion/react";
 import { memo, useRef, useState } from "react";
 import { Glyph } from "../../components/icons";
-import { Icon, insightIcon } from "../../icons";
+import { Icon } from "../../icons";
 import { TeamBadge } from "../../components/brand/TeamBadge";
 import { Chip, StatusChip, TeamDot, type Status } from "../../components/ui/badge";
 import { Panel } from "../../components/ui/card";
@@ -20,7 +20,7 @@ import { select, useReplay } from "../../state/replay";
 import { useSettings } from "../../state/settings";
 import type { Insight } from "../../types/ui";
 import { CardVisual } from "./CardVisual";
-import { PCT_METRICS, evidenceMix, reasonFor, statusOf, textOf } from "./shared";
+import { PCT_METRICS, cardChip, evidenceMix, reasonFor, statusOf, textOf } from "./shared";
 
 export const STATUS_KEY: Record<Status, Key> = {
   published: "verified",
@@ -144,7 +144,7 @@ export const InsightCard = memo(function InsightCard({
   onEvidence: (id: string) => void;
 }) {
   const m = useData();
-  const { t, typeLabel, lang } = useT();
+  const { t, lang } = useT();
   const evidenceOpen = useSettings((s) => s.evidenceOpen);
   const [view, setView] = useState<"before" | "after">("after");
   const rw = m.ui.rewrites[ins.insight_id];
@@ -183,15 +183,8 @@ export const InsightCard = memo(function InsightCard({
           {ins.teams.primary}
         </span>
         <Chip>
-          <Icon
-            name={insightIcon(
-              ins.insight_type,
-              m.chain(ins.claim_id).at(-1)?.claim.metric,
-              typeof ins.payload.metrics?.lane === "string" ? ins.payload.metrics.lane : null,
-            )}
-            size={14}
-          />
-          {typeLabel(ins.insight_type)}
+          <Icon name={cardChip(m, ins, lang).icon} size={14} />
+          {cardChip(m, ins, lang).label}
         </Chip>
         <StatusChip status={status} label={t(STATUS_KEY[status])} className="ml-auto" />
       </div>

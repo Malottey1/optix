@@ -421,6 +421,7 @@ const TYPES: Record<Lang, Partial<Record<InsightType, string>>> = {
     player_focus: "Player",
     milestone: "Milestone",
     recap_line: "Recap",
+    tactical_pattern: "Pattern",
   },
   es: {
     matchup_mismatch: "Duelo",
@@ -433,6 +434,7 @@ const TYPES: Record<Lang, Partial<Record<InsightType, string>>> = {
     player_focus: "Jugador",
     milestone: "Hito",
     recap_line: "Resumen",
+    tactical_pattern: "Patrón",
   },
   fr: {
     matchup_mismatch: "Duel",
@@ -445,8 +447,47 @@ const TYPES: Record<Lang, Partial<Record<InsightType, string>>> = {
     player_focus: "Joueur",
     milestone: "Jalon",
     recap_line: "Résumé",
+    tactical_pattern: "Motif",
   },
 };
+
+// Pattern family names (engine/patterns): observational wording, as in the templates.
+const PATTERNS: Record<Lang, Record<string, string>> = {
+  en: {
+    pat_bait_switch: "Build on one side, switch",
+    pat_cutback: "Cut-backs from the goal line",
+    pat_flank_isolation: "Touchline spells",
+    pat_elastic_low_block: "Deep block, shots from range",
+    pat_counter_press: "Losses won straight back",
+    pat_rest_defence: "Territory and counters conceded",
+    pat_starved_finisher: "Few touches, free shots",
+    pat_tactical_fouling: "Fouls after losing the ball",
+  },
+  es: {
+    pat_bait_switch: "Construir en un lado y cambiar",
+    pat_cutback: "Pases atrás desde la línea de fondo",
+    pat_flank_isolation: "Secuencias por la banda",
+    pat_elastic_low_block: "Bloque bajo, tiros de lejos",
+    pat_counter_press: "Pérdidas recuperadas al momento",
+    pat_rest_defence: "Territorio y contras concedidas",
+    pat_starved_finisher: "Pocos toques, tiros sin presión",
+    pat_tactical_fouling: "Faltas tras perder el balón",
+  },
+  fr: {
+    pat_bait_switch: "Construire d’un côté, renverser",
+    pat_cutback: "Passes en retrait depuis la ligne de but",
+    pat_flank_isolation: "Séquences le long de la touche",
+    pat_elastic_low_block: "Bloc bas, tirs de loin",
+    pat_counter_press: "Pertes récupérées aussitôt",
+    pat_rest_defence: "Territoire et contres concédés",
+    pat_starved_finisher: "Peu de ballons, tirs sans pression",
+    pat_tactical_fouling: "Fautes après une perte de balle",
+  },
+};
+
+/** A pattern family's name; an unknown family degrades to its id in words. */
+export const patternLabel = (family: string | null | undefined, lang: Lang) =>
+  PATTERNS[lang][family ?? ""] ?? PATTERNS.en[family ?? ""] ?? (family ?? "pattern").replace(/^pat_/, "").replace(/_/g, " ");
 
 export const LANG_NAMES: Record<Lang, string> = { en: "English", es: "Español", fr: "Français" };
 

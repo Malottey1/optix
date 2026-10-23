@@ -13,7 +13,8 @@ import { Tip } from "../../components/ui/tooltip";
 import { useData } from "../../data/context";
 import { cx } from "../../lib/cx";
 import { num, pct, words } from "../../lib/format";
-import { useT } from "../../lib/i18n";
+import { Icon, patternIcon } from "../../icons";
+import { patternLabel, useT } from "../../lib/i18n";
 import { PassRoutes, leagueXaPerChance, type RouteMode } from "../../components/viz/PassRoutes";
 import { PercentilePizza } from "../../components/viz/PercentilePizza";
 import type { PlayerCheck, PlayerRow } from "../../types/ui";
@@ -475,6 +476,32 @@ function PlayerTable({ players, flagged }: { players: PlayerRow[]; flagged: Set<
 }
 
 /** One player: pass routes (V4) and percentiles (V8), with a picker. */
+/** Player-level tactical patterns found for this player this season (ui.json patterns.players). */
+function PlayerPatterns({ id }: { id: string }) {
+  const m = useData();
+  const { lang } = useT();
+  const rows = m.ui.patterns?.players[id];
+  if (!rows?.length) return null;
+  return (
+    <ul className="mt-3 flex flex-wrap gap-2" data-player-patterns={id}>
+      {rows.map((r) => (
+        <li
+          key={r.family}
+          data-family={r.family}
+          className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface-2 px-3 py-1 text-[12.5px] text-ink-2"
+        >
+          <Icon name={patternIcon(r.family)} size={14} />
+          <b className="text-ink">{patternLabel(r.family, lang)}</b>
+          <span>
+            in <span className="num">{num(r.matches, lang)}</span> of the team's{" "}
+            <span className="num">{num(r.team_played, lang)}</span> matches
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 function Profile({ players, initial }: { players: PlayerRow[]; initial: string }) {
   const m = useData();
   const [id, setId] = useState(initial);
@@ -518,6 +545,7 @@ function Profile({ players, initial }: { players: PlayerRow[]; initial: string }
           ]}
         />
       </div>
+      <PlayerPatterns id={p.id} />
       <div className="mt-4 grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
         {rows ? (
           <PassRoutes

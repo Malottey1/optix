@@ -106,9 +106,10 @@ def test_every_evidence_id_the_pages_show_has_an_event_row(out):
     assert ids <= set(ui["evidence"]), sorted(ids - set(ui["evidence"]))[:5]
 
 
-def test_measured_numbers_are_parsed_from_the_three_reports(out):
+def test_measured_numbers_are_parsed_from_the_four_reports(out):
     reports = {r["file"]: r for r in out[0]["measured"]}
-    assert set(reports) == {"docs/realism-report.md", "docs/robustness.md", "docs/verifier-recall.md"}
+    assert set(reports) == {"docs/realism-report.md", "docs/robustness.md", "docs/verifier-recall.md",
+                            "docs/pattern-recall.md"}
     for r in reports.values():
         assert r["tables"] and all(t["rows"] and len(t["headers"]) == len(t["rows"][0]) for t in r["tables"])
     text = (ROOT / "docs" / "verifier-recall.md").read_text()

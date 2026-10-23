@@ -60,6 +60,7 @@ export const INSIGHT_TYPES: readonly InsightType[] = [
   "pounce_sequence",
   "underperformance_stack",
   "recap_line",
+  "tactical_pattern",
 ];
 
 /** One line of insights.jsonl, checked against the required fields of contracts/insight.schema.json. */

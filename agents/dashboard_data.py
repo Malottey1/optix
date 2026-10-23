@@ -17,7 +17,13 @@ Sections:
             blocked claim, every language and tone) and the rule's plain reason
   reasons   rule_id -> plain sentence, per language
   evidence  event rows for every evidence id the dashboard can show
-  measured  the tables of docs/realism-report.md, docs/robustness.md and docs/verifier-recall.md
+  measured  the tables of docs/realism-report.md, docs/robustness.md, docs/verifier-recall.md and
+            docs/pattern-recall.md
+  patterns  the tactical pattern catalogue (family, icon, the Verifier rules that test its naive
+            claim, measured status, recall and false-positive rate from docs/data/pattern_recall.json),
+            the Tier 2 and skipped patterns with their reason, each team's signature patterns
+            (season share of its matches with a finding against the other teams' share) and the
+            player-level findings per player (matches with a finding)
   track     [clock_sec, x, y, team code] of every on-ball event in the match, in the acting team's
             attacking frame (event locations, not tracking: the ball marker on the Focus Pitch)
   visuals   plain exports of engine metrics the visuals draw (no new metric): the match's shots
@@ -27,15 +33,18 @@ Sections:
 """
 from __future__ import annotations
 
+import json
 import re
 from pathlib import Path
 
 from engine import metrics as M
+from engine import patterns as PAT
 from engine import threat as T
 from engine import flow as F
 from engine.claims import build_claim
 from engine.matchup import lane_matchup, matchup_claim
 from engine.profiles import soft_lane, team_style_profile
+from engine.rules import PATTERN_RULES
 from engine.style_labels import style_labels
 from engine.tables import match_events, team_events
 from engine.verifier import verdict
@@ -46,7 +55,7 @@ from .azure_status import status as azure_status
 from .narrative import languages, number_guard, render, rule_reasons
 
 ROOT = Path(__file__).resolve().parent.parent
-REPORTS = ("realism-report.md", "robustness.md", "verifier-recall.md")
+REPORTS = ("realism-report.md", "robustness.md", "verifier-recall.md", "pattern-recall.md")
 TRACK_TYPES = ("pass", "carry", "dribble", "shot", "duel", "tackle", "interception", "clearance", "block",
                "ball_recovery", "save", "claim")
 PLAYER_RULES = (("chances_created", "set_piece_inflation", 4), ("forward_passes", "wide_forward_passes", 15))
@@ -298,6 +307,86 @@ def measured_section(docs_dir: Path) -> list:
     return [parse_report(docs_dir / name) for name in REPORTS if (docs_dir / name).exists()]
 
 
+# ---------- tactical patterns ----------
+
+# a family is a team's signature when it is found in at least this share of the team's season
+# matches and at least SIGNATURE_LIFT times the other teams' share (docs/patterns.md)
+SIGNATURE_SHARE = 0.30
+SIGNATURE_LIFT = 2.0
+NOT_BUILT = (("P9", "sustained_box_pinning", "metric-territorial-stress", "not built"),
+             ("P10", "controlled_funneling", "style-wing-play", "not built"),
+             ("P11", "pressed_presser", "style-high-press", "not built"),
+             ("P12", "third_man_wall_pass", "pass", "not built"),
+             ("P13", "press_trap", "pressure", "not built"),
+             ("P14", "restless_rotation", "players", "not built"),
+             ("P15", "set_piece_dependence", "corner", "not built"),
+             ("P16", "press_resistant_passer", "pressure", "not built"),
+             ("P17", "direct_transition_spike", "style-direct-play", "not built"),
+             (None, "false_nine_vacuum", None, "skipped: its core, a centre-back drawn out of line, is not in event data"),
+             (None, "mid_block_passivity", None, "skipped: shape claims are not in event data; the rest overlaps P4"))
+
+
+def _recall_rows(path: Path) -> dict:
+    """family -> measured numbers from tools.pattern_recall's JSON (pooled as in docs/pattern-recall.md)."""
+    if not path.exists():
+        return {}
+    from tools.pattern_recall import HOLDOUT, TUNING, pool, status
+    raw = json.loads(path.read_text())
+    runs = {(int(k.split("@")[0]), float(k.split("@")[1])): v for k, v in raw.items()}
+    if not all((s, x) in runs for s in TUNING + HOLDOUT for x in (1.0, 0.5)):
+        return {}
+    tune, hold, half = pool(runs, TUNING, 1.0), pool(runs, HOLDOUT, 1.0), pool(runs, TUNING + HOLDOUT, 0.5)
+
+    def rate(k, n):
+        return _r(100 * k / n) if n else None
+    return {f: dict(status=status(tune[f], hold[f]),
+                    recall_tuning=rate(tune[f]["hits"], tune[f]["cases"]),
+                    recall_holdout=rate(hold[f]["hits"], hold[f]["cases"]),
+                    fp_tuning=rate(tune[f]["fps"], tune[f]["negatives"]),
+                    fp_holdout=rate(hold[f]["fps"], hold[f]["negatives"]),
+                    recall_half=rate(half[f]["hits"], half[f]["cases"]),
+                    cases_holdout=hold[f]["cases"]) for f in PAT.FAMILIES}
+
+
+def patterns_section(season, docs_dir: Path) -> dict:
+    measured = _recall_rows(docs_dir / "data" / "pattern_recall.json")
+    rules = {f: sorted(r for r, fam in PATTERN_RULES.items() if fam == f) for f in PAT.FAMILIES}
+    catalogue = [dict(family=f, icon=PAT.ICONS[f], rule_ids=rules[f], enabled=PAT.enabled(f),
+                      **(measured.get(f) or dict(status="not measured")))
+                 for f in PAT.FAMILIES]
+    found = {}                                    # (team, family) -> matches with a finding
+    played = {}
+    by_player = {}                                # (player, family) -> matches with a finding
+    for mid, m in season.matches.items():
+        for tid in (m["home_team_id"], m["away_team_id"]):
+            played[tid] = played.get(tid, 0) + 1
+            fs = PAT.detect_team(season, mid, tid)
+            for fam in {f.family for f in fs}:
+                found[(tid, fam)] = found.get((tid, fam), 0) + 1
+            for f in fs:
+                if f.player_id:
+                    by_player[(f.player_id, f.family)] = by_player.get((f.player_id, f.family), 0) + 1
+    signature = {}
+    for tid in sorted(season.teams):
+        rows = []
+        for f in PAT.FAMILIES:
+            n = found.get((tid, f), 0)
+            others = sum(v for (t, fam), v in found.items() if fam == f and t != tid)
+            others_played = sum(v for t, v in played.items() if t != tid)
+            share, league = n / played[tid], others / others_played if others_played else 0.0
+            if share >= SIGNATURE_SHARE and share >= SIGNATURE_LIFT * league:
+                rows.append(dict(family=f, icon=PAT.ICONS[f], matches=n, played=played[tid],
+                                 share=_pct(share), others_share=_pct(league)))
+        signature[season.code(tid)] = sorted(rows, key=lambda r: -r["share"])
+    players = {}
+    for (pid, fam), n in sorted(by_player.items()):
+        players.setdefault(pid, []).append(dict(family=fam, icon=PAT.ICONS[fam], matches=n,
+                                                team_played=played[season.players[pid]["team_id"]]))
+    return dict(catalogue=catalogue, signature=signature, players=players,
+                not_built=[dict(id=i, name=n, icon=ic, status=s) for i, n, ic, s in NOT_BUILT],
+                signature_rule=dict(min_share=_pct(SIGNATURE_SHARE), min_lift=SIGNATURE_LIFT))
+
+
 # ---------- visuals: plain exports of existing engine metrics ----------
 
 STATE_METRICS = ("field_tilt", "press_intensity")
@@ -387,4 +476,5 @@ def build(match_ds, season, match_id, insights, attempts, docs_dir: Path = ROOT 
                 track=[[e["clock_sec"], e["x_start"], e["y_start"], match_ds.code(e["team_id"])]
                        for e in match_events(match_ds)[match_id] if e["event_type"] in TRACK_TYPES],
                 visuals=visuals_section(match_ds, season, match_id, players),
-                azure_status=[{k: r[k] for k in ("id", "name", "tech", "state", "live", "note")} for r in azure_status()])
+                azure_status=[{k: r[k] for k in ("id", "name", "tech", "state", "live", "note")} for r in azure_status()],
+                patterns=patterns_section(season, docs_dir))

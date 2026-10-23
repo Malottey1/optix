@@ -83,3 +83,19 @@ def test_exporter_choice_from_the_environment(tmp_path):
     provider, kind = telemetry.build_provider({"APPLICATIONINSIGHTS_CONNECTION_STRING": fake})
     assert kind == "azure-monitor"
     provider.shutdown()
+
+
+def test_pattern_proposals_and_pattern_rules_have_spans(spans):
+    """The tactical pattern library: its proposals reach the Analyst span, and a naive claim blocked
+    by a pattern context rule carries that rule on its Verifier span."""
+    from engine.rules import PATTERN_RULES
+    s, sp = spans
+    pattern_ids = {i["claim_id"] for i in s.insights if i["insight_type"] == "tactical_pattern"
+                   and i["payload"]["claim_metric"].startswith("pat_")}
+    assert pattern_ids
+    proposed = {x.attributes["optix.claim_id"] for x in _by(sp, "analyst.propose")
+                if x.attributes.get("optix.insight_type") == "tactical_pattern"}
+    assert pattern_ids <= proposed
+    fired = {r for x in _by(sp, "verifier.check") if x.attributes["optix.status"] == "blocked"
+             for r in x.attributes["optix.rule_ids"] if r in PATTERN_RULES}
+    assert len(fired) >= 2, fired

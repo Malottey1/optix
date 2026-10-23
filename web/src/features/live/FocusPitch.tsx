@@ -4,7 +4,7 @@
 import { AnimatePresence, m as motion } from "motion/react";
 import { useRef } from "react";
 import { Glyph } from "../../components/icons";
-import { Icon, insightIcon } from "../../icons";
+import { Icon } from "../../icons";
 import { Arrowheads, InsightLayer, PitchLines, PX, PY, sideColor } from "../../components/pitch/Pitch";
 import { Chip, StatusChip, TeamDot } from "../../components/ui/badge";
 import { Panel } from "../../components/ui/card";
@@ -14,7 +14,7 @@ import { clock } from "../../lib/format";
 import { useT } from "../../lib/i18n";
 import { useReplay, useReplayFrame, type ReplayState } from "../../state/replay";
 import type { Insight } from "../../types/ui";
-import { statusOf, textOf } from "./shared";
+import { cardChip, statusOf, textOf } from "./shared";
 
 const TRAIL = 5;
 
@@ -75,7 +75,7 @@ function BallLayer({ frameTeam }: { frameTeam: string }) {
 
 function Caption({ ins }: { ins: Insight | null }) {
   const m = useData();
-  const { t, lang, typeLabel } = useT();
+  const { t, lang } = useT();
   if (!ins) {
     return <p className="text-[13.5px] text-ink-3">{t("none_yet")}</p>;
   }
@@ -106,15 +106,8 @@ function Caption({ ins }: { ins: Insight | null }) {
             {ins.teams.primary}
           </span>
           <Chip>
-            <Icon
-              name={insightIcon(
-                ins.insight_type,
-                m.chain(ins.claim_id).at(-1)?.claim.metric,
-                typeof ins.payload.metrics?.lane === "string" ? ins.payload.metrics.lane : null,
-              )}
-              size={14}
-            />
-            {typeLabel(ins.insight_type)}
+            <Icon name={cardChip(m, ins, lang).icon} size={14} />
+            {cardChip(m, ins, lang).label}
           </Chip>
           <StatusChip status={status} label={label} />
         </div>
