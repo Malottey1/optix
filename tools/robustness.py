@@ -120,9 +120,26 @@ def _recovery(ds, gt) -> dict:
     return out
 
 
+def verifier_counts(cases: dict) -> dict:
+    """The Verifier cases of one full league (tests/verifier_cases.counts_of) as "rule|trap|fired": n.
+    Match rules are judged on the plain claim ("claim" level); a planted case counts as a trap case
+    whether or not it is above the detection threshold (true + below_detection), as in
+    tools/verifier_recall.py's "all planted" column. Player rules: planted or not."""
+    out = Counter()
+    for key, n in cases.items():
+        parts = key.split("|")
+        if parts[0] == "claim":
+            _, rule, kind, fired = parts
+            out[f"{rule}|{int(kind != 'non_trap')}|{fired}"] += n
+        elif parts[0] == "player":
+            _, rule, planted, fired = parts
+            out[f"{rule}|{planted}|{fired}"] += n
+    return dict(out)
+
+
 def _full_job(seed: int) -> dict:
     from engine.tables import load
-    from tests.test_verifier_full import _counts
+    from tests.verifier_cases import counts_of
     from tests.test_full_league import _tables
     t0 = time.perf_counter()
     with tempfile.TemporaryDirectory() as d:
@@ -132,13 +149,13 @@ def _full_job(seed: int) -> dict:
         res = calibration.check(calibration.season_stats(_tables(out)))
         ds = load(out)
         pts = sorted(_points(ds.matches).values())
-        counts = _counts((ds, gt))
+        counts = verifier_counts(counts_of(ds, gt))
         recovery = _recovery(ds, gt)
     return dict(seed=seed, gen_sec=round(gen_sec, 1),
                 targets={k: dict(applicable=r["applicable"], passed=r["passed"], measured=r["measured"])
                          for k, r in res.items()},
                 champion=pts[-1], bottom=pts[0], recovery=recovery,
-                verifier={f"{rule}|{int(trap)}|{int(fired)}": n for (rule, trap, fired), n in counts.items()})
+                verifier=counts)
 
 
 def _showcase_job(seed: int, max_tries: int) -> dict:

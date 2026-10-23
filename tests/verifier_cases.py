@@ -168,6 +168,16 @@ def league_counts(seed: int) -> dict:
     with tempfile.TemporaryDirectory() as d:
         gt = main_full(seed, Path(d))
         ds = load(d)
+    return counts_of(ds, gt)
+
+
+def counts_of(ds, gt) -> dict:
+    """league_counts on a league already generated and loaded (`ds`) with its ground truth `gt`."""
+    from collections import Counter
+
+    from engine.claims import build_claim
+    from engine.verifier import verdict
+
     res = Counter()
     pipe = {}
     for mid in match_events(ds):

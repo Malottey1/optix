@@ -6,6 +6,25 @@ Green start: default suite 234 passed, 2 skipped (azure_live). Each task is its 
 
 ### Cleanup decisions
 
+**Task 1 (tools/robustness.py repaired)**
+- The full-league job now uses `tests/verifier_cases.counts_of(ds, gt)`, split out of
+  `league_counts(seed)` so it runs on the league the job already generated (no second generation).
+  `verifier_counts` maps its keys to the tool's `rule|trap|fired` format: match rules on the plain
+  claim ("claim" level), with true and below-detection planted cases both counted as trap cases (the
+  old helper's definition); player rules unchanged.
+- Proven on one full league (seed 2026, about 5 minutes): calibration targets, champion and bottom
+  points and every planted-pattern recovery are identical to the earlier run. In section 4, shot_spam
+  (21/31) and both player rules (4/4, 4/4) match docs/robustness.md exactly.
+- **field_tilt_with_lead differs: 9/16 now against 15/16 in the doc.** The doc's section 4 was
+  generated before 09c3836, which changed the Verifier's field-tilt rule (judged on the trailing
+  spell and on chaser threat; that commit's message reports claim-level recall 0.70 -> 0.53). So that
+  row of docs/robustness.md describes the earlier Verifier; the tool is not the cause. I left
+  docs/robustness.md unchanged: sections 1-3 are confirmed, and regenerating section 4 would change
+  numbers the Tech Blueprint shows. docs/verifier-recall.md has the current Verifier's recall.
+  Listed in docs/known-limitations.md; regenerate with `python -m tools.robustness` to refresh it.
+- `tests/test_robustness_tool.py` runs the job end to end on the small league (about 25 s, default
+  suite) and checks the key mapping, so a removed helper breaks a test instead of the tool.
+
 **Task 2 (deterministic exports)**
 - Chose "exclude, keep aside" over a fixed clock: a frozen `verified_at` would be a made-up wall
   time. `run_match` now moves `clock.emitted_latency_ms` (per insight) and
