@@ -1,0 +1,23 @@
+{
+  "_about": "Intent and causal wording that never appears in claims, templates, UI text, phraser prompts or phraser outputs. Event data shows what was recorded, not why. Matched case-insensitively on whole words (a phrase matches as a whole). Used by tests/test_banned_language.py (template linter), agents/output_guard.py (model replies) and tools/check_web.py (rendered UI). Use observational verbs instead: recorded, played, switched, won back, conceded, completed.",
+  "en": [
+    "deliberately", "deliberate", "intentionally", "intentional", "on purpose",
+    "forces", "forced", "forcing", "in order to", "because",
+    "trap", "traps", "trapped", "trapping", "plan", "plans", "planned",
+    "tactic to", "designed to"
+  ],
+  "es": [
+    "deliberadamente", "intencionadamente", "intencionalmente", "a propósito", "adrede",
+    "obliga", "obligan", "obligó", "obligado", "obligando", "fuerza a", "forzó", "forzado", "forzando",
+    "con el fin de", "a fin de", "para poder", "porque", "debido a",
+    "trampa", "trampas", "plan", "planes", "planeado",
+    "táctica para", "diseñado para", "diseñada para"
+  ],
+  "fr": [
+    "délibérément", "intentionnellement", "exprès", "à dessein", "volontairement",
+    "force à", "forcé", "forcée", "forcés", "forçant", "oblige", "obligé", "obligée",
+    "afin de", "dans le but de", "parce que", "à cause de",
+    "piège", "pièges", "piéger", "plan", "plans", "planifié",
+    "tactique pour", "conçu pour", "conçue pour"
+  ]
+}

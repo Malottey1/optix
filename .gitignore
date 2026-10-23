@@ -21,6 +21,7 @@ local.settings.json
 
 # Generated data (regenerate with data_gen/)
 data/generated/
+data/generated-*/
 *.parquet
 *.sqlite
 

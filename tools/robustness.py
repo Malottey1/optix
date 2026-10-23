@@ -189,7 +189,7 @@ def _pooled_table(full: list) -> list:
         for key, n in f["verifier"].items():
             rule, trap, fired = key.split("|")
             pooled[(rule, trap == "1", fired == "1")] += n
-    L = ["| Rule | True cases | Recall | 95% CI | Non-trap cases | False-fire rate | 95% CI | Precision | Per-seed recall |",
+    L = ["| Rule | True cases | Recall | 95% CI | Unplanted cases | False-fire rate | 95% CI | Precision | Per-seed recall |",
          "|---|---|---|---|---|---|---|---|---|"]
     for rule in RULES:
         tp, fn = pooled[(rule, True, True)], pooled[(rule, True, False)]
@@ -285,7 +285,7 @@ def render(small: dict, full: list, showcase: list, extra: list = ()) -> str:
     found = [s for s in showcase if s["found"]]
     if found:
         keys = list(found[0]["margins"])
-        L += ["| Trap threshold | " + " | ".join(f"Seed {s['seed']}" for s in found) + " |",
+        L += ["| Planted-case threshold | " + " | ".join(f"Seed {s['seed']}" for s in found) + " |",
               "|" + "---|" * (1 + len(found))]
         for k in keys:
             m = found[0]["margins"][k]
@@ -301,9 +301,9 @@ def render(small: dict, full: list, showcase: list, extra: list = ()) -> str:
     L.append("")
 
     # 4. pooled verifier
-    L += [f"## 4. Verifier trap rules pooled over {len(full)} full leagues (seeds {', '.join(str(f['seed']) for f in full)})", "",
+    L += [f"## 4. Verifier context rules pooled over {len(full)} full leagues (seeds {', '.join(str(f['seed']) for f in full)})", "",
           "Cases as in tests/test_verifier_full.py. Recall = fired / true cases; false-fire rate = fired / "
-          "non-trap cases. Intervals are Wilson 95%.", ""] + _pooled_table(full)
+          "unplanted cases. Intervals are Wilson 95%.", ""] + _pooled_table(full)
     if extra:
         allf = list(full) + list(extra)
         L += ["", f"The same pooled over {len(allf)} full leagues (adding seeds "

@@ -21,7 +21,8 @@ width in Chromium, save screenshots to docs/screens-v5/, and report every gate:
     data-claim-id);
   * switching language never changes a number, and every sentence passes the number guard;
   * SVG text renders at 11 px or more at phone width;
-  * no forbidden word (real club names, prediction or betting language, invented statistics);
+  * no forbidden word (real club names, prediction or betting language, invented statistics) and no
+    banned intent or causal wording (contracts/banned_language.json, all three languages);
   * the page still works with storage blocked, and with reduced motion it does not autoplay;
   * the Live Center's first screen at 1920x1080 and 1600x900 shows every Live visual whole, with no
     overlapping text (check_first_screen);
@@ -50,6 +51,7 @@ from collections import Counter
 from pathlib import Path
 from urllib.parse import urlparse
 
+from contracts import banned
 from tools.check_dashboard import (FOCUSABLE_JS, FORBIDDEN, FRAMES_JS, OVERLAP_JS, _context, _shrink_png, _tab_order,
                                    chromium_path, load_sources, numbers_of, serve, untraced_numbers)
 
@@ -427,7 +429,7 @@ def check_route(browser, base, route, width_name, src, screens: Path | None, axe
     r["overlap"] = page.evaluate(OVERLAP_JS)
     r["untraced"] = untraced_numbers(page.evaluate("() => document.body.innerText"), src)
     full = page.evaluate("() => document.body.textContent")
-    r["forbidden"] = [wd for wd in FORBIDDEN if re.search(rf"\b{re.escape(wd)}", full, re.I)]
+    r["forbidden"] = [wd for wd in FORBIDDEN if re.search(rf"\b{re.escape(wd)}", full, re.I)] + banned.find(full)
     r["images"] = page.evaluate(IMG_JS)
     r["attrs"] = {sel: page.evaluate("([s, a]) => [...document.querySelectorAll(s)].filter((e) => e.getAttribute(a)).length",
                                      [sel, attr]) for sel, attr in DATA_ATTRS[route]}
@@ -494,7 +496,8 @@ def check_language_switch(browser, base, src) -> dict:
             p = number_guard(t, params, lang)
             if p:
                 guard.append((iid, lang, p))
-    forbidden = [wd for wd in FORBIDDEN if re.search(rf"\b{re.escape(wd)}", page.evaluate("() => document.body.textContent"), re.I)]
+    body = page.evaluate("() => document.body.textContent")
+    forbidden = [wd for wd in FORBIDDEN if re.search(rf"\b{re.escape(wd)}", body, re.I)] + banned.find(body)
     for route in ROUTES:
         nums = {}
         for lang in ("en", "fr"):

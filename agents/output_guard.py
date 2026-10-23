@@ -9,6 +9,8 @@ Checks, per language:
   * entities: no team or player outside the claim (a known name or code that is not one of the
     claim's own is rejected);
   * forbidden language: predictions, betting and outcome talk in en/es/fr;
+  * banned intent and causal wording (contracts/banned_language.json: "because", "on purpose",
+    "forced", "trap", ...), whole words, in the requested language and in English;
   * length: between MIN_LEN and MAX_LEN characters, one sentence;
   * language: the sentence reads as the requested language (function-word count, see `language_of`).
 """
@@ -16,6 +18,8 @@ from __future__ import annotations
 
 import re
 import unicodedata
+
+from contracts import banned
 
 from .narrative import number_guard
 
@@ -100,6 +104,8 @@ def check(text: str, claim: dict, language: str, known_entities: set, names: dic
             problems.append(f"entity outside the claim: {ent}")
     low = _norm(t)
     problems += [f"forbidden phrase: {p.strip()}" for p in FORBIDDEN.get(language, ()) if p in low]
+    hits = banned.find(t, language) + ([] if language == "en" else banned.find(t, "en"))
+    problems += [f"banned wording: {w}" for w in dict.fromkeys(hits)]
     got = language_of(t)
     if got != language:
         problems.append(f"language: reads as {got or 'unknown'}, wanted {language}")

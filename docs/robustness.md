@@ -87,7 +87,7 @@ Player and team plant misses: none.
 
 Search from offset 0; a match qualifies when all five traps fire with every threshold cleared by at least 10% inside the realism envelope (data_gen/generate.py).
 
-| Trap threshold | Seed 2026 | Seed 2027 | Seed 2028 |
+| Planted-case threshold | Seed 2026 | Seed 2027 | Seed 2028 |
 |---|---|---|---|
 | field_tilt_while_leading.chaser_field_tilt (>= 0.68) | 0.794 (+17%) | 0.858 (+26%) | 0.774 (+14%) |
 | field_tilt_while_leading.chaser_f3_passes (>= 60) | 127 (+112%) | 151 (+152%) | 89 (+48%) |
@@ -107,11 +107,11 @@ Search from offset 0; a match qualifies when all five traps fire with every thre
 | seeds tried | 1384 | 2724 | 1090 |
 | search time s | 70.3 | 116.9 | 56.8 |
 
-## 4. Verifier trap rules pooled over 3 full leagues (seeds 2026, 2027, 2028)
+## 4. Verifier context rules pooled over 3 full leagues (seeds 2026, 2027, 2028)
 
-Cases as in tests/test_verifier_full.py. Recall = fired / true cases; false-fire rate = fired / non-trap cases. Intervals are Wilson 95%.
+Cases as in tests/test_verifier_full.py. Recall = fired / true cases; false-fire rate = fired / unplanted cases. Intervals are Wilson 95%.
 
-| Rule | True cases | Recall | 95% CI | Non-trap cases | False-fire rate | 95% CI | Precision | Per-seed recall |
+| Rule | True cases | Recall | 95% CI | Unplanted cases | False-fire rate | 95% CI | Precision | Per-seed recall |
 |---|---|---|---|---|---|---|---|---|
 | shot_spam | 88 | 0.64 | 0.53-0.73 | 1938 | 0.051 | 0.042-0.061 | 0.36 | 21/31, 21/30, 14/27 |
 | field_tilt_with_lead | 62 | 0.73 | 0.60-0.82 | 1938 | 0.042 | 0.034-0.052 | 0.36 | 15/16, 12/21, 18/25 |
@@ -120,7 +120,7 @@ Cases as in tests/test_verifier_full.py. Recall = fired / true cases; false-fire
 
 The same pooled over 5 full leagues (adding seeds 2029, 2030, used for this table only):
 
-| Rule | True cases | Recall | 95% CI | Non-trap cases | False-fire rate | 95% CI | Precision | Per-seed recall |
+| Rule | True cases | Recall | 95% CI | Unplanted cases | False-fire rate | 95% CI | Precision | Per-seed recall |
 |---|---|---|---|---|---|---|---|---|
 | shot_spam | 149 | 0.64 | 0.56-0.71 | 3230 | 0.048 | 0.041-0.056 | 0.38 | 21/31, 21/30, 14/27, 22/31, 17/30 |
 | field_tilt_with_lead | 107 | 0.69 | 0.60-0.77 | 3230 | 0.039 | 0.033-0.046 | 0.37 | 15/16, 12/21, 18/25, 14/25, 15/20 |

@@ -1,5 +1,36 @@
 # Progress log
 
+## Patterns (branch `ui-visuals-patterns`, from `ui-visuals-icons` 144ba45; local tag `pre-patterns`)
+
+Tactical pattern library (PART B of the icons + patterns brief). Checklist per pattern:
+docs/patterns-progress.md. Plan and audit: docs/patterns-plan.md.
+
+### Pattern decisions
+
+- Setup: `pre-patterns` is a local tag on the last icons commit; the branch starts there. Green start
+  reused the icons gates run minutes before on the same tree (default suite 286 passed / 2 skipped,
+  `npm run build` green): no file changed between them.
+- Baseline data for the byte-identity proof was generated before any generator change:
+  `data/generated-2026-base/` and `data/generated-2027-base/` (season + showcase each, gitignored by
+  the new `data/generated-*/` rule). The 2026 showcase there is byte-identical to the committed
+  data/showcase. Peak RSS 141 MB (2026) and 152 MB (2027, showcase search from 0: 2724 tries, 69 s).
+- Banned wording: one file, contracts/banned_language.json (en/es/fr), one matcher
+  (contracts/banned.py, whole words, case-insensitive, phrases match across spaces). Wired into the
+  template linter (tests/test_banned_language.py), the phraser output guard (each banned word in
+  each language is an adversarial test; the requested language and English are both checked) and
+  the check_web forbidden scan (all three lists on every page).
+- "plan" is matched as a whole word only, so "explanation" and "planet" are not hits.
+- The phraser system prompt gained one rule (say what was recorded, never why) and
+  PROMPT_VERSION moved to p2. The phrasing cache holds no model sentences, so nothing is invalidated.
+- Existing UI wording that the new scan would catch:
+  - TechPage "Not drawn, because the data ..." became "Not drawn (the data cannot support them)";
+  - the robustness and verifier-recall tables said "Trap threshold", "Non-trap cases" and
+    "Verifier trap rules". These are the engine's planted test cases, not a team's behaviour, but
+    the scan cannot tell the two apart, so the headings now say "Planted-case threshold",
+    "Unplanted cases" and "Verifier context rules" (tools and docs);
+  - code comments ("focus trap" in ui/sheet.tsx, "on purpose" in two comments) are not UI text and
+    are left alone.
+
 ## Icons (branch `ui-visuals-icons`, from `ui-visuals-brand` f376c6b; local tag `pre-icons`)
 
 Green start: default suite 279 passed, 2 skipped (azure_live); `npm run build` passes. Item status

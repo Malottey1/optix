@@ -296,7 +296,7 @@ def render(results) -> str:
          "claim scopes): v2 = before the recall work; v3 = non-penalty shot_spam, trailing box-entry "
          "share and the full-time tilt window; v4 = v3 plus the chaser-threat condition (the current "
          "code). Seeds 2026-2028 were used to choose the changes; 2029-2030 are the hold-out.", "",
-         "Unplanted fire rate: share of non-trap (match, team) cases on which the rule fires; the fired "
+         "Unplanted fire rate: share of unplanted (match, team) cases on which the rule fires; the fired "
          "cases are split by the outcome label of the case's worst fire (J justified / U unclear / FP "
          "false positive). Outcome label (field tilt only): the chaser's non-penalty xG in the scope "
          "against the league expectation for the same time in each game state; justified <= 1x, false "

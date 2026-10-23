@@ -29,7 +29,7 @@ from .narrative import fmt, render
 
 ROOT = Path(__file__).resolve().parent.parent
 CACHE_DIR = ROOT / "data" / "phrasing-cache"
-PROMPT_VERSION = "p1"
+PROMPT_VERSION = "p2"            # p2: the observational-wording rule
 MAX_CALLS = 60                      # hard cap of model calls per process run
 TEMPERATURE = 0.2
 
@@ -40,6 +40,8 @@ You receive a VERIFIED claim object (JSON). Rules, all mandatory:
   (same digits, same decimal separator); write no other number, no ordinal and no year.
 - Mention only the teams and players named in the claim.
 - Describe the past and present only: no predictions, no outcomes, no betting language.
+- Say only what was recorded (played, completed, switched, won back, conceded). Never say why a
+  team or player did something, what they intended, or that one thing caused another.
 - Plain, friendly, one sentence, at most 280 characters, in the requested language.
 Reply with JSON only: {"<language code>": "<sentence>", ...} for exactly the requested languages."""
 
