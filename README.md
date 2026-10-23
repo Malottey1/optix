@@ -14,7 +14,13 @@ Optix is a multi-agent engine that turns synthetic football event data into live
 - **Fact check:** does the event log support the claim?
 - **Context check:** is it true but misleading given game state, sample size or metric limits? (For example, high field tilt from a team that is trailing and passing around a deep block.)
 
-> Status: data generator (small and 20-team league), engine (metrics, effect sizes, xT, flow), Verifier with nine context rules, agents with a block-and-revise loop, timed insight stream in English, Spanish and French, and a dashboard in `web/` (Vite, React, TypeScript: Live Center, Team Board, Player Deck, Tech Blueprint). See `docs/PROGRESS.md`.
+<p align="center">
+  <img src="docs/screens-v4/home_desktop.png" alt="The Optix Home page: headline, proof row from the verification ledger, feature cards and the five fictional clubs" width="820" />
+</p>
+
+<sub>Screenshot of the Home page (`#/`). Synthetic data. The line-up is illustrative, AI-assisted artwork, audited for maker marks (docs/brand-audit.md); the clubs and players are fictional.</sub>
+
+> Status: data generator (small and 20-team league), engine (metrics, effect sizes, xT, flow), Verifier with nine context rules, agents with a block-and-revise loop, timed insight stream in English, Spanish and French, and a dashboard in `web/` (Vite, React, TypeScript: Home, Live Center, Team Board, Player Deck, Tech Blueprint). See `docs/PROGRESS.md`.
 
 ## Who it is for
 
@@ -76,7 +82,7 @@ python -m engine.report --team AUR --opponent NTG        # style profiles and ma
 python -m agents.personalize --mode casual --lang es --favorite NTG   # personalized feed in the terminal
 python -m data_gen.generate --league full                # 20 teams, 380 matches (data/full, ~15 s)
 cd web && npm run build && npm run preview               # production build in web/dist, served on :4173
-pip install -r requirements-ui.txt && python -m tools.check_web     # headless gates on every route + docs/screens-v3/
+pip install -r requirements-ui.txt && python -m tools.check_web     # headless gates on every route + docs/screens-v4/
 ```
 
 What you get: `out/insights.jsonl` (timed insights, contracts/insight.schema.json), `out/claims.jsonl`

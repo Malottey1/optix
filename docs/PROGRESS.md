@@ -140,6 +140,27 @@ Green start: default suite 239 passed, 2 skipped (azure_live); `npm run build` p
   - the social image sizes and GitHub's 1 MB cap;
   - that no original, review crop or players-trio file is tracked.
 
+**Gates**
+- check_web extended: Home at 1440, 390, 1920x1080 and 1600x900; an image gate (alt, width and height,
+  lazy below the hero, fetchpriority on the hero; metadata and size budgets of every shipped image);
+  a badge gate (mini-mark and crest at 24 and 32 px draw); a hero contrast gate (text hidden, the
+  boxes behind it captured, 99.5th-percentile luminance against the text colour, at least 4.5:1).
+  With the scrim removed, the sub-line measured 2.58:1 and the gate failed, so it can fail.
+- The first full run's screenshots showed empty kit slots and missing crests below the fold: lazy
+  images had not loaded when the full-page shot was taken. check_web now scrolls through the page and
+  waits (capped at 3 s, since display:none images never load) before a full-page shot. The first
+  attempt waited without a cap and hung; it was stopped and rerun.
+- The Home translate drawing used 8 px labels at 390 px, which the gate flagged; now 11 px.
+- Results: lint, typecheck, Vitest (55), build pass; initial JS 164.5 KB gzip; frames p95 16.8 ms at
+  1440 and 1080p; default Python suite 279 passed, 2 skipped (azure_live); mutation proof catches
+  every changed visual; image gate 35 files, 0 problems (largest hero-lineup-1600.webp, 208 KB;
+  800 px 82 KB); hero contrast 9.5 to 17.3:1; secret scan (tree and history) 0 findings; repo size:
+  no tracked file over 2 MB, largest design/social/devpost-thumbnail-1500x1000.png (1.29 MB).
+- Full-page phone screenshots show the fixed bottom tab bar part-way down the page: a full-page
+  capture pins it to the first viewport. It is not a layout fault.
+- tools/image_meta.py holds the metadata reader shared by the tests and check_web; Pillow is now in
+  requirements-dev.txt because the default suite reads the images.
+
 ## Cleanup (branch `ui-visuals-fixes`, from main 1afdc0d)
 
 Green start: default suite 234 passed, 2 skipped (azure_live). Each task is its own commit.

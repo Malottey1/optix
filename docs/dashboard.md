@@ -86,6 +86,7 @@ move every frame (clock text, ball marker and trail, momentum playhead) are writ
 
 | Route | What it shows | Source |
 |---|---|---|
+| `#/` Home (default) | What Optix is in one screen: the audited line-up artwork with the headline, sub-line and two buttons on a dark scrim (below the picture on phones), the caption "Illustrative artwork. Clubs and players are fictional.", a proof row (claim drafts checked, rewritten after verification, verified insights published), three feature cards with inline SVG drawings, and the five clubs linking to the Team Board. en / es / fr. Hero is WebP at 1600 and 800 px with `srcset` and `fetchpriority=high`; every other image is lazy | `ui.json` ledger, teams |
 | `#/live` Live Center | Scoreboard with a momentum tug-of-war; play, pause, scrub (with goal and insight markers) and speed; SVG Focus Pitch with the selected or latest insight's evidence and a ball marker at the latest event location (an event-based proxy, labelled as such); momentum chart; Perimeter Lock; rhythm pulse; pinned-in-own-half gauges; shot blocks; the stream of verified cards (matchup cards show mismatch crosshairs, xG cards shot blocks, the rhythm card a pulse). Each card has a headline (the stream's sentence), an evidence summary, and an evidence drawer with a mini pitch, the evidence chain (nodes by event type, click to pin on the pitch), the claim object, every verification attempt and the exact evidence events. A card whose first attempt was blocked shows "Rewritten after verification", a Before / After toggle and the rule's reason in one sentence | `insights.jsonl`, `claims.jsonl`, `timeline.json`, `ui.json` (rewrites, reasons, evidence, track) |
 | `#/teams` Team Board | Head to head first: any attacker and defender, mismatch crosshairs (entries up, conceded down, crosshair on the verified claim's lane, attacker's frame with the mirror handled), the verified matchup sentence and the per-lane table behind a disclosure. Game-state swaps (field tilt and press intensity, trailing to leading). Zone shift of the showcase match, half by half. Per team: style labels with their rule and numbers in a tooltip (`engine/style_labels.py`); entry lanes made and conceded against the league; soft lane in both frames | `ui.json` teams |
 | `#/players` Player Deck | Only involvement, pass quality and chances created. The Verifier's context cards for the volume passer and the set-piece creators (Before / After, reason, chance split, pass routes, evidence); a player profile with pass routes (forward passes or chances) and a percentile pizza; volume against quality; where the chances come from; the full sortable, filterable table | `ui.json` players |
@@ -96,6 +97,8 @@ number-guarded sentences plus small interface dictionaries), reduce motion, show
 high contrast and density. They are saved in localStorage inside try/catch, so the app works when
 storage is blocked. The tray says that the Team Board, Player Deck and Tech Blueprint explanations are
 English only.
+
+Brand: the header wordmark (inline SVG, `currentColor`) links to Home. Club crests come from `TeamBadge` (web/src/components/brand/TeamBadge.tsx): the crest image from 40 px up, a disc in the club accent with the club code below 40 px, or when the image fails or the code is unknown. When the name or code is shown beside it, the badge is decorative (`alt=""`). Club accents (`--team-*`) are never used to mark a verdict. Image sources, the mark audit and licences: design/ASSETS.md and docs/brand-audit.md.
 
 View options for screenshots and tests: `#/live?t=2760&select=ins_0009&lang=es&play=1`.
 
@@ -109,7 +112,8 @@ View options for screenshots and tests: `#/live?t=2760&select=ins_0009&lang=es&p
 
 `python -m tools.check_web` (needs `pip install -r requirements-ui.txt` and a built `web/dist`) serves
 `web/dist` and opens every route at 1440 px and 390 px in headless Chromium, with axe-core injected.
-It writes `docs/screens-v3/<route>_<desktop|mobile>.png` plus `live_1080p.png`, each under 300 KB.
+It writes `docs/screens-v4/<route>_<desktop|mobile|1080p>.png` (Home also at 1600x900, and
+`badges_24_32.png`), each under 300 KB; lazy images are scrolled into view before a full-page shot.
 It fails on any of:
 - a console error, page error, failed request, HTTP error, or request to a host other than localhost;
 - served by the Optix API: a chip other than Live stream, fewer than three cards arriving over SSE, no
@@ -129,6 +133,14 @@ It fails on any of:
 - a forbidden word (real club names, prediction or betting language, invented statistics such as "60,000");
 - an error with storage blocked or with reduced motion;
 - initial JavaScript of 250 KB gzip or more.
+- an image without alt text, without width and height, or decorative (`alt=""`) where no name is beside
+  it; a non-hero image that is not lazy; a Home hero without `fetchpriority=high`;
+- a shipped image with EXIF, XMP, ICC or text metadata, or over its size budget (300 KB; the hero
+  220 KB at 1600 px and 90 KB at 800 px);
+- a badge at 24 or 32 px that does not draw (mini-mark and crest, `check_badges`);
+- Home hero text below 4.5:1 against the picture behind it at 1440, 1920x1080, 1600x900 or 390
+  (`check_hero_contrast`: the text is hidden, the boxes it covered are captured, and the 99.5th
+  percentile background luminance is compared with the text colour).
 
 It also records replay frame times (p50 / p95) while the match plays at fast speed.
 
