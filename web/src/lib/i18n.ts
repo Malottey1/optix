@@ -131,9 +131,8 @@ const en = {
   home_f3_title: "Translation never changes a number",
   home_f3_body: "A guard re-checks every number in the English, Spanish and French sentences.",
   home_proof: "In the showcase match",
-  home_proof_attempts: "claims checked by the Verifier",
+  home_proof_attempts: "claim drafts checked by the Verifier",
   home_proof_revised: "rewritten after verification",
-  home_proof_blocked: "first drafts blocked",
   home_proof_published: "verified insights published",
 };
 
@@ -267,9 +266,8 @@ const es: Record<Key, string> = {
   home_f3_title: "La traducción nunca cambia una cifra",
   home_f3_body: "Un control vuelve a comprobar cada cifra en las frases en inglés, español y francés.",
   home_proof: "En el partido de muestra",
-  home_proof_attempts: "afirmaciones comprobadas por el verificador",
+  home_proof_attempts: "borradores de afirmaciones comprobados por el verificador",
   home_proof_revised: "reescritas tras la verificación",
-  home_proof_blocked: "primeras versiones bloqueadas",
   home_proof_published: "análisis verificados publicados",
 };
 
@@ -401,9 +399,8 @@ const fr: Record<Key, string> = {
   home_f3_title: "La traduction ne change jamais un chiffre",
   home_f3_body: "Un contrôle revérifie chaque chiffre des phrases en anglais, espagnol et français.",
   home_proof: "Dans le match vitrine",
-  home_proof_attempts: "affirmations contrôlées par le vérificateur",
+  home_proof_attempts: "brouillons d’affirmations contrôlés par le vérificateur",
   home_proof_revised: "réécrites après vérification",
-  home_proof_blocked: "premières versions bloquées",
   home_proof_published: "analyses vérifiées publiées",
 };
 

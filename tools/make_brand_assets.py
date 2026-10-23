@@ -238,7 +238,31 @@ def teams():
         print(f"{code}: crest {crest.size}, kits home/away")
 
 
-STEPS = {"logos": logos, "icons": icons, "teams": teams}
+# ---------------------------------------------------------------- hero
+
+HERO_BUDGET = {1600: 220_000, 800: 90_000}  # bytes: desktop and mobile file budgets
+
+
+def _webp_within(im: Image.Image, limit: int) -> bytes:
+    """Highest WebP quality (from 90 down) whose file fits the budget."""
+    for q in range(90, 30, -4):
+        b = io.BytesIO()
+        clean_copy(im).save(b, "WEBP", quality=q, method=6)
+        if b.tell() <= limit:
+            return b.getvalue()
+    raise SystemExit(f"hero does not fit {limit} bytes")
+
+
+def hero():
+    src = Image.open(SRC / "hero-lineup-clean.png").convert("RGB")  # audited; see docs/brand-audit.md
+    for w, limit in HERO_BUDGET.items():
+        im = src.resize((w, round(src.height * w / src.width)), Image.LANCZOS)
+        data = _webp_within(im, limit)
+        (BRAND / f"hero-lineup-{w}.webp").write_bytes(data)
+        print(f"hero {w}: {im.size}, {len(data) // 1024} KB")
+
+
+STEPS = {"logos": logos, "icons": icons, "teams": teams, "hero": hero}
 
 
 def main(argv):

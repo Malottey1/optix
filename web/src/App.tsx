@@ -1,5 +1,5 @@
-// Loads the match once through a StreamSource, then routes by hash (#/live, #/teams, #/players,
-// #/tech). View options for screenshots and tests: #/live?t=2760&select=ins_0009&lang=es&play=1
+// Loads the match once through a StreamSource, then routes by hash (#/ home, #/live, #/teams,
+// #/players, #/tech; anything else goes home). View options for screenshots and tests: #/live?t=2760&select=ins_0009&lang=es&play=1
 import { LazyMotion, MotionConfig, domAnimation } from "motion/react";
 import { Suspense, lazy, useEffect, useMemo, useState } from "react";
 import { HashRouter, Navigate, Route, Routes, useLocation } from "react-router";
@@ -16,6 +16,7 @@ import { motionReduced, setSetting, useSettings } from "./state/settings";
 import { useSource } from "./state/source";
 import { LANGS, type Insight, type Lang, type MatchBundle } from "./types/ui";
 
+const HomePage = lazy(() => import("./features/home/HomePage"));
 const LivePage = lazy(() => import("./features/live/LivePage"));
 const TeamsPage = lazy(() => import("./features/teams/TeamsPage"));
 const PlayersPage = lazy(() => import("./features/players/PlayersPage"));
@@ -71,11 +72,12 @@ function Pages({ model }: { model: MatchModel }) {
     <DataContext.Provider value={model}>
       <Suspense fallback={<Loading />}>
         <Routes>
+          <Route index element={<HomePage />} />
           <Route path="/live" element={<LivePage />} />
           <Route path="/teams" element={<TeamsPage />} />
           <Route path="/players" element={<PlayersPage />} />
           <Route path="/tech" element={<TechPage />} />
-          <Route path="*" element={<Navigate to="/live" replace />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>
     </DataContext.Provider>

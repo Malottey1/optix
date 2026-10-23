@@ -93,3 +93,31 @@ describe("Live stream source", () => {
     act(() => useSource.setState({ mode: "replay", fellBack: false }));
   });
 });
+
+describe("Home", () => {
+  it("is the default route; the proof row reads the ledger and keeps its numbers in every language", async () => {
+    window.location.hash = "";
+    render(<App source={source()} />);
+    const page = await screen.findByText((_, el) => el?.getAttribute("data-page") === "home", undefined, {
+      timeout: 5000,
+    });
+    const value = (k: string) => page.querySelector(`[data-proof='${k}'] dd`)?.textContent;
+    expect(value("attempts")).toBe(String(ui.ledger.attempts));
+    expect(value("revised")).toBe(String(ui.ledger.counts.revised));
+    expect(value("published")).toBe(String(ui.ledger.total));
+    const hero = page.querySelector("img[data-hero]") as HTMLImageElement;
+    expect(hero.getAttribute("fetchpriority")).toBe("high");
+    expect(hero.getAttribute("width")).toBe("1600");
+    expect(hero.alt).not.toBe("");
+    for (const img of page.querySelectorAll("img")) {
+      expect(img.hasAttribute("alt"), img.outerHTML).toBe(true);
+      expect(img.getAttribute("width") && img.getAttribute("height"), img.outerHTML).toBeTruthy();
+    }
+    act(() => setSetting("lang", "fr"));
+    await waitFor(() => expect(page.querySelector("h1")?.textContent).toMatch(/données/));
+    expect(value("attempts")).toBe(String(ui.ledger.attempts));
+    act(() => setSetting("lang", "en"));
+    expect(page.querySelector("a[href='#/live']")).toBeTruthy();
+    expect(page.querySelectorAll("[data-team-badge]").length).toBe(5);
+  });
+});

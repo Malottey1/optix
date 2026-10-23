@@ -81,6 +81,32 @@ Green start: default suite 239 passed, 2 skipped (azure_live); `npm run build` p
 - Prettier was run on the touched feature files and also reformatted two files that were already
   unformatted (Flow.tsx, Scoreboard.tsx); whitespace only.
 
+**Step 4 (Home at #/)**
+- Home is the index route; unknown paths now go to #/ instead of #/live. #/live, #/teams, #/players
+  and #/tech are unchanged, and deep links with ?t= / select / lang still work. The header wordmark
+  links to Home. The nav bars keep their four entries: Home is reached through the logo.
+- **Hero:** hero-lineup-clean (not BLOCKED). On large screens the picture fills the hero, and a dark
+  left-to-right gradient (0.92 to 0.78 alpha over the left 38%, gone by 62%) carries the text over the
+  AUR and NTG bands. The two left players are dimmed by it: that is the price of never putting text
+  on a bright band. On phones the whole 4:3 picture is shown, with the text below it on the dark
+  surface. Text contrast is measured on pixels in the gate (Step 5 / gates).
+- Hero files: WebP at 1600 px (203 KB) and 800 px (79 KB), the highest quality from 90 down that fits
+  220 KB and 90 KB, with srcset/sizes, width/height and fetchpriority=high. Every other image is lazy.
+- **Proof row** from ui.json's ledger:
+  - claim drafts checked (attempts);
+  - rewritten after verification (counts.revised);
+  - verified insights published (total).
+  "Drafts" is used because attempts include the revised second drafts. No number is typed in.
+- Three feature cards with small inline SVG drawings in the app's tokens; they contain no digits. A
+  clubs strip shows the five crests (48 px) with names, linking to the Team Board. The caption
+  "Illustrative artwork. Clubs and players are fictional." sits under the hero. Home names no Azure
+  feature.
+- The no-photo fallback was not built: the hero is not BLOCKED, and the brief asks for the fallback
+  only in that case.
+- All Home strings are in en/es/fr through the interface dictionary (no digits, as its test
+  requires). A Vitest test checks that Home is the default route, that the proof values equal the
+  ledger and stay the same in French, the hero attributes, and alt plus width/height on every image.
+
 ## Cleanup (branch `ui-visuals-fixes`, from main 1afdc0d)
 
 Green start: default suite 234 passed, 2 skipped (azure_live). Each task is its own commit.
