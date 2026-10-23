@@ -42,6 +42,7 @@ from engine.verifier import verdict
 from engine.zones import FINAL_THIRD_X, LANES, MIDDLE_THIRD_X, THIRDS, lane_of, third_of
 
 from .analyst import REVISIONS
+from .azure_status import status as azure_status
 from .narrative import languages, number_guard, render, rule_reasons
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -385,4 +386,5 @@ def build(match_ds, season, match_id, insights, attempts, docs_dir: Path = ROOT 
                 evidence=evidence_section(ids, (match_ds, season)), measured=measured_section(docs_dir),
                 track=[[e["clock_sec"], e["x_start"], e["y_start"], match_ds.code(e["team_id"])]
                        for e in match_events(match_ds)[match_id] if e["event_type"] in TRACK_TYPES],
-                visuals=visuals_section(match_ds, season, match_id, players))
+                visuals=visuals_section(match_ds, season, match_id, players),
+                azure_status=[{k: r[k] for k in ("id", "name", "tech", "state", "live", "note")} for r in azure_status()])

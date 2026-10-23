@@ -278,6 +278,17 @@ export interface UiData {
   measured: Report[];
   track: TrackEntry[];
   visuals: Visuals;
+  azure_status: AzureStatus[];
+}
+
+/** One Microsoft / Azure component and its state, derived from repo facts (agents/azure_status.py). */
+export interface AzureStatus {
+  id: string;
+  name: string;
+  tech: string;
+  state: "verified live" | "verified by tests" | "built, not verified live" | "not built";
+  live: string;
+  note: string;
 }
 
 /** Everything the pages read, loaded once by a StreamSource. */

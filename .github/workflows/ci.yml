@@ -19,7 +19,8 @@ jobs:
         with:
           python-version: "3.13"
       - run: python -m pip install -r requirements-dev.txt -r requirements-azure.txt
-      - run: python -m pytest -q
+      - run: python -m tools.secret_scan
+      - run: python -m pytest -q -rs
 
   web:
     needs: python

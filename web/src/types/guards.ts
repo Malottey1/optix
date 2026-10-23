@@ -161,6 +161,7 @@ export function parseUi(raw: unknown): UiData {
     measured: "array",
     track: "array",
     visuals: "object",
+    azure_status: "array",
   });
   const teams = c.fields(o.teams, "teams", {
     teams: "array",
@@ -233,6 +234,16 @@ export function parseUi(raw: unknown): UiData {
       intro: "string",
       tables: "array",
       notes: "array",
+    }),
+  );
+  (o.azure_status as unknown[]).forEach((r, i) =>
+    c.fields(r, `azure_status[${i}]`, {
+      id: "string",
+      name: "string",
+      tech: "string",
+      state: "string",
+      live: "string",
+      note: "string",
     }),
   );
   const vis = c.fields(o.visuals, "visuals", {

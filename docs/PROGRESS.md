@@ -123,6 +123,24 @@ passed together.
   are the only skips in the default suite (2) and are reported separately. The live tool caps itself
   at 10 calls (the phraser's process cap is 60).
 
+**Step H (docs and pitch)**
+- One source for the status: `agents/azure_status.py` derives each component's state from facts
+  (files exist; the tests that exercise it exist; the live report does not say "Not run"). It writes
+  docs/AZURE.md (Mermaid diagram + table) and the README block between markers, and
+  `dashboard_data` puts the same list in ui.json (`azure_status`), which the Tech Blueprint renders in
+  place of the old "Planned Azure integration" panel. `tests/test_azure_status.py` fails if any of
+  the three drifts. The status texts contain no digit, so the number tracer has nothing to trace.
+- Components whose only tests use a fake or a static read (the Azure OpenAI client, the Application
+  Insights exporter, the container, the Bicep) are "built, not verified live", not "verified by
+  tests". The container row says the image was not built here.
+- A status note first said "prediction words"; the dashboard's forbidden-word gate (which also
+  covers the Tech page) would flag it, so it reads "talk of future results".
+- PITCH.md (298 words) and DEMO_SCRIPT.md (110 s, nine shots, text names only, no logos, no music,
+  ends with the repo URL).
+- Secret scan: `tools/secret_scan.py` (tracked tree; `--history` every blob in git history), with a
+  test that plants secrets built at run time; CI runs the tree scan. The all-zero instrumentation key
+  used to build the exporter in a test is allowed explicitly.
+
 ## Visuals polish (branch `ui-visuals-polish`, from `ui-visuals` = main 32730c4)
 
 Green start: default suite 168 passed; `npm run build` ok.

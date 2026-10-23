@@ -58,7 +58,7 @@ DATA_ATTRS = {
              ("[data-insight-id][data-claim-id]", "data-claim-id")],
     "teams": [("svg [data-lane]", "data-lane"), ("[data-team]", "data-team")],
     "players": [("[data-player] [data-event-id]", "data-event-id")],
-    "tech": [("tr[data-claim-id]", "data-claim-id")],
+    "tech": [("tr[data-claim-id]", "data-claim-id"), ("[data-azure]", "data-state")],
 }
 
 # A Radix roving-focus group (toggle group, tab list) is one tab stop: its root takes focus and

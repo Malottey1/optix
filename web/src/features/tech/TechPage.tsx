@@ -1,7 +1,7 @@
 // #/tech: how a sentence earns its place on screen (with one real claim followed from its blocked
 // first attempt to the translated, number-guarded sentence), the verification ledger of every claim
 // in the showcase stream, the measured numbers parsed from the generated reports in docs/ (never
-// retyped), and what is planned but not built.
+// retyped), and the Microsoft / Azure status list from ui.json (agents/azure_status.py).
 import { Fragment, useState } from "react";
 import { Icon, type IconName } from "../../components/icons";
 import { Chip, StatusChip, type Status } from "../../components/ui/badge";
@@ -12,7 +12,7 @@ import { useData } from "../../data/context";
 import { cx } from "../../lib/cx";
 import { cell, clock, num, words } from "../../lib/format";
 import { LANG_NAMES, useT } from "../../lib/i18n";
-import { LANGS, type LedgerOutcome } from "../../types/ui";
+import { LANGS, type AzureStatus, type LedgerOutcome } from "../../types/ui";
 import { reasonFor, textOf } from "../live/shared";
 
 const OUTCOME: Record<LedgerOutcome, { status: Status; label: string }> = {
@@ -501,34 +501,50 @@ function VisualGuide() {
   );
 }
 
-const BUILT = [
-  ["Deterministic engine and Verifier", "Python in engine/ and agents/; every number in this dashboard comes from it."],
-  [
-    "Replay of the verified stream",
-    "The dashboard replays the showcase match from the files the engine wrote (web/public/data).",
-  ],
-  [
-    "Three languages behind a number guard",
-    "Hand-written English, Spanish and French templates; every number re-checked per language.",
-  ],
-];
-const PLANNED = [
-  [
-    "Azure hosting",
-    "The dashboard and engine run locally today (a static file server and Python). No Azure resource exists for this repo.",
-  ],
-  [
-    "Live stream over server-sent events",
-    "The dashboard defines an SSE source and its contract test, marked not wired yet; no server sends events.",
-  ],
-  ["Event Hubs ingestion", "Events are read from CSV files and replayed in process; there is no live event feed."],
-  ["Application Insights telemetry", "Agent logs are written to out/agent_log.jsonl only."],
-  ["Microsoft Agent Framework", "The agents are plain Python classes in one process; no agent framework is wired in."],
-  [
-    "LLM phrasing",
-    "Every sentence comes from fixed templates. A language model would only reword verified facts behind the same number guard; it is not built.",
-  ],
-];
+const STATE_STYLE: Record<AzureStatus["state"], { icon: "check" | "cloud"; cls: string; label: string }> = {
+  "verified live": { icon: "check", cls: "border-line bg-surface-2", label: "Verified live" },
+  "verified by tests": { icon: "check", cls: "border-line bg-surface-2", label: "Verified by tests" },
+  "built, not verified live": {
+    icon: "cloud",
+    cls: "border-dashed border-line-strong",
+    label: "Built, not verified live",
+  },
+  "not built": { icon: "cloud", cls: "border-dashed border-line-strong opacity-80", label: "Not built" },
+};
+
+function AzureStatusPanel() {
+  const m = useData();
+  const rows = m.ui.azure_status;
+  return (
+    <Panel
+      id="azure"
+      title="Microsoft and Azure: what is built and what is verified"
+      subtitle="Generated from the repo's files, tests and live-check report, never typed by hand. A model may only reword a claim the Verifier approved, behind a guard that falls back to the template."
+    >
+      <ul className="grid grid-cols-1 gap-2 md:grid-cols-2">
+        {rows.map((r) => {
+          const st = STATE_STYLE[r.state];
+          return (
+            <li key={r.id} data-azure={r.id} data-state={r.state} className={`rounded-xl border px-4 py-3 ${st.cls}`}>
+              <div className="flex flex-wrap items-center gap-2">
+                <Chip>
+                  <Icon name={st.icon} className="h-3.5 w-3.5" />
+                  {st.label}
+                </Chip>
+                <b className="text-[14px] text-ink">{r.name}</b>
+              </div>
+              <p className="mt-1 text-[12.5px] font-semibold text-ink-2">{r.tech}</p>
+              <p className="mt-1 text-[13px] leading-relaxed text-ink-3">{r.note}</p>
+              {r.live !== "not applicable" && (
+                <p className="mt-1 text-[12.5px] text-ink-3">Live check: {r.live}</p>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </Panel>
+  );
+}
 
 export default function TechPage() {
   return (
@@ -546,45 +562,7 @@ export default function TechPage() {
       <Ledger />
       <Measured />
       <VisualGuide />
-      <Panel
-        id="planned"
-        title="Planned Azure integration (not built yet)"
-        subtitle="Listed so nobody mistakes the plan for the product."
-      >
-        <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
-          <div>
-            <p className="eyebrow">Built today</p>
-            <ul className="mt-2 space-y-2">
-              {BUILT.map(([k, v]) => (
-                <li key={k} className="rounded-xl border border-line bg-surface-2 px-4 py-3">
-                  <div className="flex items-center gap-2">
-                    <Icon name="check" className="h-4 w-4 text-pass" />
-                    <b className="text-[14px] text-ink">{k}</b>
-                  </div>
-                  <p className="mt-1 text-[13px] leading-relaxed text-ink-3">{v}</p>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div>
-            <p className="eyebrow">Planned, not built</p>
-            <ul className="mt-2 grid grid-cols-1 gap-2 md:grid-cols-2">
-              {PLANNED.map(([k, v]) => (
-                <li key={k} data-planned className="rounded-xl border border-dashed border-line-strong px-4 py-3">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Chip>
-                      <Icon name="cloud" className="h-3.5 w-3.5" />
-                      Planned
-                    </Chip>
-                    <b className="text-[14px] text-ink">{k}</b>
-                  </div>
-                  <p className="mt-1.5 text-[13px] leading-relaxed text-ink-3">{v}</p>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      </Panel>
+      <AzureStatusPanel />
     </div>
   );
 }
