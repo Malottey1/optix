@@ -61,7 +61,8 @@ def test_in_app_navigation_reaches_every_route(report):
 def test_the_visuals_match_the_engine_output(report):
     c = report["consistency"]
     assert not c["problems"], c["problems"]
-    assert c["pairs"] == 20 and c["cards"].get("crosshairs") and c["cards"].get("shot-blocks") and c["arrows"], c
+    assert c["pairs"] == 20 and c["cards"].get("crosshairs") and c["cards"].get("shot-blocks"), c
+    assert c["arrows"]["top"] == check_web.TOP_ROUTES < c["arrows"]["all"], c   # both route views checked
 
 
 def test_the_live_first_screen_shows_every_live_visual_at_1080p_and_900p(report):

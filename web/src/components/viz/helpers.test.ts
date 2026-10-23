@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { PlayerRow, RouteRow, ShotRow } from "../../types/ui";
-import { leagueXaPerChance, per3, ratio2, routeValue, visibleRoutes } from "./PassRoutes";
+import { leagueXaPerChance, per3, ratio2, routePath, routeValue, TOP_ROUTES, topRoutes, visibleRoutes } from "./PassRoutes";
 import { comparisonGroup, MIN_PASSES, pizzaValues } from "./PercentilePizza";
 import { shotStats } from "./ShotBlocks";
 import { press3, tiltPct } from "./StateSwaps";
@@ -61,6 +61,30 @@ describe("routes", () => {
     expect(ratio2(4.166)).toBe(4.17);
     expect(tiltPct(0.7551)).toBe(75.5);
     expect(press3(0.14949)).toBe(0.149);
+  });
+});
+
+describe("route declutter", () => {
+  const many: RouteRow[] = Array.from({ length: 12 }, (_, i) => ["fwd", i, 14 - (i % 3), 2 + i, 0.01, 1] as RouteRow);
+  it("draws the busiest TOP_ROUTES by default, thickest first", () => {
+    const top = topRoutes(many, "fwd");
+    expect(top).toHaveLength(TOP_ROUTES);
+    expect(top.map((g) => g.passes)).toEqual([13, 12, 11, 10, 9, 8, 7, 6]);
+    expect(visibleRoutes(many, "fwd")).toHaveLength(12);
+  });
+  it("breaks ties by start zone, end zone, then kind (the Python check uses the same order)", () => {
+    const tie: RouteRow[] = [
+      ["sp", 13, 12, 3, 0.3, 0],
+      ["op", 13, 12, 3, 0.2, 0],
+      ["op", 2, 12, 3, 0.2, 0],
+    ];
+    expect(topRoutes(tie, "chances").map((g) => `${g.kind}${g.from}`)).toEqual(["op2", "op13", "sp13"]);
+  });
+  it("a route and its reverse are offset to opposite sides, so they never overlap", () => {
+    const there = routePath(10, 10, 50, 10);
+    const back = routePath(50, 10, 10, 10);
+    expect(there).toBe("M10,11.1 Q30,13.1 50,11.1");
+    expect(back).toBe("M50,8.9 Q30,6.9 10,8.9");
   });
 });
 

@@ -4,7 +4,10 @@
 // forward passes = the route's pass quality (share ending in a high-threat central cell over the
 // league share, the engine's pass_quality_ratio per route); chances = xA per chance. The scale's top
 // is twice the league value, so the league average sits mid-scale and players are comparable.
-import { memo } from "react";
+// By default only the TOP_ROUTES busiest routes are drawn, with a slight bend and a fixed offset to
+// the right of travel (so a route and its reverse never sit on top of each other); "Show all routes"
+// draws the full set. The hidden table always lists every route.
+import { memo, useState } from "react";
 import { cx } from "../../lib/cx";
 import { num } from "../../lib/format";
 import { useT } from "../../lib/i18n";
@@ -16,6 +19,11 @@ const PX = 1.05;
 const PY = 0.68;
 /** Forward-pass routes need at least this many passes to be drawn (chance routes are all drawn). */
 export const MIN_ROUTE_PASSES = 2;
+/** Routes drawn by default (the busiest, by pass count). */
+export const TOP_ROUTES = 8;
+/** Bend of a route (share of its length) and its offset to the right of travel, in pitch units. */
+const BEND = 0.05;
+const LANE_OFFSET = 1.1;
 
 export type RouteMode = "fwd" | "chances";
 
@@ -37,6 +45,23 @@ const shown = (g: RouteGroup, v: number) => (g.kind === "fwd" ? ratio2(v) : per3
 export function visibleRoutes(rows: readonly RouteRow[], mode: RouteMode): RouteGroup[] {
   const g = routeGroups(rows, mode);
   return mode === "fwd" ? g.filter((r) => r.passes >= MIN_ROUTE_PASSES) : g;
+}
+
+/** The routes drawn by default: the TOP_ROUTES busiest of the full drawable set. */
+export const topRoutes = (rows: readonly RouteRow[], mode: RouteMode) => visibleRoutes(rows, mode).slice(0, TOP_ROUTES);
+
+/** A route's path: start and end moved LANE_OFFSET to the right of travel, bent by BEND. */
+export function routePath(ax: number, ay: number, bx: number, by: number) {
+  const dx = bx - ax;
+  const dy = by - ay;
+  const len = Math.hypot(dx, dy) || 1;
+  const nx = -dy / len;
+  const ny = dx / len;
+  const [sx, sy, ex, ey] = [ax + nx * LANE_OFFSET, ay + ny * LANE_OFFSET, bx + nx * LANE_OFFSET, by + ny * LANE_OFFSET];
+  const mx = (sx + ex) / 2 + nx * len * BEND;
+  const my = (sy + ey) / 2 + ny * len * BEND;
+  const r = (v: number) => Math.round(v * 100) / 100;
+  return `M${r(sx)},${r(sy)} Q${r(mx)},${r(my)} ${r(ex)},${r(ey)}`;
 }
 
 function Arrow({
@@ -89,14 +114,11 @@ function Arrow({
       </g>
     );
   }
-  // a slight bend so a route and its reverse do not sit on top of each other
-  const mx = (ax + bx) / 2 - (by - ay) * 0.12;
-  const my = (ay + by) / 2 + (bx - ax) * 0.12;
   return (
     <g {...common} data-route>
       <title>{title}</title>
       <path
-        d={`M${ax},${ay} Q${mx},${my} ${bx},${by}`}
+        d={routePath(ax, ay, bx, by)}
         fill="none"
         stroke={color}
         strokeWidth={w}
@@ -129,7 +151,9 @@ export const PassRoutes = memo(function PassRoutes({
   compact?: boolean;
 }) {
   const { lang } = useT();
-  const groups = visibleRoutes(rows, mode);
+  const [showAll, setShowAll] = useState(false);
+  const full = visibleRoutes(rows, mode);
+  const groups = showAll ? full : full.slice(0, TOP_ROUTES);
   const all = routeGroups(rows, mode);
   const total = all.reduce((s, g) => s + g.passes, 0);
   const shownPasses = groups.reduce((s, g) => s + g.passes, 0);
@@ -164,15 +188,18 @@ export const PassRoutes = memo(function PassRoutes({
               {mode === "fwd"
                 ? "Colour: how often the route ends in a high-threat central cell, grey rarely, green often."
                 : "Colour: xA per chance, grey low, green high."}{" "}
+              {mode === "fwd" ? null : "Dashed: set piece; solid: open play. "}
+              {showAll || full.length <= TOP_ROUTES ? "All" : "The busiest"}{" "}
+              <span className="num">{num(groups.length, lang)}</span> routes
               {mode === "fwd" ? (
                 <>
-                  Routes with at least <span className="num">{num(MIN_ROUTE_PASSES, lang)}</span> passes (
-                  <span className="num">{num(shownPasses, lang)}</span> of{" "}
-                  <span className="num">{num(total, lang)}</span>).
+                  {" "}
+                  with at least <span className="num">{num(MIN_ROUTE_PASSES, lang)}</span> passes
                 </>
-              ) : (
-                "Dashed: set piece; solid: open play."
-              )}
+              ) : null}{" "}
+              (<span className="num">{num(shownPasses, lang)}</span> of <span className="num">{num(total, lang)}</span>
+              ).
+              <span className="sr-only"> The table lists every route.</span>
             </>
           )}
         </>
@@ -196,19 +223,21 @@ export const PassRoutes = memo(function PassRoutes({
         data-player={player}
         data-mode={mode}
         data-routes={groups.length}
+        data-total-routes={full.length}
+        data-view={showAll ? "all" : "top"}
       >
         <defs>
           <marker
             id={`route-head-${uid}`}
             viewBox="0 0 10 10"
-            refX="7"
+            refX="2"
             refY="5"
-            markerWidth="3.2"
-            markerHeight="3.2"
+            markerWidth="4.2"
+            markerHeight="4.2"
             markerUnits="userSpaceOnUse"
             orient="auto"
           >
-            <path d="M0,0 L10,5 L0,10 z" fill="var(--ink-2)" />
+            <path d="M0,0 L10,5 L0,10 z" fill="var(--ink)" stroke="var(--bg)" strokeWidth="0.8" />
           </marker>
         </defs>
         <g fill="none" stroke="var(--pitch-line)" strokeWidth="0.3">
@@ -251,6 +280,25 @@ export const PassRoutes = memo(function PassRoutes({
           />
         ))}
       </svg>
+      {full.length > TOP_ROUTES && (
+        <button
+          type="button"
+          aria-pressed={showAll}
+          onClick={() => setShowAll((v) => !v)}
+          data-role="route-toggle"
+          className="mt-2 inline-flex min-h-9 items-center rounded-lg border border-line-strong bg-surface-2 px-3 text-[12.5px] font-semibold text-ink-2 hover:bg-surface-3 hover:text-ink"
+        >
+          {showAll ? (
+            <>
+              Show the busiest <span className="num ml-1">{num(TOP_ROUTES, lang)}</span>
+            </>
+          ) : (
+            <>
+              Show all routes (<span className="num">{num(full.length, lang)}</span>)
+            </>
+          )}
+        </button>
+      )}
       {!compact && (
         <div className="mt-2 flex items-center gap-2 text-[11.5px] text-ink-3" aria-hidden="true">
           <span>{mode === "fwd" ? "rarely central" : "low xA"}</span>

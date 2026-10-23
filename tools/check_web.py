@@ -14,7 +14,7 @@ width in Chromium, save screenshots to docs/screens-v3/, and report every gate:
   * each visual matches the engine output (check_consistency): the crosshair sits on the verified
     claim's lane, the shot blocks are the claim window's shots and xG, the territorial-stress
     gauges end at the engine's spell totals, the arrows follow the pass counts (count and width
-    order), the pizza shows the percentiles; --mutation-proof shows each check fails on a throwaway
+    order, in the default busiest-routes view and after "Show all routes"), the pizza shows the percentiles; --mutation-proof shows each check fails on a throwaway
     copy with that visual's data changed;
   * the evidence drawer lists exactly the claim's event ids, and every one exists in the stream;
   * the SVG layers carry data attributes tests can read (data-event-id, data-lane, data-team,
@@ -103,6 +103,7 @@ PIZZA_KEYS = ("involvement", "forward_passes", "pass_completion", "pass_quality_
               "wide_share", "chances_set_piece")
 PIZZA_MIN_PASSES = 100
 MIN_ROUTE_PASSES = 2
+TOP_ROUTES = 8
 
 
 def js_round(v: float, dp: int = 0) -> float:
@@ -129,10 +130,14 @@ def pizza(ui, pid) -> dict:
     return out
 
 
-def route_groups(rows, mode):
-    """Routes of a mode, thickest first (fwd: only routes with >= MIN_ROUTE_PASSES passes)."""
+def route_groups(rows, mode, top=None):
+    """Routes of a mode, thickest first, ties by start zone, end zone, kind (fwd: only routes with
+    >= MIN_ROUTE_PASSES passes); `top` keeps the busiest few, as the default view draws them."""
     g = [r for r in rows if (r[0] == "fwd" if mode == "fwd" else r[0] != "fwd")]
-    g.sort(key=lambda r: (-r[3], r[1], r[2]))
+    g.sort(key=lambda r: (-r[3], r[1], r[2], r[0]))
+    if top is not None:
+        g = [r for r in g if r[3] >= MIN_ROUTE_PASSES] if mode == "fwd" else g
+        return g[:top]
     return [r for r in g if r[3] >= MIN_ROUTE_PASSES] if mode == "fwd" else g
 
 
@@ -194,6 +199,11 @@ def visual_numbers(ui, periods=()) -> set:
         if n:
             out.add(js_round(sum(r[5] for r in fwd) / n / v["league_hot_share"], 2))
         out.add(sum(r[3] for r in route_groups(rows, "fwd")))
+        for mode in ("fwd", "chances"):                      # V4 default view and toggle
+            full = route_groups(rows, mode)
+            top = route_groups(rows, mode, TOP_ROUTES)
+            out |= {len(full), len(top), sum(r[3] for r in top), sum(r[3] for r in full),
+                    sum(r[3] for r in rows if (r[0] == "fwd") == (mode == "fwd"))}
         chances = [r for r in rows if r[0] != "fwd"]
         for r in chances:
             out.add(js_round(r[4] / r[3], 3))
@@ -209,8 +219,8 @@ def visual_numbers(ui, periods=()) -> set:
 def check_consistency(browser, base, ref_dir: Path) -> dict:
     """Each visual against the engine's own output in ref_dir (normally out/ or the committed data):
     the crosshair lane is the verified claim's lane, the shot blocks are the claim's shots and xG,
-    the gauges end at the engine's spell totals, the arrows follow the pass counts, and the pizza
-    shows the recomputed percentiles. Serving a mutated copy of the data makes these fail."""
+    the gauges end at the engine's spell totals, the arrows follow the pass counts (count and width
+    order, default view and all routes), and the pizza shows the recomputed percentiles. Serving a mutated copy of the data makes these fail."""
     ref = load_sources(ref_dir)
     ui = ref["ui"]
     claims = {}
@@ -268,25 +278,36 @@ def check_consistency(browser, base, ref_dir: Path) -> dict:
     for team, want in stress_totals(ui).items():
         if gauges.get(team) != want:
             problems.append(f"gauge {team}: {gauges.get(team)} s at full time, engine spells add up to {want} s")
-    # V4 and V8 on the Player Deck: the default profile
+    # V4 and V8 on the Player Deck: the default profile, in the default view (busiest routes) and
+    # after "Show all routes"
     _open(page, base, "players")
     pid = page.get_attribute("#profile [data-viz=pass-routes] svg", "data-player")
-    arrows = page.eval_on_selector_all("#profile [data-viz=pass-routes] [data-route]", """els => els.map((e) => [
-        Number(e.dataset.value), Number(e.querySelector('path, circle').getAttribute('stroke-width'))])""")
-    want = route_groups(ui["visuals"]["routes"].get(pid, []), "fwd")
-    if len(arrows) != len(want):
-        problems.append(f"routes {pid}: {len(arrows)} arrows, data has {len(want)} routes")
-    if sorted(a[0] for a in arrows) != sorted(r[3] for r in want):
-        problems.append(f"routes {pid}: pass counts differ from the data")
-    by_n = sorted(arrows)
-    if any(b[1] < a[1] for a, b in zip(by_n, by_n[1:])):
-        problems.append(f"routes {pid}: arrow width does not grow with the pass count")
+    rows = ui["visuals"]["routes"].get(pid, [])
+    views = {"top": route_groups(rows, "fwd", TOP_ROUTES), "all": route_groups(rows, "fwd")}
+    arrows = {}
+    for view, want in views.items():
+        if view == "all":
+            if len(views["all"]) <= TOP_ROUTES:
+                problems.append(f"routes {pid}: no toggle to test (only {len(views['all'])} routes)")
+                break
+            page.click("#profile [data-role=route-toggle]")
+            page.wait_for_selector("#profile [data-viz=pass-routes] svg[data-view=all]", timeout=5000)
+        got = page.eval_on_selector_all("#profile [data-viz=pass-routes] [data-route]", """els => els.map((e) => [
+            Number(e.dataset.value), Number(e.querySelector('path, circle').getAttribute('stroke-width'))])""")
+        arrows[view] = len(got)
+        if len(got) != len(want):
+            problems.append(f"routes {pid} ({view}): {len(got)} arrows, data has {len(want)} routes")
+        if sorted(a[0] for a in got) != sorted(r[3] for r in want):
+            problems.append(f"routes {pid} ({view}): pass counts differ from the data")
+        by_n = sorted(got)
+        if any(b[1] < a[1] for a, b in zip(by_n, by_n[1:])):
+            problems.append(f"routes {pid} ({view}): arrow width does not grow with the pass count")
     pz = dict(page.eval_on_selector_all("#profile [data-role=pizza-list] li", """els => els.map((e) => [
         e.dataset.metric, e.dataset.percentile === '' ? null : Number(e.dataset.percentile)])"""))
     if pz != pizza(ui, pid):
         problems.append(f"pizza {pid}: {pz} vs {pizza(ui, pid)}")
     ctx.close()
-    return dict(pairs=pairs, cards=dict(seen), gauges=gauges, player=pid, arrows=len(arrows),
+    return dict(pairs=pairs, cards=dict(seen), gauges=gauges, player=pid, arrows=arrows,
                 problems=problems + log["problems"])
 
 
@@ -314,23 +335,31 @@ def _mut_routes(ui):
             r[3] += 5
 
 
+def _mut_top_route(ui):
+    for rows in ui["visuals"]["routes"].values():
+        fwd = [r for r in rows if r[0] == "fwd"]
+        if fwd:
+            max(fwd, key=lambda r: r[3])[3] += 3
+
+
 def _mut_pizza(ui):
     for p in ui["players"]:
         p["involvement"] = -p["involvement"]
 
 
-MUTATIONS = {"crosshair": (_mut_crosshair, "crosshair"), "shot blocks": (_mut_shots, "shot blocks"),
-             "gauge": (_mut_gauge, "gauge"), "routes": (_mut_routes, "routes"), "pizza": (_mut_pizza, "pizza")}
+# name: (mutation, the problem prefix that must appear, text that problem must contain)
+MUTATIONS = {"crosshair": (_mut_crosshair, "crosshair", ""), "shot blocks": (_mut_shots, "shot blocks", ""),
+             "gauge": (_mut_gauge, "gauge", ""), "routes": (_mut_routes, "routes", "(all)"),
+             "routes default view": (_mut_top_route, "routes", "(top)"), "pizza": (_mut_pizza, "pizza", "")}
 
 
 def mutation_proof(browser, dist: Path, ref_dir: Path, tmp: Path) -> dict:
     """Serve a throwaway copy of dist with one visual's data changed, run check_consistency against the
     unchanged ref_dir, and record whether that visual's check failed. The copy is left in tmp."""
     out = {}
-    for name, (mutate, prefix) in MUTATIONS.items():
+    for name, (mutate, prefix, must) in MUTATIONS.items():
         copy = tmp / f"mut-{name.replace(' ', '-')}"
-        if not copy.exists():
-            shutil.copytree(dist, copy)
+        shutil.copytree(dist, copy, dirs_exist_ok=True)   # always the current build
         ui = json.loads((ref_dir / "ui.json").read_text(encoding="utf-8"))
         mutate(ui)
         (copy / "data" / "ui.json").write_text(json.dumps(ui, separators=(",", ":")), encoding="utf-8")
@@ -339,7 +368,7 @@ def mutation_proof(browser, dist: Path, ref_dir: Path, tmp: Path) -> dict:
             r = check_consistency(browser, f"http://127.0.0.1:{httpd.server_address[1]}/", ref_dir)
         finally:
             httpd.shutdown()
-        hits = [x for x in r["problems"] if x.startswith(prefix)]
+        hits = [x for x in r["problems"] if x.startswith(prefix) and must in x]
         out[name] = dict(caught=bool(hits), problems=hits[:3])
     return out
 

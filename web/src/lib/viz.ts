@@ -80,12 +80,12 @@ export interface RouteGroup {
   /** Passes ending in a high-threat central cell. */
   hot: number;
 }
-/** Routes of one kind, thickest first (ties: lower zones first, stable). */
+/** Routes of one kind, thickest first (ties: lower start zone, lower end zone, then kind). */
 export function routeGroups(rows: readonly RouteRow[], kind: RouteKind | "chances"): RouteGroup[] {
   return rows
     .filter((r) => (kind === "chances" ? r[0] !== "fwd" : r[0] === kind))
     .map(([k, from, to, passes, sum, hot]) => ({ kind: k, from, to, passes, perPass: passes ? sum / passes : 0, hot }))
-    .sort((a, b) => b.passes - a.passes || a.from - b.from || a.to - b.to);
+    .sort((a, b) => b.passes - a.passes || a.from - b.from || a.to - b.to || a.kind.localeCompare(b.kind));
 }
 
 /** Pass quality of a set of forward passes, the engine's way: share ending in a high-threat cell
