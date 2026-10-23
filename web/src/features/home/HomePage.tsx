@@ -196,16 +196,17 @@ function ArtEvidence() {
 }
 
 function ArtTranslate() {
+  // Three languages, the same highlighted number slot in each; labels at 11 px so they stay legible.
   return (
-    <svg viewBox="0 0 120 64" aria-hidden="true" className="h-16 w-[120px]">
-      {[8, 26, 44].map((y, i) => (
+    <svg viewBox="0 0 132 64" aria-hidden="true" className="h-16 w-[132px]">
+      {[0, 22, 44].map((y, i) => (
         <g key={y}>
-          <rect x="4" y={y} width="112" height="13" rx="6.5" fill="var(--surface-3)" />
-          <text x="11" y={y + 9.5} fontSize="8" fontWeight="700" fill="var(--ink-3)" fontFamily="var(--font-sans)">
+          <rect x="0" y={y} width="132" height="19" rx="9.5" fill="var(--surface-3)" />
+          <text x="8" y={y + 13.5} fontSize="11" fontWeight="700" fill="var(--ink-3)" fontFamily="var(--font-sans)">
             {["EN", "ES", "FR"][i]}
           </text>
-          <rect x="30" y={y + 4.5} width={[30, 38, 34][i]} height="4" rx="2" fill="var(--ink-3)" opacity="0.55" />
-          <rect x={[66, 74, 70][i]} y={y + 2.5} width="22" height="8" rx="2.5" fill="var(--accent)" />
+          <rect x="32" y={y + 7.5} width={[30, 40, 35][i]} height="4" rx="2" fill="var(--ink-3)" opacity="0.55" />
+          <rect x={[68, 78, 73][i]} y={y + 4.5} width="24" height="10" rx="3" fill="var(--accent)" />
         </g>
       ))}
     </svg>

@@ -43,7 +43,8 @@ def report(tmp_path_factory):
 
 def test_every_gate_passes_on_every_route_and_width(report):
     assert {(r["route"], r["width"]) for r in report["routes"]} == {
-        (route, w) for route in check_web.ROUTES for w, _ in check_web.WIDTHS.values()}
+        (route, w) for route in check_web.ROUTES for w, _ in check_web.WIDTHS.values()} | {
+        (route, w) for route, sizes in check_web.EXTRA_SIZES.items() for w, _ in sizes.values()}
     assert not report["failures"], report["failures"]
 
 

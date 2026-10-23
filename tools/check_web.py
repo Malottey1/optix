@@ -1,5 +1,5 @@
 """Headless check of the built dashboard (web/dist): serve it, open every route at desktop and phone
-width in Chromium, save screenshots to docs/screens-v3/, and report every gate:
+width in Chromium, save screenshots to docs/screens-v4/, and report every gate:
 
   * no console error, page error, failed request, HTTP error, or request to a host other than
     localhost; no horizontal scroll; no overlapping text; Tab reaches every control;
@@ -25,7 +25,14 @@ width in Chromium, save screenshots to docs/screens-v3/, and report every gate:
   * the page still works with storage blocked, and with reduced motion it does not autoplay;
   * the Live Center's first screen at 1920x1080 and 1600x900 shows every Live visual whole, with no
     overlapping text (check_first_screen);
-  * replay frame p95 at most 20 ms (at 1440x900 and 1920x1080) and initial JS under 250 KB gzip.
+  * replay frame p95 at most 20 ms (at 1440x900 and 1920x1080) and initial JS under 250 KB gzip;
+  * Home (#/) is checked like every route, and also at 1920x1080 and 1600x900;
+  * images (check_images): every <img> has alt (alt="" only with a visible name beside it) and
+    width/height, the Home hero has fetchpriority=high, no shipped image carries EXIF/XMP/ICC/text,
+    no file is over 300 KB (the hero 220 KB at 1600 px, 90 KB at 800 px); crests and mini-marks
+    render at 24 and 32 px on the dark background (check_badges);
+  * the Home hero text has at least 4.5:1 contrast against the pixels behind it, sampled from a
+    screenshot with the text hidden (check_hero_contrast).
 
     python -m tools.check_web               # needs web/dist (cd web && npm run build)
     python -m tools.check_web --ref out --mutation-proof
@@ -48,12 +55,15 @@ from tools.check_dashboard import (FOCUSABLE_JS, FORBIDDEN, FRAMES_JS, OVERLAP_J
 
 ROOT = Path(__file__).resolve().parent.parent
 WEB = ROOT / "web"
-ROUTES = ("live", "teams", "players", "tech")
+ROUTES = ("home", "live", "teams", "players", "tech")
+PATH = {"home": ""}                      # hash path of a route when it is not the route's own name
+EXTRA_SIZES = {"home": {"1080p": (1920, 1080), "900p": (1600, 900)}}
 WIDTHS = {"desktop": (1440, 900), "mobile": (390, 844)}
 QUERY = {"live": "t=2760"}               # half-time stoppage: the rewritten Perimeter Lock card on top
 AXE_FAIL = {"serious", "critical"}
 # what each route must expose for tests (selector -> attribute that must be non-empty)
 DATA_ATTRS = {
+    "home": [("[data-proof]", "data-proof"), ("[data-team-badge]", "data-team-badge"), ("img[data-hero]", "src")],
     "live": [("#pitch [data-event-id]", "data-event-id"), ("#pitch [data-team]", "data-team"),
              ("[data-insight-id][data-claim-id]", "data-claim-id")],
     "teams": [("svg [data-lane]", "data-lane"), ("[data-team]", "data-team")],
@@ -391,15 +401,19 @@ SMALL_SVG_TEXT_JS = """() => [...document.querySelectorAll('svg text')]
   .filter((x) => x[0] < %d)""" % MIN_SVG_PX
 
 
+def _path(route):
+    return PATH.get(route, route)
+
+
 def _open(page, base, route, query=""):
-    page.goto(f"{base}#/{route}" + (f"?{query}" if query else ""))
+    page.goto(f"{base}#/{_path(route)}" + (f"?{query}" if query else ""))
     page.wait_for_selector("body[data-ready='1']", timeout=20000)
     page.wait_for_selector(f"[data-page='{route}']", timeout=20000)
     page.wait_for_timeout(700)
 
 
-def check_route(browser, base, route, width_name, src, screens: Path | None, axe_src: str) -> dict:
-    w, h = WIDTHS[width_name]
+def check_route(browser, base, route, width_name, src, screens: Path | None, axe_src: str, size=None) -> dict:
+    w, h = size or WIDTHS[width_name]
     ctx, page, log = _context(browser, w, h)
     _open(page, base, route, QUERY.get(route, ""))
     r = dict(route=route, width=w, **page.evaluate("""() => ({
@@ -413,10 +427,13 @@ def check_route(browser, base, route, width_name, src, screens: Path | None, axe
     r["untraced"] = untraced_numbers(page.evaluate("() => document.body.innerText"), src)
     full = page.evaluate("() => document.body.textContent")
     r["forbidden"] = [wd for wd in FORBIDDEN if re.search(rf"\b{re.escape(wd)}", full, re.I)]
+    r["images"] = page.evaluate(IMG_JS)
     r["attrs"] = {sel: page.evaluate("([s, a]) => [...document.querySelectorAll(s)].filter((e) => e.getAttribute(a)).length",
                                      [sel, attr]) for sel, attr in DATA_ATTRS[route]}
     if screens is not None:
-        (screens / f"{route}_{width_name}.png").write_bytes(_shrink_png(page.screenshot(full_page=True)))
+        _load_lazy_images(page)
+        (screens / f"{route}_{width_name}.png").write_bytes(
+            _shrink_png(page.screenshot(full_page=size is None)))
     page.add_script_tag(content=axe_src)
     r["axe"] = page.evaluate(AXE_JS)
     r["tab"] = _tab_order(page, FOCUSABLE_JS, WEB_ACTIVE_JS)
@@ -500,7 +517,7 @@ def check_navigation(browser, base) -> dict:
         reached = []
         for route in [*ROUTES[1:], *ROUTES]:
             try:
-                page.locator(f"a[href='#/{route}']:visible").last.click(timeout=5000)
+                page.locator(f"a[href='#/{_path(route)}']:visible").last.click(timeout=5000)
                 page.wait_for_selector(f"[data-page='{route}']", timeout=10000)
                 reached.append(route)
             except Exception:
@@ -613,6 +630,160 @@ FIRST_SCREEN = {"focus pitch": "#focus", "perimeter lock": "#perimeter", "tug-of
                 "stream (top)": "#feed-panel > header"}
 
 
+# ---------- images, crests and the Home hero ----------
+
+IMG_JS = """() => [...document.querySelectorAll('img')].map((i) => {
+  let named = false;
+  for (let e = i.parentElement, k = 0; e && k < 3; e = e.parentElement, k++) {
+    if ((e.innerText || '').trim()) { named = true; break; }
+  }
+  return {src: i.getAttribute('src'), alt: i.getAttribute('alt'), w: i.getAttribute('width'),
+          h: i.getAttribute('height'), fp: i.getAttribute('fetchpriority'), hero: i.hasAttribute('data-hero'),
+          loading: i.getAttribute('loading'), named};
+})"""
+IMG_MAX = 300_000
+IMG_BUDGET = {"hero-lineup-1600.webp": 220_000, "hero-lineup-800.webp": 90_000}
+RASTER = (".png", ".webp", ".jpg", ".jpeg", ".ico", ".gif", ".avif")
+
+
+def image_problems(images, route) -> list:
+    out = []
+    for i in images:
+        tag = i["src"]
+        if i["alt"] is None:
+            out.append(f"{tag}: no alt")
+        elif i["alt"] == "" and not i["named"]:
+            out.append(f"{tag}: alt=\"\" with no visible name beside it")
+        if not (i["w"] and i["h"]):
+            out.append(f"{tag}: no width/height")
+        if not i["hero"] and i["loading"] != "lazy":
+            out.append(f"{tag}: not lazy-loaded")
+    if route == "home":
+        heroes = [i for i in images if i["hero"]]
+        if len(heroes) != 1 or heroes[0]["fp"] != "high":
+            out.append(f"Home hero missing or without fetchpriority=high: {heroes}")
+    return out
+
+
+def check_image_files(dist: Path) -> dict:
+    """Every shipped raster: no EXIF/XMP/ICC/text, and within its size budget."""
+    from tools.image_meta import metadata_chunks
+    files = [p for p in dist.rglob("*") if p.suffix.lower() in RASTER and "data" not in p.relative_to(dist).parts]
+    problems = []
+    for p in files:
+        meta = metadata_chunks(p)
+        if meta:
+            problems.append(f"{p.relative_to(dist)} carries {meta}")
+        limit = IMG_BUDGET.get(p.name, IMG_MAX)
+        if p.stat().st_size > limit:
+            problems.append(f"{p.relative_to(dist)} is {p.stat().st_size} bytes, budget {limit}")
+    largest = max(files, key=lambda p: p.stat().st_size) if files else None
+    return dict(files=len(files), problems=problems,
+                largest=[str(largest.relative_to(dist)), largest.stat().st_size] if largest else None,
+                hero={n: (dist / "brand" / n).stat().st_size for n in IMG_BUDGET if (dist / "brand" / n).exists()})
+
+
+BADGE_SHEET_JS = """(sizes) => {
+  const codes = ['AUR', 'NTG', 'CAL', 'VES', 'HAR'];
+  const box = document.createElement('div');
+  box.id = 'badge-sheet';
+  box.style.cssText = 'position:fixed;left:0;top:0;z-index:99;background:#05080f;padding:12px;display:grid;gap:10px';
+  for (const s of sizes) {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;gap:12px;align-items:center';
+    for (const c of codes) {
+      const mini = document.querySelector(`[data-badge=mini][data-team-badge=${c}]`).cloneNode(true);
+      Object.assign(mini.style, {width: s + 'px', height: s + 'px', fontSize: Math.max(9, Math.round(s * 0.37)) + 'px'});
+      mini.dataset.check = `mini-${c}-${s}`;
+      const img = document.createElement('img');
+      img.src = `./brand/teams/badge-${c.toLowerCase()}-96.webp`; img.width = s; img.height = s; img.alt = '';
+      img.dataset.check = `crest-${c}-${s}`;
+      row.append(mini, img);
+    }
+    box.append(row);
+  }
+  document.body.append(box);
+  return Promise.all([...box.querySelectorAll('img')].map((i) => i.decode().then(() => i.naturalWidth)));
+}"""
+
+
+def _ink(png: bytes, bg=(5, 8, 15)) -> tuple:
+    """Share of pixels that differ from the dark background, and share of dark pixels (the code text)."""
+    import io
+    from PIL import Image
+    b = Image.open(io.BytesIO(png)).convert("RGB").tobytes()
+    px = [tuple(b[i:i + 3]) for i in range(0, len(b), 3)]
+    far = sum(1 for p in px if sum(abs(a - b) for a, b in zip(p, bg)) > 60) / len(px)
+    return far, px
+
+
+def check_badges(browser, base, shots: Path | None) -> dict:
+    """Crests and code mini-marks at 24 and 32 px on the dark background: each shows ink, and each
+    mini-mark's disc carries dark code text (a disc alone would be one flat colour)."""
+    ctx, page, log = _context(browser, *WIDTHS["desktop"])
+    _open(page, base, "players")
+    loaded = page.evaluate(BADGE_SHEET_JS, [24, 32])
+    page.wait_for_timeout(200)
+    problems, cells = [], {}
+    if not all(loaded):
+        problems.append(f"crest image did not decode: {loaded}")
+    for el in page.query_selector_all("#badge-sheet [data-check]"):
+        name = el.get_attribute("data-check")
+        far, px = _ink(el.screenshot())
+        cells[name] = round(far, 2)
+        if name.startswith("crest") and far < 0.3:
+            problems.append(f"{name}: crest barely visible on dark ({far:.2f} of pixels)")
+        if name.startswith("mini"):
+            disc = sum(1 for p in px if max(p) > 90)
+            text = sum(1 for p in px if max(p) < 60)
+            if far < 0.55 or text / len(px) < 0.03 or disc / len(px) < 0.4:
+                problems.append(f"{name}: disc {disc / len(px):.2f}, code text {text / len(px):.2f}")
+    if shots:
+        (shots / "badges_24_32.png").write_bytes(page.locator("#badge-sheet").screenshot())
+    ctx.close()
+    return dict(cells=cells, problems=problems + log["problems"])
+
+
+HERO_SIZES = {"1440": WIDTHS["desktop"], "1080p": (1920, 1080), "900p": (1600, 900), "390": WIDTHS["mobile"]}
+
+
+def _lum(rgb) -> float:
+    def f(c):
+        c = c / 255
+        return c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4
+    r, g, b = rgb[:3]
+    return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b)
+
+
+def check_hero_contrast(browser, base) -> dict:
+    """Hide the hero text, screenshot the boxes it occupied, and compare the text colour with the
+    lightest pixels behind it (99.5th percentile of luminance): at least 4.5:1."""
+    import io
+    from PIL import Image
+    out = {}
+    for name, (w, h) in HERO_SIZES.items():
+        ctx, page, log = _context(browser, w, h)
+        _open(page, base, "home")
+        page.wait_for_function("() => document.querySelector('img[data-hero]').complete")
+        colours = page.eval_on_selector_all("[data-hero-text]", "els => els.map((e) => getComputedStyle(e).color)")
+        page.add_style_tag(content="[data-hero-text] { color: transparent !important; }")
+        page.wait_for_timeout(100)
+        res, problems = [], []
+        for el, col in zip(page.query_selector_all("[data-hero-text]"), colours):
+            text = tuple(int(x) for x in re.findall(r"[\d.]+", col)[:3])
+            raw = Image.open(io.BytesIO(el.screenshot())).convert("RGB").tobytes()
+            px = sorted(_lum(raw[i:i + 3]) for i in range(0, len(raw), 3))
+            light = px[min(len(px) - 1, int(len(px) * 0.995))]
+            lt = _lum(text)
+            ratio = (max(lt, light) + 0.05) / (min(lt, light) + 0.05)
+            res.append(round(ratio, 2))
+            if ratio < 4.5:
+                problems.append(f"text {col} on background luminance {light:.3f}: {ratio:.2f}:1")
+        out[name] = dict(ratios=res, problems=problems + log["problems"])
+        ctx.close()
+    return out
+
+
 def check_first_screen(browser, base) -> dict:
     """At 1920x1080 and 1600x900 the Live Center's first screen, unscrolled, contains each visual's
     whole bounding box; no text overlaps; SVG text is at least MIN_SVG_PX."""
@@ -637,6 +808,34 @@ def check_first_screen(browser, base) -> dict:
                                problems=problems + log["problems"])
         ctx.close()
     return out
+
+
+def _load_lazy_images(page) -> None:
+    """Scroll through the page so loading=lazy images below the fold load before a full-page
+    screenshot, wait for them, then return to the top."""
+    page.evaluate("""async () => {
+        const step = window.innerHeight;
+        for (let y = 0; y < document.documentElement.scrollHeight; y += step) {
+            window.scrollTo(0, y); await new Promise((r) => setTimeout(r, 60)); }
+        // images that are display:none never load, so the wait is capped
+        const pending = [...document.images].filter((im) => !im.complete && im.offsetParent !== null);
+        await Promise.race([new Promise((r) => setTimeout(r, 3000)), Promise.all(pending.map((im) =>
+            new Promise((r) => { im.addEventListener("load", r); im.addEventListener("error", r); })))]);
+        window.scrollTo(0, 0); }""")
+    page.wait_for_timeout(150)
+
+
+def screens_1080p(browser, base, screens: Path, routes) -> list:
+    """First-screen 1920x1080 shots of the routes not already shot at that size (Live: demo_screen,
+    Home: its extra size check)."""
+    problems = []
+    for route in routes:
+        ctx, page, log = _context(browser, 1920, 1080)
+        _open(page, base, route, QUERY.get(route, ""))
+        (screens / f"{route}_1080p.png").write_bytes(_shrink_png(page.screenshot()))
+        problems += log["problems"]
+        ctx.close()
+    return problems
 
 
 def demo_screen(browser, base, screens: Path):
@@ -670,6 +869,14 @@ def run(dist: Path | None = None, screens_dir: Path | None = None, screens: bool
         for route in routes:
             for wn in WIDTHS:
                 report["routes"].append(check_route(browser, base, route, wn, src, shots, axe_src))
+            for wn, size in EXTRA_SIZES.get(route, {}).items():
+                report["routes"].append(check_route(browser, base, route, wn, src, shots, axe_src, size=size))
+        if shots:
+            report["screens_1080p"] = screens_1080p(browser, base, shots, [r for r in routes if r not in ("live", "home")])
+        report["image_files"] = check_image_files(dist)
+        if "home" in routes:
+            report["badges"] = check_badges(browser, base, shots)
+            report["hero_contrast"] = check_hero_contrast(browser, base)
         if "live" in routes:
             report["drawer"] = check_evidence_drawer(browser, base, src)
             report["robustness"] = check_robustness(browser, base)
@@ -710,6 +917,11 @@ def failures(report) -> list:
             f.append(f"{tag}: Tab never reaches {r['tab']['missing']}")
         f += [f"{tag}: axe {v['impact']} {v['id']}: {v['help']} {v['nodes']}" for v in r["axe"] if v["impact"] in AXE_FAIL]
         f += [f"{tag}: no element matches {sel} with its data attribute" for sel, n in r["attrs"].items() if not n]
+        f += [f"{tag}: image {x}" for x in image_problems(r["images"], r["route"])]
+    f += [f"image file: {x}" for x in report.get("image_files", {}).get("problems", [])]
+    f += [f"badges: {x}" for x in report.get("badges", {}).get("problems", [])]
+    for size, v in report.get("hero_contrast", {}).items():
+        f += [f"hero contrast {size}: {x}" for x in v["problems"]]
     d = report.get("drawer")
     if d is not None:
         f += [f"drawer: {x}" for x in d["_problems"]]
@@ -759,6 +971,7 @@ def failures(report) -> list:
     if report.get("bundle", {}).get("total_kb", 0) >= INITIAL_JS_KB:
         f.append(f"initial JS {report['bundle']['total_kb']} KB gzip, budget {INITIAL_JS_KB} KB")
     f += [f"demo screen: {x}" for x in report.get("demo_problems", [])]
+    f += [f"1080p screen: {x}" for x in report.get("screens_1080p", [])]
     if report["bundle"]["total_kb"] >= 250:
         f.append(f"initial JS {report['bundle']['total_kb']} KB gzip (budget 250)")
     return f
@@ -767,7 +980,7 @@ def failures(report) -> list:
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--dist", default=str(WEB / "dist"))
-    ap.add_argument("--out", default=str(ROOT / "docs" / "screens-v3"), help="screenshot directory")
+    ap.add_argument("--out", default=str(ROOT / "docs" / "screens-v4"), help="screenshot directory")
     ap.add_argument("--no-screens", action="store_true")
     ap.add_argument("--routes", default=",".join(ROUTES))
     ap.add_argument("--json", default=None, help="also write the full report here")
@@ -792,7 +1005,7 @@ def main(argv=None):
               f"controls={r['tab']['controls']:3d} tab_missing={len(r['tab']['missing'])} axe_serious={len(bad_axe)} "
               f"axe_minor={len(r['axe']) - len(bad_axe)} problems={len(r['problems'])} remote={len(r['remote'])} attrs={r['attrs']}")
     for k in ("drawer", "consistency", "mutation_proof", "language", "robustness", "frames", "frames_1080p",
-              "first_screen", "live_stream", "bundle"):
+              "first_screen", "live_stream", "bundle", "image_files", "badges", "hero_contrast"):
         if k in report:
             print(f"{k}:", {x: y for x, y in report[k].items() if x != "_problems"} if isinstance(report[k], dict) else report[k])
     if a.json:
