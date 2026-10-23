@@ -44,6 +44,12 @@
   --team-ves: #5b85ff;
   --team-har: #6fc6f2;
 
+  /* Icon colour exceptions (docs/icons.md): the two card icons and the emphasised band of a lane
+   * icon. Everything else in an icon is currentColor. Neither card colour equals a verdict colour. */
+  --card-yellow: #f2c94c;
+  --card-red: #e5484d;
+  --lane-fill: var(--accent);
+
   --pitch: #0b1a19;
   --pitch-stripe: #0d1f1d;
   --pitch-line: rgba(214, 236, 228, 0.3);

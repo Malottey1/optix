@@ -16,6 +16,39 @@ is in docs/icons-progress.md.
   were already formatted during the brand work. Formatting them changed no behaviour: lint,
   typecheck, Vitest (55) and build pass, and the built bundle hash is unchanged (index-BRDlwXxd.js).
 
+**A0 (audit)**
+- docs/icons-plan.md lists every glyph and its replacement. Focus Pitch convention: every team attacks
+  left to right and SVG y = data y, so the attacker's left flank is the top band; the sheet draws the
+  left flank on top as well, so the lane icons are not flipped.
+- Interface glyphs that are not on the sheet (close, arrow, swap, ball marker, cloud) are kept as
+  `Glyph` in components/icons.tsx; the registry holds exactly the 54 sheet icons.
+- The Home feature drawings are illustrations, not glyphs; they stay, and each card gets its icon.
+
+**A1 (registry)**
+- web/src/icons/: one file per icon in glyphs/, names.ts (groups and the `IconName` union),
+  registry.ts (name -> component) and `<Icon name size title className />`. Drawn by hand as path
+  data from zoomed crops of the sheet (design/review/sheet-*.png, local), not traced; no raster.
+- Where the brief and the sheet differ, the brief wins: the momentum marker is off-centre (the sheet
+  centres it); play and pause are outlines.
+- Colour tokens: --card-yellow #f2c94c and --card-red #e5484d (neither equals a verdict colour) and
+  --lane-fill (= --accent). The two cards are tilted in opposite directions (+16 / -16 degrees): with
+  the same tilt their grey rasters correlate at about 1.0, since only the colour differs.
+- Distinctness is measured by tools/icon_sheet.py (each icon alone in Chromium at 16 and 24 px,
+  Pearson correlation of the grey rasters). Redraws:
+  - lanes, pass 1: side ticks and a halfway line read as a film strip; replaced by goal boxes.
+    Adjacent lanes still correlated 0.91 to 0.93 because the band's 2-unit stroke overlapped the
+    neighbouring band. Pass 2: the band is inset (16 x 1.9 inside the 2.8 band) and the goal boxes
+    dropped; adjacent lanes now 0.865 at 16 px and 0.843 at 24 px. The emphasised band keeps
+    --lane-fill at 70% plus a full-strength stroke.
+  - pattern-counter-press, pass 1: it read as a pin with a base line; redrawn as one loop arrow
+    that returns to a centre dot. At 16 px it can still look like a bulb; left as is.
+  - pattern-elastic-low-block, pass 1: too small at 16 px; arc and dots enlarged.
+  - scrub, pass 1: grip lines filled the narrow pill; the pill is wider, with two grip lines.
+- Highest non-whitelisted pair after the redraws: 0.873 at 16 px (style-direct-play / style-high-press
+  0.867; foul / pattern-tactical-fouling 0.873 is the whitelisted pair). Threshold 0.92.
+- The Python distinctness test needs Playwright, so like tests/test_dashboard.py it is skipped in CI
+  (which installs requirements-dev only) and runs locally. The Vitest manifest test runs everywhere.
+
 ## Brand (branch `ui-visuals-brand`, from `ui-visuals-fixes` 9a573d9)
 
 Green start: default suite 239 passed, 2 skipped (azure_live); `npm run build` passes.
