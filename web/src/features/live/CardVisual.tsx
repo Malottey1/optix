@@ -59,8 +59,9 @@ export function CardVisual({ ins }: { ins: Insight }) {
     const family = ins.payload.family ?? null;
     const w = ins.payload.window;
     if (family === "pat_elastic_low_block" && w && ins.teams.secondary) {
-      // the deep block's evidence is the other side's shots: the shot blocks of exactly that window
-      const team = ins.teams.secondary;
+      // the shots the claim counts, in exactly its window: for the deep block itself, the other
+      // side's shots; for a territory claim its rule rewrote, the territory holder's own shots
+      const team = ins.payload.claim_metric === "pat_elastic_low_block" ? ins.teams.secondary : ins.teams.primary;
       return (
         <div className="mt-3" data-card-visual="shot-blocks">
           <ShotBlocks

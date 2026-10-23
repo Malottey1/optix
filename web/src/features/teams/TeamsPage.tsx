@@ -191,8 +191,12 @@ function SignaturePatterns({ code }: { code: string }) {
       {rows.length ? (
         <ul className="mt-1.5 space-y-1 text-[13px] text-ink-2">
           {rows.map((r) => (
-            <li key={r.family} data-family={r.family} className="flex items-center gap-1.5">
-              <Icon name={patternIcon(r.family)} size={16} className="shrink-0 text-ink-2" />
+            <li
+              key={r.family}
+              data-family={r.family}
+              className="grid grid-cols-[16px_minmax(0,1fr)_minmax(0,1fr)] items-start gap-x-1.5"
+            >
+              <Icon name={patternIcon(r.family)} size={16} className="mt-0.5 shrink-0 text-ink-2" />
               <b className="text-ink">{patternLabel(r.family, lang)}</b>
               <span className="text-ink-3">
                 <span className="num">{pct(r.share, lang)}</span> of matches (others{" "}

@@ -1,5 +1,5 @@
 """Headless check of the built dashboard (web/dist): serve it, open every route at desktop and phone
-width in Chromium, save screenshots to docs/screens-v5/, and report every gate:
+width in Chromium, save screenshots to docs/screens-v6/, and report every gate:
 
   * no console error, page error, failed request, HTTP error, or request to a host other than
     localhost; no horizontal scroll; no overlapping text; Tab reaches every control;
@@ -277,7 +277,20 @@ def check_consistency(browser, base, ref_dir: Path) -> dict:
             want = (cl.get("zone") or {}).get("lane") if cl["verification"]["status"] != "blocked" else ""
             if c["lane"] != want:
                 problems.append(f"card crosshair {c['claim']}: lane {c['lane']!r}, claim says {want!r}")
-        if c["kind"] == "shot-blocks":
+        if c["kind"] == "shot-blocks" and (cl["metric"] == "pat_elastic_low_block" or "team_shots" in cl["params"]):
+            # a deep-block card: the other side's shots (P4 claim) or the territory holder's own
+            # shots (a territory claim the P4 rule rewrote), against the claim's count and xG per shot
+            w, own = cl["window"], cl["metric"] != "pat_elastic_low_block"
+            team = cl["subject"]["team_code"] if own else next(
+                s[2] for s in ui["visuals"]["shots"] if s[2] != cl["subject"]["team_code"])
+            n = cl["params"]["team_shots" if own else "opp_shots"]
+            per = cl["params"]["team_xg_per_shot" if own else "xg_per_shot"]
+            want_ids = [s[0] for s in ui["visuals"]["shots"] if s[2] == team and w["from_sec"] <= s[1] <= w["to_sec"]]
+            if c["shots"] != want_ids or len(c["shots"]) != n:
+                problems.append(f"shot blocks {c['claim']}: {len(c['shots'])} blocks of {team}, claim has {n}")
+            if c["xg"] is None or not n or abs(float(c["xg"]) / n - per) > 0.001:
+                problems.append(f"shot blocks {c['claim']}: xG {c['xg']} over {n} shots, claim says {per} a shot")
+        elif c["kind"] == "shot-blocks":
             w, team = cl["window"], cl["subject"]["team_code"]
             want_ids = [s[0] for s in ui["visuals"]["shots"] if s[2] == team and w["from_sec"] <= s[1] <= w["to_sec"]]
             if c["shots"] != want_ids or len(c["shots"]) != cl["value"]["sample_size"]:
@@ -985,7 +998,7 @@ def failures(report) -> list:
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--dist", default=str(WEB / "dist"))
-    ap.add_argument("--out", default=str(ROOT / "docs" / "screens-v5"), help="screenshot directory")
+    ap.add_argument("--out", default=str(ROOT / "docs" / "screens-v6"), help="screenshot directory")
     ap.add_argument("--no-screens", action="store_true")
     ap.add_argument("--routes", default=",".join(ROUTES))
     ap.add_argument("--json", default=None, help="also write the full report here")

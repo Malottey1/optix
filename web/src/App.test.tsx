@@ -119,3 +119,54 @@ describe("Home", () => {
     expect(page.querySelectorAll("[data-team-badge]").length).toBe(5);
   });
 });
+
+describe("Tactical patterns on the pages", () => {
+  it("Player Deck shows the starved-finisher chip, Team Board the signatures, Tech the catalogue", async () => {
+    window.location.hash = "#/players";
+    render(<App source={source()} />);
+    const page = await screen.findByText((_, el) => el?.getAttribute("data-page") === "players", undefined, {
+      timeout: 5000,
+    });
+    const select = (await waitFor(() => page.querySelector("#profile-player"))) as HTMLSelectElement;
+    const options = new Set([...select.options].map((o) => o.value));
+    const pid = Object.entries(ui.patterns.players as Record<string, { family: string }[]>).find(
+      ([id, rows]) => options.has(id) && rows.some((r) => r.family === "pat_starved_finisher"),
+    )![0];
+    fireEvent.change(select, { target: { value: pid } });
+    await waitFor(() =>
+      expect(page.querySelector(`[data-player-patterns='${pid}'] [data-family='pat_starved_finisher']`)).toBeTruthy(),
+    );
+    cleanup();
+
+    window.location.hash = "#/teams";
+    render(<App source={source()} />);
+    const teams = await screen.findByText((_, el) => el?.getAttribute("data-page") === "teams", undefined, {
+      timeout: 5000,
+    });
+    for (const [code, rows] of Object.entries(ui.patterns.signature as Record<string, { family: string }[]>)) {
+      const box = await waitFor(() => teams.querySelector(`[data-signature-patterns='${code}']`) as HTMLElement);
+      expect([...box.querySelectorAll("[data-family]")].map((e) => e.getAttribute("data-family"))).toEqual(
+        rows.map((r) => r.family),
+      );
+    }
+    cleanup();
+
+    window.location.hash = "#/tech";
+    render(<App source={source()} />);
+    const tech = await screen.findByText((_, el) => el?.getAttribute("data-page") === "tech", undefined, {
+      timeout: 5000,
+    });
+    const rows = await waitFor(() => {
+      const r = tech.querySelectorAll("[data-table='patterns'] tbody tr");
+      expect(r.length).toBe(ui.patterns.catalogue.length);
+      return r;
+    });
+    const off = ui.patterns.catalogue
+      .filter((r: { enabled: boolean }) => !r.enabled)
+      .map((r: { family: string }) => r.family);
+    for (const f of off) {
+      const row = [...rows].find((r) => r.getAttribute("data-family") === f)!;
+      expect(row.textContent).toMatch(/off in the stream/);
+    }
+  });
+});
