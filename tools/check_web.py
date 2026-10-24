@@ -1,5 +1,5 @@
 """Headless check of the built dashboard (web/dist): serve it, open every route at desktop and phone
-width in Chromium, save screenshots to docs/screens-v6/, and report every gate:
+width in Chromium, save screenshots to docs/screens-v7/, and report every gate:
 
   * no console error, page error, failed request, HTTP error, or request to a host other than
     localhost; no horizontal scroll; no overlapping text; Tab reaches every control;
@@ -998,7 +998,7 @@ def failures(report) -> list:
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--dist", default=str(WEB / "dist"))
-    ap.add_argument("--out", default=str(ROOT / "docs" / "screens-v6"), help="screenshot directory")
+    ap.add_argument("--out", default=str(ROOT / "docs" / "screens-v7"), help="screenshot directory")
     ap.add_argument("--no-screens", action="store_true")
     ap.add_argument("--routes", default=",".join(ROUTES))
     ap.add_argument("--json", default=None, help="also write the full report here")

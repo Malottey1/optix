@@ -43,6 +43,11 @@ const PATTERN_ICON: Record<string, IconName> = {
   pat_rest_defence: "pattern-rest-defence",
   pat_starved_finisher: "pattern-starved-finisher",
   pat_tactical_fouling: "pattern-tactical-fouling",
+  // Tier 2 families reuse existing icons
+  pat_set_piece_dependence: "corner",
+  pat_direct_transition: "style-direct-play",
+  pat_press_resistant: "pressure",
+  pat_pressed_presser: "style-high-press",
 };
 
 /** Icon of a tactical pattern family (engine/patterns/config.py ICONS); unknown families get the evidence glyph. */

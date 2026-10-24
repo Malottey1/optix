@@ -55,7 +55,12 @@ export type IntermediateClaimObject = {
     | "pat_counter_press"
     | "pat_rest_defence"
     | "pat_starved_finisher"
-    | "pat_tactical_fouling";
+    | "pat_tactical_fouling"
+    | "pat_set_piece_dependence"
+    | "pat_direct_transition"
+    | "pat_press_resistant"
+    | "pat_pressed_presser"
+    | "pass_completion";
   subject: {
     kind: "team" | "player" | "match" | "zone";
     id: string;
@@ -176,6 +181,10 @@ export type IntermediateClaimObject = {
       | "ctx_dominance_with_transition_exposure"
       | "ctx_low_volume_high_quality"
       | "ctx_fouls_clustered_after_losses"
+      | "ctx_xg_from_set_pieces"
+      | "ctx_low_possession_with_direct_threat"
+      | "ctx_completion_without_pressure_split"
+      | "ctx_press_without_secure_build_up"
       | "missing_evidence"
       | "value_mismatch"
     )[];

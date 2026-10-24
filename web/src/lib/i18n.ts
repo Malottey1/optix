@@ -462,6 +462,10 @@ const PATTERNS: Record<Lang, Record<string, string>> = {
     pat_rest_defence: "Territory and counters conceded",
     pat_starved_finisher: "Few touches, free shots",
     pat_tactical_fouling: "Fouls after losing the ball",
+    pat_set_piece_dependence: "Set-piece share of xG",
+    pat_direct_transition: "Shots soon after regains",
+    pat_press_resistant: "Keeps the ball under pressure",
+    pat_pressed_presser: "Presses hard, loose at the back",
   },
   es: {
     pat_bait_switch: "Construir en un lado y cambiar",
@@ -472,6 +476,10 @@ const PATTERNS: Record<Lang, Record<string, string>> = {
     pat_rest_defence: "Territorio y contras concedidas",
     pat_starved_finisher: "Pocos toques, tiros sin presión",
     pat_tactical_fouling: "Faltas tras perder el balón",
+    pat_set_piece_dependence: "xG a balón parado",
+    pat_direct_transition: "Tiros tras recuperar",
+    pat_press_resistant: "Conserva el balón bajo presión",
+    pat_pressed_presser: "Presiona fuerte, duda atrás",
   },
   fr: {
     pat_bait_switch: "Construire d’un côté, renverser",
@@ -482,6 +490,10 @@ const PATTERNS: Record<Lang, Record<string, string>> = {
     pat_rest_defence: "Territoire et contres concédés",
     pat_starved_finisher: "Peu de ballons, tirs sans pression",
     pat_tactical_fouling: "Fautes après une perte de balle",
+    pat_set_piece_dependence: "xG sur coups de pied arrêtés",
+    pat_direct_transition: "Tirs juste après une récupération",
+    pat_press_resistant: "Garde le ballon sous pression",
+    pat_pressed_presser: "Presse fort, fébrile derrière",
   },
 };
 

@@ -70,7 +70,7 @@ describe("tactical pattern cards", () => {
   });
 
   it("the catalogue and signature patterns come from ui.json, every family with a registry icon", () => {
-    expect(ui.patterns.catalogue.length).toBe(8);
+    expect(ui.patterns.catalogue.length).toBe(12); // eight Tier 1 and four Tier 2 families
     for (const r of ui.patterns.catalogue) expect(patternIcon(r.family)).toBe(r.icon);
     for (const rows of Object.values(ui.patterns.signature) as { family: string; icon: string }[][])
       for (const r of rows) expect(patternIcon(r.family)).toBe(r.icon);

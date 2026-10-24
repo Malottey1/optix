@@ -35,6 +35,7 @@ export function reasonFor(m: MatchModel, ruleIds: readonly string[], lang: Lang)
 export const PCT_METRICS = new Set([
   "field_tilt",
   "possession_pct",
+  "pass_completion",
   "box_entry_share",
   "wide_share",
   "set_piece_share",
