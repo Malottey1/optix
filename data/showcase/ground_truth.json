@@ -897,7 +897,11 @@
       "pat_counter_press": 0.08,
       "pat_rest_defence": 0.2,
       "pat_starved_finisher": 0.35,
-      "pat_tactical_fouling": 0.1
+      "pat_tactical_fouling": 0.1,
+      "pat_set_piece_dependence": 0.5,
+      "pat_direct_transition": 0.06,
+      "pat_press_resistant": 0.8,
+      "pat_pressed_presser": 0.35
     },
     "teams": {
       "AUR": {

@@ -56,7 +56,9 @@ def test_ground_truth_records_the_planted_motifs(planted):
     ds, gt = planted
     pm = gt["planted_motifs"]
     assert pm["scale"] == 1.0 and pm["teams"]["AUR"]["pat_bait_switch"] == 1.0
-    assert len(pm["players"]) == 1 and next(iter(pm["players"].values()))["team"] == "VES"
+    small = {t.code for t in TEAMS}                       # full-league-only plants are not in this season
+    assert sorted((p["team"], p["role"]) for p in pm["players"].values()) == sorted(k for k in PLAYER_MOTIFS
+                                                                                    if k[0] in small)
     assert pm["instances"] and all("|" in k for rows in pm["instances"].values() for k in rows)
 
 

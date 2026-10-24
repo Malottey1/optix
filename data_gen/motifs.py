@@ -1,11 +1,13 @@
 """Planted tactical motifs: scripted sequence behaviour that gives the pattern detectors
 (engine/patterns) a known ground truth to recover.
 
-Each motif runs at one of three existing decision points of MatchSim.run_sequence:
+Each motif runs at one of four decision points of MatchSim (three in run_sequence, one in corner):
   * at_start: the first action of a possession that began in open play (after a turnover or a
     ball recovery), before the holder acts;
   * in_play:  the pass choice, when no restart is being taken;
-  * at_shot:  a shot the simulator has already decided to take (the starved finisher re-routes it).
+  * at_shot:  a shot the simulator has already decided to take (the starved finisher re-routes it);
+  * at_corner: a corner about to be delivered (set-piece dependence: the delivery is won and headed;
+    the simulator's header shot is drawn as usual).
 Motifs that add shots of their own lower the team's natural shot appetite (shot_factor), so shot
 volume and goals stay in the calibrated ranges.
 Scripts reuse the simulator's own construction functions (pick, emit, record_pass, pass_success,
@@ -27,7 +29,7 @@ import math
 import random
 from collections import Counter
 
-from .config import MOTIF_RATES, MOTIF_SIDES, MOTIFS, PLAYER_MOTIFS, SHOT_COMP
+from .config import LANE_CENTERS, MOTIF_RATES, MOTIF_SIDES, MOTIFS, PLAYER_MOTIFS, SHOT_COMP
 
 BOX_X, BOX_Y = 84.0, (22.0, 78.0)
 
@@ -74,6 +76,8 @@ class Motifs:
                     self.players[slot.p.player_id] = (tid, pm)
         # a starved finisher sees less of the ball: his weight in pick() is scaled down
         self.usage = {pid: 0.15 for pid, (_, pm) in self.players.items() if "pat_starved_finisher" in pm}
+        # a press-resistant passer is the one his side looks for, so he sees more of the ball
+        self.usage.update({pid: 2.2 for pid, (_, pm) in self.players.items() if "pat_press_resistant" in pm})
 
     def rng(self, motif, tid):
         k = (motif, tid)
@@ -118,6 +122,9 @@ class Motifs:
         lead = sim.score[tid] - sim.score[o]
         if x < 55 and pattern in ("open_play", "counter") and self._fire(tid, "pat_bait_switch", 0.5 if lead > 0 else 1.0):
             return self._run("pat_bait_switch", tid, self._bait_switch, tid, x, y, holder, idx)
+        if x < 50 and self._turnover(tid) and self._fire(tid, "pat_direct_transition"):
+            return self._run("pat_direct_transition", tid, self._counter_attack, tid, tid, x, y, holder, idx,
+                             "pat_direct_transition")
         # the opponent's propensities act on this possession (o has just lost the ball)
         if o not in self.cfg or not self._turnover(tid):
             return None
@@ -134,6 +141,12 @@ class Motifs:
     def in_play(self, tid, x, y, holder, pattern, last_pass, pressed, idx):
         sim = self.sim
         o = sim.other(tid)
+        if pressed and holder.player_id in self.players:
+            ptid, pm = self.players[holder.player_id]
+            if ptid == tid and self._fire_player(holder.player_id, tid, pm, "pat_press_resistant"):
+                return self._run("pat_press_resistant", tid, self._secure_pass, tid, x, y, holder, pattern, idx)
+        if pressed and x < 30 and self._fire(tid, "pat_pressed_presser"):
+            return self._run("pat_pressed_presser", tid, self._giveaway, tid, o, x, y, holder, pattern, idx)
         if x >= 72 and abs(y - 50) > 25 and self._fire(tid, "pat_cutback"):
             return self._run("pat_cutback", tid, self._cutback, tid, x, y, holder, pattern, idx)
         if 45 <= x <= 75 and (y < 15 or y > 85):
@@ -158,6 +171,16 @@ class Motifs:
                 return self._run("pat_starved_finisher", tid, self._feed, tid, pid, x, y, holder, pattern, idx)
         return None
 
+    # ---------- decision point 4: a corner the simulator is about to deliver ----------
+
+    def at_corner(self, tid) -> bool:
+        """Set-piece dependence: the planted team wins its corner delivery in the air and heads at
+        goal. No corner is added, so corner counts stay natural; the simulator draws the header."""
+        if self._fire(tid, "pat_set_piece_dependence"):
+            self.done("pat_set_piece_dependence", tid)
+            return True
+        return False
+
     def shot_factor(self, tid) -> float:
         """Natural shot appetite left to a team while planted motifs add shots of their own, so its
         shot volume stays in the realistic range (SHOT_COMP in data_gen/config.py)."""
@@ -174,13 +197,14 @@ class Motifs:
             f *= SHOT_COMP["opp:pat_elastic_low_block"] ** self._p(o, "pat_elastic_low_block")
         return f
 
-    def _fire_player(self, pid, tid, pm) -> bool:
-        p = pm.get("pat_starved_finisher", 0.0)
-        return p > 0 and self.rng("pat_starved_finisher", pid).random() < MOTIF_RATES["pat_starved_finisher"] * p
+    def _fire_player(self, pid, tid, pm, motif="pat_starved_finisher") -> bool:
+        p = pm.get(motif, 0.0)
+        return p > 0 and self.rng(motif, pid).random() < MOTIF_RATES[motif] * p
 
     # ---------- scripts ----------
 
-    def _pass(self, tid, holder, x, y, xe, ye, ptype="short", pattern="open_play", idx=0, exclude=None, force_recv=None):
+    def _pass(self, tid, holder, x, y, xe, ye, ptype="short", pattern="open_play", idx=0, exclude=None, force_recv=None,
+              pressed=False):
         """One completed pass with the simulator's own fields. Returns (eid, recv, xe, ye) or None when
         the receiver could not reach the point (the script then stops)."""
         sim = self.sim
@@ -190,10 +214,10 @@ class Motifs:
             xe, ye = sim.within_reach(tid, recv.player_id, xe, ye)
         else:
             recv, xe, ye = sim.pick(tid, xe, ye, x, exclude=holder, skip_gk=xe > 22)
-        p_succ = sim.pass_success(tid, o, sim.deep(o.team_id), False, x, y, xe, ye, ptype == "long_ball", pattern)
+        p_succ = sim.pass_success(tid, o, sim.deep(o.team_id), pressed, x, y, xe, ye, ptype == "long_ball", pattern)
         sim.tick(sim.teams[tid], 0.6 if pattern == "counter" else 1.0)
         sim.run_time(_dist_m(x, y, xe, ye) / 20)
-        eid = sim.emit(tid, holder.player_id, "pass", x, y, xe, ye, pattern=pattern, idx=idx)
+        eid = sim.emit(tid, holder.player_id, "pass", x, y, xe, ye, pattern=pattern, pressed=pressed, idx=idx)
         sim.record_pass(eid, holder, recv, x, y, xe, ye, ptype, True, p_succ)
         return eid, recv, xe, ye
 
@@ -306,16 +330,21 @@ class Motifs:
             self.done("pat_counter_press", o)
         return ("return", sim._won(o, d, dx, dy))
 
-    def _counter_attack(self, tid, o, x, y, holder, idx):
+    def _counter_attack(self, tid, o, x, y, holder, idx, motif="pat_rest_defence"):
         sim, r = self.sim, self.sim.rng
-        fx, fy = r.uniform(72.0, 82.0), _clip(50 + r.gauss(0, 10), 30, 70)
+        if motif == "pat_direct_transition":
+            # the team's own counters go down its usual lanes, so its lane profile (style seed) holds
+            lane = r.choices(range(len(LANE_CENTERS)), sim.teams[tid].lane_weights)[0]
+            fx, fy = r.uniform(72.0, 82.0), _clip(LANE_CENTERS[lane] + r.gauss(0, 6), 5, 95)
+        else:
+            fx, fy = r.uniform(72.0, 82.0), _clip(50 + r.gauss(0, 10), 30, 70)
         eid, recv, fx, fy = self._pass(tid, holder, x, y, fx, fy, ptype="through_ball", pattern="counter", idx=idx)
         cx, cy = r.uniform(84.0, 90.0), _clip(fy + r.gauss(0, 5), 32, 68)
         sim.tick(sim.teams[tid], 0.5)
         sim.emit(tid, recv.player_id, "carry", fx, fy, cx, cy, pattern="counter", idx=idx + 1)
         sim.tick(sim.teams[tid], 0.4)
         res = sim.take_shot(tid, recv, cx, cy, False, "counter", eid, False, idx + 2)
-        self.done("pat_rest_defence", o)
+        self.done(motif, o)
         return ("return", sim.after_shot(tid, res, cx, cy))
 
     def _foul_after_loss(self, tid, o, x, y, holder):
@@ -324,3 +353,27 @@ class Motifs:
         d, dx, dy = sim.pick(o, 100 - x, 100 - y, 100 - x, scale=12, usage=False)
         self.done("pat_tactical_fouling", o)
         return ("return", sim.foul(o, d, dx, dy, holder, x, y))
+
+    def _giveaway(self, tid, o, x, y, holder, pattern, idx):
+        """A short pass under pressure at the back that does not arrive: intercepted."""
+        sim, r = self.sim, self.sim.rng
+        xe, ye = _clip(x + r.uniform(3.0, 12.0), 3.0, 40.0), _clip(y + r.gauss(0, 12), 3.0, 97.0)
+        recv, xe, ye = sim.pick(tid, xe, ye, x, exclude=holder, skip_gk=xe > 22)
+        p_succ = sim.pass_success(tid, sim.teams[o], sim.deep(o), True, x, y, xe, ye, False, pattern)
+        sim.tick(sim.teams[tid], 1.0)
+        sim.run_time(_dist_m(x, y, xe, ye) / 20)
+        eid = sim.emit(tid, holder.player_id, "pass", x, y, xe, ye, outcome="fail", pattern=pattern, pressed=True,
+                       idx=idx)
+        sim.record_pass(eid, holder, recv, x, y, xe, ye, "short", False, p_succ)
+        d, dx, dy = sim.pick(o, 100 - xe, 100 - ye, 100 - xe, scale=10, usage=False)
+        sim.emit(o, d.player_id, "interception", dx, dy, idx=idx)
+        self.done("pat_pressed_presser", tid)
+        return ("return", sim._won(o, d, dx, dy, emit=False))
+
+    def _secure_pass(self, tid, x, y, holder, pattern, idx):
+        """The planted passer keeps it under pressure: a short completed pass with the pressure flag."""
+        r = self.sim.rng
+        xe, ye = _clip(x + r.uniform(-4.0, 10.0), 3.0, 95.0), _clip(y + r.gauss(0, 12), 3.0, 97.0)
+        eid, recv, xe, ye = self._pass(tid, holder, x, y, xe, ye, pattern=pattern, idx=idx, pressed=True)
+        self.done("pat_press_resistant", tid, holder.player_id)
+        return ("continue", xe, ye, recv, eid, idx + 1, pattern)

@@ -101,23 +101,31 @@ SHOWCASE_PLAYER_TRAITS = {
 MOTIFS = {
     "AUR": {"pat_bait_switch": 1.0, "pat_elastic_low_block": 1.0},        # signature; low block while leading
     "NTG": {"pat_rest_defence": 1.0, "pat_flank_isolation": 0.6},         # counters conceded while chasing
-    "CAL": {"pat_counter_press": 1.0, "pat_tactical_fouling": 0.6},       # regains after losses; fouls after losses
+    "CAL": {"pat_counter_press": 1.0, "pat_tactical_fouling": 0.6},      # regains after losses; fouls after losses
     "VES": {"pat_cutback": 1.0, "pat_flank_isolation": 0.5},              # cut-backs; isolation on one flank
+    # full league only (data_gen/league.py), so the small calibrated season keeps its targets
+    "FWM": {"pat_set_piece_dependence": 1.0},                             # corners won in the air and headed (direct)
+    "PLQ": {"pat_pressed_presser": 1.0},                                  # gives it away under pressure (high press)
+    "JPH": {"pat_direct_transition": 1.0},                                # shoots soon after winning it back (low block)
 }
 MOTIF_SIDES = {("VES", "pat_flank_isolation"): "left"}
 # 1.0 in every generated dataset; 0 switches planting off (the byte-identity proof), 0.5 is the
 # detection-limit run. The CLI flag --motif-scale overrides it.
 MOTIF_SCALE = 1.0
 # player-level: (team code, role) -> {motif: propensity}
-PLAYER_MOTIFS = {("VES", "striker"): {"pat_starved_finisher": 1.0}}
+PLAYER_MOTIFS = {("VES", "striker"): {"pat_starved_finisher": 1.0},
+                 ("MDL", "defensive_mid_l"): {"pat_press_resistant": 1.0}}   # full league only (wing-play side)
 # chance per eligible decision point at propensity 1.0 (eligibility in data_gen/motifs.py)
 MOTIF_RATES = {
     "pat_bait_switch": 0.02, "pat_cutback": 0.03, "pat_flank_isolation": 0.05, "pat_elastic_low_block": 0.12,
     "pat_counter_press": 0.08, "pat_rest_defence": 0.20, "pat_starved_finisher": 0.35, "pat_tactical_fouling": 0.10,
+    "pat_set_piece_dependence": 0.50, "pat_direct_transition": 0.06, "pat_press_resistant": 0.80,
+    "pat_pressed_presser": 0.35,
 }
 # Natural shot appetite kept by a team while a motif adds shots (multiplier per unit propensity):
 # its own motifs, and "opp:" entries for a team facing that motif (AUR's counters against a trailing
 # NTG, the range shots against a leading AUR). Measured so shots per team and goals per match stay
 # in their calibration ranges with planting on (docs/patterns.md).
 SHOT_COMP = {"pat_cutback": 0.85, "pat_counter_press": 0.90, "pat_bait_switch": 0.95,
+             "pat_set_piece_dependence": 0.85, "pat_direct_transition": 0.85,
              "opp:pat_rest_defence": 0.55, "opp:pat_elastic_low_block": 0.55, "opp:pat_tactical_fouling": 0.95}

@@ -511,13 +511,16 @@ class MatchSim:
         recv, xe, ye = self.pick(tid, xe, ye, 90, exclude=taker)
         p_succ = 0.40 + 0.25 * taker.set_piece_taker * taker.delivery + 0.1 * (self.att(tid) - self.teams[o_id].dfn)
         ok = rng.random() < p_succ
+        # a planted set-piece motif (data_gen/motifs.py) wins the delivery and heads at goal
+        planted = self.motifs is not None and self.motifs.at_corner(tid)
+        ok = ok or planted
         eid = self.emit(tid, taker.player_id, "pass", 99.5, ys, xe, ye,
                         outcome="success" if ok else "fail", pattern="set_piece", idx=0)
         self.record_pass(eid, taker, recv, 99.5, ys, xe, ye, "corner", ok, p_succ)
         self.run_time(1.5)
         if ok:
             self.emit(tid, recv.player_id, "duel", xe, ye, body="head", outcome="success", pattern="set_piece")
-            u = rng.random()
+            u = 0.0 if planted else rng.random()
             if u < 0.40:
                 res = self.take_shot(tid, recv, xe, ye, True, "set_piece", eid, False, 1)
                 return self.after_shot(tid, res, xe, ye)
