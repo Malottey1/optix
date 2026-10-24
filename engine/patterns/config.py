@@ -46,13 +46,26 @@ CONFIG = {
         min_xg=0.25, positions=("FW",), full_match_only=True),
     "pat_tactical_fouling": dict(
         enabled=True, foul_sec=5, transition_sec=10, min_fouls=3, min_rate_vs_league=2.5),
+    # ---- Tier 2 ----
+    # experimental, as above (hold-out recall 0.51 with a realistic plant); its context rule stays on
+    "pat_set_piece_dependence": dict(
+        enabled=False, min_sp_shots=3, min_npxg=0.3, min_share=0.4, min_share_vs_league=2.0),
+    "pat_direct_transition": dict(
+        enabled=True, counter_sec=10, own_half_x=50.0, min_shots=4, min_rate_vs_league=2.0),
+    "pat_press_resistant": dict(
+        enabled=True, min_pressured=12, min_completion=0.85, min_gap=0.17, positions=("DF", "MF", "FW")),
+    "pat_pressed_presser": dict(
+        enabled=True, press_pctl=0.75, own_x=30.0, min_own_passes=10, completion_pctl=0.25),
 }
 
 FAMILIES = tuple(CONFIG)
 # families whose lines are full-match lines (touch counts): not detected on a partial match
 FULL_MATCH_ONLY = tuple(f for f in FAMILIES if CONFIG[f].get("full_match_only"))
 # the registry icon of each family (web/src/icons); the frontend owns the mapping, this is for docs
-ICONS = {f: "pattern-" + f[4:].replace("_", "-") for f in FAMILIES}
+# Tier 2 families reuse existing icons (docs/patterns.md); Tier 1 families have their own glyph
+_SHARED_ICONS = {"pat_set_piece_dependence": "corner", "pat_direct_transition": "style-direct-play",
+                 "pat_press_resistant": "pressure", "pat_pressed_presser": "style-high-press"}
+ICONS = {f: _SHARED_ICONS.get(f, "pattern-" + f[4:].replace("_", "-")) for f in FAMILIES}
 
 
 def cfg(family: str) -> dict:

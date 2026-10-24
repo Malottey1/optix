@@ -5,8 +5,9 @@ import math
 import pytest
 
 from engine import patterns as P
-from engine.patterns import (bait_switch, counter_press, cutback, elastic_low_block, flank_isolation, helpers,
-                             rest_defence, starved_finisher, tactical_fouling)
+from engine.patterns import (bait_switch, counter_press, cutback, direct_transition, elastic_low_block,
+                             flank_isolation, helpers, press_resistant, pressed_presser, rest_defence,
+                             set_piece_dependence, starved_finisher, tactical_fouling)
 from engine.tables import Dataset
 
 H, A = "t_h", "t_a"
@@ -20,24 +21,25 @@ class B:
         self.clock = 0
 
     def add(self, etype, team, x, y, xe=None, ye=None, outcome="success", poss=1, dt=2, player=None,
-            pressed=0, xg=0.1, ptype="short", assist=""):
+            pressed=0, xg=0.1, ptype="short", assist="", pattern="open_play", stype="open_play"):
         self.clock += dt
         eid = f"{self.mid}_e{len(self.rows) + 1:04d}"
         self.rows.append(dict(event_id=eid, match_id=self.mid, team_id=team, opponent_team_id=A if team == H else H,
                               player_id=player or f"{team}_p", event_type=etype, x_start=x, y_start=y, x_end=xe,
                               y_end=ye, outcome=outcome, clock_sec=self.clock, period=1, possession_id=poss,
-                              under_pressure=pressed, score_home=0, score_away=0, home_team_id=H))
+                              under_pressure=pressed, score_home=0, score_away=0, home_team_id=H,
+                              play_pattern=pattern))
         if etype == "pass":
             self.passes[eid] = dict(pass_distance_m=round(math.hypot((xe - x) * 1.05, (ye - y) * 0.68), 1),
                                     pass_type=ptype, is_key_pass=0, xa=0.0)
         if etype == "shot":
-            self.shots[eid] = dict(xg=xg, shot_type="open_play", assist_event_id=assist)
+            self.shots[eid] = dict(xg=xg, shot_type=stype, assist_event_id=assist)
         return eid
 
-    def ds(self):
-        players = {f"{t}_p": dict(player_id=f"{t}_p", team_id=t, name=t, shirt="9", position="FW") for t in (H, A)}
+    def ds(self, position="FW"):
+        players = {f"{t}_p": dict(player_id=f"{t}_p", team_id=t, name=t, shirt="9", position=position) for t in (H, A)}
         players.update({r["player_id"]: dict(player_id=r["player_id"], team_id=r["team_id"], name=r["player_id"],
-                                             shirt="9", position="FW") for r in self.rows})
+                                             shirt="9", position=position) for r in self.rows})
         return Dataset({H: dict(team_id=H, code="HHH", name="H"), A: dict(team_id=A, code="AAA", name="A")}, players,
                        {self.mid: dict(match_id=self.mid, home_team_id=H, away_team_id=A)}, self.rows,
                        self.passes, self.shots)
@@ -273,4 +275,110 @@ def test_helpers_zones():
     assert helpers.outer_strip(14.9) == "left" and helpers.outer_strip(85.1) == "right" and helpers.outer_strip(50) is None
     assert helpers.in_apex(82, 38) and not helpers.in_apex(93, 50)
     assert helpers.in_goal_line_wide(94, 25) and not helpers.in_goal_line_wide(94, 30)
-    assert set(P.FAMILIES) == set(P.MODULES) and len(P.FAMILIES) == 8
+    assert set(P.FAMILIES) == set(P.MODULES) and len(P.FAMILIES) == 12      # Tier 1 (8) and P11, P15, P16, P17
+
+
+# ---------- Tier 2: P15 set-piece dependence, P17 direct transition, P16 press-resistant, P11 pressed presser ----------
+
+def _team(ds, f):
+    return P.recompute(ds, f.family, "m_p", {"kind": "team", "id": f.team_id}, f.evidence, ds.events, None)
+
+
+def test_set_piece_dependence(monkeypatch):
+    monkeypatch.setattr(set_piece_dependence, "league", lambda ds, key, fn: 0.15)
+    b = B()
+    for _ in range(3):
+        b.add("shot", H, 92.0, 50.0, xg=0.2, pattern="set_piece")
+    b.add("shot", H, 80.0, 50.0, xg=0.1)
+    b.add("shot", H, 89.0, 50.0, xg=0.76, pattern="set_piece", stype="penalty")      # left out of both sides
+    ds = b.ds()
+    f = set_piece_dependence.detect(ds, ds.events, H)
+    assert f.values["amount"] == 3 and f.values["share"] == pytest.approx(600 / 7)
+    assert f.values["npxg"] == pytest.approx(0.7)
+    _recompute_matches(ds, f)
+    assert _team(ds, f.__class__(f.family, H, f.instances[:2], f.values))[1]            # one set-piece shot left out
+    b2 = B()
+    for _ in range(3):
+        b2.add("shot", H, 92.0, 50.0, xg=0.1, pattern="set_piece")
+    b2.add("shot", H, 80.0, 50.0, xg=0.5)                                              # near: share 37.5% < 40%
+    d2 = b2.ds()
+    assert set_piece_dependence.detect(d2, d2.events, H) is None
+
+
+def _regain_shot(b, x=30.0, dt=5, poss=1):
+    g = b.add("possession_change", H, x, 50.0, poss=poss)
+    b.add("pass", H, x, 50.0, 70.0, 50.0, poss=poss, dt=2)
+    s = b.add("shot", H, 88.0, 50.0, poss=poss, dt=dt, xg=0.1)
+    return g, s
+
+
+def test_direct_transition(monkeypatch):
+    monkeypatch.setattr(direct_transition, "league", lambda ds, key, fn: 0.05)
+    b = B()
+    for poss in range(1, 9, 2):
+        _regain_shot(b, poss=poss)
+    b.add("possession_change", H, 60.0, 50.0, poss=11)                                # in the opponent's half: not a regain
+    b.add("shot", H, 88.0, 50.0, poss=11, dt=3)
+    ds = b.ds()
+    f = direct_transition.detect(ds, ds.events, H)
+    assert f.values["amount"] == 4 and f.values["regains"] == 4 and f.values["team_shots"] == 5
+    _recompute_matches(ds, f)
+    ds.events[2]["clock_sec"] += 30                                                   # the first shot comes too late
+    assert _team(ds, f)[1]
+    b2 = B()
+    for poss in range(1, 7, 2):
+        _regain_shot(b2, poss=poss)                                                   # near: three such shots
+    _regain_shot(b2, poss=9, dt=12)                                                   # outside ten seconds
+    d2 = b2.ds()
+    assert direct_transition.detect(d2, d2.events, H) is None
+
+
+def test_press_resistant():
+    b = B()
+    for i in range(12):
+        b.add("pass", H, 40.0, 50.0, 45.0, 50.0, player="dm6", pressed=1, outcome="fail" if i == 0 else "success")
+    for i in range(10):
+        b.add("pass", H, 40.0, 50.0, 45.0, 50.0, player="cb4", pressed=1, outcome="fail" if i % 2 else "success")
+    ds = b.ds(position="MF")
+    fs = press_resistant.detect(ds, ds.events, H)
+    assert [f.player_id for f in fs] == ["dm6"]
+    assert fs[0].values["amount"] == 11 and fs[0].values["team_completion"] == 50.0
+    _recompute_matches(ds, fs[0])
+    subj = {"kind": "player", "id": "dm6"}
+    assert P.recompute(ds, fs[0].family, "m_p", subj, fs[0].evidence[1:], ds.events, None)[1]   # a pass left out
+    ds.events[1]["outcome"] = "fail"                                                  # 10 of 12: under 85%
+    assert P.recompute(ds, fs[0].family, "m_p", subj, fs[0].evidence, ds.events, None)[1]
+    b2 = B()
+    for i in range(11):                                                               # near: eleven passes
+        b2.add("pass", H, 40.0, 50.0, 45.0, 50.0, player="dm6", pressed=1)
+    for i in range(10):
+        b2.add("pass", H, 40.0, 50.0, 45.0, 50.0, player="cb4", pressed=1, outcome="fail" if i % 2 else "success")
+    d2 = b2.ds(position="MF")
+    assert press_resistant.detect(d2, d2.events, H) == []
+
+
+def test_pressed_presser(monkeypatch):
+    monkeypatch.setattr(pressed_presser, "lines", lambda ds, c=None: (0.2, 0.6))
+    b = B()
+    for i in range(10):
+        b.add("pass", A, 50.0, 50.0, 55.0, 50.0)
+        b.add("pressure", H, 50.0, 50.0)
+    for i in range(10):
+        b.add("pass", H, 20.0, 50.0, 25.0, 50.0, pressed=1, outcome="fail" if i < 5 else "success")
+    b.add("pass", H, 40.0, 50.0, 45.0, 50.0, pressed=1, outcome="fail")               # outside the zone
+    ds = b.ds()
+    f = pressed_presser.detect(ds, ds.events, H)
+    assert f.values["amount"] == 5 and f.values["own_passes"] == 10 and f.values["own_completion"] == 50.0
+    _recompute_matches(ds, f)
+    assert _team(ds, f.__class__(f.family, H, [f.instances[0][1:]], f.values))[1]       # a pass left out
+    ds.events[-2]["x_start"] = 35.0                                                    # one pass moves out: 9 left
+    assert _team(ds, f)[1]
+    b2 = B()
+    for i in range(10):
+        b2.add("pass", A, 50.0, 50.0, 55.0, 50.0)
+        b2.add("pressure", H, 50.0, 50.0, outcome="success" if i < 1 else "fail")
+    for i in range(10):
+        b2.add("pass", H, 20.0, 50.0, 25.0, 50.0, pressed=1, outcome="fail" if i < 5 else "success")
+    d2 = b2.ds()
+    d2.events[:] = [e for e in d2.events if not (e["event_type"] == "pressure" and e["outcome"] == "fail")]
+    assert pressed_presser.detect(d2, d2.events, H) is None                           # press 0.1 below the line

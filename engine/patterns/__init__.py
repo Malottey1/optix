@@ -9,14 +9,18 @@ from __future__ import annotations
 
 from engine.tables import Dataset, match_events
 
-from . import (bait_switch, counter_press, cutback, elastic_low_block, flank_isolation, rest_defence,
-               starved_finisher, tactical_fouling)
+from . import (bait_switch, counter_press, cutback, direct_transition, elastic_low_block, flank_isolation,
+               press_resistant, pressed_presser, rest_defence, set_piece_dependence, starved_finisher,
+               tactical_fouling)
 from .config import CONFIG, FAMILIES, FULL_MATCH_ONLY, ICONS, enabled
 from .helpers import Finding
 
 MODULES = {m.FAMILY: m for m in (bait_switch, cutback, flank_isolation, elastic_low_block, counter_press,
-                                  rest_defence, starved_finisher, tactical_fouling)}
-PLAYER_FAMILIES = ("pat_starved_finisher",)
+                                  rest_defence, starved_finisher, tactical_fouling, set_piece_dependence,
+                                  direct_transition, press_resistant, pressed_presser)}
+PLAYER_FAMILIES = ("pat_starved_finisher", "pat_press_resistant")
+# team families whose detector takes (ds, events, team_id) and whose recompute takes the scope
+SCOPE_FAMILIES = ("pat_counter_press", "pat_rest_defence", "pat_tactical_fouling", "pat_direct_transition")
 WINDOW_FAMILIES = ("pat_elastic_low_block",)       # the finding carries its own window
 
 # claim units and the numbers each family carries (value.amount is the first)
@@ -34,6 +38,11 @@ VALUE_KEYS = {
                              "league_xg_per_touch"),
     "pat_tactical_fouling": ("amount", "losses", "rate", "league_rate", "shots_after_fouls", "shots_after_other",
                              "other_losses"),
+    "pat_set_piece_dependence": ("amount", "set_piece_xg", "open_play_xg", "npxg", "share", "league_share"),
+    "pat_direct_transition": ("amount", "xg", "regains", "per_100", "league_per_100", "team_shots", "shot_share"),
+    "pat_press_resistant": ("amount", "pressured", "completion", "team_completion", "pass_completion"),
+    "pat_pressed_presser": ("amount", "own_passes", "own_completion", "league_own_completion", "press_intensity",
+                            "league_press_line"),
 }
 
 
@@ -47,9 +56,9 @@ def detect_team(ds: Dataset, match_id: str, team_id: str, upto: int | None = Non
         m = MODULES[fam]
         if fam == "pat_elastic_low_block":
             f = m.detect(ds, match_id, team_id, upto)
-        elif fam in ("pat_counter_press", "pat_rest_defence", "pat_tactical_fouling"):
+        elif fam in SCOPE_FAMILIES or fam in ("pat_set_piece_dependence", "pat_pressed_presser"):
             f = m.detect(ds, evs, team_id)
-        elif fam == "pat_starved_finisher":
+        elif fam in PLAYER_FAMILIES:
             out += m.detect(ds, evs, team_id)
             continue
         else:
@@ -81,13 +90,15 @@ def recompute(ds: Dataset, family: str, match_id: str, subject: dict, anchors: l
     m = MODULES[family]
     ordered = match_events(ds)[match_id]
     by_id = _by_id(ds)
-    if family == "pat_starved_finisher":
+    if family in PLAYER_FAMILIES:
         return m.recompute(ds, subject["id"], anchors, scope_events)
     tid = subject["id"]
     if family == "pat_elastic_low_block":
         return m.recompute(ds, match_id, tid, window, anchors)
-    if family in ("pat_counter_press", "pat_rest_defence", "pat_tactical_fouling"):
+    if family in SCOPE_FAMILIES:
         return m.recompute(ds, ordered, tid, anchors, scope_events)
+    if family in ("pat_set_piece_dependence", "pat_pressed_presser"):
+        return m.recompute(ds, tid, anchors, scope_events)
     if family == "pat_bait_switch":
         return m.recompute(by_id, ordered, ds.passes, ds.shots, tid, anchors)
     return m.recompute(by_id, ordered, ds.passes, ds.shots, tid, anchors, scope_events)
