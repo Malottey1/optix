@@ -5,7 +5,8 @@ Applies to: metric field_tilt, subject a team (the side with the territory), sco
 window. Stands down when field_tilt_with_lead fires on the same claim (that rule already gives the
 caveat, with its own wording).
 Fires when the low-block detector finds a spell of the OPPONENT inside the claim's window
-(overlapping it by >= MIN_OVERLAP_SEC).
+(overlapping it by >= MIN_OVERLAP_SEC). Any overlap counts: a 600-second floor let a 463-second
+overlap through unqualified (tests/test_pattern_claims.py, after the Tier 2 plants changed the data).
 Action: context. REQUIRES team_shots, outside_shot_share and team_xg_per_shot.
 """
 from engine.patterns import elastic_low_block
@@ -13,7 +14,7 @@ from engine.patterns import elastic_low_block
 from . import RuleResult, field_tilt_with_lead
 
 RULE_ID = "ctx_tilt_without_access"
-MIN_OVERLAP_SEC = 600
+MIN_OVERLAP_SEC = 1
 REQUIRES = ("team_shots", "outside_shot_share", "team_xg_per_shot")
 
 

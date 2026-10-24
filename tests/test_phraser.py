@@ -116,7 +116,7 @@ def _other_team(ds, claim):
 
 ADVERSARIAL = {
     "altered number": lambda c, ds, s: s.replace(fmt(_decimal(c), "en"), fmt(round(_decimal(c) + 0.1, 3), "en")),
-    "invented number": lambda c, ds, s: s.rstrip(".") + " over 7 matches.",
+    "invented number": lambda c, ds, s: s.rstrip(".") + " over 9917 matches.",
     "different team": lambda c, ds, s: s.rstrip(".") + f", more than {_other_team(ds, c)}.",
     "prediction": lambda c, ds, s: s.rstrip(".") + ", and they will win this.",
     "over-length": lambda c, ds, s: (s + " ") * 6,

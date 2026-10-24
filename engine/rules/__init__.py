@@ -27,10 +27,11 @@ class RuleResult:
     detail: dict
 
 
-from . import (causal_claim, causal_red_card, ctx_attack_side_vs_finish_side, ctx_crosses_vs_cutbacks,  # noqa: E402
-               ctx_dominance_with_transition_exposure, ctx_fouls_clustered_after_losses,
-               ctx_losses_vs_immediate_regain, ctx_low_volume_high_quality, ctx_tilt_without_access,
-               ctx_volume_without_central_access, field_tilt_with_lead, ppda_alone, set_piece_inflation, shot_spam,
+from . import (causal_claim, causal_red_card, ctx_attack_side_vs_finish_side, ctx_completion_without_pressure_split,  # noqa: E402
+               ctx_crosses_vs_cutbacks, ctx_dominance_with_transition_exposure, ctx_fouls_clustered_after_losses,
+               ctx_losses_vs_immediate_regain, ctx_low_possession_with_direct_threat, ctx_low_volume_high_quality,
+               ctx_press_without_secure_build_up, ctx_tilt_without_access, ctx_volume_without_central_access,
+               ctx_xg_from_set_pieces, field_tilt_with_lead, ppda_alone, set_piece_inflation, shot_spam,
                single_match_fatigue, small_sample_xg, wide_forward_passes)
 
 RULES = [causal_claim, causal_red_card, single_match_fatigue, field_tilt_with_lead, shot_spam,
@@ -38,11 +39,17 @@ RULES = [causal_claim, causal_red_card, single_match_fatigue, field_tilt_with_le
          # pattern trap rules (engine/patterns): a naive claim the pattern shows to be misleading
          ctx_attack_side_vs_finish_side, ctx_crosses_vs_cutbacks, ctx_volume_without_central_access,
          ctx_tilt_without_access, ctx_losses_vs_immediate_regain, ctx_dominance_with_transition_exposure,
-         ctx_low_volume_high_quality, ctx_fouls_clustered_after_losses]
+         ctx_low_volume_high_quality, ctx_fouls_clustered_after_losses,
+         ctx_xg_from_set_pieces, ctx_low_possession_with_direct_threat, ctx_completion_without_pressure_split,
+         ctx_press_without_secure_build_up]
 PATTERN_RULES = {"ctx_attack_side_vs_finish_side": "pat_bait_switch", "ctx_crosses_vs_cutbacks": "pat_cutback",
                  "ctx_volume_without_central_access": "pat_flank_isolation",
                  "ctx_tilt_without_access": "pat_elastic_low_block",
                  "ctx_losses_vs_immediate_regain": "pat_counter_press",
                  "ctx_dominance_with_transition_exposure": "pat_rest_defence",
                  "ctx_low_volume_high_quality": "pat_starved_finisher",
-                 "ctx_fouls_clustered_after_losses": "pat_tactical_fouling"}
+                 "ctx_fouls_clustered_after_losses": "pat_tactical_fouling",
+                 "ctx_xg_from_set_pieces": "pat_set_piece_dependence",
+                 "ctx_low_possession_with_direct_threat": "pat_direct_transition",
+                 "ctx_completion_without_pressure_split": "pat_press_resistant",
+                 "ctx_press_without_secure_build_up": "pat_pressed_presser"}

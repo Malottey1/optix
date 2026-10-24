@@ -29,7 +29,11 @@
     "ctx_losses_vs_immediate_regain": "Muchas de esas pérdidas se recuperaron en pocos segundos; la frase ahora da las recuperaciones junto a las pérdidas.",
     "ctx_dominance_with_transition_exposure": "El equipo con el territorio también concedió tiros a la contra; la frase ahora da esos tiros junto al territorio.",
     "ctx_low_volume_high_quality": "Pocos toques, pero tiros sin presión: decir que fue un partido discreto engañaría, así que no se publica.",
-    "ctx_fouls_clustered_after_losses": "Muchas de las faltas llegaron justo después de perder el balón en el centro del campo; la frase ahora da ese recuento junto al total."
+    "ctx_fouls_clustered_after_losses": "Muchas de las faltas llegaron justo después de perder el balón en el centro del campo; la frase ahora da ese recuento junto al total.",
+    "ctx_xg_from_set_pieces": "La mayor parte del xG sin penaltis llegó a balón parado; la frase ahora dice cuánto del total supuso.",
+    "ctx_low_possession_with_direct_threat": "Poco balón, pero hubo tiros a los pocos segundos de recuperarlo en campo propio; la frase ahora da esos tiros.",
+    "ctx_completion_without_pressure_split": "Un solo porcentaje de acierto ocultaba cómo este jugador conservó el balón bajo presión frente a sus compañeros; la frase ahora da la división.",
+    "ctx_press_without_secure_build_up": "La presión fue alta, pero bajo presión cerca de su portería llegaron pocos pases; la frase ahora da ese acierto junto a la presión."
   },
   "matchup.weak_flank": {
     "analyst": "{attacker} envía el {attack_share} % de sus entradas al último tercio por el {lane_label} (media de la liga {league_share} %), y {defender} permite que el {concede_completion} % de las entradas por ahí salgan bien (liga {league_completion} %).",
@@ -312,5 +316,93 @@
   "field_tilt.low_block_and_counters": {
     "analyst": "{team} tuvo el {amount}% del territorio, pero el {outside_shot_share}% de sus {team_shots} {team_shots|tiro|tiros} fue desde fuera del área ({team_xg_per_shot} xG por tiro) y concedió {counter_shots_conceded} {counter_shots_conceded|tiro|tiros} al contragolpe por {counter_xg_conceded} xG.",
     "casual": "{team} tuvo el {amount}% del territorio, pero el {outside_shot_share}% de sus {team_shots} {team_shots|tiro|tiros} fue de lejos ({team_xg_per_shot} xG por tiro) y recibió {counter_shots_conceded} {counter_shots_conceded|tiro|tiros} a la contra ({counter_xg_conceded} xG)."
-  }
+  },
+  "possession.stat": {
+    "analyst": "{team} solo ha dado el {amount}% de los pases del partido.",
+    "casual": "{team} apenas ha tenido el balón: el {amount}% de los pases."
+  },
+  "possession.shots_after_regains": {
+    "analyst": "{team} dio el {amount}% de los pases, pero hizo {transition_shots} {transition_shots|tiro|tiros} a los pocos segundos de recuperar el balón en campo propio ({transition_xg} xG).",
+    "casual": "Solo el {amount}% de los pases para {team}, pero {transition_shots} {transition_shots|tiro rápido|tiros rápidos} justo tras recuperarlo en campo propio, {transition_xg} xG."
+  },
+  "pass_completion.stat": {
+    "analyst": "{player} ({team}) completó el {amount}% de sus pases.",
+    "casual": "{player} encontró a un compañero en el {amount}% de sus pases con {team}."
+  },
+  "pass_completion.under_pressure": {
+    "analyst": "{player} ({team}) completó el {amount}% de sus pases y el {pressured_completion}% de {pressured_passes} bajo presión, frente al {team_pressured_completion}% de sus compañeros bajo presión.",
+    "casual": "{player} completó el {amount}% de sus pases con {team}, y el {pressured_completion}% de los {pressured_passes} bajo presión, cuando sus compañeros lograron el {team_pressured_completion}%."
+  },
+  "xg.set_piece_split": {
+    "analyst": "{team} suma {amount} xG hasta ahora, y {set_piece_xg} de ellos a balón parado ({set_piece_xg_share}% de su xG sin penaltis).",
+    "casual": "Las ocasiones de {team} suman {amount} goles esperados, pero {set_piece_xg} llegaron a balón parado ({set_piece_xg_share}% sin penaltis)."
+  },
+  "xg.volume_and_set_pieces": {
+    "analyst": "{team}: {amount} xG en {shots} {shots|tiro|tiros}, {xg_per_shot} xG por tiro, con {set_piece_xg} a balón parado ({set_piece_xg_share}% del xG sin penaltis).",
+    "casual": "{team} lleva {shots} {shots|tiro|tiros} que valen {amount} goles esperados ({xg_per_shot} por tiro), y {set_piece_xg} llegaron a balón parado ({set_piece_xg_share}% sin penaltis)."
+  },
+  "xg.small_sample_set_pieces": {
+    "analyst": "{team} tiene {amount} xG en solo {shots} {shots|tiro|tiros}, {set_piece_xg} a balón parado ({set_piece_xg_share}% del xG sin penaltis); demasiado pocos tiros para sacar conclusiones.",
+    "casual": "Los {shots} {shots|tiro|tiros} de {team} valen {amount} goles esperados, {set_piece_xg} a balón parado ({set_piece_xg_share}% sin penaltis), pero son muy pocos tiros para juzgar."
+  },
+  "ppda.press_and_own_zone": {
+    "analyst": "{team}: PPDA {amount}, {press_intensity} acciones de presión por pase rival; bajo presión cerca de su portería completó el {own_zone_completion}% de {own_zone_passes} {own_zone_passes|pase|pases} (percentil quince de la liga: {league_own_completion}%).",
+    "casual": "{team} presiona fuerte ({press_intensity} presiones por pase rival, PPDA {amount}), pero bajo presión cerca de su portería solo llegó el {own_zone_completion}% de {own_zone_passes} {own_zone_passes|pase|pases} (la mayoría supera el {league_own_completion}%)."
+  },
+  "pattern.set_piece_dependence": [
+    {
+      "analyst": "{team} hizo {amount} {amount|tiro|tiros} a balón parado por {set_piece_xg} xG: el {share}% de sus {npxg} xG sin penaltis (liga {league_share}%).",
+      "casual": "El balón parado sostuvo a {team}: el {share}% de su xG sin penaltis ({set_piece_xg} de {npxg}) en {amount} {amount|tiro|tiros}, liga {league_share}%."
+    },
+    {
+      "analyst": "Parte del xG sin penaltis a balón parado: {share}% para {team} ({set_piece_xg} de {npxg} xG, {amount} {amount|tiro|tiros}) frente al {league_share}% de la liga.",
+      "casual": "El peligro de {team} llegó sobre todo a balón parado: {amount} {amount|tiro|tiros}, {set_piece_xg} de {npxg} xG, el {share}% de su xG sin penaltis (liga {league_share}%)."
+    },
+    {
+      "analyst": "{set_piece_xg} de los {npxg} xG sin penaltis de {team} llegaron en {amount} {amount|tiro|tiros} a balón parado, el {share}% (liga {league_share}%).",
+      "casual": "Córners y faltas: {amount} {amount|tiro|tiros} para {team}, {set_piece_xg} de {npxg} xG, el {share}% de su xG sin penaltis (liga {league_share}%)."
+    }
+  ],
+  "pattern.direct_transition": [
+    {
+      "analyst": "{team} hizo {amount} {amount|tiro|tiros} a los pocos segundos de recuperar el balón en campo propio, {xg} xG: {per_100} por cada cien de sus {regains} recuperaciones (liga {league_per_100}).",
+      "casual": "Recuperar y salir: {team} hizo {amount} {amount|tiro|tiros} justo tras recuperar el balón en campo propio ({xg} xG), de {regains} {regains|recuperación|recuperaciones}: {per_100} por cada cien, liga {league_per_100}."
+    },
+    {
+      "analyst": "Transiciones directas: {amount} {amount|tiro|tiros} de {team} tras {regains} {regains|recuperación|recuperaciones} en campo propio ({per_100} por cada cien, liga {league_per_100}), {xg} xG.",
+      "casual": "{team} convirtió recuperaciones en tiros: {amount} de {regains} {regains|recuperación|recuperaciones} en campo propio, {xg} xG ({per_100} por cada cien, liga {league_per_100})."
+    },
+    {
+      "analyst": "{amount} {amount|tiro|tiros} ({xg} xG) llegaron a los pocos segundos de que {team} recuperara el balón en campo propio: {per_100} por cada cien de {regains} recuperaciones frente a {league_per_100} en la liga.",
+      "casual": "De campo propio al tiro en segundos: {amount} {amount|vez|veces} en {regains} {regains|recuperación|recuperaciones} para {team}, {xg} xG, {per_100} por cada cien (liga {league_per_100})."
+    }
+  ],
+  "pattern.press_resistant": [
+    {
+      "analyst": "{player} ({team}) completó {amount} de {pressured} {pressured|pase|pases} bajo presión, el {completion}%, frente al {team_completion}% de sus compañeros bajo presión.",
+      "casual": "Tranquilo bajo presión: {player} completó el {completion}% de {pressured} {pressured|pase|pases} presionados con {team} ({amount}); sus compañeros, el {team_completion}%."
+    },
+    {
+      "analyst": "Bajo presión, {player} ({team}) conservó el balón: {completion}% de {pressured} {pressured|pase|pases} completados ({amount}), compañeros {team_completion}%.",
+      "casual": "{player} fue la salida de {team} cuando le presionaban: {amount} de {pressured} {pressured|pase|pases} completados ({completion}%), compañeros {team_completion}%."
+    },
+    {
+      "analyst": "{completion}% de acierto en {pressured} pases bajo presión para {player} ({team}): {amount} completados, frente al {team_completion}% de sus compañeros.",
+      "casual": "Presionado {pressured} {pressured|vez|veces} con el balón, {player} encontró a un compañero {amount} {amount|vez|veces} ({completion}%) con {team}; compañeros {team_completion}%."
+    }
+  ],
+  "pattern.pressed_presser": [
+    {
+      "analyst": "{team} presionó fuerte ({press_intensity} acciones de presión por pase rival), pero bajo presión cerca de su portería completó el {own_completion}% de {own_passes} {own_passes|pase|pases} (percentil quince de la liga: {league_own_completion}%); {amount} no llegaron.",
+      "casual": "{team} presionó arriba ({press_intensity} presiones por pase rival), pero presionado cerca de su portería perdió {amount} de {own_passes} {own_passes|pase|pases}: {own_completion}% completados, cuando la mayoría supera el {league_own_completion}%."
+    },
+    {
+      "analyst": "Presiona y es presionado: {team} registró {press_intensity} acciones de presión por pase rival y completó el {own_completion}% de {own_passes} {own_passes|pase|pases} bajo presión cerca de su portería (percentil quince de la liga: {league_own_completion}%); {amount} no llegaron.",
+      "casual": "{team} presiona bien ({press_intensity} presiones por pase rival) pero duda atrás: {amount} de {own_passes} {own_passes|pase|pases} presionados cerca de su portería no llegaron ({own_completion}% completados, línea de la liga {league_own_completion}%)."
+    },
+    {
+      "analyst": "{amount} de los {own_passes} pases de {team} bajo presión cerca de su portería no llegaron ({own_completion}% completados, percentil quince de la liga: {league_own_completion}%), mientras presionaba a {press_intensity} acciones por pase rival.",
+      "casual": "Presión alta, inseguridad atrás: {team} completó el {own_completion}% de {own_passes} {own_passes|pase|pases} presionados cerca de su portería y perdió {amount} (línea de la liga {league_own_completion}%), presionando {press_intensity} veces por pase rival."
+    }
+  ]
 }

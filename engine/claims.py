@@ -29,7 +29,7 @@ SUPPORT_DP = {"xg_per_shot": 3, "cluster_xg": 2, "open_play_xa": 2, "set_piece_x
               # pattern and naive-claim values (engine/patterns)
               "xg": 2, "cross_xg_per_shot": 3, "cutback_xg_per_shot": 3, "xg_per_touch": 3,
               "league_xg_per_touch": 4, "median_xg": 3, "team_xg_per_shot": 3, "counter_xg_conceded": 2,
-              "cross_xg": 2}
+              "cross_xg": 2, "set_piece_xg": 2, "transition_xg": 2}
 INT_KEYS = {"shots", "low_xg_shots", "team_f3_passes", "opponent_f3_passes", "box_entries", "open_play",
             "set_piece", "passes_allowed", "defensive_actions", "cluster_start_sec", "cluster_end_sec",
             "spell_events", "spell_start_sec", "concede_sample_size", "completion_attempts", "wide_count",
@@ -37,7 +37,8 @@ INT_KEYS = {"shots", "low_xg_shots", "team_f3_passes", "opponent_f3_passes", "bo
             # pattern and naive-claim values (engine/patterns)
             "losses", "other_losses", "shots_after_fouls", "shots_after_other", "unpressured_shots", "opp_shots",
             "f3_passes", "build_left", "seconds", "cross_shots", "entries", "cutbacks", "cutback_shots",
-            "regains_4s", "fouls_after_losses", "counter_shots_conceded", "isolation_spells", "team_shots"}
+            "regains_4s", "fouls_after_losses", "counter_shots_conceded", "isolation_spells", "team_shots",
+            "transition_shots", "pressured_passes", "own_zone_passes"}
 MAX_EVIDENCE = 15
 PATTERN_MAX_EVIDENCE = 240          # a pattern claim keeps every anchor (the recompute starts from them)
 
@@ -117,6 +118,12 @@ def _xg(sc, subject, params, non_penalty=False):
     low = sum(1 for i in r.evidence_event_ids if sc.ds.shots[i]["xg"] <= 0.08)
     vals = dict(amount=r.value, shots=r.sample_size, low_xg_shots=low,
                 xg_per_shot=r.value / r.sample_size if r.sample_size else 0.0)
+    if params.get("with_set_piece_split"):   # rule ctx_xg_from_set_pieces: non-penalty set-piece xG
+        np_ = [e for e in ev if e["event_type"] == "shot" and e["team_id"] == tid
+               and sc.ds.shots[e["event_id"]]["shot_type"] != "penalty"]
+        npxg = sum(sc.ds.shots[e["event_id"]]["xg"] for e in np_)
+        sp = sum(sc.ds.shots[e["event_id"]]["xg"] for e in np_ if e["play_pattern"] == "set_piece")
+        vals.update(set_piece_xg=sp, set_piece_xg_share=_pct(sp / npxg) if npxg else 0.0)
     return vals, lambda e: e["event_type"] == "shot" and e["team_id"] == tid
 
 
@@ -154,6 +161,13 @@ def _ppda(sc, subject, params):
     vals = dict(amount=r.value or 0.0, passes_allowed=r.detail["passes_allowed"], defensive_actions=r.sample_size)
     if params.get("with_press_intensity"):
         vals["press_intensity"] = M.press_intensity(ev, tid).value or 0.0
+    if params.get("with_own_zone"):         # rule ctx_press_without_secure_build_up
+        from .patterns import pressed_presser as PP
+        c = PP.cfg(PP.FAMILY)
+        own = PP._own(ev, tid, c)
+        ok = sum(e["outcome"] == "success" for e in own)
+        vals.update(own_zone_passes=len(own), own_zone_completion=_pct(ok / len(own)) if own else 0.0,
+                    league_own_completion=_pct(PP.lines(sc.ds, c)[1]))
     return vals, lambda e: e["team_id"] == tid and e["event_type"] in M.PPDA_ACTIONS and e["x_start"] >= 40
 
 
@@ -358,6 +372,44 @@ def _fouls(sc, subject, params):
     return vals, lambda e: e["event_type"] == "foul" and e["team_id"] == tid
 
 
+def _possession(sc, subject, params):
+    """The team's share of the passes attempted in scope by both teams (an event-count proxy for
+    possession: the feed has no possession clock). with_transition adds the shots taken within
+    seconds of winning the ball in the team's own half (the definition of
+    engine/patterns/direct_transition.py) and their xG."""
+    tid = subject["id"]
+    ev = _team_scope_events(sc, tid)
+    passes = [e for e in ev if e["event_type"] == "pass"]
+    mine = sum(1 for e in passes if e["team_id"] == tid)
+    vals = dict(amount=_pct(mine / len(passes)) if passes else 0.0)
+    if params.get("with_transition"):
+        from .patterns import direct_transition as DT
+        _, pairs = DT.transition_shots(ev, tid, DT.cfg(DT.FAMILY))
+        vals.update(transition_shots=len(pairs), transition_xg=sum(sc.ds.shots[s_["event_id"]]["xg"] for _, s_ in pairs))
+    return vals, lambda e: e["event_type"] == "pass" and e["team_id"] == tid
+
+
+def _pass_completion(sc, subject, params):
+    """A player's pass completion (completed over attempted passes, %). with_pressure_split adds the
+    completion of the player's passes under pressure and of the team-mates' passes under pressure
+    (the definition of engine/patterns/press_resistant.py)."""
+    pid = subject["id"]
+    tid = _team_of(sc.ds, subject)
+    ev = _team_scope_events(sc, tid)
+    mine = [e for e in ev if e["event_type"] == "pass" and e["player_id"] == pid]
+    ok = sum(e["outcome"] == "success" for e in mine)
+    vals = dict(amount=_pct(ok / len(mine)) if mine else 0.0)
+    if params.get("with_pressure_split"):
+        pr = [e for e in mine if e["under_pressure"]]
+        mates = [e for e in ev if e["event_type"] == "pass" and e["team_id"] == tid and e["player_id"] != pid
+                 and e["under_pressure"]]
+        pok = sum(e["outcome"] == "success" for e in pr)
+        mok = sum(e["outcome"] == "success" for e in mates)
+        vals.update(pressured_passes=len(pr), pressured_completion=_pct(pok / len(pr)) if pr else 0.0,
+                    team_pressured_completion=_pct(mok / len(mates)) if mates else 0.0)
+    return vals, lambda e: e["event_type"] == "pass" and e["player_id"] == pid and e["outcome"] == "success"
+
+
 COMPUTE = {
     "field_tilt": _field_tilt,
     "xg": _xg,
@@ -378,6 +430,8 @@ COMPUTE = {
     "final_third_losses": _f3_losses,
     "player_touches": _touches,
     "fouls": _fouls,
+    "possession_pct": _possession,
+    "pass_completion": _pass_completion,
 }
 # evidence shown first when a claim cites only MAX_EVIDENCE events: the events that carry the point
 EVIDENCE_FIRST = {
@@ -387,7 +441,8 @@ UNITS = {"field_tilt": "percent", "xg": "xg", "npxg": "xg", "chances_created": "
          "ppda": "ratio", "shot_cluster_score": "count", "territorial_stress": "seconds", "momentum": "score_0_100",
          "rhythm_index": "per_min", "xt_added": "xt", "milestone_count": "count", "zone_mismatch": "percent",
          "attack_side_share": "percent", "crosses": "count", "final_third_passes": "count",
-         "final_third_losses": "count", "player_touches": "count", "fouls": "count"}
+         "final_third_losses": "count", "player_touches": "count", "fouls": "count", "possession_pct": "percent",
+         "pass_completion": "percent"}
 
 
 def compute(ds: Dataset, metric: str, scope: str, subject: dict, params: dict | None = None,

@@ -253,7 +253,8 @@ def switched_on(data):
 
 def test_experimental_families_are_off_by_default_and_still_verified_when_switched_on(showcase, switched_on, data):
     off, (s, results) = switched_on
-    assert set(off) == {"pat_elastic_low_block", "pat_rest_defence"}   # docs/pattern-recall.md: experimental
+    assert set(off) == {"pat_elastic_low_block", "pat_rest_defence",   # docs/pattern-recall.md: experimental
+                        "pat_set_piece_dependence"}
     assert not {r.claim["metric"] for r in showcase[1]} & set(off)
     claims = [r.claim for r in results if r.claim["metric"] in off and r.status == "published"]
     assert {c["metric"] for c in claims} == set(off)
@@ -407,3 +408,51 @@ def test_every_pattern_template_renders_edge_values_in_every_language(key):
 def test_variant_seeds_reach_every_variant():
     seen = {N._variant(f"clm_m_{i:03d}_x", 3) for i in range(30)}
     assert seen == {0, 1, 2}
+
+
+# ---------- Tier 2 trap rules: the naive claim with and without the pattern ----------
+
+TIER2 = {  # rule -> (family, naive metric, subject kind)
+    "ctx_xg_from_set_pieces": ("pat_set_piece_dependence", "xg", "team"),
+    "ctx_low_possession_with_direct_threat": ("pat_direct_transition", "possession_pct", "team"),
+    "ctx_completion_without_pressure_split": ("pat_press_resistant", "pass_completion", "player"),
+    "ctx_press_without_secure_build_up": ("pat_pressed_presser", "ppda", "team"),
+}
+
+
+def _naive_claim(ds, mid, metric, subject, rule=None):
+    params = dict(REVISIONS[rule][2]) if rule else {}
+    keys = ("amount",) + (tuple(REVISIONS[rule][1]) if rule else ())
+    t1 = max(e["clock_sec"] for e in match_events(ds)[mid])
+    return build_claim(ds, metric, "window", subject, template_key="x", params=params, match_id=mid,
+                       window=(0, t1), param_values=keys, extra_params={"team": "T"})
+
+
+@pytest.mark.parametrize("rule", sorted(TIER2))
+def test_tier2_rule_fires_with_the_pattern_and_not_without(data, rule):
+    """Where the detector finds the pattern, the plain claim is held for context and the revised one
+    publishes with it; where it does not, the rule stays quiet."""
+    family, metric, kind = TIER2[rule]
+    ds = data[1]
+    hit = miss = None
+    for mid, m in sorted(ds.matches.items()):
+        for tid in (m["home_team_id"], m["away_team_id"]):
+            fs = PAT.detect_team(ds, mid, tid, families=[family])
+            if kind == "player":
+                subj = ({"kind": "player", "id": fs[0].player_id} if fs else
+                        {"kind": "player", "id": next(e["player_id"] for e in match_events(ds)[mid]
+                                                      if e["team_id"] == tid and e["event_type"] == "pass")})
+            else:
+                subj = {"kind": "team", "id": tid}
+            if fs and hit is None:
+                hit = (mid, subj)
+            if not fs and miss is None:
+                miss = (mid, subj)
+        if hit and miss:
+            break
+    assert hit and miss, rule
+    v = verdict(_naive_claim(ds, hit[0], metric, hit[1]), ds)
+    assert rule in v.rule_ids and v.status == "blocked" and rule in v.revision_hint
+    rv = verdict(_naive_claim(ds, hit[0], metric, hit[1], rule), ds)
+    assert rv.fact_check == "pass" and rule in rv.rule_ids and rule not in rv.revision_hint
+    assert rule not in verdict(_naive_claim(ds, miss[0], metric, miss[1]), ds).rule_ids

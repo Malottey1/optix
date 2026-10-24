@@ -17,7 +17,8 @@ Triggers (deterministic, in match clock):
   * a player's completed passes reaching a PASS_MILESTONES value;
   * at half time and full time, the tactical patterns (engine/patterns) found so far and the naive
     claims those patterns can make misleading (lane share, crosses, final-third volume and losses,
-    fouls, a forward's touches); they are ranked (novelty against the team's previous two matches,
+    fouls, a forward's touches, a low share of the passes, the pass completion of the player most
+    often pressed on the ball; the xG and PPDA claims above are tested too); they are ranked (novelty against the team's previous two matches,
     when a history is given) and capped per family (rank_candidates).
 First attempts are plain (the headline number only); the Verifier says what context a sentence
 needs and revise() adds it.
@@ -62,6 +63,8 @@ MIN_F3_PASSES = 40
 MIN_F3_LOSSES = 10
 MIN_FOULS = 10
 MAX_QUIET_TOUCHES = 25         # a forward with this many touches or fewer "had a quiet game"
+MAX_LOW_POSSESSION = 40.0      # % of the passes at or below which "had only N% of the passes" is said
+MIN_PRESSURED_PASSES = 12      # passes under pressure before a player's pass completion is said
 # ranking and caps of pattern and naive candidates (docs/patterns.md, "Novelty and repetition")
 FAMILY_CAP = 3                 # surfaced claims per family per match
 PER_SUMMARY = 6                # candidates surfaced at each half-time / full-time summary
@@ -80,6 +83,10 @@ PATTERN_PARAMS = {
     "pat_rest_defence": ("amount", "xg", "tilt"),
     "pat_starved_finisher": ("amount", "touch_line", "unpressured_shots", "xg"),
     "pat_tactical_fouling": ("amount", "losses", "rate", "league_rate"),
+    "pat_set_piece_dependence": ("amount", "set_piece_xg", "npxg", "share", "league_share"),
+    "pat_direct_transition": ("amount", "xg", "regains", "per_100", "league_per_100"),
+    "pat_press_resistant": ("amount", "pressured", "completion", "team_completion"),
+    "pat_pressed_presser": ("amount", "own_passes", "own_completion", "league_own_completion", "press_intensity"),
 }
 
 # a family whose finding can have zero of some count is phrased without it: (value, suffix, params dropped)
@@ -121,18 +128,36 @@ REVISIONS = {
                                                {"with_transition": True}),
     "ctx_fouls_clustered_after_losses": ("fouls.after_losses", ("fouls_after_losses", "after_loss_share"),
                                          {"with_after_losses": True}),
+    "ctx_xg_from_set_pieces": ("xg.set_piece_split", ("set_piece_xg", "set_piece_xg_share"),
+                               {"with_set_piece_split": True}),
+    "ctx_low_possession_with_direct_threat": ("possession.shots_after_regains", ("transition_shots", "transition_xg"),
+                                              {"with_transition": True}),
+    "ctx_completion_without_pressure_split": ("pass_completion.under_pressure",
+                                              ("pressured_passes", "pressured_completion",
+                                               "team_pressured_completion"), {"with_pressure_split": True}),
+    # PPDA always needs press intensity too (ppda_alone): the revision adds both
+    "ctx_press_without_secure_build_up": ("ppda.press_and_own_zone",
+                                          ("press_intensity", "own_zone_passes", "own_zone_completion",
+                                           "league_own_completion"),
+                                          {"with_press_intensity": True, "with_own_zone": True}),
 }
 # two rules firing together on one claim: the template that says both (else the claim is dropped,
 # never phrased with a template missing one rule's numbers)
 COMBINED_REVISIONS = {frozenset({"ctx_tilt_without_access", "ctx_dominance_with_transition_exposure"}):
-                      "field_tilt.low_block_and_counters"}
+                      "field_tilt.low_block_and_counters",
+                      frozenset({"ppda_alone", "ctx_press_without_secure_build_up"}): "ppda.press_and_own_zone",
+                      frozenset({"shot_spam", "ctx_xg_from_set_pieces"}): "xg.volume_and_set_pieces",
+                      frozenset({"small_sample_xg", "ctx_xg_from_set_pieces"}): "xg.small_sample_set_pieces"}
 STRATEGY = {"field_tilt_with_lead": "add_game_state", "shot_spam": "add_shot_quality",
             "small_sample_xg": "add_sample_size", "set_piece_inflation": "split_open_play_set_piece",
             "wide_forward_passes": "add_pass_quality", "ppda_alone": "add_press_intensity",
             "ctx_attack_side_vs_finish_side": "add_finish_side", "ctx_crosses_vs_cutbacks": "add_cutbacks",
             "ctx_volume_without_central_access": "add_touchline_spells", "ctx_tilt_without_access": "add_shot_origin",
             "ctx_losses_vs_immediate_regain": "add_regains", "ctx_dominance_with_transition_exposure": "add_counters",
-            "ctx_fouls_clustered_after_losses": "add_fouls_after_losses"}
+            "ctx_fouls_clustered_after_losses": "add_fouls_after_losses",
+            "ctx_xg_from_set_pieces": "add_set_piece_xg", "ctx_low_possession_with_direct_threat": "add_transition_shots",
+            "ctx_completion_without_pressure_split": "add_pressure_split",
+            "ctx_press_without_secure_build_up": "add_own_zone_completion"}
 NOT_REVISABLE = {"causal_claim", "causal_red_card", "single_match_fatigue", "ctx_low_volume_high_quality"}
 
 
@@ -397,7 +422,24 @@ class AnalystAgent:
                      and 100 - x["x_start"] >= M.FINAL_THIRD_X)
         if losses >= MIN_F3_LOSSES:
             add("final_third_losses", "f3_losses.stat", losses)
+        passes = [x for x in evs if x["event_type"] == "pass"]
+        if passes:
+            share = 100 * sum(1 for x in passes if x["team_id"] == tid) / len(passes)
+            if share <= MAX_LOW_POSSESSION:
+                add("possession_pct", "possession.stat", share)
         if tag == "ft":
+            pressed: dict = {}
+            for x in passes:
+                if x["team_id"] == tid and x["under_pressure"] and x["player_id"]:
+                    pressed[x["player_id"]] = pressed.get(x["player_id"], 0) + 1
+            if pressed:
+                pid, n = max(sorted(pressed.items()), key=lambda kv: kv[1])
+                if n >= MIN_PRESSURED_PASSES:
+                    ps, pe = self._player(pid)
+                    mine = [x for x in passes if x["player_id"] == pid]
+                    add("pass_completion", "pass_completion.stat",
+                        100 * sum(x["outcome"] == "success" for x in mine) / len(mine), insight_type="player_focus",
+                        ex=pe, subject=ps, key=pid)
             fouls = sum(1 for x in evs if x["event_type"] == "foul" and x["team_id"] == tid)
             if fouls >= MIN_FOULS:
                 add("fouls", "fouls.stat", fouls)

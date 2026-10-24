@@ -158,9 +158,12 @@ def test_shot_spam_fires_on_ntg_in_showcase(data):
     _, sc, _ = data
     v = verdict(claim_on(sc, "xg", team("t_ntg")), sc)
     assert "shot_spam" in v.rule_ids and v.status == "blocked"
-    assert v.revision_hint == {"shot_spam": ["shots", "xg_per_shot"]}
-    v = verdict(claim_on(sc, "xg", team("t_ntg"), param_values=("amount", "shots", "xg_per_shot")), sc)
-    assert v.rule_ids == ["shot_spam"] and v.status == "published_with_context"
+    # NTG's xG in this showcase is also mostly from set pieces (pattern rule ctx_xg_from_set_pieces)
+    assert v.revision_hint == {"shot_spam": ["shots", "xg_per_shot"],
+                               "ctx_xg_from_set_pieces": ["set_piece_xg", "set_piece_xg_share"]}
+    v = verdict(claim_on(sc, "xg", team("t_ntg"), params={"with_set_piece_split": True},
+                         param_values=("amount", "shots", "xg_per_shot", "set_piece_xg", "set_piece_xg_share")), sc)
+    assert v.rule_ids == ["shot_spam", "ctx_xg_from_set_pieces"] and v.status == "published_with_context"
 
 
 def test_set_piece_inflation_fires_on_corner_specialist(data):
