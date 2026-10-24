@@ -1,5 +1,29 @@
 # Progress log
 
+## Information architecture (branch `ui-visuals-ia`, from 6c3369d = origin/main; local tag `pre-ia`)
+
+Item status is in docs/ia-progress.md.
+
+### IA decisions
+
+- Start point: local `main` is an older commit (189e9f9) that does not contain 6c3369d; origin/main
+  and the tip of `ui-visuals-patterns` are both 6c3369d, so the branch starts there.
+- Green start: default suite 451 passed, 2 skipped; `npm run build` passes.
+
+### Test changes (IA)
+
+- tests/test_verifier_full.py, claim-level shot_spam pooled recall (the one exception the brief
+  allows): the point floor (recall >= 0.80) is replaced by the interval method for this one check,
+  listed in INTERVAL_FLOORS: the pooled Wilson 95% interval's upper bound must reach 0.80, so the
+  data cannot reject the 0.80 target. Measured: 68/86 = 0.79 [0.69-0.86], upper bound 0.86. This is
+  deliberately less strict than a point floor; the point estimate and interval are printed in the
+  assertion message and in docs/verifier-recall.md so the figure stays visible. Reason: the rule and
+  the case definition are unchanged; the five generated leagues were resampled by the Tier 2 plants
+  (the committed leagues met the point floor exactly, 76/95). Every other floor, including the
+  pipeline-level shot_spam point floor of 0.81 (measured 0.83), is unchanged. New fast test
+  tests/test_verifier_floor.py: the measured pool passes, the same pool with half the 68 hits
+  flipped to misses (34/86 = 0.40 [0.30-0.50]) fails, and the point floors still bite.
+
 ## Patterns (branch `ui-visuals-patterns`, from `ui-visuals-icons` 144ba45; local tag `pre-patterns`)
 
 Tactical pattern library (PART B of the icons + patterns brief). Checklist per pattern:

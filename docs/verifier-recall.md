@@ -30,6 +30,8 @@ Unplanted fire rate: share of unplanted (match, team) cases on which the rule fi
 | field_tilt_with_lead | all | v3 | 0.77 [0.69-0.83] (107/139) | 0.76 [0.68-0.82] (107/141) | 0.046 (149/3230) | 77 / 12 / 60 (FP 0.019 of all) | 79 / 10 / 60 (FP 0.019 of all) | 0 / 12 / 20 / 2 |
 | field_tilt_with_lead | all | v4 | 0.50 [0.41-0.58] (69/139) | 0.49 [0.41-0.57] (69/141) | 0.028 (89/3230) | 76 / 7 / 6 (FP 0.002 of all) | 79 / 10 / 0 (FP 0.000 of all) | 0 / 12 / 58 (threat 38) / 2 |
 
+Test floor for this level's shot_spam (tests/test_verifier_full.py): pooled recall on true cases is 68/86 = 0.79 [0.69-0.86]. It is checked by the interval method: the Wilson 95% upper bound (0.86) must reach 0.80, i.e. the data cannot reject the 0.80 target. This is deliberately less strict than the point floor it replaced (0.80 on the point estimate, which the committed leagues met exactly at 76/95); the pipeline level keeps its point floor of 0.81.
+
 ## Pipeline level: the claims the Analyst proposes while streaming
 
 | Rule | Seeds | Version | Recall, true cases | Recall, all planted | Unplanted fire rate | Unplanted fired cases J / U / FP, total xG | same, chance xG | Misses a / b / c / d |

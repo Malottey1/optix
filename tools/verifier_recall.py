@@ -327,6 +327,15 @@ def render(results) -> str:
                              f"{u[0] / u[1]:.3f} ({u[0]}/{u[1]}) | {lab[0]} | {lab[1]} | "
                              f"{c['a']} / {c['b']} / {c['c']}{th} / {c['d']} |")
         L.append("")
+        if level == "claim":
+            k, n = evaluate(results, tuple(seeds), "shot_spam", "claim", "v3")["true"]
+            lo, hi = wilson(k, n)
+            L += [f"Test floor for this level's shot_spam (tests/test_verifier_full.py): pooled recall on true "
+                  f"cases is {k}/{n} = {k / n:.2f} [{lo:.2f}-{hi:.2f}]. It is checked by the interval method: "
+                  f"the Wilson 95% upper bound ({hi:.2f}) must reach 0.80, i.e. the data cannot reject the 0.80 "
+                  "target. This is deliberately less strict than the point floor it replaced (0.80 on the point "
+                  "estimate, which the committed leagues met exactly at 76/95); the pipeline level keeps its "
+                  "point floor of 0.81.", ""]
     bad = check_current(results)
     L += [f"The {CURRENT} rows are the current code's own recorded verdicts. Recorded verdicts that disagree with "
           f"the {CURRENT} re-evaluation from the recorded features: {len(bad)}"
