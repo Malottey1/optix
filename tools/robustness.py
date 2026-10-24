@@ -371,7 +371,11 @@ def main(argv=None):
     have_full = {} if a.redo_full else {f["seed"]: f for f in cache.get("full", [])}
     have_sc = {s["seed"]: s for s in cache.get("showcase", [])}
     have_small = {int(k): v for k, v in cache.get("small", {}).items()}
-    with (ProcessPoolExecutor(a.jobs) if a.jobs else _Inline()) as ex:
+    # --jobs 1 runs the jobs one at a time, each in a fresh child process, so a league's memory goes
+    # back to the system when its job ends (inline, five full leagues in one process reached 2.9 GB)
+    pool = (ProcessPoolExecutor(1, max_tasks_per_child=1) if a.jobs == 1 else ProcessPoolExecutor(a.jobs)) \
+        if a.jobs else _Inline()
+    with pool as ex:
         # longest jobs first; anything in the --reuse cache is not recomputed
         sc = {s: ex.submit(_showcase_job, s, a.showcase_max_tries) for s in SHOWCASE_SEEDS if s not in have_sc}
         fu = {s: ex.submit(_full_job, s, a.reuse_leagues) for s in FULL_SEEDS + VERIFIER_EXTRA_SEEDS if s not in have_full}

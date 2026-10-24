@@ -64,22 +64,22 @@ Targets failing on more than 2 of 10 seeds: none.
 
 | Seed | Targets in range | Outside range | Soft lanes (true effect >= 7 pp) | Soft lanes (all planted) | Soft-lane false positives | Volume passers | Corner specialists | Shot-spam teams | Deep-when-leading teams | Champion pts | Bottom pts | Generation s |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 2026 | 47/47 | none | 6/6 | 7/8 | 0/12 | 4/4 | 4/4 | 3/3 | 3/3 | 92 | 26 | reused |
-| 2027 | 47/47 | none | 6/6 | 7/8 | 0/12 | 4/4 | 4/4 | 3/3 | 3/3 | 84 | 24 | reused |
-| 2028 | 47/47 | none | 6/6 | 6/8 | 0/12 | 4/4 | 4/4 | 3/3 | 3/3 | 86 | 28 | reused |
+| 2026 | 47/47 | none | 6/6 | 6/8 | 0/12 | 4/4 | 4/4 | 3/3 | 3/3 | 90 | 22 | reused |
+| 2027 | 47/47 | none | 6/6 | 6/8 | 0/12 | 4/4 | 4/4 | 3/3 | 3/3 | 83 | 25 | reused |
+| 2028 | 47/47 | none | 5/6 | 5/8 | 0/12 | 4/4 | 4/4 | 3/3 | 3/3 | 85 | 31 | reused |
 
 Soft lanes by plant (true effect is the lower bound from the generator's own pass probabilities, tests/soft_lane_truth.py; found = the engine's soft_lane names the planted lane):
 
 | Team | Strength | Seed 2026 effect pp / found | Seed 2027 effect pp / found | Seed 2028 effect pp / found |
 |---|---|---|---|---|
-| NTG | 1.5 | 11.3 / yes | 11.3 / yes | 11.8 / yes |
-| HAR | 1.0 | 8.6 / yes | 8.5 / yes | 8.4 / yes |
-| FWM | 1.0 | 7.9 / yes | 8.2 / yes | 8.3 / yes |
-| HBC | 2.0 | 13.5 / yes | 13.7 / yes | 13.5 / yes |
-| IRK | 0.3 | 2.6 / no | 2.5 / no | 2.5 / no |
-| MDL | 1.5 | 10.7 / yes | 11.2 / yes | 11.5 / yes |
-| OKP | 2.5 | 14.1 / yes | 13.6 / yes | 14.1 / yes |
-| RVD | 0.6 | 5.1 / yes | 5.2 / yes | 5.1 / no |
+| NTG | 1.5 | 11.2 / yes | 11.2 / yes | 11.8 / yes |
+| HAR | 1.0 | 8.4 / yes | 8.5 / yes | 8.5 / no |
+| FWM | 1.0 | 8.2 / yes | 8.2 / yes | 8.1 / yes |
+| HBC | 2.0 | 13.3 / yes | 13.5 / yes | 14.0 / yes |
+| IRK | 0.3 | 2.5 / no | 2.5 / no | 2.5 / no |
+| MDL | 1.5 | 11.0 / yes | 10.8 / yes | 10.8 / yes |
+| OKP | 2.5 | 14.3 / yes | 13.4 / yes | 13.4 / yes |
+| RVD | 0.6 | 5.1 / no | 5.2 / no | 5.1 / no |
 
 Player and team plant misses: none.
 
@@ -105,7 +105,7 @@ Search from offset 0; a match qualifies when all five traps fire with every thre
 | minimum margin | 13% | 11% | 11% |
 | score AUR-NTG | 4-0 | 3-2 | 3-0 |
 | seeds tried | 6915 | 575 | 4392 |
-| search time s | 191.7 | 17.4 | 125.2 |
+| search time s | 190.7 | 17.0 | 131.2 |
 
 ## 4. Verifier context rules pooled over 3 full leagues (seeds 2026, 2027, 2028)
 
@@ -113,16 +113,16 @@ Cases as in tests/test_verifier_full.py. Recall = fired / true cases; false-fire
 
 | Rule | True cases | Recall | 95% CI | Unplanted cases | False-fire rate | 95% CI | Precision | Per-seed recall |
 |---|---|---|---|---|---|---|---|---|
-| shot_spam | 78 | 0.60 | 0.49-0.70 | 1938 | 0.053 | 0.044-0.064 | 0.31 | 16/28, 19/29, 12/21 |
-| field_tilt_with_lead | 69 | 0.52 | 0.41-0.64 | 1938 | 0.029 | 0.023-0.038 | 0.39 | 8/21, 10/20, 18/28 |
-| set_piece_inflation | 12 | 1.00 | 0.76-1.00 | 1078 | 0.041 | 0.031-0.054 | 0.21 | 4/4, 4/4, 4/4 |
-| wide_forward_passes | 12 | 1.00 | 0.76-1.00 | 1294 | 0.000 | 0.000-0.003 | 1.00 | 4/4, 4/4, 4/4 |
+| shot_spam | 82 | 0.55 | 0.44-0.65 | 1938 | 0.067 | 0.056-0.079 | 0.26 | 16/29, 19/30, 10/23 |
+| field_tilt_with_lead | 87 | 0.53 | 0.42-0.63 | 1938 | 0.025 | 0.019-0.033 | 0.48 | 5/22, 20/34, 21/31 |
+| set_piece_inflation | 12 | 1.00 | 0.76-1.00 | 1095 | 0.045 | 0.034-0.059 | 0.20 | 4/4, 4/4, 4/4 |
+| wide_forward_passes | 12 | 1.00 | 0.76-1.00 | 1295 | 0.000 | 0.000-0.003 | 1.00 | 4/4, 4/4, 4/4 |
 
 The same pooled over 5 full leagues (adding seeds 2029, 2030, used for this table only):
 
 | Rule | True cases | Recall | 95% CI | Unplanted cases | False-fire rate | 95% CI | Precision | Per-seed recall |
 |---|---|---|---|---|---|---|---|---|
-| shot_spam | 145 | 0.57 | 0.49-0.65 | 3230 | 0.055 | 0.048-0.064 | 0.32 | 16/28, 19/29, 12/21, 19/31, 17/36 |
-| field_tilt_with_lead | 114 | 0.49 | 0.40-0.58 | 3230 | 0.030 | 0.025-0.036 | 0.37 | 8/21, 10/20, 18/28, 11/25, 9/20 |
-| set_piece_inflation | 20 | 1.00 | 0.84-1.00 | 1785 | 0.041 | 0.033-0.051 | 0.22 | 4/4, 4/4, 4/4, 4/4, 4/4 |
-| wide_forward_passes | 20 | 1.00 | 0.84-1.00 | 2157 | 0.000 | 0.000-0.002 | 1.00 | 4/4, 4/4, 4/4, 4/4, 4/4 |
+| shot_spam | 147 | 0.52 | 0.44-0.60 | 3230 | 0.066 | 0.058-0.075 | 0.27 | 16/29, 19/30, 10/23, 17/33, 15/32 |
+| field_tilt_with_lead | 141 | 0.49 | 0.41-0.57 | 3230 | 0.028 | 0.022-0.034 | 0.44 | 5/22, 20/34, 21/31, 13/28, 10/26 |
+| set_piece_inflation | 20 | 1.00 | 0.84-1.00 | 1806 | 0.041 | 0.033-0.051 | 0.21 | 4/4, 4/4, 4/4, 4/4, 4/4 |
+| wide_forward_passes | 20 | 1.00 | 0.84-1.00 | 2150 | 0.001 | 0.000-0.003 | 0.91 | 4/4, 4/4, 4/4, 4/4, 4/4 |

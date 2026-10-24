@@ -1,6 +1,6 @@
 # Tactical patterns
 
-Optix finds eight tactical patterns in the event log and uses them two ways: as cards of their own
+Optix finds twelve tactical patterns (eight Tier 1, four Tier 2) in the event log and uses them two ways: as cards of their own
 (how often a team won the ball straight back after losing it in the final third) and as evidence
 that a plain statistic would mislead (a team held most of the territory, true, but most of its
 shots were from distance and it conceded counters). Every pattern is event-observable: it says what was
@@ -42,6 +42,10 @@ blocked with a revision hint and the Analyst rewrites it with the numbers that m
 | "lost the ball N times in the final third" | ctx_losses_vs_immediate_regain | how many were won straight back |
 | "N fouls" | ctx_fouls_clustered_after_losses | how many came straight after losing the ball |
 | "a quiet game: N touches" | ctx_low_volume_high_quality | nothing: it is blocked and never published |
+| "N xG" | ctx_xg_from_set_pieces | the set-piece xG and its share of non-penalty xG |
+| "only N% of the passes" | ctx_low_possession_with_direct_threat | shots within seconds of winning the ball in their own half, and their xG |
+| "completed N% of passes" (the player most often pressed on the ball) | ctx_completion_without_pressure_split | completion under pressure, against team-mates under pressure |
+| "PPDA N" | ctx_press_without_secure_build_up | press intensity, and completion under pressure near their own goal against the league's fifteenth percentile |
 
 When two rules fire on one claim the Analyst uses a combined template that says both, or drops the
 claim; it never publishes a sentence missing one rule's numbers. Cross-claim tests check that an
@@ -64,6 +68,10 @@ planted). Bar: recall >= 0.60 and false-positive rate <= 8% on both tuning and h
 | P6 Territory and counters conceded | **experimental** | recall 0.63 tuning, 0.48 hold-out; the misses are counters planted in matches where the team did not hold the territory, which the definition requires |
 | P7 Few touches, free shots | validated | player level, full matches only |
 | P8 Fouls after losing the ball | validated | small planted sample at half strength (4 cases) |
+| P15 Set-piece share of xG | **experimental** | Tier 2; recall 0.46 tuning, 0.62 hold-out (planted on FWM with its xG kept natural); 0.64 and 0.27 on HAR after three tuning attempts. A planted side still takes enough open-play xG in about half its matches to stay under the share line, and a lower line lets false positives past 8% |
+| P17 Shots soon after regains | validated | Tier 2; the mirror of P6 from the side that wins the ball; does not read field tilt |
+| P16 Keeps the ball under pressure | validated | Tier 2, player level; recall 0.76 tuning, 0.70 hold-out after two tuning attempts (gap line 20 to 17 points); weak at half strength |
+| P11 Presses hard, loose at the back | validated | Tier 2; the press is read from pressure events per opponent pass, not PPDA; one tuning attempt (completion line from the 15th to the 25th percentile) |
 
 Experimental patterns are switched off by default (`enabled=False` in engine/patterns/config.py):
 they publish no card of their own, in the showcase or anywhere else, and the Tech page catalogue
@@ -82,21 +90,29 @@ column of docs/pattern-recall.md: P4 drops to 0.41; the others hold.
   moved by at least 25% and by at least 2 (a count going from 1 to 2 is noise, not news).
 - Across matches (novelty): a family shown for a team in either of its previous two matches is
   down-weighted, and held back unless its number moved the same way. With novelty the worst team
-  repeats 35.0% of its pattern cards from the previous match (bar 40%; 53.2% without novelty). The
-  most common family, the cut-back, is 26.9% of pattern cards, above the 25% bar: real cut-backs
-  happen in about 6% of team-matches without any planting, and with P4 and P6 switched off there
-  are fewer families to share the cards (docs/pattern-diversity.md). The price of novelty: a team's
-  signature pattern is not repeated every week, so fewer planted cases reach the stream.
+  repeats 31.2% of its pattern cards from the previous match (VES; bar 40%; 50.0% without
+  novelty), and the most common family, the cut-back, is 19.7% of pattern cards (bar 25%; 20.7%
+  without novelty). All twelve families have a card in at least 5% of the 120 small-league matches
+  (the Tier 2 families from natural play, since their plants are in the full league only; P4 and
+  P6, experimental, only through their rules; docs/pattern-diversity.md).
+  The price of novelty: a team's signature pattern is not repeated every week, so fewer planted
+  cases reach the stream.
 - The showcase match is streamed standalone, with no history, so no novelty adjustment applies.
 
 ## The showcase
 
-AUR 4-0 NTG (seed 2026, try 6915). Besides the five original traps it holds the deep block (AUR),
-the counters conceded and the touchline spells (NTG). The stream shows the touchline spells as a
-card; the deep block and the counters are experimental, so they appear only through the three naive
-claims their rules rewrote (territory twice, final-third volume). The search tried all 20000 seeds allowed: no seed held
-the five traps, four new families and two rewritten naive claims together, so per the brief the
-target was relaxed to three families (docs/PROGRESS.md, Pattern decisions).
+AUR 4-0 NTG (seed 2026, offset 6914), the same match as before the follow-up: with every Tier 2
+plant in the full league the small season and the showcase search are unchanged, and the
+follow-up's serial scan over the full 20000-try cap (every trap hit streamed) found that its first
+hit, offset 6914, already meets the targets. The stream holds 49 insights (13 blocked attempts
+revised, none dropped). Validated pattern cards: the shots soon after regains (AUR, P17) at half
+time and full time, and the touchline spells (NTG, P3). Naive claims rewritten by the Tier 2 rules: AUR's share of the passes at half time (shots
+soon after regains, ctx_low_possession_with_direct_threat) and NTG's xG at full time (set-piece
+share, ctx_xg_from_set_pieces, together with shot_spam; P15 itself is experimental, so it shows
+only through its rule). The touchline spells and the counters
+conceded also rewrite NTG's final-third volume and territory. The other hits of the scan were
+8213, 8827, 8911, 11293, 11579, 12985 and 13865; only 11293 (5-1, three Tier 2 rewrites) also met
+both targets.
 
 ## Limits
 
@@ -110,8 +126,14 @@ target was relaxed to three families (docs/PROGRESS.md, Pattern decisions).
   of that generator, not new data.
 - The starved finisher compares a substitute's touches with full-match lines (minutes are not in
   the engine tables).
-- Tier 2 patterns (P9-P17) are not built; false nine vacuum and mid-block passivity are skipped
-  because their core is not observable in event data.
+- Tier 2 patterns P9, P10, P12, P13 and P14 are not built; false nine vacuum and mid-block
+  passivity are skipped because their core is not observable in event data.
+- All four Tier 2 patterns occur naturally, but at random: no hidden generator trait marks a true
+  case, so each is planted on one team (P15 FWM, P17 JPH, P11 PLQ) or player (P16, MDL's left
+  defensive midfielder); all four hosts exist only in the full league, so the small season is unchanged, at about two to three times the natural rate, and natural occurrences
+  elsewhere count as false positives.
+- Tier 2 reuses existing icons: corner (P15), style-direct-play (P17), pressure (P16) and
+  style-high-press (P11).
 
 ## How to add a pattern
 

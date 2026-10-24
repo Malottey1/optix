@@ -169,6 +169,155 @@ docs/patterns-progress.md. Plan and audit: docs/patterns-plan.md.
   after each league, to keep within the "at most 2 processes, no multiprocessing" rule; the process
   pool is still the default when --jobs is above 0.
 
+- Tier 2 follow-up (P15, P17, P16, P11), in the brief's order. Base rates first, on the unplanted
+  seed 2026 league (data/generated-2026-zero): set-piece share of non-penalty xG has mean 0.175 and
+  95th percentile 0.49; transition shots per team-match mean 0.9, 95th percentile 3; own-zone
+  completion under pressure median 0.75; a player's gap over team-mates under pressure 90th
+  percentile 0.18. All four occur naturally, but at random: no hidden generator trait marks a true
+  case, and recall needs labelled cases, so all four are planted at modest strength (about two to
+  three times the natural rate), and natural occurrences on unplanted teams count as false
+  positives, exactly as for Tier 1. With the first floors P17 (3 shots) and P16 (10 pressured
+  passes) had base rates of 8.8%, above the 8% false-positive bar before any planting, so the floors
+  were raised to 4 and 12 before planting (base rates 3.9% and 4.6%); these are definition choices
+  made on unplanted data, not tuning attempts.
+- Plants: P15 on FWM (a corner delivery is won in the air and headed at goal), P17 on JPH (a
+  regain in its own half goes straight into a counter down the team's own lanes), P11 on PLQ (a
+  pressed pass near its own goal is intercepted), P16 on MDL's left defensive midfielder (a pressed
+  pass is completed; usage 2.2 while planted, so the player sees the ball often enough). All four
+  hosts exist only in the full league, so the small 40-match season is byte-identical to the
+  pre-Tier-2 generator (only the plant rates in ground_truth.json differ). P15 was first planted
+  on NTG and P17 on HAR; NTG's open-play volume (the shot-spam trap) kept its set-piece share low,
+  so P15 moved to HAR and P17 to AUR; both then moved to the full league (revision 4 below). Each motif has its own random stream; byte-identity at scale 0 holds
+  (tests/test_motifs.py, slow test included).
+- Plant revisions forced by the realism tests (none of them changed): (1) P15 first manufactured
+  corners (a blocked cross); HAR's corners went from 94 to 182 in the small season and corners per
+  team left the calibrated band (7.1, band 4.5-5.8). The plant now acts at a new decision point,
+  at_corner: a planted corner delivery is won and headed (the simulator draws the header shot), so
+  no corner is added (corners per team 5.66). (2) P17's counters first went through the middle and
+  diluted AUR's planted left lean (54.5% of entries on the left, floor 55%); the through ball now
+  follows the team's own lane weights. (3) P11 on CAL changed the small season enough that the CAL
+  tilt control and CAL's counter-press recovery failed, and nearby plant rates flipped them back and
+  forth (noise in a 40-match season), so instead of tuning rates against a noisy test P11 is planted
+  on ASV, a high-press side that exists only in the full league where recall is measured. (4) The
+  slow suite then showed the same noise from P15 on HAR and P17 on AUR: the pooled five-seed
+  final_third_pass_share went to 0.3065 (allowed up to 0.306; 0.3042 without them), and
+  retuning P15's shot compensation only moved it around the edge (0.85 failed, 0.7 passed, 1.0 broke
+  shots and goals). With P15 moved to FWM (a direct side) the share was 0.3042, but CAL's
+  counter-press recovery in the 2026 season fell to 9/16 (floor 0.60; 10/16 without P17). Rather
+  than tune rates against a 16-match sample, P15 moved to FWM and P17 to a low-block counter side
+  (DCH, then JPH; below), both full-league only, like P11 and P16. The small season and its tests are then exactly
+  as before Tier 2. The recall figures below were re-measured after these changes.
+- P11 reads the press from pressure events per opponent pass (engine press_intensity), not PPDA:
+  PPDA misleads on this feed (rule ppda_alone). "Own zone" is x < 30, so templates say "near their
+  own goal", not "own third".
+- P15 tuning, on the tuning leagues only. First definition (>= 2 set-piece shots, npxG >= 0.5, share
+  >= 50%) gave recall 6/27 on seed 2026 with the first (corner-adding) plant. Attempt 1: npxG >= 0.3
+  and share >= 40%: recall 12/16 (2026) but 8/16 (2027), false positives 6.9-7.2%. Attempt 2: >= 3
+  set-piece shots, and a planted case needs 3 planted set-piece shots (NEED = the detector's own
+  floor, as for P17 and P16): pooled tuning 0.68, hold-out 0.80 with that plant. The plant then had
+  to change (corner counts, above), and with the realistic header plant the same thresholds give
+  0.59 tuning and 0.49 hold-out. Attempt 3 (read off the tuning leagues only): a share line of 0.35
+  lifts tuning recall to about 0.67 but false positives to 7.2-9.0% per tuning league; no line
+  clears both bars, because in about a third of planted matches HAR still takes enough open-play xG
+  to stay under any line that unplanted set-piece-heavy matches do not also cross. P15 is
+  experimental (enabled=False), thresholds as after attempt 2; final numbers 0.64 tuning, 0.27
+  hold-out (docs/pattern-recall.md). Its rule ctx_xg_from_set_pieces stays on, like P4's and P6's:
+  it only asks an xG sentence for the set-piece share, which the Verifier recomputes.
+- P15 after the host move (revision 4, made for the calibration and recovery tests, not for
+  recall; thresholds unchanged since attempt 2, no fourth tuning attempt). With the shot
+  compensation carried over from HAR (0.50) it measured 0.643 tuning and 0.639 hold-out on FWM, but
+  the full-league tests then showed why: FWM, a weak side, fell from 37 points to 13 (bottom_points
+  out of range; goals 45 to 27, shots 389 to 314), because halving its open-play appetite is not
+  made up by headed corners. That pass came from an unrealistic plant, so it is not used. A
+  compensation of 0.70 kept FWM's shot count (383 against 389) but robustness seed 2027 still had
+  FWM bottom on 11 points; its xG had dropped (36.0 against 42.2), and headers are low-xG shots, so
+  the right thing to keep is the planted side's xG, not its shot count. SHOT_COMP for P15 is 0.85:
+  FWM's xG over seeds 2026-2028 is 41.6, 41.2, 34.5 (mean 39.1) against 38.5, 42.2, 38.6 unplanted
+  (mean 39.8), and the bottom side has 22, 27 and 26 points (range 15-35). FWM is the league's
+  weakest attack (about -45 xG difference a season), so its points swing with finishing luck either
+  way. P15's recall is re-measured with this value below.
+- P17's host: on DCH, the 2027 full league's bottom side had 14 points and ESF's corner specialist
+  fell to 61 set-piece against 63 open-play chances (72 against 53 before). The full league links
+  matches through squad rotation (one SquadManager random stream), so any plant change resamples
+  every later match; the ESF tie was such a draw, and the bottom-points miss was FWM's compensation
+  above. P17 moved to JPH, the other low-block counter side, and with P15 at 0.70 every full-league
+  and realism test passes (tests/test_full_league.py, tests/test_realism.py, slow included).
+- P11: after the move to ASV, recall was 0.74 tuning but 0.55 hold-out with the completion line at
+  the league 15th percentile; the misses sat just above that line (0.59-0.70 against about 0.58).
+  Attempt 1: the line moves to the 25th percentile: 0.90 tuning, 0.81 hold-out, false positives
+  3.1% and 2.8%. Validated.
+- P11's host after the five-league slow tests: on ASV, the corner specialist ASV_11 (a planted
+  trap on the same team) lost set-piece chances on three of five leagues (69 to 54 on 2029, where
+  open play reached 56 and the set_piece_inflation player check found 3 of 4), plausibly because
+  giveaways at the back cut ASV's attacks and corners. A pattern plant should not erode another
+  trap on its own team, so P11 moved: IRK gave a champion on 97 points (range 78-95; ESF, not
+  IRK, a resample effect), PLQ (the weak side that presses hard, no player trap) passes every
+  full-league and realism test. Final P11 recall on PLQ: 0.90 tuning, 0.92 hold-out, false
+  positives 3.0% and 2.5%, thresholds unchanged.
+- Final Tier 2 recall (docs/pattern-recall.md, the leagues with FWM, JPH, PLQ and MDL plants):
+  P15 0.46 tuning, 0.62 hold-out (experimental, tuning below the bar); P17 0.93 and 0.91; P16 0.76
+  and 0.70; P11 0.90 and 0.92; false positives all at most 5.5%.
+- P16 on VES's left defensive midfielder validated but broke four small-season style-recovery
+  tests (AUR's lead behaviour, NTG's soft lane, the small-league soft lane, the Team Board): usage
+  2.2 for one VES midfielder shifts the 40-match season. Switching only that plant off fixed all
+  four, so P16 moved to the full league. On KWC (possession) recall collapsed to 0.32/0.18: KWC's
+  team-mates already complete about 80% under pressure, so a 20-point gap is out of reach. It now
+  sits on MDL's left defensive midfielder (same wing-play archetype and 4-2-3-1 as VES, team
+  completion under pressure 0.746 against VES's 0.738): 0.70 tuning, 0.63 hold-out, false positives
+  3.5% and 3.3%. Validated with its first thresholds; the hold-out margin is thin.
+- P16 after the full league was resampled (P15 and P17 moved, P15's compensation 0.85): 31/43 =
+  0.72 tuning but 16/28 = 0.57 hold-out, below the bar. Its first tuning attempts, read off the
+  tuning leagues 2026-2028 only (tools: a P16-only sweep with the recall tool's case definition):
+  attempt 1, gap line 0.15: recall 39/43 = 0.91, false positives 6.7%; completion 0.80 adds false
+  positives and no recall. Attempt 2, gap 0.17: 36/43 = 0.84, false positives 5.1%; gap 0.18:
+  34/43 = 0.79, 4.6%. Chosen: 0.17 (the highest recall with false positives at most about 5%, to
+  keep a margin under 8%), then measured once on hold-out: 20/28 = 0.71 hold-out, 36/43 = 0.84
+  tuning, false positives 5.1% and 5.5%. Validated.
+- P17 passed with its first thresholds: 1.00 tuning, 0.97 hold-out, false positives 4.0% and 3.0%.
+- Naive claims for Tier 2: P15 tests the existing team xG claim; P17 a new "only N% of the passes"
+  claim (possession_pct, the share of passes: the feed has no possession clock), proposed at half
+  time and full time when the share is at most 40%; P16 a new player pass_completion claim, at full
+  time, for the team's player most often pressed on the ball if that is at least 12 passes; P11 the
+  existing PPDA claim. PPDA always needs press intensity (ppda_alone), so ppda_alone and the P11 rule
+  share one combined revision; xG with shot_spam or small_sample_xg has combined templates too.
+- ctx_tilt_without_access (P4's rule) now fires on any overlap of the low-block spell with the
+  claim's window (was >= 600 s). With the new plants the 2026 season held a field-tilt claim
+  (3600-5400) overlapping a low-block spell by 463 s; it published unqualified and the cross-claim
+  test (no unqualified dominance claim in a P4 window) failed. The rule moved toward the test, not
+  the other way.
+- Stale data found in tools/pattern_diversity.py: it reused data/generated-<seed>/season whenever
+  matches.csv existed, with no generator stamp, so its first run measured pre-Tier 2 seasons (no P15
+  or P17 planted cases). It now writes and checks generator_stamp.txt like tools.pattern_recall, and
+  reports each family's share of matches with a card (the brief's "surfaced in at least 5% of
+  matches"). Re-measured after revision 4: with novelty the cut-back is 19.7% of cards and the
+  worst repetition VES 31.2% (both bars met); without novelty 20.7% and VES 50.0%. All twelve
+  families reach 5% of the 120 matches. No ranking weight was changed.
+- Robustness peak memory: run inline (--jobs 0) the five reused full leagues reached 2.93 GB in one
+  process (one full-league job alone peaks at 1.8 GB; the rest is memory the process kept between
+  jobs). --jobs 1 now runs the jobs one at a time, each in a fresh child process
+  (max_tasks_per_child=1): serial, at most two processes, peak 1.76 GB. Small league: 6 of 10 seeds
+  have every target in range (was 7 of 10); no target fails on more than 2 seeds.
+- Showcase: a first scan (with P15 and P17 planted on HAR and AUR) picked offset 351. After the
+  plants moved to the full league (revision 4) the scan was rerun (cap 20000, serial, every trap
+  hit streamed): hits 6914, 8213, 8827, 8911, 11293, 11579, 12985, 13865. The first, 6914 (AUR 4-0
+  NTG, the showcase committed before this follow-up), meets both targets, so it is kept and
+  SHOWCASE_SEARCH_START is (2026, 1.0): 6914 again; the showcase tables are byte-identical to the
+  committed ones (ground_truth.json gains only the new plant rates). Final stream: 49 insights, 13
+  revised, 0 dropped; validated pattern cards P17 (half time, full time) and P3;
+  Tier 2 rewrites: AUR's share of the passes at half time (P17's rule) and NTG's xG at full time
+  (P15's rule with shot_spam). Two identical exports.
+- Open gate: tests/test_verifier_full.py claim-level shot_spam pooled recall is 68/86 = 0.79
+  [0.69-0.86] against a floor of 0.80; the pipeline level (0.83, floor 0.81) and every other slow
+  test pass. The rule and the case definition are unchanged (no diff in engine/rules/shot_spam.py
+  or tests/verifier_cases.py); the leagues are not. The committed run sat exactly on the floor
+  (76/95 = 0.80), and every plant change resamples all five leagues (squad rotation links the
+  matches), so the five Tier 2 configurations measured 0.79, 0.82, 0.81, 0.79 and 0.79. The misses
+  are on unplanted opponents (IRK, OKP, PLQ, KWC, CAL), none on a Tier 2 host. The floor is not
+  lowered and the plants are not moved again to find a passing draw; the floor needs a decision
+  (a pooled interval-based floor, or more leagues) that is the owner's to make.
+- Tier 2 icons are existing ones (corner, style-direct-play, pressure, style-high-press):
+  engine/patterns/config.py ICONS maps them, and web/src/icons/semantic.ts likewise.
+
 ### Test changes (patterns)
 
 - tests/test_translation.py: the placeholder test iterates over template variants (a key may hold a
@@ -200,6 +349,23 @@ docs/patterns-progress.md. Plan and audit: docs/patterns-plan.md.
 - web/src/types/guards.ts (not a test, but it gates the Vitest fixtures): INSIGHT_TYPES gains
   `tactical_pattern`, the new contract type; without it the stream guard rejected the showcase
   stream. Vitest 118 -> 123 (5 new PatternRoute tests).
+- Tier 2 follow-up: tests/test_motifs.py checks the planted players against PLAYER_MOTIFS as a
+  sorted list (there are two planted players now, not one); tests/test_patterns.py expects 12
+  families (was 8). The micro-sequence builder gains play_pattern and shot_type fields (defaults are
+  the old values) and a position argument. New: micro-sequence and mutation tests for the four
+  Tier 2 detectors, and one test per Tier 2 rule (the naive claim is held where the pattern holds,
+  publishes with context once revised, and the rule stays quiet where it does not hold).
+- Tier 2 follow-up, further: tests/test_motifs.py compares the planted players with the
+  PLAYER_MOTIFS entries whose team is in the small season (P16's plant is on MDL, a full-league
+  team). tests/test_pattern_claims.py: the experimental set gains pat_set_piece_dependence (measured
+  experimental); the switched-on run still checks every experimental family publishes and blocks
+  mutations. tests/test_verifier.py `test_shot_spam_fires_on_ntg_in_showcase`: NTG's showcase xG
+  is also mostly from set pieces, so the expected hint gains ctx_xg_from_set_pieces exactly, and
+  the publishable claim carries both rules' numbers; the shot_spam expectations are unchanged.
+  tests/test_phraser.py adversarial "invented number": the appended "over 7 matches" used a number
+  a showcase claim really contained during the follow-up (7 of 52, offset 351), so the guard could
+  not call it invented; it now appends 9917, a number no claim can contain. The showcase is back
+  at offset 6914; both changes still hold there. web/src/components/viz/PatternRoute.test.tsx: the catalogue has 12 families (was 8).
 
 ## Icons (branch `ui-visuals-icons`, from `ui-visuals-brand` f376c6b; local tag `pre-icons`)
 

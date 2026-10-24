@@ -28,22 +28,26 @@ from data_gen.config import MOTIF_SCALE
 from engine import patterns as P
 from engine.tables import load
 
-from .pattern_recall import NEED, reset_caches
+from .pattern_recall import NEED, generator_stamp, reset_caches
 
 ROOT = Path(__file__).resolve().parents[1]
 SEEDS = (2026, 2027, 2028)
 MAX_FAMILY_SHARE, MAX_REPEAT = 0.25, 0.40
+MIN_MATCH_SHARE = 0.05             # a family counts as surfaced when it has a card in this share of matches
 
 
 def season_dir(seed: int) -> Path:
     d = ROOT / "data" / f"generated-{seed}" / "season"
-    if not (d / "matches.csv").exists():
+    stamp = d / "generator_stamp.txt"
+    # a cached season is only valid for the generator that wrote it (as in tools.pattern_recall)
+    if not (d / "matches.csv").exists() or not stamp.exists() or stamp.read_text() != generator_stamp():
         players = make_players(seed)
         sims, fixtures = small_season(seed, players, MOTIF_SCALE)
         write_dataset(d, sims, players, fixtures)
         from data_gen.generate import planted_motifs, TEAMS
         pm = planted_motifs(sims, TEAMS, players, MOTIF_SCALE)
         (d / "ground_truth.json").write_text(json.dumps({"planted_motifs": pm}, indent=1))
+        stamp.write_text(generator_stamp())
     return d
 
 
@@ -100,7 +104,12 @@ def summarise(runs: list) -> dict:
     for r in runs:
         cases.update(r["cases"])
         hits.update(r["hits"])
-    return dict(total=total, families=dict(fam.most_common()),
+    n_matches = sum(len({mid for mid, _ in r["played"]}) for r in runs)
+    by_fam = Counter()                            # matches (per season: ids repeat across seeds) with a card
+    for r in runs:
+        by_fam.update(f for _, f in {(mid, f) for mid, _, f in r["cards"]})
+    return dict(total=total, families=dict(fam.most_common()), n_matches=n_matches,
+                match_share={f: by_fam[f] / n_matches for f in P.FAMILIES} if n_matches else {},
                 top_share=(fam.most_common(1)[0][1] / total) if total else 0.0,
                 repeat={t: (repeat[t] / n if n else 0.0, repeat[t], n) for t, n in sorted(per_team.items())},
                 recall={f: (hits[f], cases[f]) for f in P.FAMILIES if cases[f]})
@@ -119,6 +128,11 @@ def report(on: dict, off: dict, seconds: float, peak: float) -> str:
         lines += [f"| {f} | {n} | {n / s['total']:.1%} |" for f, n in s["families"].items()]
         lines += ["", "| Team | Repeated from the previous match | Cards | Share |", "|---|---|---|---|"]
         lines += [f"| {t} | {k} | {n} | {v:.1%} |" for t, (v, k, n) in s["repeat"].items()]
+        wide = [f for f in P.FAMILIES if s["match_share"].get(f, 0) >= MIN_MATCH_SHARE]
+        lines += ["", f"Families surfaced in at least {MIN_MATCH_SHARE:.0%} of the {s['n_matches']} matches: "
+                  f"{len(wide)} of {len(P.FAMILIES)} ({', '.join(wide) or 'none'}).", "",
+                  "| Family | Matches with a card | Share of matches |", "|---|---|---|"]
+        lines += [f"| {f} | {round(v * s['n_matches'])} | {v:.1%} |" for f, v in s["match_share"].items()]
         lines += ["", "| Family | Pipeline recall (planted cases the stream surfaced) |", "|---|---|"]
         lines += [f"| {f} | {h}/{n} = {h / n:.2f} |" for f, (h, n) in s["recall"].items()]
         return lines

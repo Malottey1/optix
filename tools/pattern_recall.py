@@ -31,12 +31,16 @@ from .verifier_recall import wilson
 ROOT = Path(__file__).resolve().parents[1]
 TUNING = (2026, 2027, 2028)
 HOLDOUT = (2029, 2030)
-NEED = {"pat_counter_press": 2, "pat_rest_defence": 2, "pat_starved_finisher": 2, "pat_tactical_fouling": 3}
+NEED = {"pat_counter_press": 2, "pat_rest_defence": 2, "pat_starved_finisher": 2, "pat_tactical_fouling": 3,
+        "pat_set_piece_dependence": 3, "pat_direct_transition": 4, "pat_press_resistant": 12,
+        "pat_pressed_presser": 4}
 MIN_RECALL, MAX_FP = 0.60, 0.08
 NAMES = {"pat_bait_switch": "Bait and switch (P1)", "pat_cutback": "Cut-back (P2)",
          "pat_flank_isolation": "Flank isolation (P3)", "pat_elastic_low_block": "Elastic low block (P4)",
          "pat_counter_press": "Counter-press (P5)", "pat_rest_defence": "Rest defence (P6)",
-         "pat_starved_finisher": "Starved finisher (P7)", "pat_tactical_fouling": "Fouls after losses (P8)"}
+         "pat_starved_finisher": "Starved finisher (P7)", "pat_tactical_fouling": "Fouls after losses (P8)",
+         "pat_pressed_presser": "Pressed presser (P11)", "pat_set_piece_dependence": "Set-piece dependence (P15)",
+         "pat_press_resistant": "Press-resistant passer (P16)", "pat_direct_transition": "Direct transition (P17)"}
 
 
 def rss_mb() -> float:

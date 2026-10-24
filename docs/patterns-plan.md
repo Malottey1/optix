@@ -33,22 +33,28 @@ losing the ball").
 
 ## Tier 2
 
-Not built in this pass (time went to Tier 1 measurement and the Verifier loop). Each would follow
-the same Definition of Done. Icons to reuse when built: P9 metric-territorial-stress, P10
-style-wing-play, P11 style-high-press, P12 pass, P13 pressure, P14 players, P15 corner, P16
-pressure, P17 style-direct-play.
+Four Tier 2 patterns are built (follow-up pass): P17, P16 and P11 validated, P15 experimental (off in the stream, its rule on). Five are not built. Built patterns reuse existing icons.
+Base rates are on the same unplanted seed 2026 league with the final thresholds; P17 and P16 were
+first written with lower floors (3 shots, 10 passes under pressure) whose base rates, 8.8% each,
+were too high to read a planted signal against, so the floors were raised before any planting.
+
+| Pattern | Decision | Fields | Thresholds (config) | Base rate | Naive claim -> rule | Visual, icon | Planted |
+|---|---|---|---|---|---|---|---|
+| P15 Set-piece dependence (`pat_set_piece_dependence`) | BUILD | shots, xG, shot_type, play_pattern | non-penalty xG; >= 3 set-piece shots (play_pattern set_piece), non-penalty xG >= 0.3, set-piece share >= 40% and >= 2x the league share | 6.6% | "N xG" (xg) -> `ctx_xg_from_set_pieces` (context) | shot route nodes, corner | FWM (full league only): a corner delivery is won in the air and headed at goal (50% of its corners; shot compensation 0.85 keeps its xG natural; no corner is added, so corner counts stay natural) |
+| P17 Direct transition spike (`pat_direct_transition`) | BUILD | possession_change x, shots, xG, clock | regain in own half (x < 50), first shot within 10 s with no possession change between; >= 4 such shots and >= 2x the league rate per own-half regain; never reads field tilt | 3.9% | "only N% of the passes" (possession_pct) -> `ctx_low_possession_with_direct_threat` (context) | regain-to-shot route nodes, style-direct-play | JPH (full league only): a regain in its own half is played straight into a counter (6% of such regains) |
+| P16 Press-resistant passer (`pat_press_resistant`, player) | BUILD | passes, under_pressure, outcome, position | outfield; >= 12 passes under pressure, >= 85% completed and >= 17 points above team-mates under pressure (20 as first written) | 4.6% | "completed N% of passes" (pass_completion) -> `ctx_completion_without_pressure_split` (context) | pass route nodes, pressure | MDL (full league, wing-play archetype) left defensive midfielder: a pressed pass is completed (80% of such passes), usage raised to 2.2 |
+| P11 Pressed presser (`pat_pressed_presser`) | BUILD | pressure events, opponent passes, passes under pressure x, outcome | press intensity (pressures per opponent pass) at or above the league 75th percentile, and own passes under pressure at x < 30 (>= 10) completed at or below the league 25th percentile (15th as first written) | 2.6% | "PPDA N" (ppda) -> `ctx_press_without_secure_build_up` (context; with ppda_alone, one combined revision) | pass route nodes, style-high-press | PLQ (full league, high-press archetype): a pressed pass near its own goal is intercepted (35% of such moments) |
+
+PPDA is not used for P11: on this feed it ranks a non-pressing side level with a pressing one (rule
+ppda_alone, docs/engine.md).
 
 | Pattern | Decision |
 |---|---|
-| P9 Sustained box pinning | not built |
-| P10 Controlled funneling | not built |
-| P11 Pressed presser | not built |
-| P12 Third-man wall pass | not built |
-| P13 Wide-zone turnovers (turnovers after short passes into a wide zone) | not built |
-| P14 Restless rotation (player) | not built |
-| P15 Set-piece dependence | not built |
-| P16 Press-resistant passer (player) | not built |
-| P17 Direct transition spike | not built |
+| P9 Sustained box pinning | not built (icon to reuse: metric-territorial-stress) |
+| P10 Controlled funneling | not built (style-wing-play) |
+| P12 Third-man wall pass | not built (pass) |
+| P13 Wide-zone turnovers (turnovers after short passes into a wide zone) | not built (pressure) |
+| P14 Restless rotation (player) | not built (players) |
 
 ## Skipped
 

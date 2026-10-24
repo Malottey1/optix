@@ -6,79 +6,78 @@ Unplanted fire rate: share of unplanted (match, team) cases on which the rule fi
 
 ## Reading these numbers
 
-- field_tilt_with_lead on one full-match claim per team: 0.55 [0.43-0.66], n=66 on the tuning seeds 2026-2028, but 0.44 [0.31-0.59], n=45 on the hold-out seeds 2029-2030. The changes (including the chaser-threat line at the league's 75th percentile) were chosen on the tuning seeds, so the hold-out figure is the honest one for this level.
-- The same rule in the Analyst pipeline, the figure users experience: 0.79 [0.67-0.87], n=66 (tuning) and 0.78 [0.64-0.87], n=45 (hold-out). The pipeline proposes a field tilt claim for every 30-minute window above 60% tilt, several per match, and a case counts as caught when any of them fires, so a window the rule misses is often caught by a neighbouring one. A full-match claim has one chance, its box-entry and threat figures are averaged over the whole match, and the league's threat line for full matches is tighter than for 30-minute windows (less spread: 1.06-1.15 against 1.26-1.38 on these leagues).
-- Analyst-pipeline unplanted fire rate, outcome label on total xG: before the changes 16.3% of 3230 unplanted cases: 9.5% justified, 2.3% unclear, 4.5% real false positives; now 14.2% of 3230 unplanted cases: 11.3% justified, 2.2% unclear, 0.7% real false positives. The before figures are the old rules re-applied to the claim scopes recorded in this run (the Analyst's windows do not depend on the rules).
+- field_tilt_with_lead on one full-match claim per team: 0.54 [0.44-0.64], n=85 on the tuning seeds 2026-2028, but 0.43 [0.30-0.56], n=54 on the hold-out seeds 2029-2030. The changes (including the chaser-threat line at the league's 75th percentile) were chosen on the tuning seeds, so the hold-out figure is the honest one for this level.
+- The same rule in the Analyst pipeline, the figure users experience: 0.85 [0.76-0.91], n=85 (tuning) and 0.87 [0.76-0.94], n=54 (hold-out). The pipeline proposes a field tilt claim for every 30-minute window above 60% tilt, several per match, and a case counts as caught when any of them fires, so a window the rule misses is often caught by a neighbouring one. A full-match claim has one chance, its box-entry and threat figures are averaged over the whole match, and the league's threat line for full matches is tighter than for 30-minute windows (less spread: 1.11-1.16 against 1.31-1.39 on these leagues).
+- Analyst-pipeline unplanted fire rate, outcome label on total xG: before the changes 16.1% of 3230 unplanted cases: 9.6% justified, 2.0% unclear, 4.6% real false positives; now 13.8% of 3230 unplanted cases: 11.1% justified, 2.1% unclear, 0.6% real false positives. The before figures are the old rules re-applied to the claim scopes recorded in this run (the Analyst's windows do not depend on the rules).
 
 ## Claim level: one full-match claim per team (tests/test_verifier_full.py)
 
 | Rule | Seeds | Version | Recall, true cases | Recall, all planted | Unplanted fire rate | Unplanted fired cases J / U / FP, total xG | same, chance xG | Misses a / b / c / d |
 |---|---|---|---|---|---|---|---|---|
-| shot_spam | 2026-2028 (tune) | v2 | 0.82 [0.69-0.90] (40/49) | 0.56 [0.45-0.67] (44/78) | 0.050 (97/1938) | – | – | 0 / 5 / 4 / 25 |
-| shot_spam | 2026-2028 (tune) | v3 | 0.88 [0.76-0.94] (43/49) | 0.60 [0.49-0.70] (47/78) | 0.053 (103/1938) | – | – | 0 / 2 / 4 / 25 |
-| shot_spam | 2029-2030 (hold-out) | v2 | 0.70 [0.55-0.81] (32/46) | 0.49 [0.38-0.61] (33/67) | 0.057 (74/1292) | – | – | 0 / 7 / 7 / 20 |
-| shot_spam | 2029-2030 (hold-out) | v3 | 0.72 [0.57-0.83] (33/46) | 0.54 [0.42-0.65] (36/67) | 0.059 (76/1292) | – | – | 0 / 6 / 7 / 18 |
-| shot_spam | all | v2 | 0.76 [0.66-0.83] (72/95) | 0.53 [0.45-0.61] (77/145) | 0.053 (171/3230) | – | – | 0 / 12 / 11 / 45 |
-| shot_spam | all | v3 | 0.80 [0.71-0.87] (76/95) | 0.57 [0.49-0.65] (83/145) | 0.055 (179/3230) | – | – | 0 / 8 / 11 / 43 |
-| field_tilt_with_lead | 2026-2028 (tune) | v2 | 0.74 [0.63-0.83] (49/66) | 0.71 [0.59-0.80] (49/69) | 0.040 (77/1938) | 41 / 5 / 31 (FP 0.016 of all) | 44 / 6 / 27 (FP 0.014 of all) | 0 / 10 / 7 / 3 |
-| field_tilt_with_lead | 2026-2028 (tune) | v3 | 0.77 [0.66-0.86] (51/66) | 0.74 [0.62-0.83] (51/69) | 0.046 (89/1938) | 47 / 8 / 34 (FP 0.018 of all) | 51 / 6 / 32 (FP 0.017 of all) | 0 / 8 / 7 / 3 |
-| field_tilt_with_lead | 2026-2028 (tune) | v4 | 0.55 [0.43-0.66] (36/66) | 0.52 [0.41-0.64] (36/69) | 0.029 (57/1938) | 47 / 5 / 5 (FP 0.003 of all) | 51 / 6 / 0 (FP 0.000 of all) | 0 / 8 / 22 (threat 15) / 3 |
-| field_tilt_with_lead | 2029-2030 (hold-out) | v2 | 0.64 [0.50-0.77] (29/45) | 0.64 [0.50-0.77] (29/45) | 0.041 (53/1292) | 28 / 5 / 20 (FP 0.015 of all) | 30 / 5 / 18 (FP 0.014 of all) | 0 / 12 / 4 / 0 |
-| field_tilt_with_lead | 2029-2030 (hold-out) | v3 | 0.71 [0.57-0.82] (32/45) | 0.71 [0.57-0.82] (32/45) | 0.053 (69/1292) | 32 / 7 / 30 (FP 0.023 of all) | 34 / 6 / 29 (FP 0.022 of all) | 0 / 9 / 4 / 0 |
-| field_tilt_with_lead | 2029-2030 (hold-out) | v4 | 0.44 [0.31-0.59] (20/45) | 0.44 [0.31-0.59] (20/45) | 0.031 (40/1292) | 32 / 4 / 4 (FP 0.003 of all) | 34 / 6 / 0 (FP 0.000 of all) | 0 / 9 / 16 (threat 12) / 0 |
-| field_tilt_with_lead | all | v2 | 0.70 [0.61-0.78] (78/111) | 0.68 [0.59-0.76] (78/114) | 0.040 (130/3230) | 69 / 10 / 51 (FP 0.016 of all) | 74 / 11 / 45 (FP 0.014 of all) | 0 / 22 / 11 / 3 |
-| field_tilt_with_lead | all | v3 | 0.75 [0.66-0.82] (83/111) | 0.73 [0.64-0.80] (83/114) | 0.049 (158/3230) | 79 / 15 / 64 (FP 0.020 of all) | 85 / 12 / 61 (FP 0.019 of all) | 0 / 17 / 11 / 3 |
-| field_tilt_with_lead | all | v4 | 0.50 [0.41-0.60] (56/111) | 0.49 [0.40-0.58] (56/114) | 0.030 (97/3230) | 79 / 9 / 9 (FP 0.003 of all) | 85 / 12 / 0 (FP 0.000 of all) | 0 / 17 / 38 (threat 27) / 3 |
+| shot_spam | 2026-2028 (tune) | v2 | 0.80 [0.66-0.89] (39/49) | 0.55 [0.44-0.65] (45/82) | 0.062 (120/1938) | – | – | 0 / 6 / 4 / 27 |
+| shot_spam | 2026-2028 (tune) | v3 | 0.80 [0.66-0.89] (39/49) | 0.55 [0.44-0.65] (45/82) | 0.067 (129/1938) | – | – | 0 / 6 / 4 / 27 |
+| shot_spam | 2029-2030 (hold-out) | v2 | 27/37 [0.57-0.85] | 0.45 [0.33-0.57] (29/65) | 0.061 (79/1292) | – | – | 0 / 6 / 4 / 26 |
+| shot_spam | 2029-2030 (hold-out) | v3 | 29/37 [0.63-0.89] | 0.49 [0.37-0.61] (32/65) | 0.064 (83/1292) | – | – | 0 / 4 / 4 / 25 |
+| shot_spam | all | v2 | 0.77 [0.67-0.84] (66/86) | 0.50 [0.42-0.58] (74/147) | 0.062 (199/3230) | – | – | 0 / 12 / 8 / 53 |
+| shot_spam | all | v3 | 0.79 [0.69-0.86] (68/86) | 0.52 [0.44-0.60] (77/147) | 0.066 (212/3230) | – | – | 0 / 10 / 8 / 52 |
+| field_tilt_with_lead | 2026-2028 (tune) | v2 | 0.73 [0.63-0.81] (62/85) | 0.71 [0.61-0.80] (62/87) | 0.036 (70/1938) | 38 / 6 / 26 (FP 0.013 of all) | 39 / 2 / 29 (FP 0.015 of all) | 0 / 12 / 11 / 2 |
+| field_tilt_with_lead | 2026-2028 (tune) | v3 | 0.78 [0.68-0.85] (66/85) | 0.76 [0.66-0.84] (66/87) | 0.044 (86/1938) | 46 / 6 / 34 (FP 0.018 of all) | 47 / 2 / 37 (FP 0.019 of all) | 0 / 7 / 12 / 2 |
+| field_tilt_with_lead | 2026-2028 (tune) | v4 | 0.54 [0.44-0.64] (46/85) | 0.53 [0.42-0.63] (46/87) | 0.025 (49/1938) | 45 / 2 / 2 (FP 0.001 of all) | 47 / 2 / 0 (FP 0.000 of all) | 0 / 7 / 32 (threat 20) / 2 |
+| field_tilt_with_lead | 2029-2030 (hold-out) | v2 | 0.63 [0.50-0.75] (34/54) | 0.63 [0.50-0.75] (34/54) | 0.041 (53/1292) | 24 / 5 / 24 (FP 0.019 of all) | 26 / 6 / 21 (FP 0.016 of all) | 0 / 14 / 6 / 0 |
+| field_tilt_with_lead | 2029-2030 (hold-out) | v3 | 0.76 [0.63-0.85] (41/54) | 0.76 [0.63-0.85] (41/54) | 0.049 (63/1292) | 31 / 6 / 26 (FP 0.020 of all) | 32 / 8 / 23 (FP 0.018 of all) | 0 / 5 / 8 / 0 |
+| field_tilt_with_lead | 2029-2030 (hold-out) | v4 | 0.43 [0.30-0.56] (23/54) | 0.43 [0.30-0.56] (23/54) | 0.031 (40/1292) | 31 / 5 / 4 (FP 0.003 of all) | 32 / 8 / 0 (FP 0.000 of all) | 0 / 5 / 26 (threat 18) / 0 |
+| field_tilt_with_lead | all | v2 | 0.69 [0.61-0.76] (96/139) | 0.68 [0.60-0.75] (96/141) | 0.038 (123/3230) | 62 / 11 / 50 (FP 0.015 of all) | 65 / 8 / 50 (FP 0.015 of all) | 0 / 26 / 17 / 2 |
+| field_tilt_with_lead | all | v3 | 0.77 [0.69-0.83] (107/139) | 0.76 [0.68-0.82] (107/141) | 0.046 (149/3230) | 77 / 12 / 60 (FP 0.019 of all) | 79 / 10 / 60 (FP 0.019 of all) | 0 / 12 / 20 / 2 |
+| field_tilt_with_lead | all | v4 | 0.50 [0.41-0.58] (69/139) | 0.49 [0.41-0.57] (69/141) | 0.028 (89/3230) | 76 / 7 / 6 (FP 0.002 of all) | 79 / 10 / 0 (FP 0.000 of all) | 0 / 12 / 58 (threat 38) / 2 |
 
 ## Pipeline level: the claims the Analyst proposes while streaming
 
 | Rule | Seeds | Version | Recall, true cases | Recall, all planted | Unplanted fire rate | Unplanted fired cases J / U / FP, total xG | same, chance xG | Misses a / b / c / d |
 |---|---|---|---|---|---|---|---|---|
-| shot_spam | 2026-2028 (tune) | v2 | 0.84 [0.71-0.91] (41/49) | 0.59 [0.48-0.69] (46/78) | 0.051 (98/1938) | – | – | 0 / 4 / 4 / 24 |
-| shot_spam | 2026-2028 (tune) | v3 | 0.90 [0.78-0.96] (44/49) | 0.63 [0.52-0.73] (49/78) | 0.053 (103/1938) | – | – | 0 / 1 / 4 / 24 |
-| shot_spam | 2029-2030 (hold-out) | v2 | 0.70 [0.55-0.81] (32/46) | 0.49 [0.38-0.61] (33/67) | 0.059 (76/1292) | – | – | 0 / 7 / 7 / 20 |
-| shot_spam | 2029-2030 (hold-out) | v3 | 0.72 [0.57-0.83] (33/46) | 0.54 [0.42-0.65] (36/67) | 0.060 (78/1292) | – | – | 0 / 6 / 7 / 18 |
-| shot_spam | all | v2 | 0.77 [0.67-0.84] (73/95) | 0.54 [0.46-0.62] (79/145) | 0.054 (174/3230) | – | – | 0 / 11 / 11 / 44 |
-| shot_spam | all | v3 | 0.81 [0.72-0.88] (77/95) | 0.59 [0.50-0.66] (85/145) | 0.056 (181/3230) | – | – | 0 / 7 / 11 / 42 |
-| field_tilt_with_lead | 2026-2028 (tune) | v2 | 0.89 [0.80-0.95] (59/66) | 0.90 [0.81-0.95] (62/69) | 0.170 (330/1938) | 193 / 49 / 88 (FP 0.045 of all) | 198 / 40 / 92 (FP 0.047 of all) | 0 / 1 / 6 / 0 |
-| field_tilt_with_lead | 2026-2028 (tune) | v3 | 0.89 [0.80-0.95] (59/66) | 0.90 [0.81-0.95] (62/69) | 0.184 (356/1938) | 192 / 58 / 106 (FP 0.055 of all) | 201 / 46 / 109 (FP 0.056 of all) | 0 / 1 / 6 / 0 |
-| field_tilt_with_lead | 2026-2028 (tune) | v4 | 0.79 [0.67-0.87] (52/66) | 0.80 [0.69-0.88] (55/69) | 0.148 (286/1938) | 221 / 51 / 14 (FP 0.007 of all) | 230 / 56 / 0 (FP 0.000 of all) | 0 / 1 / 13 (threat 7) / 0 |
-| field_tilt_with_lead | 2029-2030 (hold-out) | v2 | 0.91 [0.79-0.96] (41/45) | 0.91 [0.79-0.96] (41/45) | 0.152 (197/1292) | 115 / 26 / 56 (FP 0.043 of all) | 116 / 18 / 63 (FP 0.049 of all) | 0 / 3 / 1 / 0 |
-| field_tilt_with_lead | 2029-2030 (hold-out) | v3 | 0.96 [0.85-0.99] (43/45) | 0.96 [0.85-0.99] (43/45) | 0.167 (216/1292) | 122 / 27 / 67 (FP 0.052 of all) | 122 / 22 / 72 (FP 0.056 of all) | 0 / 1 / 1 / 0 |
-| field_tilt_with_lead | 2029-2030 (hold-out) | v4 | 0.78 [0.64-0.87] (35/45) | 0.78 [0.64-0.87] (35/45) | 0.133 (172/1292) | 144 / 21 / 7 (FP 0.005 of all) | 145 / 27 / 0 (FP 0.000 of all) | 0 / 1 / 9 (threat 8) / 0 |
-| field_tilt_with_lead | all | v2 | 0.90 [0.83-0.94] (100/111) | 0.90 [0.84-0.95] (103/114) | 0.163 (527/3230) | 308 / 75 / 144 (FP 0.045 of all) | 314 / 58 / 155 (FP 0.048 of all) | 0 / 4 / 7 / 0 |
-| field_tilt_with_lead | all | v3 | 0.92 [0.85-0.96] (102/111) | 0.92 [0.86-0.96] (105/114) | 0.177 (572/3230) | 314 / 85 / 173 (FP 0.054 of all) | 323 / 68 / 181 (FP 0.056 of all) | 0 / 2 / 7 / 0 |
-| field_tilt_with_lead | all | v4 | 0.78 [0.70-0.85] (87/111) | 0.79 [0.71-0.85] (90/114) | 0.142 (458/3230) | 365 / 72 / 21 (FP 0.007 of all) | 375 / 83 / 0 (FP 0.000 of all) | 0 / 2 / 22 (threat 15) / 0 |
+| shot_spam | 2026-2028 (tune) | v2 | 0.86 [0.73-0.93] (42/49) | 0.60 [0.49-0.70] (49/82) | 0.064 (124/1938) | – | – | 0 / 4 / 3 / 26 |
+| shot_spam | 2026-2028 (tune) | v3 | 0.86 [0.73-0.93] (42/49) | 0.60 [0.49-0.70] (49/82) | 0.069 (133/1938) | – | – | 0 / 4 / 3 / 26 |
+| shot_spam | 2029-2030 (hold-out) | v2 | 27/37 [0.57-0.85] | 0.45 [0.33-0.57] (29/65) | 0.063 (81/1292) | – | – | 0 / 6 / 4 / 26 |
+| shot_spam | 2029-2030 (hold-out) | v3 | 29/37 [0.63-0.89] | 0.49 [0.37-0.61] (32/65) | 0.066 (85/1292) | – | – | 0 / 4 / 4 / 25 |
+| shot_spam | all | v2 | 0.80 [0.71-0.87] (69/86) | 0.53 [0.45-0.61] (78/147) | 0.063 (205/3230) | – | – | 0 / 10 / 7 / 52 |
+| shot_spam | all | v3 | 0.83 [0.73-0.89] (71/86) | 0.55 [0.47-0.63] (81/147) | 0.067 (218/3230) | – | – | 0 / 8 / 7 / 51 |
+| field_tilt_with_lead | 2026-2028 (tune) | v2 | 0.89 [0.81-0.94] (76/85) | 0.90 [0.81-0.94] (78/87) | 0.168 (326/1938) | 187 / 42 / 97 (FP 0.050 of all) | 200 / 24 / 102 (FP 0.053 of all) | 0 / 1 / 8 / 0 |
+| field_tilt_with_lead | 2026-2028 (tune) | v3 | 0.92 [0.84-0.96] (78/85) | 0.92 [0.84-0.96] (80/87) | 0.182 (353/1938) | 191 / 50 / 112 (FP 0.058 of all) | 201 / 35 / 117 (FP 0.060 of all) | 0 / 0 / 7 / 0 |
+| field_tilt_with_lead | 2026-2028 (tune) | v4 | 0.85 [0.76-0.91] (72/85) | 0.85 [0.76-0.91] (74/87) | 0.139 (269/1938) | 214 / 42 / 13 (FP 0.007 of all) | 227 / 42 / 0 (FP 0.000 of all) | 0 / 0 / 13 (threat 6) / 0 |
+| field_tilt_with_lead | 2029-2030 (hold-out) | v2 | 0.91 [0.80-0.96] (49/54) | 0.91 [0.80-0.96] (49/54) | 0.150 (194/1292) | 122 / 21 / 51 (FP 0.039 of all) | 120 / 21 / 53 (FP 0.041 of all) | 0 / 3 / 2 / 0 |
+| field_tilt_with_lead | 2029-2030 (hold-out) | v3 | 0.96 [0.87-0.99] (52/54) | 0.96 [0.87-0.99] (52/54) | 0.172 (222/1292) | 128 / 30 / 64 (FP 0.050 of all) | 127 / 28 / 67 (FP 0.052 of all) | 0 / 1 / 1 / 0 |
+| field_tilt_with_lead | 2029-2030 (hold-out) | v4 | 0.87 [0.76-0.94] (47/54) | 0.87 [0.76-0.94] (47/54) | 0.138 (178/1292) | 145 / 27 / 6 (FP 0.005 of all) | 144 / 34 / 0 (FP 0.000 of all) | 0 / 1 / 6 (threat 5) / 0 |
+| field_tilt_with_lead | all | v2 | 0.90 [0.84-0.94] (125/139) | 0.90 [0.84-0.94] (127/141) | 0.161 (520/3230) | 309 / 63 / 148 (FP 0.046 of all) | 320 / 45 / 155 (FP 0.048 of all) | 0 / 4 / 10 / 0 |
+| field_tilt_with_lead | all | v3 | 0.94 [0.88-0.97] (130/139) | 0.94 [0.88-0.97] (132/141) | 0.178 (575/3230) | 319 / 80 / 176 (FP 0.054 of all) | 328 / 63 / 184 (FP 0.057 of all) | 0 / 1 / 8 / 0 |
+| field_tilt_with_lead | all | v4 | 0.86 [0.79-0.90] (119/139) | 0.86 [0.79-0.91] (121/141) | 0.138 (447/3230) | 359 / 69 / 19 (FP 0.006 of all) | 371 / 76 / 0 (FP 0.000 of all) | 0 / 1 / 19 (threat 11) / 0 |
 
 The v4 rows are the current code's own recorded verdicts. Recorded verdicts that disagree with the v4 re-evaluation from the recorded features: 0.
 
 ## Examples of misses (v4, pipeline level)
 
-**shot_spam, category b** (7 cases)
+**shot_spam, category b** (8 cases)
 
+- seed 2026 m_062 ESF v NTG: trailing spell {"shots": 13, "low_xg_shots": 9, "xg": 0.93, "f3_passes": 88, "field_tilt": 0.603, "box_entries": 20}; claim windows (0, 2844), (0, 6125)
+- seed 2026 m_180 NTG v HBC: trailing spell {"shots": 34, "low_xg_shots": 23, "xg": 2.621, "f3_passes": 66, "field_tilt": 0.564, "box_entries": 22}; claim windows (0, 2903), (0, 6253)
 - seed 2026 m_276 LMF v GRM: trailing spell {"shots": 17, "low_xg_shots": 14, "xg": 1.268, "f3_passes": 69, "field_tilt": 0.496, "box_entries": 13}; claim windows (0, 6071)
-- seed 2029 m_091 NTG v GRM: trailing spell {"shots": 18, "low_xg_shots": 16, "xg": 1.218, "f3_passes": 57, "field_tilt": 0.553, "box_entries": 5}; claim windows (0, 3100), (0, 6338)
-- seed 2029 m_307 ESF v QNT: trailing spell {"shots": 12, "low_xg_shots": 11, "xg": 0.691, "f3_passes": 71, "field_tilt": 0.689, "box_entries": 13}; claim windows (0, 2925), (0, 6079)
 
-**shot_spam, category c** (11 cases)
+**shot_spam, category c** (7 cases)
 
-- seed 2026 m_028 LMF v PLQ: trailing spell {"shots": 13, "low_xg_shots": 9, "xg": 1.433, "f3_passes": 69, "field_tilt": 0.67, "box_entries": 15}; claim windows (0, 6226)
 - seed 2027 m_079 NTG v IRK: trailing spell {"shots": 19, "low_xg_shots": 14, "xg": 1.707, "f3_passes": 98, "field_tilt": 0.557, "box_entries": 18}; claim windows (0, 2962), (0, 6124)
-- seed 2028 m_049 LMF v MDL: trailing spell {"shots": 16, "low_xg_shots": 12, "xg": 1.372, "f3_passes": 82, "field_tilt": 0.569, "box_entries": 11}; claim windows (0, 2911), (0, 5994)
+- seed 2027 m_250 NTG v OKP: trailing spell {"shots": 31, "low_xg_shots": 23, "xg": 2.789, "f3_passes": 127, "field_tilt": 0.658, "box_entries": 28}; claim windows (0, 2918), (0, 6122)
+- seed 2028 m_278 NTG v AUR: trailing spell {"shots": 21, "low_xg_shots": 15, "xg": 1.783, "f3_passes": 108, "field_tilt": 0.85, "box_entries": 16}; claim windows (0, 2899), (0, 6002)
 
-**shot_spam, category d** (42 cases)
+**shot_spam, category d** (51 cases)
 
 - seed 2026 m_006 LMF v ESF: trailing spell {"shots": 5, "low_xg_shots": 4, "xg": 0.16, "f3_passes": 41, "field_tilt": 0.383, "box_entries": 4}; fewer than 12 non-penalty shots while trailing; claim windows (0, 3065), (0, 6542)
-- seed 2026 m_039 LMF v ASV: trailing spell {"shots": 4, "low_xg_shots": 3, "xg": 0.569, "f3_passes": 58, "field_tilt": 0.302, "box_entries": 13}; fewer than 12 non-penalty shots while trailing; claim windows none
-- seed 2026 m_044 NTG v CAL: trailing spell {"shots": 15, "low_xg_shots": 9, "xg": 0.925, "f3_passes": 61, "field_tilt": 0.581, "box_entries": 13}; low-xG share while trailing not above the league's; claim windows (0, 3138), (0, 6220)
+- seed 2026 m_039 LMF v ASV: trailing spell {"shots": 5, "low_xg_shots": 4, "xg": 0.604, "f3_passes": 89, "field_tilt": 0.468, "box_entries": 21}; fewer than 12 non-penalty shots while trailing; claim windows (0, 6272)
+- seed 2026 m_141 LMF v KWC: trailing spell {"shots": 9, "low_xg_shots": 7, "xg": 0.521, "f3_passes": 45, "field_tilt": 0.441, "box_entries": 11}; fewer than 12 non-penalty shots while trailing; claim windows (0, 2785), (0, 5994)
 
-**field_tilt_with_lead, category b** (2 cases)
+**field_tilt_with_lead, category b** (1 cases)
 
-- seed 2027 m_265 HAR v DCH: trailing spell {"shots": 14, "low_xg_shots": 7, "xg": 1.499, "f3_passes": 51, "field_tilt": 0.63, "box_entries": 8}; claim windows (0, 900)
-- seed 2029 m_183 HBC v AUR: trailing spell {"shots": 11, "low_xg_shots": 10, "xg": 0.423, "f3_passes": 59, "field_tilt": 0.621, "box_entries": 10}; claim windows (900, 2700)
+- seed 2029 m_341 NTG v AUR: trailing spell {"shots": 13, "low_xg_shots": 11, "xg": 0.831, "f3_passes": 55, "field_tilt": 0.859, "box_entries": 7}; claim windows (0, 900), (1800, 3600), (3600, 5400)
 
-**field_tilt_with_lead, category c** (22 cases)
+**field_tilt_with_lead, category c** (19 cases)
 
+- seed 2026 m_012 FWM v AUR: trailing spell {"shots": 4, "low_xg_shots": 4, "xg": 0.171, "f3_passes": 39, "field_tilt": 0.661, "box_entries": 9}; claim windows (4171, 5971)
 - seed 2026 m_110 CAL v AUR: trailing spell {"shots": 11, "low_xg_shots": 8, "xg": 0.544, "f3_passes": 92, "field_tilt": 0.742, "box_entries": 19}; claim windows (0, 900), (900, 2700), (2700, 4500), (4389, 6189)
 - seed 2026 m_137 NTG v AUR: trailing spell {"shots": 26, "low_xg_shots": 16, "xg": 2.083, "f3_passes": 89, "field_tilt": 0.802, "box_entries": 22}; claim windows (900, 2700), (2700, 4500), (4329, 6129)
-- seed 2026 m_162 VES v DCH: trailing spell {"shots": 17, "low_xg_shots": 7, "xg": 2.129, "f3_passes": 79, "field_tilt": 0.76, "box_entries": 11}; claim windows (900, 2700), (3600, 5400)

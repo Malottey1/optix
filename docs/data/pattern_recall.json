@@ -8,43 +8,67 @@
     "negatives": 722
    },
    "pat_counter_press": {
-    "cases": 13,
+    "cases": 12,
     "fps": 2,
-    "hits": 11,
+    "hits": 9,
     "negatives": 722
    },
    "pat_cutback": {
-    "cases": 24,
-    "fps": 48,
-    "hits": 24,
+    "cases": 25,
+    "fps": 37,
+    "hits": 25,
+    "negatives": 722
+   },
+   "pat_direct_transition": {
+    "cases": 5,
+    "fps": 32,
+    "hits": 5,
     "negatives": 722
    },
    "pat_elastic_low_block": {
-    "cases": 11,
-    "fps": 35,
-    "hits": 5,
+    "cases": 15,
+    "fps": 36,
+    "hits": 9,
     "negatives": 722
    },
    "pat_flank_isolation": {
     "cases": 20,
-    "fps": 3,
+    "fps": 5,
     "hits": 20,
     "negatives": 684
    },
+   "pat_press_resistant": {
+    "cases": 1,
+    "fps": 36,
+    "hits": 1,
+    "negatives": 722
+   },
+   "pat_pressed_presser": {
+    "cases": 21,
+    "fps": 26,
+    "hits": 17,
+    "negatives": 722
+   },
    "pat_rest_defence": {
-    "cases": 7,
-    "fps": 57,
-    "hits": 7,
+    "cases": 8,
+    "fps": 63,
+    "hits": 4,
+    "negatives": 722
+   },
+   "pat_set_piece_dependence": {
+    "cases": 2,
+    "fps": 35,
+    "hits": 1,
     "negatives": 722
    },
    "pat_starved_finisher": {
-    "cases": 9,
-    "fps": 44,
-    "hits": 9,
+    "cases": 8,
+    "fps": 39,
+    "hits": 7,
     "negatives": 722
    },
    "pat_tactical_fouling": {
-    "fps": 42,
+    "fps": 37,
     "negatives": 722
    }
   },
@@ -54,51 +78,75 @@
  "2026@1.0": {
   "counts": {
    "pat_bait_switch": {
-    "cases": 24,
+    "cases": 25,
     "fps": 0,
-    "hits": 24,
+    "hits": 25,
     "negatives": 722
    },
    "pat_counter_press": {
-    "cases": 28,
-    "fps": 3,
-    "hits": 27,
+    "cases": 30,
+    "fps": 1,
+    "hits": 28,
     "negatives": 722
    },
    "pat_cutback": {
-    "cases": 30,
-    "fps": 44,
-    "hits": 30,
+    "cases": 29,
+    "fps": 53,
+    "hits": 29,
+    "negatives": 722
+   },
+   "pat_direct_transition": {
+    "cases": 15,
+    "fps": 34,
+    "hits": 15,
     "negatives": 722
    },
    "pat_elastic_low_block": {
-    "cases": 15,
-    "fps": 34,
-    "hits": 5,
+    "cases": 19,
+    "fps": 24,
+    "hits": 8,
     "negatives": 722
    },
    "pat_flank_isolation": {
-    "cases": 45,
-    "fps": 4,
-    "hits": 45,
+    "cases": 48,
+    "fps": 5,
+    "hits": 48,
     "negatives": 684
    },
+   "pat_press_resistant": {
+    "cases": 15,
+    "fps": 40,
+    "hits": 13,
+    "negatives": 722
+   },
+   "pat_pressed_presser": {
+    "cases": 34,
+    "fps": 21,
+    "hits": 32,
+    "negatives": 722
+   },
    "pat_rest_defence": {
+    "cases": 14,
+    "fps": 62,
+    "hits": 8,
+    "negatives": 722
+   },
+   "pat_set_piece_dependence": {
     "cases": 16,
-    "fps": 54,
-    "hits": 9,
+    "fps": 41,
+    "hits": 6,
     "negatives": 722
    },
    "pat_starved_finisher": {
-    "cases": 15,
-    "fps": 28,
-    "hits": 13,
+    "cases": 18,
+    "fps": 43,
+    "hits": 12,
     "negatives": 722
    },
    "pat_tactical_fouling": {
     "cases": 5,
-    "fps": 35,
-    "hits": 3,
+    "fps": 38,
+    "hits": 4,
     "negatives": 722
    }
   },
@@ -108,9 +156,9 @@
  "2027@0.5": {
   "counts": {
    "pat_bait_switch": {
-    "cases": 22,
+    "cases": 21,
     "fps": 0,
-    "hits": 22,
+    "hits": 21,
     "negatives": 722
    },
    "pat_counter_press": {
@@ -120,39 +168,61 @@
     "negatives": 722
    },
    "pat_cutback": {
-    "cases": 21,
-    "fps": 41,
-    "hits": 21,
+    "cases": 20,
+    "fps": 42,
+    "hits": 20,
+    "negatives": 722
+   },
+   "pat_direct_transition": {
+    "cases": 3,
+    "fps": 19,
+    "hits": 3,
     "negatives": 722
    },
    "pat_elastic_low_block": {
-    "cases": 17,
-    "fps": 42,
-    "hits": 5,
+    "cases": 19,
+    "fps": 33,
+    "hits": 7,
     "negatives": 722
    },
    "pat_flank_isolation": {
-    "cases": 28,
-    "fps": 5,
-    "hits": 28,
+    "cases": 30,
+    "fps": 7,
+    "hits": 30,
     "negatives": 684
    },
+   "pat_press_resistant": {
+    "fps": 38,
+    "negatives": 722
+   },
+   "pat_pressed_presser": {
+    "cases": 19,
+    "fps": 19,
+    "hits": 15,
+    "negatives": 722
+   },
    "pat_rest_defence": {
-    "cases": 11,
-    "fps": 56,
-    "hits": 8,
+    "cases": 10,
+    "fps": 65,
+    "hits": 5,
+    "negatives": 722
+   },
+   "pat_set_piece_dependence": {
+    "cases": 7,
+    "fps": 44,
+    "hits": 3,
     "negatives": 722
    },
    "pat_starved_finisher": {
-    "cases": 8,
-    "fps": 36,
-    "hits": 8,
+    "cases": 14,
+    "fps": 38,
+    "hits": 13,
     "negatives": 722
    },
    "pat_tactical_fouling": {
-    "cases": 3,
-    "fps": 36,
-    "hits": 2,
+    "cases": 2,
+    "fps": 31,
+    "hits": 1,
     "negatives": 722
    }
   },
@@ -162,51 +232,75 @@
  "2027@1.0": {
   "counts": {
    "pat_bait_switch": {
-    "cases": 30,
+    "cases": 28,
     "fps": 0,
-    "hits": 30,
+    "hits": 28,
     "negatives": 722
    },
    "pat_counter_press": {
     "cases": 28,
-    "fps": 1,
-    "hits": 25,
+    "fps": 0,
+    "hits": 26,
     "negatives": 722
    },
    "pat_cutback": {
     "cases": 30,
-    "fps": 39,
+    "fps": 42,
     "hits": 30,
     "negatives": 722
    },
-   "pat_elastic_low_block": {
-    "cases": 21,
-    "fps": 45,
-    "hits": 9,
-    "negatives": 722
-   },
-   "pat_flank_isolation": {
-    "cases": 50,
-    "fps": 8,
-    "hits": 50,
-    "negatives": 684
-   },
-   "pat_rest_defence": {
-    "cases": 14,
-    "fps": 49,
-    "hits": 10,
-    "negatives": 722
-   },
-   "pat_starved_finisher": {
-    "cases": 19,
-    "fps": 43,
+   "pat_direct_transition": {
+    "cases": 16,
+    "fps": 20,
     "hits": 14,
     "negatives": 722
    },
-   "pat_tactical_fouling": {
-    "cases": 9,
-    "fps": 48,
+   "pat_elastic_low_block": {
+    "cases": 20,
+    "fps": 38,
+    "hits": 13,
+    "negatives": 722
+   },
+   "pat_flank_isolation": {
+    "cases": 51,
+    "fps": 10,
+    "hits": 51,
+    "negatives": 684
+   },
+   "pat_press_resistant": {
+    "cases": 13,
+    "fps": 34,
+    "hits": 8,
+    "negatives": 722
+   },
+   "pat_pressed_presser": {
+    "cases": 35,
+    "fps": 25,
+    "hits": 29,
+    "negatives": 722
+   },
+   "pat_rest_defence": {
+    "cases": 15,
+    "fps": 68,
     "hits": 9,
+    "negatives": 722
+   },
+   "pat_set_piece_dependence": {
+    "cases": 20,
+    "fps": 35,
+    "hits": 13,
+    "negatives": 722
+   },
+   "pat_starved_finisher": {
+    "cases": 24,
+    "fps": 35,
+    "hits": 18,
+    "negatives": 722
+   },
+   "pat_tactical_fouling": {
+    "cases": 7,
+    "fps": 41,
+    "hits": 6,
     "negatives": 722
    }
   },
@@ -216,49 +310,73 @@
  "2028@0.5": {
   "counts": {
    "pat_bait_switch": {
-    "cases": 14,
+    "cases": 16,
     "fps": 0,
-    "hits": 14,
+    "hits": 16,
     "negatives": 722
    },
    "pat_counter_press": {
-    "cases": 12,
-    "fps": 1,
+    "cases": 11,
+    "fps": 0,
     "hits": 10,
     "negatives": 722
    },
    "pat_cutback": {
     "cases": 20,
-    "fps": 37,
+    "fps": 39,
     "hits": 20,
+    "negatives": 722
+   },
+   "pat_direct_transition": {
+    "cases": 4,
+    "fps": 21,
+    "hits": 4,
     "negatives": 722
    },
    "pat_elastic_low_block": {
     "cases": 15,
-    "fps": 36,
-    "hits": 4,
-    "negatives": 722
-   },
-   "pat_flank_isolation": {
-    "cases": 30,
-    "fps": 5,
-    "hits": 30,
-    "negatives": 684
-   },
-   "pat_rest_defence": {
-    "cases": 7,
-    "fps": 53,
+    "fps": 37,
     "hits": 5,
     "negatives": 722
    },
-   "pat_starved_finisher": {
-    "cases": 13,
+   "pat_flank_isolation": {
+    "cases": 29,
+    "fps": 7,
+    "hits": 29,
+    "negatives": 684
+   },
+   "pat_press_resistant": {
+    "cases": 2,
+    "fps": 43,
+    "hits": 2,
+    "negatives": 722
+   },
+   "pat_pressed_presser": {
+    "cases": 18,
+    "fps": 15,
+    "hits": 12,
+    "negatives": 722
+   },
+   "pat_rest_defence": {
+    "cases": 7,
+    "fps": 69,
+    "hits": 4,
+    "negatives": 722
+   },
+   "pat_set_piece_dependence": {
+    "cases": 5,
     "fps": 42,
-    "hits": 8,
+    "hits": 1,
+    "negatives": 722
+   },
+   "pat_starved_finisher": {
+    "cases": 8,
+    "fps": 34,
+    "hits": 7,
     "negatives": 722
    },
    "pat_tactical_fouling": {
-    "fps": 38,
+    "fps": 35,
     "negatives": 722
    }
   },
@@ -268,51 +386,75 @@
  "2028@1.0": {
   "counts": {
    "pat_bait_switch": {
-    "cases": 23,
+    "cases": 25,
     "fps": 0,
-    "hits": 23,
+    "hits": 25,
     "negatives": 722
    },
    "pat_counter_press": {
-    "cases": 23,
+    "cases": 25,
     "fps": 0,
-    "hits": 21,
+    "hits": 24,
     "negatives": 722
    },
    "pat_cutback": {
     "cases": 33,
-    "fps": 36,
+    "fps": 33,
     "hits": 33,
     "negatives": 722
    },
-   "pat_elastic_low_block": {
-    "cases": 19,
+   "pat_direct_transition": {
+    "cases": 14,
     "fps": 35,
-    "hits": 10,
+    "hits": 13,
+    "negatives": 722
+   },
+   "pat_elastic_low_block": {
+    "cases": 18,
+    "fps": 38,
+    "hits": 9,
     "negatives": 722
    },
    "pat_flank_isolation": {
-    "cases": 49,
-    "fps": 7,
-    "hits": 49,
+    "cases": 48,
+    "fps": 9,
+    "hits": 48,
     "negatives": 684
    },
+   "pat_press_resistant": {
+    "cases": 14,
+    "fps": 39,
+    "hits": 11,
+    "negatives": 722
+   },
+   "pat_pressed_presser": {
+    "cases": 30,
+    "fps": 19,
+    "hits": 28,
+    "negatives": 722
+   },
    "pat_rest_defence": {
-    "cases": 13,
-    "fps": 54,
-    "hits": 8,
+    "cases": 14,
+    "fps": 67,
+    "hits": 9,
+    "negatives": 722
+   },
+   "pat_set_piece_dependence": {
+    "cases": 21,
+    "fps": 40,
+    "hits": 7,
     "negatives": 722
    },
    "pat_starved_finisher": {
-    "cases": 23,
-    "fps": 37,
+    "cases": 24,
+    "fps": 31,
     "hits": 20,
     "negatives": 722
    },
    "pat_tactical_fouling": {
-    "cases": 7,
-    "fps": 36,
-    "hits": 7,
+    "cases": 6,
+    "fps": 30,
+    "hits": 6,
     "negatives": 722
    }
   },
@@ -329,42 +471,68 @@
    },
    "pat_counter_press": {
     "cases": 10,
-    "fps": 0,
+    "fps": 2,
     "hits": 9,
     "negatives": 722
    },
    "pat_cutback": {
-    "cases": 20,
-    "fps": 34,
-    "hits": 20,
+    "cases": 21,
+    "fps": 32,
+    "hits": 21,
+    "negatives": 722
+   },
+   "pat_direct_transition": {
+    "cases": 3,
+    "fps": 21,
+    "hits": 3,
     "negatives": 722
    },
    "pat_elastic_low_block": {
-    "cases": 14,
+    "cases": 16,
     "fps": 34,
-    "hits": 8,
+    "hits": 9,
     "negatives": 722
    },
    "pat_flank_isolation": {
     "cases": 32,
-    "fps": 4,
+    "fps": 3,
     "hits": 32,
     "negatives": 684
    },
+   "pat_press_resistant": {
+    "cases": 2,
+    "fps": 35,
+    "hits": 0,
+    "negatives": 722
+   },
+   "pat_pressed_presser": {
+    "cases": 16,
+    "fps": 25,
+    "hits": 10,
+    "negatives": 722
+   },
    "pat_rest_defence": {
     "cases": 5,
-    "fps": 57,
-    "hits": 4,
+    "fps": 64,
+    "hits": 3,
+    "negatives": 722
+   },
+   "pat_set_piece_dependence": {
+    "cases": 6,
+    "fps": 39,
+    "hits": 3,
     "negatives": 722
    },
    "pat_starved_finisher": {
-    "cases": 11,
-    "fps": 48,
+    "cases": 10,
+    "fps": 37,
     "hits": 10,
     "negatives": 722
    },
    "pat_tactical_fouling": {
-    "fps": 50,
+    "cases": 1,
+    "fps": 33,
+    "hits": 1,
     "negatives": 722
    }
   },
@@ -374,51 +542,75 @@
  "2029@1.0": {
   "counts": {
    "pat_bait_switch": {
-    "cases": 28,
-    "fps": 1,
-    "hits": 28,
+    "cases": 24,
+    "fps": 0,
+    "hits": 24,
     "negatives": 722
    },
    "pat_counter_press": {
-    "cases": 27,
-    "fps": 1,
-    "hits": 26,
+    "cases": 25,
+    "fps": 3,
+    "hits": 21,
     "negatives": 722
    },
    "pat_cutback": {
     "cases": 25,
-    "fps": 38,
+    "fps": 44,
     "hits": 25,
     "negatives": 722
    },
+   "pat_direct_transition": {
+    "cases": 12,
+    "fps": 22,
+    "hits": 11,
+    "negatives": 722
+   },
    "pat_elastic_low_block": {
-    "cases": 17,
-    "fps": 34,
-    "hits": 12,
+    "cases": 18,
+    "fps": 30,
+    "hits": 9,
     "negatives": 722
    },
    "pat_flank_isolation": {
-    "cases": 49,
-    "fps": 13,
-    "hits": 49,
+    "cases": 47,
+    "fps": 9,
+    "hits": 47,
     "negatives": 684
    },
-   "pat_rest_defence": {
-    "cases": 16,
-    "fps": 48,
+   "pat_press_resistant": {
+    "cases": 11,
+    "fps": 38,
     "hits": 7,
     "negatives": 722
    },
+   "pat_pressed_presser": {
+    "cases": 32,
+    "fps": 17,
+    "hits": 30,
+    "negatives": 722
+   },
+   "pat_rest_defence": {
+    "cases": 13,
+    "fps": 71,
+    "hits": 9,
+    "negatives": 722
+   },
+   "pat_set_piece_dependence": {
+    "cases": 17,
+    "fps": 45,
+    "hits": 9,
+    "negatives": 722
+   },
    "pat_starved_finisher": {
-    "cases": 20,
-    "fps": 42,
+    "cases": 19,
+    "fps": 47,
     "hits": 17,
     "negatives": 722
    },
    "pat_tactical_fouling": {
-    "cases": 3,
-    "fps": 35,
-    "hits": 3,
+    "cases": 5,
+    "fps": 36,
+    "hits": 4,
     "negatives": 722
    }
   },
@@ -428,27 +620,33 @@
  "2030@0.5": {
   "counts": {
    "pat_bait_switch": {
-    "cases": 13,
+    "cases": 14,
     "fps": 0,
-    "hits": 13,
+    "hits": 14,
     "negatives": 722
    },
    "pat_counter_press": {
-    "cases": 17,
-    "fps": 0,
-    "hits": 15,
+    "cases": 16,
+    "fps": 1,
+    "hits": 16,
     "negatives": 722
    },
    "pat_cutback": {
-    "cases": 19,
-    "fps": 44,
-    "hits": 19,
+    "cases": 18,
+    "fps": 40,
+    "hits": 18,
+    "negatives": 722
+   },
+   "pat_direct_transition": {
+    "cases": 2,
+    "fps": 20,
+    "hits": 2,
     "negatives": 722
    },
    "pat_elastic_low_block": {
-    "cases": 17,
-    "fps": 29,
-    "hits": 8,
+    "cases": 19,
+    "fps": 36,
+    "hits": 6,
     "negatives": 722
    },
    "pat_flank_isolation": {
@@ -457,16 +655,32 @@
     "hits": 26,
     "negatives": 684
    },
+   "pat_press_resistant": {
+    "fps": 51,
+    "negatives": 722
+   },
+   "pat_pressed_presser": {
+    "cases": 15,
+    "fps": 18,
+    "hits": 11,
+    "negatives": 722
+   },
    "pat_rest_defence": {
     "cases": 11,
-    "fps": 42,
-    "hits": 5,
+    "fps": 50,
+    "hits": 4,
+    "negatives": 722
+   },
+   "pat_set_piece_dependence": {
+    "cases": 4,
+    "fps": 29,
+    "hits": 1,
     "negatives": 722
    },
    "pat_starved_finisher": {
-    "cases": 7,
-    "fps": 39,
-    "hits": 5,
+    "cases": 6,
+    "fps": 48,
+    "hits": 3,
     "negatives": 722
    },
    "pat_tactical_fouling": {
@@ -488,45 +702,69 @@
     "negatives": 722
    },
    "pat_counter_press": {
-    "cases": 29,
+    "cases": 25,
     "fps": 0,
-    "hits": 28,
+    "hits": 24,
     "negatives": 722
    },
    "pat_cutback": {
-    "cases": 28,
-    "fps": 43,
-    "hits": 28,
+    "cases": 30,
+    "fps": 41,
+    "hits": 30,
+    "negatives": 722
+   },
+   "pat_direct_transition": {
+    "cases": 11,
+    "fps": 25,
+    "hits": 10,
     "negatives": 722
    },
    "pat_elastic_low_block": {
-    "cases": 24,
-    "fps": 29,
-    "hits": 6,
+    "cases": 22,
+    "fps": 32,
+    "hits": 11,
     "negatives": 722
    },
    "pat_flank_isolation": {
-    "cases": 40,
+    "cases": 42,
     "fps": 10,
-    "hits": 40,
+    "hits": 42,
     "negatives": 684
    },
-   "pat_rest_defence": {
-    "cases": 13,
-    "fps": 52,
+   "pat_press_resistant": {
+    "cases": 9,
+    "fps": 37,
     "hits": 7,
     "negatives": 722
    },
-   "pat_starved_finisher": {
+   "pat_pressed_presser": {
+    "cases": 32,
+    "fps": 19,
+    "hits": 29,
+    "negatives": 722
+   },
+   "pat_rest_defence": {
+    "cases": 12,
+    "fps": 73,
+    "hits": 5,
+    "negatives": 722
+   },
+   "pat_set_piece_dependence": {
     "cases": 20,
-    "fps": 31,
-    "hits": 18,
+    "fps": 34,
+    "hits": 14,
+    "negatives": 722
+   },
+   "pat_starved_finisher": {
+    "cases": 19,
+    "fps": 39,
+    "hits": 13,
     "negatives": 722
    },
    "pat_tactical_fouling": {
     "cases": 11,
-    "fps": 29,
-    "hits": 10,
+    "fps": 37,
+    "hits": 9,
     "negatives": 722
    }
   },
