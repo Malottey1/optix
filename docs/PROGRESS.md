@@ -11,9 +11,38 @@ Item status is in docs/final-ui-progress.md; the audit and design notes in docs/
 - Audit data source: the dashboard season data/generated (40 matches) and data/showcase; facts in
   docs/final-ui-plan.md section 1 and docs/data-dictionary.md "What the data can and cannot show".
 
+- Nav: Home joins the primary nav (Home, Fixtures, Teams, Players); the logo still links home. Tech
+  is reached from Settings ("Technical details", above the language switch) and from Home. The search
+  button stays hidden until search ships (Step 8). The kits note now lives once, in Settings.
+- Player profiles: exported pre-rounded (as shown) in ui.json `players[].profile`, so the number
+  tracer matches them exactly; percentiles against position peers are computed in the export. Lists
+  (defensive points, key passes, shots faced) go to lazy per-team `matches/players-<code>.json`.
+- Rates and peer percentiles need at least 270 minutes (`MIN_MINUTES`); below that they are absent,
+  not zero. Keepers get no outfield defensive block (`defence` absent), outfield players no `keeper`.
+- Keeper attribution: saved shots by the save event's keeper; every shot faced (goals included) by
+  the keeper on the pitch at the shot's clock (lineups on_sec/off_sec), which is the starting keeper
+  except in the 3 matches with a keeper substitution. Long pass = at least 32 m (`LONG_PASS_M`).
+- xA per chance is rounded half up on exact integer ten-thousandths (xa has four decimals), so a mean
+  landing on a half rounds the same in the export and the tests.
+- Pressure regains: no field; a sequence rule would be a new metric, so it is not exported.
+- Match Hub (final): two columns from 1100 px (62/38). Left: scoreline, turning points, lineups,
+  heat maps, matchup, event log. Right: one sticky "Insights and patterns" panel, height 100vh - 96 px,
+  scrolling inside (focusable named region), tabs Insights / Patterns (family chips with icons under
+  Patterns), 5 or 10 cards per page with Previous / Next and "Page k of n"; tab, family and page size
+  remembered in module memory only. Below 1100 px the same panel is a section under the scoreline.
+  Gap under Heat Maps at 1440: 2,248 px before, 16 px after (all section gaps 16 px at every size).
+- Lineups facing each other: from 640 px one landscape pitch (home left attacking right, away
+  mirrored); below 640 px two stacked pitches (labels never collide at 390). Markers: goal, yellow,
+  red, substituted off, from the turning points.
+- Live replay hub (showcase): its console already has its own two-column frame with the feed; kept
+  unchanged, as the brief requires its behaviour to stay the same.
+
 ### Test changes (final UI)
 
-(none yet)
+- web/src/features/teams/teams.test.tsx: the kits line is now expected 0 times on the Team Grid (it
+  moved to Settings, per Step 1); shell.test.tsx checks it is in Settings.
+- web/src/features/hub/hub.test.tsx: the final hub's section order is now insights, turning, lineups,
+  heat, (matchup), log (the Step 3 layout); the matchup-only-with-a-claim assertion is unchanged.
 
 ## Information architecture (branch `ui-visuals-ia`, from 6c3369d = origin/main; local tag `pre-ia`)
 

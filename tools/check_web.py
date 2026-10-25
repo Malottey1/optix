@@ -853,6 +853,55 @@ def check_text_budget_proof(browser, base) -> dict:
     return out
 
 
+HUB_GAP_PX = 96
+HUB_GAP_JS = r"""() => {
+  const out = {gaps: [], panel: null, vh: innerHeight};
+  const secs = [...document.querySelectorAll('[data-hub-column=main] section[id], [data-hub-column=main] > a[data-ledger-link]')];
+  const top = (e) => e.getBoundingClientRect().top + scrollY, bottom = (e) => e.getBoundingClientRect().bottom + scrollY;
+  for (let i = 1; i < secs.length; i++) out.gaps.push([secs[i - 1].id || 'ledger', secs[i].id || 'ledger', Math.round(top(secs[i]) - bottom(secs[i - 1]))]);
+  const p = document.querySelector('#insights[data-panel=side]');
+  if (p) out.panel = Math.round(p.getBoundingClientRect().height);
+  return out;
+}"""
+# reintroduces the old layout: Heat Maps beside a full-height card column, Matchup after the row
+HUB_OLD_LAYOUT_JS = r"""() => {
+  const heat = document.getElementById('heat'), panel = document.getElementById('insights');
+  const row = document.createElement('div');
+  row.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start';
+  heat.replaceWith(row); row.appendChild(heat);
+  panel.style.position = 'static'; panel.style.height = 'auto';
+  panel.querySelector('[data-scroll-region]').style.overflow = 'visible';
+  row.appendChild(panel);
+}"""
+
+
+def hub_layout_problems(m: dict) -> list:
+    f = [f"empty gap of {g}px between {a} and {b} (max {HUB_GAP_PX})" for a, b, g in m["gaps"] if g > HUB_GAP_PX]
+    if m["panel"] is not None and m["panel"] > m["vh"]:
+        f.append(f"insights panel {m['panel']}px taller than the viewport {m['vh']}px")
+    return f
+
+
+def check_hub_layout(browser, base) -> dict:
+    """Match Hub (final): no empty gap over HUB_GAP_PX between consecutive sections of the main
+    column, and the side panel never taller than the viewport, at every size; plus the proof that
+    the old layout (cards beside Heat Maps, Matchup after the row) is caught."""
+    out = {}
+    for name, (w, h) in {**WIDTHS, "1080p": (1920, 1080), "900p": (1600, 900)}.items():
+        ctx, page, log = _context(browser, w, h)
+        _open(page, base, "hub_final")
+        page.wait_for_selector("#insights", timeout=10000)
+        m = page.evaluate(HUB_GAP_JS)
+        out[name] = dict(gaps=m["gaps"], panel=m["panel"], problems=hub_layout_problems(m) + log["problems"])
+        if name == "desktop":
+            page.evaluate(HUB_OLD_LAYOUT_JS)
+            page.wait_for_timeout(200)
+            hits = hub_layout_problems(page.evaluate(HUB_GAP_JS))
+            out["old_layout_proof"] = dict(caught=bool(hits), problems=hits[:2])
+        ctx.close()
+    return out
+
+
 def check_navigation(browser, base) -> dict:
     """In-app navigation through the visible nav links at both widths (each route check opens a fresh
     page, so unmount and route-change bugs only show up here)."""
@@ -1241,6 +1290,7 @@ def run(dist: Path | None = None, screens_dir: Path | None = None, screens: bool
             report["text_budget_proof"] = check_text_budget_proof(browser, base)
             report["consistency"] = check_consistency(browser, base, ref_dir or dist / "data")
             report["navigation"] = check_navigation(browser, base)
+            report["hub_layout"] = check_hub_layout(browser, base)
             report["language"] = check_language_switch(browser, base, src)
         browser.close()
     httpd.shutdown()
@@ -1297,6 +1347,12 @@ def failures(report) -> list:
         if not L["cards"]:
             f.append("language: no cards at full time")
     f += [f"consistency: {x}" for x in report.get("consistency", {}).get("problems", [])]
+    for k, v in report.get("hub_layout", {}).items():
+        if k == "old_layout_proof":
+            if not v["caught"]:
+                f.append("hub layout proof: the old layout was not caught")
+        else:
+            f += [f"hub layout@{k}: {x}" for x in v["problems"]]
     f += [f"text budget proof: {k} not caught" for k, v in report.get("text_budget_proof", {}).items()
           if not v["caught"]]
     for wn, v in report.get("navigation", {}).items():
@@ -1367,7 +1423,7 @@ def main(argv=None):
         for k, _, n in r.get("words", {}).get("elements", []):
             top[k] = max(top.get(k, 0), n)
         print(f"words {r['route']:10s} {r['width']:5d}px total={r.get('words', {}).get('total')} max_per_budget={top}")
-    for k in ("text_budget_proof", "drawer", "consistency", "mutation_proof", "language", "robustness", "frames", "frames_1080p",
+    for k in ("hub_layout", "text_budget_proof", "drawer", "consistency", "mutation_proof", "language", "robustness", "frames", "frames_1080p",
               "first_screen", "live_stream", "bundle", "image_files", "badges", "hero_contrast"):
         if k in report:
             print(f"{k}:", {x: y for x, y in report[k].items() if x != "_problems"} if isinstance(report[k], dict) else report[k])

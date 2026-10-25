@@ -7,6 +7,9 @@ import { MatchFiles } from "../../data/matches";
 import { ReplaySource } from "../../data/ReplaySource";
 import { setSetting } from "../../state/settings";
 import { capCards, layoutMarks } from "./parts";
+import { isPattern, panelMemory, panelPage } from "./InsightsPanel";
+import { facingPos, lineupMarkers } from "../../charts/MatchLineups";
+import { parseMatchFile, xiRows } from "../../data/matches";
 import type { Insight } from "../../types/ui";
 
 const DATA = join(__dirname, "..", "..", "..", "public", "data");
@@ -52,7 +55,10 @@ describe("Match Hub, Final", () => {
       await waitFor(() => expect(p.querySelector("[data-turning-points]")).toBeTruthy());
       const ids = [...p.querySelectorAll("section[id]")].map((s) => s.id);
       expect(ids).toEqual(
-        withMatchup ? ["turning", "heat", "cards", "matchup", "log"] : ["turning", "heat", "cards", "log"],
+        // below 1100 px (jsdom has no matchMedia) the insights panel sits under the scoreline
+        withMatchup
+          ? ["insights", "turning", "lineups", "heat", "matchup", "log"]
+          : ["insights", "turning", "lineups", "heat", "log"],
       );
       expect(p.textContent).not.toMatch(/No claim/i);
       expect(p.querySelector("[data-ledger-link]")!.getAttribute("href")).toBe(`#/match/${id}/ledger`);
@@ -121,5 +127,82 @@ describe("hub helpers", () => {
     const rows = layoutMarks(xs, 4, 8);
     for (let i = 0; i < xs.length; i++)
       for (let j = 0; j < i; j++) if (rows[i] === rows[j]) expect(Math.abs(xs[i]! - xs[j]!)).toBeGreaterThanOrEqual(4);
+  });
+});
+
+describe("Match Hub insights panel and lineups", () => {
+  it("pages the cards five at a time, the pager reads Page k of n, and a tab change is remembered in memory", async () => {
+    window.location.hash = "#/match/m_001";
+    render(<App source={source()} matches={matches()} />);
+    const p = await page("hub");
+    const panel = await waitFor(() => p.querySelector("#insights") as HTMLElement);
+    const list = panel.querySelector<HTMLElement>("[data-scroll-region]")!;
+    expect(list.tabIndex).toBe(0);
+    expect(list.getAttribute("aria-labelledby")).toBe("tab-insights");
+    const label = () => panel.querySelector("[data-page-label]")!.textContent;
+    const cards = () => list.querySelectorAll("article[data-insight-id]").length;
+    expect(cards()).toBeLessThanOrEqual(5);
+    expect(label()).toMatch(/^Page 1 of \d+$/);
+    const next = [...panel.querySelectorAll("button")].find((b) => /Next/.test(b.textContent ?? ""))!;
+    const before = list.querySelector("article")!.getAttribute("data-insight-id");
+    fireEvent.click(next);
+    expect(label()).toMatch(/^Page 2 of /);
+    expect(list.querySelector("article")!.getAttribute("data-insight-id")).not.toBe(before);
+    fireEvent.click(panel.querySelector("[data-tab='patterns']")!);
+    expect(panelMemory.tab).toBe("patterns");
+    expect(label()).toMatch(/^Page 1 of /);
+    expect([...list.querySelectorAll("article")].every((a) => a.getAttribute("data-type") === "tactical_pattern")).toBe(
+      true,
+    );
+    fireEvent.click(panel.querySelector("[data-tab='insights']")!);
+  });
+
+  it("panelPage splits tabs, filters by family and clamps the page", () => {
+    const f = parseMatchFile(JSON.parse(readFileSync(join(DATA, "matches", "m_001.json"), "utf8")), "m_001");
+    const cards = f.insights.map(
+      (c) => ({ insight_type: c.type, payload: { family: (c as { family?: string }).family } }) as unknown as Insight,
+    );
+    const ins = panelPage(cards, "insights", "all", 5, 99);
+    expect(ins.list.every((c) => !isPattern(c))).toBe(true);
+    expect(ins.page).toBe(ins.pages - 1);
+    expect(ins.shown.length).toBeLessThanOrEqual(5);
+    const pats = panelPage(cards, "patterns", "all", 5, 0);
+    expect(pats.list.length + ins.list.length).toBe(cards.length);
+  });
+
+  it("the facing pitch mirrors the away XI and no two nodes overlap; markers come from the turning points", () => {
+    for (const id of ["m_001", "m_010", "m_025"]) {
+      const f = parseMatchFile(JSON.parse(readFileSync(join(DATA, "matches", `${id}.json`), "utf8")), id);
+      const pts = [
+        ...xiRows(f, "home").map((r) => facingPos(r, "home", true)),
+        ...xiRows(f, "away").map((r) => facingPos(r, "away", true)),
+      ];
+      expect(pts.length).toBe(22);
+      for (let i = 0; i < pts.length; i++)
+        for (let j = i + 1; j < pts.length; j++)
+          expect(Math.hypot(pts[i]!.x - pts[j]!.x, pts[i]!.y - pts[j]!.y)).toBeGreaterThan(10);
+      // home on the left half, away on the right half
+      expect(xiRows(f, "home").every((r) => facingPos(r, "home", true).x < 52.5)).toBe(true);
+      expect(xiRows(f, "away").every((r) => facingPos(r, "away", true).x > 52.5)).toBe(true);
+      const mk = lineupMarkers(f, (k) => k);
+      const goals = f.turning_points.filter((t) => t.kind === "goal").length;
+      expect(
+        Object.values(mk)
+          .flat()
+          .filter((m) => m.icon === "goal").length,
+      ).toBe(goals);
+    }
+  });
+
+  it("a lineup node opens the mini-profile sheet with the ledger link", async () => {
+    window.location.hash = "#/match/m_001";
+    render(<App source={source()} matches={matches()} />);
+    const p = await page("hub");
+    const node = await waitFor(() => p.querySelector<HTMLButtonElement>("[data-layout='stacked'] button[data-node]")!);
+    const xi = p.querySelectorAll("[data-layout='stacked'] [data-xi='home'] button[data-node]");
+    expect([...xi].filter((b) => (b as HTMLButtonElement).tabIndex === 0).length).toBe(1);
+    fireEvent.click(node);
+    const sheet = await waitFor(() => document.querySelector("#player-sheet") as HTMLElement);
+    expect(sheet.querySelector(`a[data-ledger-link='${node.getAttribute("data-node")}']`)).toBeTruthy();
   });
 });
