@@ -227,3 +227,26 @@ These are listed or counted facts, written by `agents/dashboard_data.py` (ui.jso
 - **Event log** (`matches/<id>.json` events): every event of the match, or, when the file would pass
   72 KB, the log without the types in `omitted_types` (pressure and possession changes first, then
   carries and duels, then passes...). Evidence events and turning-point events are always kept.
+- **Player profiles** (`ui.players[].profile`, agents/player_profiles.py, recomputed from the raw CSVs
+  in tests/test_player_profiles.py):
+  - minutes = sum of lineups `minutes_played`; starts; substitute appearances and minutes;
+  - **defensive contributions = tackles + interceptions + blocks + clearances**
+    (`DEFENSIVE_CONTRIBUTIONS`); also tackles won (outcome success), headed clearances (body_part
+    head), fouls, pressures, aerial duels and aerials won;
+  - per 90 = count / minutes x 90 and per 100 opposition final-third entries faced (the opponents'
+    completed passes into the final third while the player was on the pitch), shown only from
+    `MIN_MINUTES` = 270 minutes; position-peer percentiles among same-position players over that floor;
+  - keepers: shots faced while on the pitch (lineups on/off), on target = goal + saved, saves (save
+    events), goals conceded, xG faced = xG of on-target shots, save %, goals conceded minus xG faced
+    (descriptive, not "goals prevented"), clean sheets (started, on to the final whistle, team conceded
+    none), distribution (passes, completion, share at least `LONG_PASS_M` = 32 m);
+  - passing extras: completed progressive passes, completed passes into the final third and into the box;
+  - chances: key passes; set piece = corner or play_pattern set_piece (as `chances_created`), split
+    corner / free_kick / throw_in / other set piece; xA per chance = mean `passes.xa`, rounded half up.
+- **Team lists** (`matches/players-<code>.json`, contracts/players.schema.json): per player the
+  defensive action points (x, y, type, own frame), the key passes (event id, clock, kind, pass type,
+  xA, the assisted shot's result, start and end points) and, for keepers, the shots faced mirrored into
+  the keeper's defending frame (x' = 100 - x, y' = 100 - y) with result and xG. Loaded by the console
+  only.
+- **Match lineups** (`matches/<id>.json` lineups): both starting XIs, by listed position as on the
+  Team Board; substitutions, cards and goals come from the turning points.
