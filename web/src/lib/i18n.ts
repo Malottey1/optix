@@ -4,6 +4,7 @@
 // and the settings tray says so.
 import { useSettings } from "../state/settings";
 import type { InsightType, Lang } from "../types/ui";
+import { FINAL_EN, FINAL_ES, FINAL_FR } from "./i18n-final";
 
 const en = {
   brand_sub: "Verified match insights · synthetic data",
@@ -319,6 +320,7 @@ const en = {
   open_board: "Team Board",
   of_word: "of",
   mx_legend: "Up: entries. Down: conceded. Tick: league. Ring: the verified claim's lane.",
+  ...FINAL_EN,
 };
 
 export type Key = keyof typeof en;
@@ -642,6 +644,7 @@ const es: Record<Key, string> = {
   of_word: "de",
   mx_legend:
     "Arriba: entradas. Abajo: concedidas. Marca: liga. Anillo: carril de la afirmación verificada.",
+  ...FINAL_ES,
 };
 
 const fr: Record<Key, string> = {
@@ -963,6 +966,7 @@ const fr: Record<Key, string> = {
   of_word: "sur",
   mx_legend:
     "En haut : entrées. En bas : concédées. Trait : ligue. Anneau : couloir de l'affirmation vérifiée.",
+  ...FINAL_FR,
 };
 
 export const STRINGS: Record<Lang, Record<Key, string>> = { en, es, fr };

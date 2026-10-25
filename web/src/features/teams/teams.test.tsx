@@ -36,8 +36,8 @@ describe("Team Grid", () => {
       expect(c.querySelectorAll("[data-chip]").length).toBe(5);
       expect(words(c)).toBeLessThanOrEqual(20);
     }
-    // the kits line appears once, as the page footnote
-    expect(p.textContent!.split(/kit/i).length - 1).toBe(1);
+    // the kits line lives once, in Settings; it no longer repeats on the grid
+    expect(p.textContent!.split(/kit/i).length - 1).toBe(0);
   });
 });
 

@@ -59,7 +59,7 @@ export default function TeamBoard() {
             <FingerprintChips team={team} size="md" />
           </div>
         </div>
-        <span title={t("teams_kits_note")} className="hidden sm:block">
+        <span className="hidden sm:block">
           <Jersey code={team.code} shirt={10} size={56} />
         </span>
       </header>

@@ -1,3 +1,5 @@
+import { Link } from "react-router";
+import { Icon } from "../../icons";
 import { LANG_NAMES, useT } from "../../lib/i18n";
 import { setSetting, useSettings } from "../../state/settings";
 import { LANGS, type Lang } from "../../types/ui";
@@ -17,6 +19,21 @@ export function SettingsSheet({ open, onOpenChange }: { open: boolean; onOpenCha
       closeLabel={t("close")}
       width="max-w-[400px]"
     >
+      <Link
+        to="/tech"
+        data-settings-tech
+        onClick={() => onOpenChange(false)}
+        className="mb-6 flex min-h-[52px] items-center gap-3 rounded-xl border border-line bg-surface-2 px-3.5 py-2.5 hover:border-accent-line"
+      >
+        <Icon name="tech" size={22} className="shrink-0 text-accent" />
+        <span className="min-w-0 flex-1">
+          <span className="block text-[14px] font-semibold text-ink">{t("tech_details")}</span>
+          <span className="block text-[12px] text-ink-3">{t("tech_details_sub")}</span>
+        </span>
+        <span aria-hidden="true" className="text-ink-3">
+          →
+        </span>
+      </Link>
       <section aria-labelledby="set-lang-h">
         <h3 id="set-lang-h" className="eyebrow">
           {t("language")}
@@ -73,6 +90,9 @@ export function SettingsSheet({ open, onOpenChange }: { open: boolean; onOpenCha
         </div>
       </section>
       <p className="mt-5 text-[12.5px] leading-relaxed text-ink-3">{t("settings_note")}</p>
+      <p className="mt-2 text-[12.5px] leading-relaxed text-ink-3" data-kits-note>
+        {t("kits_note")}
+      </p>
     </Sheet>
   );
 }

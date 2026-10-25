@@ -824,7 +824,7 @@ def check_language_switch(browser, base, src) -> dict:
                 route_numbers_same=routes, problems=log["problems"])
 
 
-NAV = ("fixtures", "teams", "players", "tech", "home")     # the nav bar's links (home = the logo)
+NAV = ("fixtures", "teams", "players", "tech", "home")     # the nav bar's links; tech is reached through Settings
 
 
 def check_text_budget_proof(browser, base) -> dict:
@@ -861,7 +861,11 @@ def check_navigation(browser, base) -> dict:
         reached = []
         for route in [*NAV, *NAV]:
             try:
-                page.locator(f"a[href='#/{_path(route)}']:visible").last.click(timeout=5000)
+                if route == "tech":      # not in the primary nav: Settings -> Technical details
+                    page.locator("#open-settings").click(timeout=5000)
+                    page.locator("a[data-settings-tech]").click(timeout=5000)
+                else:
+                    page.locator(f"nav a[href='#/{_path(route)}']:visible").last.click(timeout=5000)
                 page.wait_for_selector(f"[data-page='{route}']", timeout=10000)
                 reached.append(route)
             except Exception:

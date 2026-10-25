@@ -7,16 +7,18 @@ import { Icon, type IconName } from "../../icons";
 import { Logo } from "../icons";
 import { SettingsSheet } from "./SettingsSheet";
 
-export const ROUTES = ["fixtures", "teams", "players", "tech"] as const;
+/** The primary nav. The Tech page is reached from Settings ("Technical details") and from Home. */
+export const ROUTES = ["home", "fixtures", "teams", "players"] as const;
 export type Route = (typeof ROUTES)[number];
-const ICON: Record<Route, IconName> = { fixtures: "scrub", teams: "teams", players: "players", tech: "tech" };
+const ICON: Record<Route, IconName> = { home: "home", fixtures: "scrub", teams: "teams", players: "players" };
 /** A nav entry is also active on its sub-routes (a match hub belongs to Fixtures). */
 const ACTIVE_ON: Record<Route, RegExp> = {
+  home: /^\/?$/,
   fixtures: /^\/(fixtures|match)(\/|$)/,
   teams: /^\/teams(\/|$)/,
   players: /^\/players(\/|$)/,
-  tech: /^\/tech(\/|$)/,
 };
+const PATH: Record<Route, string> = { home: "/", fixtures: "/fixtures", teams: "/teams", players: "/players" };
 
 function NavLinks({ compact }: { compact?: boolean }) {
   const { t } = useT();
@@ -24,7 +26,8 @@ function NavLinks({ compact }: { compact?: boolean }) {
   return ROUTES.map((r) => (
     <NavLink
       key={r}
-      to={`/${r}`}
+      to={PATH[r]}
+      end={r === "home"}
       data-route={r}
       aria-current={ACTIVE_ON[r].test(pathname) ? "page" : undefined}
       className={({ isActive: exact }) => {

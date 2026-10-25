@@ -37,7 +37,6 @@ export default function TeamGrid() {
           </li>
         ))}
       </ul>
-      <p className="text-[12px] text-ink-3">{t("teams_kits_note")}</p>
     </div>
   );
 }
