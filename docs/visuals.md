@@ -117,8 +117,9 @@ least 1000 px tall. Below 1600 px the layout is unchanged.
 - **Question:** how does this player rank on involvement, pass quality and chances?
 - **Fields:** `players[]`: involvement, forward_passes, pass_completion, pass_quality_ratio,
   chances_open_play, wide_share, chances_set_piece.
-- **Formula:** percentile = 100 · (below + ½ · equal) / n against outfield players with at least
-  100 passes (n shown), rounded to a whole number. Slice radius = percentile. Letters A–G link the
+- **Formula:** percentile = 100 · (below + ½ · equal) / n against players of the same listed
+  position with at least 100 passes (n shown; goalkeepers form their own group), rounded to a whole
+  number. Slice radius = percentile. Letters A–G link the
   slices to the list with value and percentile.
 - **Caveat:** season totals, not per 90 (the data has no minutes).
 
@@ -162,6 +163,64 @@ least 1000 px tall. Below 1600 px the layout is unchanged.
 ### V15 Percentile bars (Player Console)
 - **Formula:** for each pizza slice, percentile − 50 (same group and rounding as V8), drawn as a bar
   left or right of the median. Not the skipped V9 (per-match values).
+
+### V16 Match lineups (Match Hub, final)
+- **Fields:** `lineups` in `matches/<id>.json`: per side the starting XI rows [player_id, shirt,
+  position, line, slot, of] from lineups.csv, laid out by listed position; markers from the file's
+  turning points (goal, card, substitution off).
+- **Layout:** from 640 px one landscape pitch, home on the left attacking right, away mirrored
+  (105 − x, 68 − y) so each side's left flank is on its own left; on phones two stacked pitches,
+  both attacking left to right. Each XI is one tab stop (roving focus).
+- **Caveat:** listed positions, not a tracked shape.
+
+### V17 Matchup lane strips (Match Hub, final)
+- **Fields:** the season lane claim for the fixture (`teams.lanes`, `matchups` in the match file),
+  `teams.matchup_rule` (the engine's thresholds and the display confidence).
+- **Formula:** left strip = the attacker's entry share per lane minus the league share (points);
+  right strip = completion conceded per lane minus the league (points); diverging heat tokens; the
+  claim lane outlined in both. Shown only at medium or high confidence (17 of 41 fixtures).
+- **Caveat:** season figures, descriptive only; never a prediction for the fixture.
+
+### V18 Style against the league (Team Board)
+- **Fields:** `teams.teams[].labels` (value, league), `teams.style_rule.tolerance_rel`.
+- **Formula:** one row per measure on one scale from the league's lowest to highest team; the team's
+  accent bar over the grey league bar; chip highest / lowest (unique extreme), above / below, or about
+  average within the tolerance. Tempo's unit is in the tooltip and View data.
+
+### V19 Defensive actions (Player Console, defenders)
+- **Fields:** `players[].profile.defence`: season counts, `p90`, `p100` (per hundred opposition
+  final-third entries faced while on the pitch), `peer_pctl`; `profiles.peers`, `profiles.min_minutes`.
+- **Formula:** percentile among same-position players with at least the minutes floor (270), drawn as
+  a bar left or right of the median (50). Defensive contributions = tackles + interceptions + blocks
+  + clearances, defined once under the table.
+- **Caveat:** rates need the minutes floor; ground duels and pressure regains are not in the data
+  (a "Not available in event data" note links to the Tech limits).
+
+### V20 Defensive action map (Player Console, defenders)
+- **Fields:** `players-<code>.json` `players[id].defence`: [x, y, type index into `point_types`], the
+  player's own frame. One marker shape and colour per type (circle tackle, square interception,
+  triangle block, cross clearance); type toggles.
+- **Check:** markers per type equal the lists file and the profile counts.
+
+### V21 Shots faced (Player Console, goalkeepers)
+- **Fields:** `players[id].shots_faced`: [event_id, clock, x, y, result, xG], mirrored into the
+  keeper's frame (own goal on the left). Fill by result (goal, saved; blocked and off target as
+  rings), radius grows with √xG.
+- **Check:** saved markers = profile saves, goals = conceded, goals + saved = on target.
+- **Caveat:** save location and post-shot quality are not in the data.
+
+### V22 Chance evidence pitch (Player Console drawer)
+- **Fields:** `players[id].chances`: [event_id, clock, period, minute, kind, pass type, xA, result,
+  x0, y0, x1, y1, progressive, forward]. One line per key pass from start to end, a ring at the end
+  (filled for a goal), colour by kind; tabs All / Set pieces / Open play. Table rows open the Match
+  Hub at that match and clock (`?t=`).
+
+### V23 Home tiles
+- **xG race:** cumulative xG per team over the showcase match from `visuals.shots` (step lines);
+  the totals printed are the match header's (checked equal).
+- **Momentum:** `timeline.momentum` (home positive) as an area above and below the line.
+- **Where the ball was:** the home team's on-ball events from the showcase file's heat bins, its own
+  attacking frame (same smoothing as V12); the two teams' frames are never summed.
 
 ## Polished (already built)
 - **Tug-of-war momentum bar:** shows who is pulling in words, never a raw percentage.
