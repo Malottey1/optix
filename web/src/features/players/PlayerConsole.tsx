@@ -277,7 +277,7 @@ export default function PlayerConsole() {
           <h1 className="display text-[28px] font-semibold leading-none text-ink sm:text-[32px]">{p.name}</h1>
           <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-ink-2">
             <span className="inline-flex items-center gap-1.5">
-              <Jersey code={p.team} shirt={p.shirt} size={24} />
+              <Jersey code={p.team} shirt={p.shirt} size={28} />
               {t("number_short")} <span className="num font-semibold text-ink">{p.shirt}</span>
             </span>
             <span>{t(`pos_${p.position}` as Key)}</span>

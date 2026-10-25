@@ -133,7 +133,12 @@ export default function FixturesPage() {
       {!data && <div className="h-[420px] animate-pulse rounded-2xl bg-surface-2" aria-busy="true" />}
       {data && !groups.length && <p className="text-[14px] text-ink-3">{t("no_fixtures")}</p>}
       {groups.map((g) => (
-        <section key={g.key} aria-labelledby={`fx-${g.key}`} data-group={g.key}>
+        <section
+          key={g.key}
+          aria-labelledby={`fx-${g.key}`}
+          data-group={g.key}
+          className="rounded-2xl border border-line bg-surface-1 p-3 sm:p-4"
+        >
           <h2 id={`fx-${g.key}`} className="eyebrow mb-2">
             {g.week === null ? t("status_live") : `${t("matchweek")} ${g.week} · ${g.rows[0]!.date}`}
           </h2>

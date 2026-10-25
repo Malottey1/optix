@@ -57,26 +57,61 @@ from tools.check_dashboard import (FOCUSABLE_JS, FORBIDDEN, FRAMES_JS, OVERLAP_J
 
 ROOT = Path(__file__).resolve().parent.parent
 WEB = ROOT / "web"
-ROUTES = ("home", "live", "teams", "players", "tech")
-PATH = {"home": ""}                      # hash path of a route when it is not the route's own name
+ROUTES = ("home", "fixtures", "hub_live", "hub_final", "teams", "team_board", "team_sheet", "players", "player",
+          "tech")
+# hash path of a route when it is not the route's own name; `live` (the old link, redirected to the
+# showcase hub) stays usable for the Live checks
+SHOWCASE_HUB = "match/m_showcase"
+FINAL_MATCH = "m_001"                    # a final with a verified lane claim (so the Matchup section shows)
+BOARD_TEAM = "AUR"
+CONSOLE_PLAYER = "NTG_07"                # has a fired context check (the Raw / With context toggle)
+PATH = {"home": "", "hub_live": SHOWCASE_HUB, "hub_final": f"match/{FINAL_MATCH}", "team_board": f"teams/{BOARD_TEAM}",
+        "team_sheet": f"teams/{BOARD_TEAM}", "player": f"players/{CONSOLE_PLAYER}"}
+# the data-page a route renders when it is not the route's own name
+PAGE = {"hub_live": "live", "hub_final": "hub", "team_board": "team-board", "team_sheet": "team-board",
+        "player": "player"}
 # every route is also checked at the demo-video sizes (all gates, plus a first-screen shot)
 EXTRA_SIZES = {r: {"1080p": (1920, 1080), "900p": (1600, 900)} for r in ROUTES}
 WIDTHS = {"desktop": (1440, 900), "mobile": (390, 844)}
-QUERY = {"live": "t=2760"}               # half-time stoppage: the rewritten Perimeter Lock card on top
+QUERY = {"live": "t=2760", "hub_live": "t=2760"}   # half-time stoppage: the rewritten Perimeter Lock card on top
+
+
+def _open_sheet(page):
+    """Team Board with the lineup mini-profile open (the first node)."""
+    page.locator("[data-lineup] button[data-node]").first.click()
+    page.wait_for_selector("#player-sheet a[data-ledger-link]", timeout=5000)
+    page.wait_for_timeout(400)
+
+
+# what to do on a route after it loads, before the gates run
+ACTIONS = {"team_sheet": _open_sheet}
 AXE_FAIL = {"serious", "critical"}
 # what each route must expose for tests (selector -> attribute that must be non-empty)
 DATA_ATTRS = {
     "home": [("[data-proof]", "data-proof"), ("[data-team-badge]", "data-team-badge"), ("img[data-hero]", "src")],
-    "live": [("#pitch [data-event-id]", "data-event-id"), ("#pitch [data-team]", "data-team"),
-             ("[data-insight-id][data-claim-id]", "data-claim-id")],
-    "teams": [("svg [data-lane]", "data-lane"), ("[data-team]", "data-team")],
-    "players": [("[data-player] [data-event-id]", "data-event-id")],
+    "fixtures": [("a[data-fixture]", "href")],
+    "hub_live": [("#pitch [data-event-id]", "data-event-id"), ("#pitch [data-team]", "data-team"),
+                 ("[data-insight-id][data-claim-id]", "data-claim-id")],
+    "hub_final": [("rect[data-bin]", "data-count"), ("[data-budget=card]", "data-budget"),
+                  ("[data-matchup] svg[data-claim-lane]", "data-claim-lane")],
+    "teams": [("a[data-team]", "data-team")],
+    "team_board": [("button[data-node]", "data-node"), ("[data-signature-patterns]", "data-signature-patterns")],
+    "team_sheet": [("#player-sheet a[data-ledger-link]", "href")],
+    "players": [("a[data-player]", "href")],
+    "player": [("[data-viz=pass-routes] [data-route]", "data-value"), ("#touch rect[data-bin]", "data-count"),
+               ("[data-context]", "data-context")],
     "tech": [("tr[data-claim-id]", "data-claim-id"), ("[data-azure]", "data-state")],
 }
 
 # A Radix roving-focus group (toggle group, tab list) is one tab stop: its root takes focus and
 # hands it to the active item (whose own tabindex is -1 until then). So the focused element counts
 # for the nearest counted ancestor: reaching the item means the root's stop was reached.
+# With a modal sheet open (team_sheet) focus is trapped by design: Tab must reach every control in
+# the dialog and never leave it.
+MODAL_FOCUSABLE_JS = FOCUSABLE_JS.replace("document.querySelectorAll(sel)",
+                                          "document.querySelector('[role=dialog]').querySelectorAll(sel)")
+assert MODAL_FOCUSABLE_JS != FOCUSABLE_JS
+
 WEB_ACTIVE_JS = """() => { const e = document.activeElement; const c = e && e.closest('[data-tabcheck]');
   return c ? c.getAttribute('data-tabcheck') : null; }"""
 
@@ -116,6 +151,7 @@ WORDS_JS = r"""() => {
     return h;
   };
   const groups = {};
+  const each = new Map();   // budget element -> its words (nearest budget ancestor)
   let total = 0;
   const walker = document.createTreeWalker(document.querySelector('main') || document.body, NodeFilter.SHOW_TEXT);
   for (let n = walker.nextNode(); n; n = walker.nextNode()) {
@@ -132,9 +168,44 @@ WORDS_JS = r"""() => {
     if (g) {
       const k = g.getAttribute('data-budget');
       groups[k] = (groups[k] || 0) + words;
+      each.set(g, (each.get(g) || 0) + words);
     }
   }
-  return {total, groups};
+  const label = (g) => g.dataset.team || g.dataset.player || g.dataset.insightId || g.dataset.fixture || g.id ||
+    (g.textContent || '').trim().slice(0, 24);
+  const elements = [...each].map(([g, n]) => [g.getAttribute('data-budget'), label(g), n]);
+  return {total, groups, elements};
+}"""
+
+# Text budgets (words a sighted reader sees, WORDS_JS), one config: each element marked
+# data-budget=<key> holds at most this many words of its own (text inside a nested budget element
+# counts for that one). Match Hub recap sections are listed by their section id; the event log
+# (budget "log") has none.
+TEXT_BUDGETS = {"card": 30, "team-card": 20, "team-board": 180, "hub-header": 60, "turning": 60, "heat": 60,
+                "cards": 60, "matchup": 60}
+
+
+def budget_problems(words: dict) -> list:
+    return [f"{k} {label!r}: {n} words, budget {TEXT_BUDGETS[k]}" for k, label, n in words["elements"]
+            if k in TEXT_BUDGETS and n > TEXT_BUDGETS[k]]
+
+
+# "lane" / "mismatch" in visible English text is allowed only inside [data-lane-ok]: the Tech
+# worked example, the Match Hub's Matchup section (shown only with a verified lane claim), the
+# lane-lift strip's label and the legend of a verified claim's crosshair.
+LANE_JS = r"""() => {
+  const out = [];
+  const w = document.createTreeWalker(document.querySelector('main') || document.body, NodeFilter.SHOW_TEXT);
+  for (let n = w.nextNode(); n; n = w.nextNode()) {
+    const el = n.parentElement;
+    if (!el || !/\b(lanes?|mismatch\w*)\b/i.test(n.textContent)) continue;
+    const cs = getComputedStyle(el);
+    if (el.getBoundingClientRect().width < 2 || cs.visibility === 'hidden' || el.closest('.sr-only')) continue;
+    if (el.closest('details:not([open])') && !el.closest('summary')) continue;
+    if (el.closest('svg') && el.closest('title, desc')) continue;
+    if (!el.closest('[data-lane-ok]')) out.push(n.textContent.trim().slice(0, 80));
+  }
+  return out;
 }"""
 
 AXE_JS = """async () => {
@@ -153,7 +224,118 @@ def web_sources(dist: Path) -> dict:
         counts = Counter(ev[i]["event_type"] for i in ins["evidence_event_ids"] if i in ev)
         src["nums"].update(float(c) for c in counts.values())
     src["nums"].update(round(abs(float(v)), 6) for v in visual_numbers(src["ui"], src["timeline"]["periods"]))
+    nums, words = match_sources(dist / "data")
+    src["nums"] |= nums
+    src["words"] |= words
     return src
+
+
+def _walk(v, nums: set, words: set) -> None:
+    """Every number and word in a JSON value, as load_sources collects them."""
+    from tools.check_dashboard import NUM
+    if isinstance(v, bool) or v is None:
+        return
+    if isinstance(v, (int, float)):
+        nums.add(round(abs(float(v)), 6))
+    elif isinstance(v, str):
+        words.add(v.strip(".:"))
+        words.update(w.strip(".:") for w in re.split(r"[\s,;()\[\]|`*]+", v) if w)
+        nums.update(round(abs(float(n.replace(",", "."))), 6) for n in NUM.findall(v))
+    elif isinstance(v, dict):
+        nums.add(float(len(v)))
+        for k, x in v.items():
+            _walk(k, nums, words)
+            _walk(x, nums, words)
+    elif isinstance(v, list):
+        nums.add(float(len(v)))
+        for x in v:
+            _walk(x, nums, words)
+
+
+def _full_id(match_id: str, v) -> str:
+    return f"{match_id}_e{v:05d}" if isinstance(v, int) else str(v)
+
+
+def match_sources(data: Path) -> tuple:
+    """The per-match recap files and player touch maps (data/matches): their numbers and words,
+    the full event ids the page expands from the compact ones, and the heat maps' shown numbers
+    recomputed here (heat_numbers)."""
+    nums, words = set(), set()
+    for p in sorted((data / "matches").glob("*.json")):
+        f = json.loads(p.read_text(encoding="utf-8"))
+        _walk(f, nums, words)
+        mid = f.get("match_id")
+        if mid:
+            for row in f["events"]["rows"] + f["evidence"]["rows"]:
+                words.add(_full_id(mid, row[0]))
+            for c in f["claims"]:
+                words.update(_full_id(mid, e) for e in c.get("evidence", []))
+            for halves in f["heat"]["teams"].values():
+                nums |= heat_numbers(f["heat"], halves)
+        else:
+            for bins in f.get("players", {}).values():
+                nums |= heat_numbers(f, bins)
+    return nums, words
+
+
+# ---------- heat maps (web/src/lib/heat.ts), recomputed independently ----------
+
+def _smooth(bins, cols, rows, sigma=1.0):
+    r = max(1, math.ceil(3 * sigma))
+    w = [math.exp(-(d * d) / (2 * sigma * sigma)) for d in range(-r, r + 1)]
+
+    def one(src, along_x):
+        n = cols if along_x else rows
+        norm = [sum(w[d + r] for d in range(-r, r + 1) if 0 <= i + d < n) for i in range(n)]
+        out = [0.0] * len(src)
+        for row in range(rows):
+            for col in range(cols):
+                v = src[row * cols + col]
+                if not v:
+                    continue
+                i = col if along_x else row
+                for d in range(-r, r + 1):
+                    j = i + d
+                    if 0 <= j < n:
+                        out[row * cols + j if along_x else j * cols + col] += v * w[d + r] / norm[i]
+        return out
+    return one(one(list(map(float, bins)), True), False)
+
+
+def heat_density(grid, bins):
+    cols, xe, ye = grid["cols"], grid["x_edges"], grid["y_edges"]
+    sm = _smooth(bins, cols, grid["rows"])
+    return [v / ((xe[b % cols + 1] - xe[b % cols]) * (ye[b // cols + 1] - ye[b // cols]) / 100)
+            for b, v in enumerate(sm)]
+
+
+def heat_zone_shares(grid, bins):
+    lanes = [0, 0, 0, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 4, 4, 4]       # 3/3/4/3/3 rows per lane
+    counts = [0] * 15
+    for b, v in enumerate(bins):
+        counts[(b % grid["cols"]) // 8 * 5 + lanes[b // grid["cols"]]] += v
+    n = sum(counts)
+    return [c / n if n else 0 for c in counts], n
+
+
+def heat_numbers(grid, halves) -> set:
+    """What a HeatPitch shows for one team or player: the legend's top (1 dp) for the whole match,
+    each half and the change; the View data table's zone shares (%, 1 dp) and changes (points)."""
+    out = set()
+    a = halves[0]
+    b = halves[1] if len(halves) > 1 else None
+    views = [a] if b is None else [a, b, [x + y for x, y in zip(a, b)]]
+    for bins in views:
+        out.add(js_round(max(heat_density(grid, bins)), 1))
+        out.add(float(sum(bins)))
+    if b is not None:
+        d1, d2 = heat_density(grid, a), heat_density(grid, b)
+        out.add(js_round(max(abs(y - x) for x, y in zip(d1, d2)), 1))
+        s1, _ = heat_zone_shares(grid, a)
+        s2, _ = heat_zone_shares(grid, b)
+        for x, y in zip(s1, s2):
+            out |= {pct1(x), pct1(y), abs(js_round((y - x) * 1000) / 10)}
+    return out
 
 
 # ---------- the visuals' documented formulas (docs/visuals.md), independent of the page ----------
@@ -275,6 +457,12 @@ def visual_numbers(ui, periods=()) -> set:
     return out
 
 
+def match_ref(ref_dir: Path) -> Path:
+    """The per-match files to check against: ref_dir/matches (out/ after agents.match_export), else
+    the committed web/public/data/matches (a freshly streamed showcase has no match files)."""
+    return ref_dir / "matches" if (ref_dir / "matches").is_dir() else WEB / "public" / "data" / "matches"
+
+
 def check_consistency(browser, base, ref_dir: Path) -> dict:
     """Each visual against the engine's own output in ref_dir (normally out/ or the committed data):
     the crosshair lane is the verified claim's lane, the shot blocks are the claim's shots and xG,
@@ -289,25 +477,48 @@ def check_consistency(browser, base, ref_dir: Path) -> dict:
             claims[a["claim"]["claim_id"]] = a["claim"]
     problems = []
     ctx, page, log = _context(browser, *WIDTHS["desktop"])
-    # V1 on the Team Board: every ordered pair
-    _open(page, base, "teams")
+    # V1 on the Match Hub: every final with a verified lane claim shows its crosshairs on the claim's
+    # lane, and a final without one has no Matchup section
     pairs = 0
-    for h in ui["teams"]["head_to_head"]:
-        page.select_option("#h2h-attacker", h["attacker"])
-        page.select_option("#h2h-defender", h["defender"])
-        if (page.input_value("#h2h-attacker"), page.input_value("#h2h-defender")) != (h["attacker"], h["defender"]):
-            page.select_option("#h2h-attacker", h["attacker"])
-        got = page.get_attribute("#h2h [data-viz=crosshairs] svg[data-claim-lane]", "data-claim-lane")
-        want = h["claim"]["lane"] if h["claim"] and h["claim"]["status"] != "blocked" else ""
-        pairs += 1
+    mref = match_ref(ref_dir)
+    index = json.loads((mref / "index.json").read_text(encoding="utf-8"))
+    for row in index["fixtures"]:
+        if row["status"] != "final":
+            continue
+        f = json.loads((mref / f"{row['id']}.json").read_text(encoding="utf-8"))
+        want = {f"{mu['attacker']}-{mu['defender']}": mu["metrics"]["lane"] for mu in f.get("matchups", [])}
+        if not want and row["id"] not in (FINAL_MATCH, "m_007"):
+            continue                                  # one final without a claim is enough
+        page.goto(f"{base}#/match/{row['id']}")
+        page.wait_for_selector(f"[data-page='hub'][data-match='{row['id']}']", timeout=20000)
+        page.wait_for_timeout(300)
+        got = dict(page.eval_on_selector_all("[data-matchup]", """els => els.map((e) => [e.dataset.matchup,
+            e.querySelector('svg[data-claim-lane]')?.dataset.claimLane ?? null])"""))
+        pairs += len(want)
         if got != want:
-            problems.append(f"crosshair {h['attacker']}->{h['defender']}: lane {got!r}, claim says {want!r}")
+            problems.append(f"crosshair {row['id']}: page {got}, verified claims {want}")
+        if row["id"] == FINAL_MATCH:
+            # heat: the bins' counts are the file's counts (both halves), team by team
+            for code, halves in f["heat"]["teams"].items():
+                if page.locator(f"[data-name='heat-team'][data-value='{code}']").count():
+                    page.click(f"[data-name='heat-team'][data-value='{code}']")
+                page.wait_for_selector(f"[data-viz=heat][data-team='{code}']", timeout=5000)
+                counts = page.eval_on_selector_all("[data-viz=heat] rect[data-bin]", "els => els.map((e) => Number(e.dataset.count))")
+                if counts != [x + y for x, y in zip(*halves[:2])]:
+                    problems.append(f"heat {row['id']} {code}: bin counts differ from the match file")
+    # the lineup pitch: the ref's most-used XI with the listed numbers, one node per player
+    _open(page, base, "team_board")
+    nodes = page.eval_on_selector_all("[data-lineup] button[data-node]", """els => els.map((e) => [e.dataset.node,
+        Number(e.querySelector('svg text').textContent)])""")
+    want_xi = [[n["id"], n["shirt"]] for n in ui["lineups"][BOARD_TEAM]["xi"]]
+    if nodes != want_xi:
+        problems.append(f"lineup {BOARD_TEAM}: {nodes} vs {want_xi}")
     # V1, V2 and V5 on the Live Center at full time (a fresh page: the clock query is read on load)
     ctx.close()
     earlier = log["problems"]
     ctx, page, log = _context(browser, *WIDTHS["desktop"])
     log["problems"][:0] = earlier
-    _open(page, base, "live", "t=99999")
+    _open(page, base, "hub_live", "t=99999")
     cards = page.eval_on_selector_all("[data-card-visual] svg[data-claim-id]", """els => els.map((e) => ({
         kind: e.closest('[data-card-visual]').dataset.cardVisual, claim: e.dataset.claimId,
         lane: e.dataset.claimLane ?? null, xg: e.dataset.xg ?? null,
@@ -350,10 +561,10 @@ def check_consistency(browser, base, ref_dir: Path) -> dict:
     for team, want in stress_totals(ui).items():
         if gauges.get(team) != want:
             problems.append(f"gauge {team}: {gauges.get(team)} s at full time, engine spells add up to {want} s")
-    # V4 and V8 on the Player Deck: the default profile, in the default view (busiest routes) and
-    # after "Show all routes"
-    _open(page, base, "players")
-    pid = page.get_attribute("#profile [data-viz=pass-routes] svg", "data-player")
+    # V4 and V8 on the Player Console, in the default view (busiest routes) and after "Show all
+    # routes"; the touch map's bins are the player's counts
+    _open(page, base, "player")
+    pid = page.get_attribute("#routes [data-viz=pass-routes] svg", "data-player")
     rows = ui["visuals"]["routes"].get(pid, [])
     views = {"top": route_groups(rows, "fwd", TOP_ROUTES), "all": route_groups(rows, "fwd")}
     arrows = {}
@@ -362,9 +573,9 @@ def check_consistency(browser, base, ref_dir: Path) -> dict:
             if len(views["all"]) <= TOP_ROUTES:
                 problems.append(f"routes {pid}: no toggle to test (only {len(views['all'])} routes)")
                 break
-            page.click("#profile [data-role=route-toggle]")
-            page.wait_for_selector("#profile [data-viz=pass-routes] svg[data-view=all]", timeout=5000)
-        got = page.eval_on_selector_all("#profile [data-viz=pass-routes] [data-route]", """els => els.map((e) => [
+            page.click("#routes [data-role=route-toggle]")
+            page.wait_for_selector("#routes [data-viz=pass-routes] svg[data-view=all]", timeout=5000)
+        got = page.eval_on_selector_all("#routes [data-viz=pass-routes] [data-route]", """els => els.map((e) => [
             Number(e.dataset.value), Number(e.querySelector('path, circle').getAttribute('stroke-width'))])""")
         arrows[view] = len(got)
         if len(got) != len(want):
@@ -374,10 +585,16 @@ def check_consistency(browser, base, ref_dir: Path) -> dict:
         by_n = sorted(got)
         if any(b[1] < a[1] for a, b in zip(by_n, by_n[1:])):
             problems.append(f"routes {pid} ({view}): arrow width does not grow with the pass count")
-    pz = dict(page.eval_on_selector_all("#profile [data-role=pizza-list] li", """els => els.map((e) => [
+    pz = dict(page.eval_on_selector_all("#pizza [data-role=pizza-list] li", """els => els.map((e) => [
         e.dataset.metric, e.dataset.percentile === '' ? null : Number(e.dataset.percentile)])"""))
     if pz != pizza(ui, pid):
         problems.append(f"pizza {pid}: {pz} vs {pizza(ui, pid)}")
+    team = next(p["team"] for p in ui["players"] if p["id"] == pid)
+    touch = json.loads((mref / f"players-heat-{team.lower()}.json").read_text(encoding="utf-8"))
+    page.wait_for_selector("#touch rect[data-bin]", timeout=10000)
+    counts = page.eval_on_selector_all("#touch rect[data-bin]", "els => els.map((e) => Number(e.dataset.count))")
+    if counts != touch["players"][pid][0]:
+        problems.append(f"touch map {pid}: bin counts differ from players-heat-{team.lower()}.json")
     ctx.close()
     return dict(pairs=pairs, cards=dict(seen), gauges=gauges, player=pid, arrows=arrows,
                 problems=problems + log["problems"])
@@ -385,9 +602,35 @@ def check_consistency(browser, base, ref_dir: Path) -> dict:
 
 # ---------- mutation proof: each consistency check must fail when its data changes ----------
 
-def _mut_crosshair(ui):
-    h = next(h for h in ui["teams"]["head_to_head"] if h["claim"] and h["claim"]["status"] != "blocked")
-    h["claim"]["lane"] = next(l for l in ("left_flank", "center") if l != h["claim"]["lane"])
+def _mut_file(copy: Path, name: str, change) -> None:
+    p = copy / "data" / "matches" / name
+    f = json.loads(p.read_text(encoding="utf-8"))
+    change(f)
+    p.write_text(json.dumps(f, separators=(",", ":")), encoding="utf-8")
+
+
+def _mut_crosshair(ui, copy):
+    def change(f):
+        mu = f["matchups"][0]
+        mu["metrics"]["lane"] = next(l for l in ("left_flank", "center") if l != mu["metrics"]["lane"])
+    _mut_file(copy, f"{FINAL_MATCH}.json", change)
+
+
+def _mut_heat(ui, copy):
+    def change(f):
+        f["heat"]["teams"][next(iter(f["heat"]["teams"]))][0][100] += 7
+    _mut_file(copy, f"{FINAL_MATCH}.json", change)
+
+
+def _mut_touch(ui, copy):
+    team = next(p["team"] for p in ui["players"] if p["id"] == CONSOLE_PLAYER)
+    _mut_file(copy, f"players-heat-{team.lower()}.json",
+              lambda f: f["players"][CONSOLE_PLAYER][0].__setitem__(200, f["players"][CONSOLE_PLAYER][0][200] + 4))
+
+
+def _mut_lineup(ui):
+    xi = ui["lineups"][BOARD_TEAM]["xi"]
+    xi[0]["shirt"], xi[1]["shirt"] = xi[1]["shirt"], xi[0]["shirt"]
 
 
 def _mut_shots(ui):
@@ -420,7 +663,9 @@ def _mut_pizza(ui):
 
 
 # name: (mutation, the problem prefix that must appear, text that problem must contain)
-MUTATIONS = {"crosshair": (_mut_crosshair, "crosshair", ""), "shot blocks": (_mut_shots, "shot blocks", ""),
+MUTATIONS = {"crosshair": (_mut_crosshair, "crosshair", ""), "heat": (_mut_heat, "heat", ""),
+             "touch map": (_mut_touch, "touch map", ""), "lineup": (_mut_lineup, "lineup", ""),
+             "shot blocks": (_mut_shots, "shot blocks", ""),
              "gauge": (_mut_gauge, "gauge", ""), "routes": (_mut_routes, "routes", "(all)"),
              "routes default view": (_mut_top_route, "routes", "(top)"), "pizza": (_mut_pizza, "pizza", "")}
 
@@ -433,7 +678,8 @@ def mutation_proof(browser, dist: Path, ref_dir: Path, tmp: Path) -> dict:
         copy = tmp / f"mut-{name.replace(' ', '-')}"
         shutil.copytree(dist, copy, dirs_exist_ok=True)   # always the current build
         ui = json.loads((ref_dir / "ui.json").read_text(encoding="utf-8"))
-        mutate(ui)
+        # a mutation changes ui.json, or (two arguments) a match file in the copy
+        mutate(ui, copy) if mutate.__code__.co_argcount == 2 else mutate(ui)
         (copy / "data" / "ui.json").write_text(json.dumps(ui, separators=(",", ":")), encoding="utf-8")
         httpd = serve(copy)
         try:
@@ -469,7 +715,7 @@ def _path(route):
 def _open(page, base, route, query=""):
     page.goto(f"{base}#/{_path(route)}" + (f"?{query}" if query else ""))
     page.wait_for_selector("body[data-ready='1']", timeout=20000)
-    page.wait_for_selector(f"[data-page='{route}']", timeout=20000)
+    page.wait_for_selector(f"[data-page='{PAGE.get(route, route)}']", timeout=20000)
     page.wait_for_timeout(700)
 
 
@@ -477,6 +723,8 @@ def check_route(browser, base, route, width_name, src, screens: Path | None, axe
     w, h = size or WIDTHS[width_name]
     ctx, page, log = _context(browser, w, h)
     _open(page, base, route, QUERY.get(route, ""))
+    if route in ACTIONS:
+        ACTIONS[route](page)
     r = dict(route=route, width=w, **page.evaluate("""() => ({
         overflowX: document.documentElement.scrollWidth > document.documentElement.clientWidth,
         scrollWidth: document.documentElement.scrollWidth })"""))
@@ -489,6 +737,9 @@ def check_route(browser, base, route, width_name, src, screens: Path | None, axe
     full = page.evaluate("() => document.body.textContent")
     r["forbidden"] = [wd for wd in FORBIDDEN if re.search(rf"\b{re.escape(wd)}", full, re.I)] + banned.find(full)
     r["images"] = page.evaluate(IMG_JS)
+    r["words"] = page.evaluate(WORDS_JS)
+    r["budget"] = budget_problems(r["words"])
+    r["lane"] = page.evaluate(LANE_JS)
     r["attrs"] = {sel: page.evaluate("([s, a]) => [...document.querySelectorAll(s)].filter((e) => e.getAttribute(a)).length",
                                      [sel, attr]) for sel, attr in DATA_ATTRS[route]}
     if screens is not None:
@@ -497,7 +748,11 @@ def check_route(browser, base, route, width_name, src, screens: Path | None, axe
             _shrink_png(page.screenshot(full_page=size is None)))
     page.add_script_tag(content=axe_src)
     r["axe"] = page.evaluate(AXE_JS)
-    r["tab"] = _tab_order(page, FOCUSABLE_JS, WEB_ACTIVE_JS)
+    modal = route in ACTIONS
+    r["tab"] = _tab_order(page, MODAL_FOCUSABLE_JS if modal else FOCUSABLE_JS, WEB_ACTIVE_JS)
+    if modal:
+        page.keyboard.press("Tab")
+        r["focus_trapped"] = page.evaluate("() => !!document.activeElement?.closest('[role=dialog]')")
     r["problems"], r["remote"] = log["problems"], log["remote"]
     ctx.close()
     return r
@@ -505,7 +760,7 @@ def check_route(browser, base, route, width_name, src, screens: Path | None, axe
 
 def check_evidence_drawer(browser, base, src) -> dict:
     ctx, page, log = _context(browser, *WIDTHS["desktop"])
-    _open(page, base, "live", "t=99999")
+    _open(page, base, "hub_live", "t=99999")
     out = {}
     buttons = page.locator("button[data-evidence]")
     picks = sorted({0, 1, buttons.count() - 1} | {i for i in range(buttons.count())
@@ -539,7 +794,7 @@ def check_language_switch(browser, base, src) -> dict:
     Also every route's numbers are unchanged by the switch (decimal mark aside)."""
     from agents.narrative import number_guard
     ctx, page, log = _context(browser, *WIDTHS["desktop"])
-    _open(page, base, "live", "t=99999")
+    _open(page, base, "hub_live", "t=99999")
     texts, routes = {}, {}
     for lang in ("en", "es", "fr"):
         _set_lang(page, lang)
@@ -560,7 +815,7 @@ def check_language_switch(browser, base, src) -> dict:
         nums = {}
         for lang in ("en", "fr"):
             _set_lang(page, lang)
-            _open(page, base, route, "t=99999" if route == "live" else "")
+            _open(page, base, route, "t=99999" if route == "hub_live" else "")
             nums[lang] = sorted(numbers_of(page.evaluate("() => document.querySelector('main').innerText")))
         routes[route] = nums["en"] == nums["fr"]
     _set_lang(page, "en")
@@ -569,15 +824,42 @@ def check_language_switch(browser, base, src) -> dict:
                 route_numbers_same=routes, problems=log["problems"])
 
 
+NAV = ("fixtures", "teams", "players", "tech", "home")     # the nav bar's links (home = the logo)
+
+
+def check_text_budget_proof(browser, base) -> dict:
+    """The text budget and the lane scan fail when the page breaks them: words added to a Team Grid
+    card, a Player Deck card and the Team Board, and a lane sentence outside the allowed places."""
+    out = {}
+    cases = (("teams", "[data-budget=team-card]", 15, "team-card"), ("players", "[data-budget=card]", 25, "card"),
+             ("team_board", "[data-budget=team-board] h1", 40, "team-board"))
+    for route, sel, n, key in cases:
+        ctx, page, log = _context(browser, *WIDTHS["desktop"])
+        _open(page, base, route)
+        page.eval_on_selector(sel, "(e, n) => { const p = document.createElement('p'); "
+                                   "p.textContent = Array(n).fill('word').join(' '); e.appendChild(p); }", n)
+        hits = [x for x in budget_problems(page.evaluate(WORDS_JS)) if x.startswith(key + " ")]
+        out[f"budget {key}"] = dict(caught=bool(hits), problems=hits[:2])
+        ctx.close()
+    ctx, page, log = _context(browser, *WIDTHS["desktop"])
+    _open(page, base, "hub_final")
+    page.eval_on_selector("#turning", "(e) => { const p = document.createElement('p'); "
+                                      "p.textContent = 'Lane mismatch on the left'; e.appendChild(p); }")
+    hits = page.evaluate(LANE_JS)
+    out["lane wording"] = dict(caught=bool(hits), problems=hits[:2])
+    ctx.close()
+    return out
+
+
 def check_navigation(browser, base) -> dict:
     """In-app navigation through the visible nav links at both widths (each route check opens a fresh
     page, so unmount and route-change bugs only show up here)."""
     out = {}
     for wn, (w, h) in WIDTHS.items():
         ctx, page, log = _context(browser, w, h)
-        _open(page, base, "live", QUERY["live"])
+        _open(page, base, "hub_live", QUERY["hub_live"])
         reached = []
-        for route in [*ROUTES[1:], *ROUTES]:
+        for route in [*NAV, *NAV]:
             try:
                 page.locator(f"a[href='#/{_path(route)}']:visible").last.click(timeout=5000)
                 page.wait_for_selector(f"[data-page='{route}']", timeout=10000)
@@ -593,7 +875,7 @@ def check_robustness(browser, base) -> dict:
     out = {}
     ctx, page, log = _context(browser, *WIDTHS["desktop"])
     page.add_init_script("Object.defineProperty(window, 'localStorage', { get() { throw new Error('storage blocked'); } });")
-    _open(page, base, "live", QUERY["live"])
+    _open(page, base, "hub_live", QUERY["hub_live"])
     page.click("#open-settings")
     page.click("#set-contrast")
     page.keyboard.press("Escape")
@@ -602,7 +884,7 @@ def check_robustness(browser, base) -> dict:
                                   problems=log["problems"])
     ctx.close()
     ctx, page, log = _context(browser, *WIDTHS["desktop"], reduced_motion="reduce")
-    _open(page, base, "live", "t=60&play=1")
+    _open(page, base, "hub_live", "t=60&play=1")
     page.wait_for_timeout(600)
     out["reduced_motion"] = dict(autoplay=page.get_attribute("#play", "aria-pressed"),
                                  motion=page.evaluate("() => document.documentElement.dataset.motion"),
@@ -639,7 +921,7 @@ def check_live_stream(browser, dist: Path, static_base: str) -> dict:
     request is same-origin (the page, its data, /healthz and /api/...). Served statically: Replay."""
     out = {"problems": []}
     ctx, page, log = _context(browser, *WIDTHS["desktop"])
-    _open(page, static_base, "live")
+    _open(page, static_base, "hub_live")
     out["static_chip"] = page.get_attribute("[data-source]", "data-source")
     out["problems"] += [f"static: {x}" for x in log["problems"] + log["remote"]]
     ctx.close()
@@ -648,7 +930,7 @@ def check_live_stream(browser, dist: Path, static_base: str) -> dict:
         ctx, page, log = _context(browser, *WIDTHS["desktop"])
         urls = []
         page.on("request", lambda r: urls.append(r.url))
-        _open(page, base, "live")
+        _open(page, base, "hub_live")
         page.wait_for_selector("[data-source='live']", timeout=10000)
         first = page.locator("li[data-insight-id]").count()
         page.wait_for_function("() => document.querySelectorAll('li[data-insight-id]').length >= 3", timeout=20000)
@@ -670,7 +952,7 @@ INITIAL_JS_KB = 250
 
 def check_replay_frames(browser, base, ms=4000, size=WIDTHS["desktop"]) -> dict:
     ctx, page, log = _context(browser, *size)
-    _open(page, base, "live", "t=0")
+    _open(page, base, "hub_live", "t=0")
     page.click("[data-name='speed'][data-value='fast']")
     page.click("#play")
     res = page.evaluate(FRAMES_JS, ms)
@@ -852,7 +1134,7 @@ def check_first_screen(browser, base) -> dict:
     out = {}
     for w, h in FIRST_SCREENS:
         ctx, page, log = _context(browser, w, h)
-        _open(page, base, "live", QUERY["live"])
+        _open(page, base, "hub_live", QUERY["hub_live"])
         boxes = page.evaluate("""(sel) => Object.fromEntries(Object.entries(sel).map(([k, s]) => {
             const e = document.querySelector(s); if (!e) return [k, null];
             const r = e.getBoundingClientRect(); return [k, [r.left, r.top, r.right, r.bottom]]; }))""", FIRST_SCREEN)
@@ -902,7 +1184,7 @@ def screens_1080p(browser, base, screens: Path, routes) -> list:
 
 def demo_screen(browser, base, screens: Path):
     ctx, page, log = _context(browser, 1920, 1080)
-    _open(page, base, "live", QUERY["live"])
+    _open(page, base, "hub_live", QUERY["hub_live"])
     (screens / "live_1080p.png").write_bytes(_shrink_png(page.screenshot()))
     ctx.close()
     return log["problems"]
@@ -940,7 +1222,7 @@ def run(dist: Path | None = None, screens_dir: Path | None = None, screens: bool
         if "home" in routes:
             report["badges"] = check_badges(browser, base, shots)
             report["hero_contrast"] = check_hero_contrast(browser, base)
-        if "live" in routes:
+        if "hub_live" in routes:
             report["drawer"] = check_evidence_drawer(browser, base, src)
             report["robustness"] = check_robustness(browser, base)
             report["frames"] = check_replay_frames(browser, base)
@@ -950,6 +1232,7 @@ def run(dist: Path | None = None, screens_dir: Path | None = None, screens: bool
             if shots:
                 report["demo_problems"] = demo_screen(browser, base, shots)
         if set(routes) == set(ROUTES):
+            report["text_budget_proof"] = check_text_budget_proof(browser, base)
             report["consistency"] = check_consistency(browser, base, ref_dir or dist / "data")
             report["navigation"] = check_navigation(browser, base)
             report["language"] = check_language_switch(browser, base, src)
@@ -976,6 +1259,10 @@ def failures(report) -> list:
             f.append(f"{tag}: SVG text under {MIN_SVG_PX}px {r['small_svg_text'][:5]}")
         if r["forbidden"]:
             f.append(f"{tag}: forbidden words {r['forbidden']}")
+        f += [f"{tag}: text budget {x}" for x in r.get("budget", [])]
+        f += [f"{tag}: lane/mismatch wording outside its allowed places: {x!r}" for x in r.get("lane", [])]
+        if r.get("focus_trapped") is False:
+            f.append(f"{tag}: focus left the open sheet")
         if r["tab"]["missing"]:
             f.append(f"{tag}: Tab never reaches {r['tab']['missing']}")
         f += [f"{tag}: axe {v['impact']} {v['id']}: {v['help']} {v['nodes']}" for v in r["axe"] if v["impact"] in AXE_FAIL]
@@ -1004,6 +1291,8 @@ def failures(report) -> list:
         if not L["cards"]:
             f.append("language: no cards at full time")
     f += [f"consistency: {x}" for x in report.get("consistency", {}).get("problems", [])]
+    f += [f"text budget proof: {k} not caught" for k, v in report.get("text_budget_proof", {}).items()
+          if not v["caught"]]
     for wn, v in report.get("navigation", {}).items():
         f += [f"navigation@{wn}: {x}" for x in v["problems"]]
         f += [f"navigation@{wn}: never reached {x}" for x in v["reached"] if x.endswith(":missing")]
@@ -1043,7 +1332,7 @@ def failures(report) -> list:
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--dist", default=str(WEB / "dist"))
-    ap.add_argument("--out", default=str(ROOT / "docs" / "screens-v7"), help="screenshot directory")
+    ap.add_argument("--out", default=str(ROOT / "docs" / "screens-v8"), help="screenshot directory")
     ap.add_argument("--no-screens", action="store_true")
     ap.add_argument("--routes", default=",".join(ROUTES))
     ap.add_argument("--json", default=None, help="also write the full report here")
@@ -1063,11 +1352,16 @@ def main(argv=None):
                                    if not v["caught"]]
     for r in report["routes"]:
         bad_axe = [v["id"] for v in r["axe"] if v["impact"] in AXE_FAIL]
-        print(f"{r['route']:8s} {r['width']:5d}px overflow_x={r['overflowX']!s:5s} tailwind={r['tailwind_ok']!s:5s} "
+        print(f"{r['route']:10s} {r['width']:5d}px overflow_x={r['overflowX']!s:5s} tailwind={r['tailwind_ok']!s:5s} "
               f"text_runs={r['overlap']['count']:4d} overlaps={len(r['overlap']['overlaps'])} untraced={len(r['untraced'])} "
               f"controls={r['tab']['controls']:3d} tab_missing={len(r['tab']['missing'])} axe_serious={len(bad_axe)} "
               f"axe_minor={len(r['axe']) - len(bad_axe)} problems={len(r['problems'])} remote={len(r['remote'])} attrs={r['attrs']}")
-    for k in ("drawer", "consistency", "mutation_proof", "language", "robustness", "frames", "frames_1080p",
+    for r in report["routes"]:
+        top = {}
+        for k, _, n in r.get("words", {}).get("elements", []):
+            top[k] = max(top.get(k, 0), n)
+        print(f"words {r['route']:10s} {r['width']:5d}px total={r.get('words', {}).get('total')} max_per_budget={top}")
+    for k in ("text_budget_proof", "drawer", "consistency", "mutation_proof", "language", "robustness", "frames", "frames_1080p",
               "first_screen", "live_stream", "bundle", "image_files", "badges", "hero_contrast"):
         if k in report:
             print(f"{k}:", {x: y for x, y in report[k].items() if x != "_problems"} if isinstance(report[k], dict) else report[k])

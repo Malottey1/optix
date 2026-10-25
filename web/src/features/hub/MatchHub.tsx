@@ -32,9 +32,14 @@ const LivePage = lazy(() => import("../live/LivePage"));
 function LiveFrame() {
   const { t } = useT();
   return (
-    <div className="flex flex-col gap-2" data-hub="live">
-      <div className="flex items-center gap-2 text-[12px] font-semibold text-ink-3">
-        <Link to="/fixtures" className="inline-flex min-h-[32px] items-center rounded-full px-2 hover:text-ink">
+    // at the 1600 px+ demo layout the frame row sits in the page's top padding, so every live
+    // visual stays on the first screen at 1600x900 (tools/check_web.check_first_screen)
+    <div className="relative flex flex-col gap-2 wide:gap-0" data-hub="live">
+      <div className="flex items-center gap-2 text-[12px] font-semibold text-ink-3 wide:absolute wide:-top-[22px] wide:left-0 wide:h-5">
+        <Link
+          to="/fixtures"
+          className="inline-flex min-h-[32px] items-center rounded-full px-2 hover:text-ink wide:min-h-0"
+        >
           ← {t("back_fixtures")}
         </Link>
         <span className="inline-flex items-center gap-1 rounded-full bg-accent px-2 py-0.5 text-accent-ink">
@@ -60,20 +65,25 @@ function Matchup({ file }: { file: MatchFile }) {
   if (!blocks.length) return null;
   return (
     <Section id="matchup" title={t("hub_matchup")}>
-      <p className="mb-2 text-[12px] text-ink-3">{t("matchup_note")}</p>
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        {blocks.map(({ mu, h, d }) => (
-          <div key={mu.claim_id} data-matchup={`${mu.attacker}-${mu.defender}`}>
-            <MismatchCrosshairs
-              h={h}
-              defender={d}
-              lanes={m.ui.teams.lanes}
-              compact
-              claimLane={String((mu.metrics as Record<string, unknown>).lane ?? "")}
-              claimId={mu.claim_id}
-            />
-          </div>
-        ))}
+      <div data-lane-ok="matchup">
+        <p className="mb-2 text-[12px] text-ink-3">
+          {t("matchup_note")} {t("mx_legend")}
+        </p>
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          {blocks.map(({ mu, h, d }) => (
+            <div key={mu.claim_id} data-matchup={`${mu.attacker}-${mu.defender}`}>
+              <MismatchCrosshairs
+                h={h}
+                defender={d}
+                lanes={m.ui.teams.lanes}
+                compact
+                claimLane={String((mu.metrics as Record<string, unknown>).lane ?? "")}
+                claimId={mu.claim_id}
+                legend={false}
+              />
+            </div>
+          ))}
+        </div>
       </div>
     </Section>
   );

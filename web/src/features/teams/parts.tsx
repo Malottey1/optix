@@ -183,7 +183,7 @@ export function LaneLiftStrip({ team, lanes }: { team: TeamProfile; lanes: reado
         })}
         <PitchLines ground={false} />
       </svg>
-      <figcaption className="mt-1.5 text-[12px] text-ink-3">
+      <figcaption className="mt-1.5 text-[12px] text-ink-3" data-lane-ok="lane-lift">
         {t("lane_lift_label")} · {t("heat_attacking")} →
       </figcaption>
       {soft ? (
@@ -375,7 +375,7 @@ export function PlayerSheet({
             <div>
               <div className="text-[13px] text-ink-2">{t(`pos_${node.position}` as Key)}</div>
               <div className="mt-1 flex items-center gap-2 text-[13px] text-ink-3">
-                <Jersey code={code} shirt={node.shirt} size={26} />
+                <Jersey code={code} shirt={node.shirt} size={28} />
                 {t("number_short")} <span className="num font-semibold text-ink">{node.shirt}</span>
               </div>
             </div>

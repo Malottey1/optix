@@ -15,12 +15,17 @@ Optix is a multi-agent engine that turns synthetic football event data into live
 - **Context check:** is it true but misleading given game state, sample size or metric limits? (For example, high field tilt from a team that is trailing and passing around a deep block.)
 
 <p align="center">
-  <img src="docs/screens-v4/home_desktop.png" alt="The Optix Home page: headline, proof row from the verification ledger, feature cards and the five fictional clubs" width="820" />
+  <img src="docs/screens-v8/home_desktop.png" alt="The Optix Home page: headline, proof row from the verification ledger, feature cards and the five fictional clubs" width="820" />
 </p>
 
-<sub>Screenshot of the Home page (`#/`). Synthetic data. The line-up is illustrative, AI-assisted artwork, audited for maker marks (docs/brand-audit.md); the clubs and players are fictional.</sub>
+<p align="center">
+  <img src="docs/screens-v8/hub_final_desktop.png" alt="A Match Hub recap: scoreline, turning points, heat maps and verified pattern cards" width="405" />
+  <img src="docs/screens-v8/team_board_desktop.png" alt="A Team Board: identity chips, the most-used starting eleven on a pitch, style pizza and lane lift" width="405" />
+</p>
 
-> Status: data generator (small and 20-team league), engine (metrics, effect sizes, xT, flow), Verifier with nine context rules, agents with a block-and-revise loop, timed insight stream in English, Spanish and French, and a dashboard in `web/` (Vite, React, TypeScript: Home, Live Center, Team Board, Player Deck, Tech Blueprint). See `docs/PROGRESS.md`.
+<sub>Screenshots of Home (`#/`), a Match Hub recap (`#/match/m_001`) and a Team Board (`#/teams/AUR`). Synthetic data. The line-up is illustrative, AI-assisted artwork, audited for maker marks (docs/brand-audit.md); the clubs and players are fictional.</sub>
+
+> Status: data generator (small and 20-team league), engine (metrics, effect sizes, xT, flow), Verifier with nine context rules, agents with a block-and-revise loop, timed insight stream in English, Spanish and French, and a dashboard in `web/` (Vite, React, TypeScript: Home, Fixtures, Match Hub with the live replay and final recaps, Team Grid and Team Board, Player Deck and Player Console, Tech Blueprint). See `docs/PROGRESS.md`.
 
 ## Who it is for
 
@@ -82,7 +87,7 @@ python -m engine.report --team AUR --opponent NTG        # style profiles and ma
 python -m agents.personalize --mode casual --lang es --favorite NTG   # personalized feed in the terminal
 python -m data_gen.generate --league full                # 20 teams, 380 matches (data/full, ~15 s)
 cd web && npm run build && npm run preview               # production build in web/dist, served on :4173
-pip install -r requirements-ui.txt && python -m tools.check_web     # headless gates on every route + docs/screens-v4/
+pip install -r requirements-ui.txt && python -m tools.check_web     # headless gates on every route + docs/screens-v8/
 ```
 
 What you get: `out/insights.jsonl` (timed insights, contracts/insight.schema.json), `out/claims.jsonl`
@@ -120,7 +125,7 @@ Known gaps: `docs/known-limitations.md`.
 
 Run it with Azure: `az login`, copy `.env.example` to `.env`, `pip install -r requirements-azure.txt`,
 then `python -m tools.azure_live_check` (at most 10 model calls). Serve the dashboard with the live
-stream: `uvicorn service.app:app` and open http://127.0.0.1:8000/#/live. Deploying: `infra/deploy.md`.
+stream: `uvicorn service.app:app` and open http://127.0.0.1:8000/#/match/m_showcase (old `#/live` links redirect there). Deploying: `infra/deploy.md`.
 
 ## License
 

@@ -50,9 +50,9 @@ export function Jersey({
       />
       <text
         x="20"
-        y="28"
+        y="27.5"
         textAnchor="middle"
-        fontSize="13"
+        fontSize="16"
         fontWeight="800"
         fill="#05080f"
         fontFamily="var(--font-display)"
@@ -110,7 +110,7 @@ export function LineupPitch({
               data-node={n.id}
               data-line={n.line}
               data-slot={n.slot}
-              aria-label={`${n.shirt}, ${name}, ${t(`pos_${n.position}` as Key)}`}
+              aria-label={`${n.shirt} ${surname(name)}, ${name}, ${t(`pos_${n.position}` as Key)}`}
               onKeyDown={(e) => onKey(e, i)}
               onFocus={() => setActive(i)}
               onClick={() => onOpen(n.id)}
@@ -120,6 +120,7 @@ export function LineupPitch({
               <span className="h-7 w-7 sm:h-10 sm:w-10 lg:h-12 lg:w-12">
                 <Jersey code={code} shirt={n.shirt} fluid />
               </span>
+              {/* a word break between the number and the surname, so the visible text reads "1 Name" */}{" "}
               <span className="max-w-full truncate text-[clamp(10px,1.2vw,12.5px)] font-semibold leading-tight text-ink">
                 {surname(name)}
               </span>

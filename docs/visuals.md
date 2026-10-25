@@ -23,7 +23,7 @@ on any number that is neither.
 
 ## Built
 
-### V1 Mismatch crosshairs (Team Board head to head; Live matchup card)
+### V1 Mismatch crosshairs (Match Hub Matchup, only with a verified lane claim; live matchup card)
 - **Question:** where does this attacker's habit meet this defender's soft spot?
 - **Fields:** `teams.head_to_head[].lanes[l].attack_share` and `.league_share`; the defender's
   `teams.teams[].entry_lanes_conceded[l].share` and `.league`; `head_to_head[].claim.lane`,
@@ -36,7 +36,7 @@ on any number that is neither.
 - **Claim:** `matchup.weak_lane`. The lane table stays available under "Lane table".
 - **Caveat:** season aggregates.
 
-### V2 Shot blocks (Live: shot-quality panel and xG cards)
+### V2 Shot blocks (live console: shot-quality panel and xG cards)
 - **Question:** is a pile of shots worth much?
 - **Fields:** `visuals.shots` = [event_id, clock_sec, team, player_id, x, y, xg, result, shot_type];
   the claim's `window` and `subject.team_code`.
@@ -46,7 +46,7 @@ on any number that is neither.
 - **Claim:** `xg` team claims, in particular the twenty low-xG shots trap (shot spam).
 - **Caveat:** shot location is the event location; xG comes from the generator's shot table.
 
-### V3 Game-state swaps (Team Board)
+### V3 Game-state swaps (Team Board, compact: one team, one-line caption)
 - **Question:** how does a team's play change once it goes ahead?
 - **Fields:** `visuals.states[code].{trailing,leading}.{field_tilt,press_intensity}` (value, league,
   n, interval, confidence); `visuals.state_min_n`.
@@ -60,7 +60,7 @@ on any number that is neither.
 - **Caveat:** season data, the team's own score state; descriptive, not causal. Axes carry no
   tick numbers on purpose.
 
-### V4 Pass routes (Player Deck: profile and context cards)
+### V4 Pass routes (Player Console)
 - **Question:** where do a player's passes go, and are they worth anything?
 - **Fields:** `visuals.routes[player]` = [kind, from_zone, to_zone, passes, sum, hot];
   `visuals.league_hot_share`; `visuals.zones`.
@@ -113,7 +113,7 @@ least 1000 px tall. Below 1600 px the layout is unchanged.
 - **Caveat:** there is no sequence detection in the engine, so this is the evidence chain, not a
   detected move.
 
-### V8 Percentile pizza (Player Deck profile)
+### V8 Percentile pizza (Player Console)
 - **Question:** how does this player rank on involvement, pass quality and chances?
 - **Fields:** `players[]`: involvement, forward_passes, pass_completion, pass_quality_ratio,
   chances_open_play, wide_share, chances_set_piece.
@@ -122,7 +122,7 @@ least 1000 px tall. Below 1600 px the layout is unchanged.
   slices to the list with value and percentile.
 - **Caveat:** season totals, not per 90 (the data has no minutes).
 
-### V10 Zone shift (Team Board)
+### V10 Zone shift (retired from the Team Board; replaced by V12)
 - **Question:** where did each side have the ball in the second half compared with the first?
 - **Fields:** `track` = [clock_sec, x, y, team] (the showcase match's on-ball events, acting team's
   attacking frame); `timeline.periods`; `visuals.zones.third_x`.
@@ -132,6 +132,36 @@ least 1000 px tall. Below 1600 px the layout is unchanged.
 - **Claim:** supports the field-tilt-while-leading context: a side that leads and sits deep shows
   its share rising in its own third.
 - **Caveat:** event locations, not tracking; on-ball share, not possession time; descriptive only.
+
+### V12 Heat map (HeatPitch: Match Hub, Player Console touch map)
+- **Question:** where did a side (or a player) have the ball, and where did that move between halves?
+- **Fields:** `heat` in `matches/<id>.json`: raw on-ball event counts per bin, per team and half, on
+  a zone-aligned 24 × 16 grid (8 columns per third; rows 3/3/4/3/3 per lane), attacking frame;
+  `players-heat-<code>.json`: one season bin list per player.
+- **Formula:** density = Gaussian-smoothed count (sigma 1 bin, separable, edge-normalised, so the
+  mass is exact) per 1 % of the pitch area; volume uses `--heat-seq` as opacity, the legend's top is
+  the largest density (1 dp); change = second-half density − first-half density, `--heat-fall` /
+  `--heat-rise`, symmetric scale. View data: per zone, first- and second-half shares (%, 1 dp) and the
+  change in points; zone shares from the bins equal the 15-zone shares of the track exactly.
+- **Caveat:** event locations, not tracking; the smoothing is display only; heat colours are never
+  verdict colours (tokens.test.ts).
+
+### V13 Lineup pitch (Team Board)
+- **Fields:** `lineups[code]`: the 11 players with most starts (ties by id), the `shirt` field,
+  `line` (GK, DF, MF, FW), `slot` and `of` from the listed role's left-to-right order; label =
+  DF-MF-FW counts.
+- **Layout:** one column per line, slots spread evenly inside a line, so two nodes never share a
+  spot. Footnote: "Most-used starting XI, laid out by listed position. Not a tracked shape."
+
+### V14 Style pizza and lane-lift strip (Team Board)
+- **Style pizza:** one slice per fingerprint measure; slice length = team value / league average
+  (capped at 1.6), the dashed ring = the league.
+- **Lane-lift strip:** five lane bands across one pitch, coloured by the team's share of
+  final-third entries in the lane minus the league share (points, diverging heat tokens).
+
+### V15 Percentile bars (Player Console)
+- **Formula:** for each pizza slice, percentile − 50 (same group and rounding as V8), drawn as a bar
+  left or right of the median. Not the skipped V9 (per-match values).
 
 ## Polished (already built)
 - **Tug-of-war momentum bar:** shows who is pulling in words, never a raw percentage.
@@ -152,11 +182,14 @@ least 1000 px tall. Below 1600 px the layout is unchanged.
   zone index and shares, colour scales, stress accumulation, arcs, display rounding).
 - `python -m tools.check_web --ref out --mutation-proof`: every number traces to data or a formula
   above; `check_consistency` compares each visual with the engine output (crosshair lane = the
-  verified claim's lane for all 20 pairs and the Live cards; shot blocks = the claim window's shots
+  verified claim's lane on every final with a lane claim (and no Matchup section without one) and on
+  the live cards; heat bins = the match file's counts; touch map = players-heat counts; lineup nodes
+  = the most-used XI with its numbers; shot blocks = the claim window's shots
   and xG; gauges at full time = the spell totals; arrow count and width order = the pass counts;
   pizza = an independent percentile computation); the routes are checked in the default view and
   after "Show all routes"; the mutation proof changes one visual's data in a throwaway copy and
-  shows the matching check fails (six mutations, one of them aimed at the default route view).
+  shows the matching check fails (ten mutations: crosshair, heat, touch map, lineup, shot blocks,
+  gauge, routes, routes default view, pizza; plus the text-budget and lane-wording proofs).
   `check_first_screen` asserts every Live visual is whole on the first screen at 1920x1080 and
   1600x900 with no overlapping text. `tests/test_visuals_consistency.py` runs
   the proof in the slow suite.

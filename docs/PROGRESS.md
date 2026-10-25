@@ -115,6 +115,41 @@ Item status is in docs/ia-progress.md.
 - The settings note now says only the Tech Blueprint and some longer chart captions are English
   only (Team Board, Deck and Console strings are in en/es/fr).
 
+- Text budget (tools/check_web.py `TEXT_BUDGETS`, one config): visible words (WORDS_JS) per element
+  marked `data-budget`, attributed to the nearest budget ancestor, so a hub section's budget does not
+  count the cards inside it (each card has its own 30). Card 30, Team Grid card 20, Team Board 180,
+  each Match Hub recap section 60 (header, turning points, heat, cards, matchup); the event log has
+  none. `check_text_budget_proof` appends words to a grid card, a deck card and the board and shows
+  each budget fails.
+- Lane wording: visible "lane"/"mismatch" (English) is allowed only inside `data-lane-ok`: the Tech
+  worked example (the crosshairs entry of the Visual guide, labelled "One example of many"), the
+  Match Hub Matchup section, the lane-lift strip label, and the legend of a verified claim's
+  crosshair on a live matchup card (that card exists only when the claim was published). The proof
+  adds a lane sentence to the hub's turning points and shows the scan catches it.
+- Matchup section words: the two crosshairs share one legend (en/es/fr) instead of one each, and the
+  note no longer says "because" (the banned causal list caught my own wording).
+- Card sentences: the tone is chosen by its English length and the sentence shows only when it has
+  at most 22 words in every language, so a language switch never hides a sentence or its numbers
+  (the checker caught en and fr differing on m_001).
+- Checker routes: home, fixtures, hub_live, hub_final (m_001, a final with a lane claim; m_007 is
+  also opened to prove a final without one has no Matchup), teams, team_board (AUR), team_sheet (the
+  board with the lineup sheet open: Tab must reach every control in the dialog and focus must stay
+  inside it), players, player (NTG_07, which has a context check). Every route at 1440, 390,
+  1920x1080 and 1600x900.
+- Checker consistency: crosshairs on every final with a lane claim (37) against out/matches; heat
+  bins (m_001) against the match file; the touch map against players-heat; lineup nodes against
+  ui.lineups; routes and pizza now on the Player Console. New mutations: crosshair (match file),
+  heat, touch map, lineup. The old H2H pairs loop on the Team Board is gone with the block.
+- Tracer: the match files and touch maps join the sources (their numbers, the full event ids the
+  page expands), and heat legends and View data shares/changes are recomputed in Python
+  (smoothing, density, zone shares) independently of the page.
+- Live frame on the hub: at the 1600 px+ demo layout the back link and Live chip sit in the page's
+  top padding, so every live visual stays on the first screen at 1600x900.
+- Lineup nodes: the accessible name starts with the visible number and surname ("1 Fenren, Kwame
+  Fenren, Goalkeeper"; axe label-content-name-mismatch); jersey numbers are 16/40 of the jersey so
+  they render at 11 px or more on a phone.
+- Fixtures: each matchweek group is a panel (rounded-2xl), like the other pages' sections.
+
 ### Test changes (IA)
 
 - web/src/components/viz/helpers.test.ts: the PlayerRow fixture gains the new required fields
@@ -127,6 +162,13 @@ Item status is in docs/ia-progress.md.
   player's card and finds the same chip on the Player Console.
 - web/src/routes.test.tsx: the mocked page module for `/players` is now PlayerDeck (PlayersPage is
   unrouted); a `/players/:id` case is added.
+- tests/test_dashboard.py (slow), `test_the_visuals_match_the_engine_output`: `pairs == 20` counted
+  the Team Board's H2H selector pairs, a block the brief removes. The crosshair check now runs on the
+  Match Hub, so the test asserts `pairs` equals the number of verified lane claims in the committed
+  final match files (60), which is stricter in count. The other assertions are unchanged.
+- tests/test_dashboard.py and test_visuals_consistency.py read `check_web.ROUTES` / `MUTATIONS`, so
+  they pick up the new routes (fixtures, hub_live, hub_final, team_board, team_sheet, player) and
+  the four new mutations without edits.
 
 - tests/test_verifier_full.py, claim-level shot_spam pooled recall (the one exception the brief
   allows): the point floor (recall >= 0.80) is replaced by the interval method for this one check,

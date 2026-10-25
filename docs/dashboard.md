@@ -39,7 +39,9 @@ All versions are exact and every package was at least two weeks old when install
 (`npm install --save-exact --ignore-scripts --before=<date>`). The full list is in `docs/PROGRESS.md`.
 
 - **Vite 7, React 19, TypeScript 5.9** in strict mode (`noUncheckedIndexedAccess`; no `any`).
-- **React Router** `HashRouter`: `#/live`, `#/teams`, `#/players`, `#/tech`. Each page is a lazy chunk.
+- **React Router** `HashRouter`: `#/`, `#/fixtures`, `#/match/:id` (and `/ledger`), `#/teams`, `#/teams/:code`,
+  `#/players`, `#/players/:id`, `#/tech`. Each page is a lazy chunk. Old deep links redirect (`#/live` to
+  the showcase hub, keeping its query; `#/match` to the fixtures), one test per old link.
 - **Tailwind CSS 4** through its Vite plugin. Design tokens are CSS variables in
   `web/src/styles/tokens.css`, mapped to Tailwind colours with `@theme inline`. The body background is
   set in plain CSS in `index.html`, so there is no flash before the styles load.
@@ -87,20 +89,26 @@ move every frame (clock text, ball marker and trail, momentum playhead) are writ
 | Route | What it shows | Source |
 |---|---|---|
 | `#/` Home (default) | What Optix is in one screen: the audited line-up artwork with the headline, sub-line and two buttons on a dark scrim (below the picture on phones), the caption "Illustrative artwork. Clubs and players are fictional.", a proof row (claim drafts checked, rewritten after verification, verified insights published), three feature cards with inline SVG drawings, and the five clubs linking to the Team Board. en / es / fr. Hero is WebP at 1600 and 800 px with `srcset` and `fetchpriority=high`; every other image is lazy | `ui.json` ledger, teams |
-| `#/live` Live Center | Scoreboard with a momentum tug-of-war; play, pause, scrub (with goal and insight markers) and speed; SVG Focus Pitch with the selected or latest insight's evidence and a ball marker at the latest event location (an event-based proxy, labelled as such); momentum chart; Perimeter Lock; rhythm pulse; pinned-in-own-half gauges; shot blocks; the stream of verified cards (matchup cards show mismatch crosshairs, xG cards shot blocks, the rhythm card a pulse). Each card has a headline (the stream's sentence), an evidence summary, and an evidence drawer with a mini pitch, the evidence chain (nodes by event type, click to pin on the pitch), the claim object, every verification attempt and the exact evidence events. A card whose first attempt was blocked shows "Rewritten after verification", a Before / After toggle and the rule's reason in one sentence | `insights.jsonl`, `claims.jsonl`, `timeline.json`, `ui.json` (rewrites, reasons, evidence, track) |
-| `#/teams` Team Board | Head to head first: any attacker and defender, mismatch crosshairs (entries up, conceded down, crosshair on the verified claim's lane, attacker's frame with the mirror handled), the verified matchup sentence and the per-lane table behind a disclosure. Game-state swaps (field tilt and press intensity, trailing to leading). Zone shift of the showcase match, half by half. Per team: style labels with their rule and numbers in a tooltip (`engine/style_labels.py`); entry lanes made and conceded against the league; soft lane in both frames | `ui.json` teams |
-| `#/players` Player Deck | Only involvement, pass quality and chances created. The Verifier's context cards for the volume passer and the set-piece creators (Before / After, reason, chance split, pass routes, evidence); a player profile with pass routes (forward passes or chances) and a percentile pizza; volume against quality; where the chances come from; the full sortable, filterable table | `ui.json` players |
-| `#/tech` Tech Blueprint | Pipeline (Analyst → Verifier → Narrative → number guard) with counts from the ledger; one real claim followed from its blocked first attempt to the translated sentence; the verification ledger (every claim: passed / passed with context / revised / blocked, and the deciding rule); the measured numbers, a visual guide (legend of every visual), parsed from docs/realism-report.md, docs/robustness.md and docs/verifier-recall.md; "Planned Azure integration (not built yet)" | `ui.json` ledger, measured, rewrites |
+| `#/fixtures` Fixtures | Every fixture in the data, grouped by matchweek: both badges, names (codes on phones), score, status chip and the number of verified insights. The showcase AUR v NTG is pinned as the Live replay; every other match is Final. Filters by team and status; 44 px tap targets. No future fixtures (the data has none) | `matches/index.json` |
+| `#/match/m_showcase` Match Hub, live | The live console (below) inside the hub frame, with a Live chip and a link back to the fixtures | as the live console |
+| `#/match/:id` Match Hub, final | In order: scoreline header (score, xG, shots); turning points on a timeline (goals, momentum swings, verified pattern cards, cards and subs, each with an icon, each opening the evidence drawer); heat maps (HeatPitch: volume or second-half change, per team, per half); pattern and insight cards (one headline, one visual, at most one short sentence; at most two per family or type); Matchup only when a verified lane claim exists (otherwise the section is omitted); the event log (filter by event-type icon, virtualised, arrow keys); a link to the match's claim ledger (`#/match/:id/ledger`) | `matches/<id>.json` |
+| Live console (inside the hub) | Scoreboard with a momentum tug-of-war; play, pause, scrub (with goal and insight markers) and speed; SVG Focus Pitch with the selected or latest insight's evidence and a ball marker at the latest event location (an event-based proxy, labelled as such); momentum chart; Perimeter Lock; rhythm pulse; pinned-in-own-half gauges; shot blocks; the stream of verified cards (matchup cards show mismatch crosshairs, xG cards shot blocks, the rhythm card a pulse). Each card has a headline (the stream's sentence), an evidence summary, and an evidence drawer with a mini pitch, the evidence chain, the claim object, every verification attempt and the exact evidence events. A card whose first attempt was blocked shows "Rewritten after verification", a Before / After toggle and the rule's reason in one sentence | `insights.jsonl`, `claims.jsonl`, `timeline.json`, `ui.json` |
+| `#/teams` Team Grid | One card per club: badge, name, matches played and the five fingerprint chips (Tempo, Press, Passing, Territory, Counters). The kits line appears once, as the page footnote | `ui.json` teams |
+| `#/teams/:code` Team Board | Visual first, at most 180 visible words. Identity header (badge, kit, five chips); the lineup pitch (most-used XI by listed position, jersey nodes with number and surname, roving focus, a mini-profile sheet with goals, assists and "VIEW DEEP TACTICAL LEDGER →" to the Player Console); style pizza against the league; where they attack (five lane bands, lift over the league; the soft-side line only when the rule passes); game-state swaps; up to three signature patterns with the share of matches and its interval, "Show all" in a drawer. Tables in closed "View data" sections | `ui.json` teams, lineups, patterns, visuals |
+| `#/players` Player Deck | One card per player: initials avatar, badge, name, position, season goals and assists. Filter by team and position, search by name; 4 / 3 / 2 columns at 1440 / 1024 / 390 | `ui.json` players |
+| `#/players/:id` Player Console | Header (avatar, name, number, position, team badge); pass routes on the Focus Pitch (top 8, then "Show all routes (N)"); Raw / With context, built only from the Verifier's existing player check (disabled with a note when the player has none); pattern chips with their evidence events; percentile pizza; the same percentiles as diverging bars around the median; the season touch map (HeatPitch) | `ui.json` players, visuals, patterns; `matches/players-heat-<code>.json` |
+| `#/tech` Tech Blueprint | Pipeline (Analyst → Verifier → Narrative → number guard) with counts from the ledger; one real claim followed from its blocked first attempt to the translated sentence; the verification ledger (every claim: passed / passed with context / revised / blocked, and the deciding rule); the measured numbers, a visual guide (legend of every visual, with the lane mismatch crosshairs as its one worked example, "One example of many"), parsed from docs/realism-report.md, docs/robustness.md and docs/verifier-recall.md; "Planned Azure integration (not built yet)" | `ui.json` ledger, measured, rewrites |
 
 Settings (slide-over from the header): language (en / es / fr: the stream's own translated,
 number-guarded sentences plus small interface dictionaries), reduce motion, show evidence by default,
 high contrast and density. They are saved in localStorage inside try/catch, so the app works when
-storage is blocked. The tray says that the Team Board, Player Deck and Tech Blueprint explanations are
-English only.
+storage is blocked. The tray says that the Tech Blueprint explanations and some longer chart captions
+are English only (the Team Board, Player Deck and Player Console strings are in en / es / fr).
 
 Brand: the header wordmark (inline SVG, `currentColor`) links to Home. Club crests come from `TeamBadge` (web/src/components/brand/TeamBadge.tsx): the crest image from 40 px up, a disc in the club accent with the club code below 40 px, or when the image fails or the code is unknown. When the name or code is shown beside it, the badge is decorative (`alt=""`). Club accents (`--team-*`) are never used to mark a verdict. Image sources, the mark audit and licences: design/ASSETS.md and docs/brand-audit.md.
 
-View options for screenshots and tests: `#/live?t=2760&select=ins_0009&lang=es&play=1`.
+View options for screenshots and tests: `#/match/m_showcase?t=2760&select=ins_0009&lang=es&play=1` (old
+`#/live?...` links redirect there with the query).
 
 ## Not available in this dataset
 
@@ -112,7 +120,10 @@ View options for screenshots and tests: `#/live?t=2760&select=ins_0009&lang=es&p
 
 `python -m tools.check_web` (needs `pip install -r requirements-ui.txt` and a built `web/dist`) serves
 `web/dist` and opens every route at 1440 px and 390 px in headless Chromium, with axe-core injected.
-It writes `docs/screens-v5/<route>_<desktop|mobile|1080p|900p>.png` (every route is also checked at
+Routes: home, fixtures, hub_live (`#/match/m_showcase`), hub_final (`#/match/m_001`), teams, team_board
+(`#/teams/AUR`), team_sheet (the same board with the lineup mini-profile open), players, player
+(`#/players/NTG_07`), tech.
+It writes `docs/screens-v8/<route>_<desktop|mobile|1080p|900p>.png` (every route is also checked at
 1920x1080 and 1600x900; plus
 `badges_24_32.png`), each under 300 KB; lazy images are scrolled into view before a full-page shot.
 It fails on any of:
@@ -133,7 +144,14 @@ It fails on any of:
 - a language switch that changes a number, or a sentence that fails the number guard;
 - a forbidden word (real club names, prediction or betting language, invented statistics such as "60,000");
 - an error with storage blocked or with reduced motion;
-- initial JavaScript of 250 KB gzip or more.
+- initial JavaScript of 250 KB gzip or more;
+- a text budget exceeded (visible words, `TEXT_BUDGETS` in tools/check_web.py, one config): a card 30,
+  a Team Grid card 20, the Team Board 180 in all, each Match Hub recap section 60 (the event log has
+  none); the measured counts are printed per route, and `check_text_budget_proof` adds words to a
+  page and shows each budget then fails;
+- "lane" or "mismatch" in visible text outside its allowed places (`data-lane-ok`: the Tech worked
+  example, the Matchup section, the lane-lift label, a verified claim's crosshair legend); the proof
+  adds a lane sentence to the hub and shows the scan catches it;
 - an image without alt text, without width and height, or decorative (`alt=""`) where no name is beside
   it; a non-hero image that is not lazy; a Home hero without `fetchpriority=high`;
 - a shipped image with EXIF, XMP, ICC or text metadata, or over its size budget (300 KB; the hero

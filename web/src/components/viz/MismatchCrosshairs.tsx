@@ -37,6 +37,7 @@ export const MismatchCrosshairs = memo(function MismatchCrosshairs({
   compact = false,
   claimLane,
   claimId,
+  legend = true,
 }: {
   h: HeadToHead;
   defender: TeamProfile;
@@ -45,6 +46,8 @@ export const MismatchCrosshairs = memo(function MismatchCrosshairs({
   /** The lane of a stream claim (Live card); defaults to the season claim's lane. */
   claimLane?: string | null;
   claimId?: string;
+  /** false: the caller shows one shared legend (the Match Hub's Matchup section) */
+  legend?: boolean;
 }) {
   const { lang } = useT();
   const att = h.attacker;
@@ -95,26 +98,28 @@ export const MismatchCrosshairs = memo(function MismatchCrosshairs({
         ]),
       }}
     >
-      <div className="mb-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] text-ink-2" aria-hidden="true">
-        <span className="inline-flex items-center gap-1.5">
-          <span className="inline-block h-3 w-3 rounded-sm bg-accent" /> {att} entries % (up)
-        </span>
-        <span className="inline-flex items-center gap-1.5">
-          <span className="inline-block h-3 w-3 rounded-sm border border-muted bg-[repeating-linear-gradient(45deg,var(--muted-accent)_0_2px,transparent_2px_5px)]" />{" "}
-          {dfn} concedes % (down)
-        </span>
-        <span className="inline-flex items-center gap-1.5">
-          <span className="inline-block h-0.5 w-4 bg-ink" /> league
-        </span>
-        {lane && (
-          <span className="inline-flex items-center gap-1.5 font-semibold text-revise">
-            <svg viewBox="0 0 12 12" className="h-3 w-3" aria-hidden="true">
-              <circle cx="6" cy="6" r="4" fill="none" stroke="currentColor" strokeWidth="1.6" />
-            </svg>
-            verified claim lane
+      {legend && (
+        <div className="mb-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] text-ink-2" aria-hidden="true">
+          <span className="inline-flex items-center gap-1.5">
+            <span className="inline-block h-3 w-3 rounded-sm bg-accent" /> {att} entries % (up)
           </span>
-        )}
-      </div>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="inline-block h-3 w-3 rounded-sm border border-muted bg-[repeating-linear-gradient(45deg,var(--muted-accent)_0_2px,transparent_2px_5px)]" />{" "}
+            {dfn} concedes % (down)
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="inline-block h-0.5 w-4 bg-ink" /> league
+          </span>
+          {lane && (
+            <span className="inline-flex items-center gap-1.5 font-semibold text-revise" data-lane-ok="verified-claim">
+              <svg viewBox="0 0 12 12" className="h-3 w-3" aria-hidden="true">
+                <circle cx="6" cy="6" r="4" fill="none" stroke="currentColor" strokeWidth="1.6" />
+              </svg>
+              verified claim lane
+            </span>
+          )}
+        </div>
+      )}
       <svg
         viewBox={`0 0 ${W} ${H}`}
         role="img"

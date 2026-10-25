@@ -435,42 +435,45 @@ function Prose({ text }: { text: string }) {
   );
 }
 
-const GUIDE: { name: string; where: string; reads: string; from: string }[] = [
+// The lane mismatch is one insight among many: the crosshairs entry is the page's one worked
+// example of it (`example`), the only place on Tech that names it.
+const GUIDE: { name: string; where: string; reads: string; from: string; example?: boolean }[] = [
   {
     name: "Mismatch crosshairs",
-    where: "Team Board, matchup cards",
+    where: "Match Hub, Matchup (only when a verified lane claim exists)",
+    example: true,
     reads:
       "Bars up: where the attacker enters; bars down: where the defender concedes; the crosshair sits only on the lane a verified matchup claim names.",
     from: "engine/matchup.py",
   },
   {
     name: "Shot blocks",
-    where: "Live Center, xG cards",
+    where: "Match Hub, xG cards",
     reads: "One block per shot, area proportional to xG; fill pattern shows the outcome.",
     from: "shots table, xG claims",
   },
   {
     name: "Game-state swaps",
-    where: "Team Board",
+    where: "Team Board, When the score changes",
     reads: "Each team trailing (ring) and leading (diamond): field tilt across, press intensity up.",
     from: "engine/profiles.py",
   },
   {
     name: "Pass routes",
-    where: "Player Deck",
+    where: "Player Console",
     reads:
       "Arrows between zones; width is the pass count, colour how often the route reaches high-threat central cells (or xA per chance).",
     from: "engine/threat.py",
   },
   {
     name: "Pinned-in-half gauges",
-    where: "Live Center",
+    where: "Match Hub, live replay",
     reads: "Time the opponent kept the ball in this team's half, adding up with the clock.",
     from: "engine/flow.py territorial_stress",
   },
   {
     name: "Rhythm pulse",
-    where: "Live Center, rhythm cards",
+    where: "Match Hub, rhythm cards",
     reads: "Possession changes per minute; jagged peaks are chaos, a flat line is control.",
     from: "engine/flow.py rhythm",
   },
@@ -482,7 +485,7 @@ const GUIDE: { name: string; where: string; reads: string; from: string }[] = [
   },
   {
     name: "Percentile pizza",
-    where: "Player Deck",
+    where: "Player Console",
     reads: "Slice length is the player's percentile among outfield regulars, for volume, quality and chance source.",
     from: "player metrics",
   },
@@ -497,7 +500,12 @@ function VisualGuide() {
     >
       <ul className="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-4" data-role="visual-guide">
         {GUIDE.map((g) => (
-          <li key={g.name} className="rounded-xl border border-line bg-surface-2 px-4 py-3">
+          <li
+            key={g.name}
+            className="rounded-xl border border-line bg-surface-2 px-4 py-3"
+            data-lane-ok={g.example ? "tech-example" : undefined}
+          >
+            {g.example && <p className="eyebrow mb-1">One example of many</p>}
             <b className="text-[14px] text-ink">{g.name}</b>
             <p className="mt-0.5 text-[11.5px] font-semibold text-ink-3">{g.where}</p>
             <p className="mt-1.5 text-[12.5px] leading-snug text-ink-2">{g.reads}</p>

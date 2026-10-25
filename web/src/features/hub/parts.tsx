@@ -232,13 +232,17 @@ const amountOf = (file: MatchFile, ins: Insight) => file.claims.filter((c) => c.
 /** Longest sentence a recap card shows; a longer one stays in the evidence drawer. */
 export const CARD_SENTENCE_WORDS = 22;
 
-/** The card's one short sentence: the shorter of the two tones, or null when even that is long. */
+/** The card's one short sentence: the tone that is shorter in English, shown only when it has at
+ * most CARD_SENTENCE_WORDS words in every language, so switching language never hides or shows a
+ * sentence (or its numbers). */
 export function cardSentence(ins: Insight, lang: string): string | null {
-  const opts = (["casual", "analyst"] as const)
-    .map((tone) => textOf(ins.text.rendered, lang as "en", tone))
-    .filter(Boolean);
-  const best = opts.sort((a, b) => a.split(/\s+/).length - b.split(/\s+/).length)[0];
-  return best && best.split(/\s+/).length <= CARD_SENTENCE_WORDS ? best : null;
+  const n = (s: string) => s.split(/\s+/).filter(Boolean).length;
+  const tones = (["casual", "analyst"] as const).filter((tone) => textOf(ins.text.rendered, "en", tone));
+  const tone = tones.sort((a, b) => n(textOf(ins.text.rendered, "en", a)) - n(textOf(ins.text.rendered, "en", b)))[0];
+  if (!tone) return null;
+  const langs = Object.keys(ins.text.rendered) as "en"[];
+  if (langs.some((l) => n(textOf(ins.text.rendered, l, tone)) > CARD_SENTENCE_WORDS)) return null;
+  return textOf(ins.text.rendered, lang as "en", tone) || null;
 }
 
 export function RecapCard({

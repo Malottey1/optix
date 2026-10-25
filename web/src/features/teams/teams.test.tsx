@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import App from "../../App";
-import { nodePos } from "../../charts/LineupPitch";
+import { nodePos, surname } from "../../charts/LineupPitch";
 import { ReplaySource } from "../../data/ReplaySource";
 import { setSetting } from "../../state/settings";
 
@@ -68,10 +68,10 @@ describe("Lineup pitch", () => {
     expect(nodes.filter((n) => n.tabIndex === 0).length).toBe(1);
     const xi = ui.lineups.AUR.xi as { id: string; shirt: number; position: string }[];
     const name = (id: string) => ui.players.find((r: { id: string }) => r.id === id).name as string;
+    const pos = { GK: "Goalkeeper", DF: "Defender", MF: "Midfielder", FW: "Forward" }[xi[0]!.position];
+    // the visible number and surname come first (the accessible name contains the visible text)
     expect(nodes[0]!.getAttribute("aria-label")).toBe(
-      `${xi[0]!.shirt}, ${name(xi[0]!.id)}, ${
-        { GK: "Goalkeeper", DF: "Defender", MF: "Midfielder", FW: "Forward" }[xi[0]!.position]
-      }`,
+      `${xi[0]!.shirt} ${surname(name(xi[0]!.id))}, ${name(xi[0]!.id)}, ${pos}`,
     );
     nodes[0]!.focus();
     fireEvent.keyDown(nodes[0]!, { key: "ArrowRight" });

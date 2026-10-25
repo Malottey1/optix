@@ -208,7 +208,7 @@ const en = {
   tbl_evidence: "Evidence events",
   evidence_title: "Evidence",
   evidence_other_match: "from an earlier match",
-  matchup_note: "Shown because the Verifier passed a lane claim for this fixture.",
+  matchup_note: "The Verifier passed a lane claim for this fixture.",
   attack_share: "of final-third entries",
   league: "league",
   conceded_completion: "completion conceded there",
@@ -318,6 +318,7 @@ const en = {
   con_open: "Open play",
   open_board: "Team Board",
   of_word: "of",
+  mx_legend: "Up: entries. Down: conceded. Tick: league. Ring: the verified claim's lane.",
 };
 
 export type Key = keyof typeof en;
@@ -528,7 +529,7 @@ const es: Record<Key, string> = {
   tbl_evidence: "Eventos de evidencia",
   evidence_title: "Evidencia",
   evidence_other_match: "de un partido anterior",
-  matchup_note: "Se muestra porque el verificador aprobó una afirmación de carril para este partido.",
+  matchup_note: "El verificador aprobó una afirmación de carril para este partido.",
   attack_share: "de las entradas al último tercio",
   league: "liga",
   conceded_completion: "acierto concedido ahí",
@@ -639,6 +640,8 @@ const es: Record<Key, string> = {
   con_open: "Juego abierto",
   open_board: "Ficha del equipo",
   of_word: "de",
+  mx_legend:
+    "Arriba: entradas. Abajo: concedidas. Marca: liga. Anillo: carril de la afirmación verificada.",
 };
 
 const fr: Record<Key, string> = {
@@ -847,7 +850,7 @@ const fr: Record<Key, string> = {
   tbl_evidence: "Actions en preuve",
   evidence_title: "Preuves",
   evidence_other_match: "d'un match précédent",
-  matchup_note: "Affiché car le vérificateur a validé une affirmation de couloir pour ce match.",
+  matchup_note: "Le vérificateur a validé une affirmation de couloir pour ce match.",
   attack_share: "des entrées dans le dernier tiers",
   league: "ligue",
   conceded_completion: "réussite concédée là",
@@ -958,6 +961,8 @@ const fr: Record<Key, string> = {
   con_open: "Jeu ouvert",
   open_board: "Fiche de l'équipe",
   of_word: "sur",
+  mx_legend:
+    "En haut : entrées. En bas : concédées. Trait : ligue. Anneau : couloir de l'affirmation vérifiée.",
 };
 
 export const STRINGS: Record<Lang, Record<Key, string>> = { en, es, fr };
