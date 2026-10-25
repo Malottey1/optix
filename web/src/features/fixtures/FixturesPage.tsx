@@ -4,7 +4,9 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router";
 import { TeamBadge } from "../../components/brand/TeamBadge";
+import { FavStar, FollowingChip } from "../../components/ui/fav";
 import { Segmented } from "../../components/ui/segmented";
+import { useFavourites } from "../../state/favourites";
 import { useFixtures } from "../../data/matchContext";
 import type { Fixture } from "../../data/matches";
 import { Icon } from "../../icons";
@@ -19,6 +21,10 @@ export function filterFixtures(rows: readonly Fixture[], team: string, status: S
     (f) => (team === "all" || f.home === team || f.away === team) && (status === "all" || f.status === status),
   );
 }
+
+/** A fixture shows under "Following" when it is starred or a followed team plays in it (pure). */
+export const followedFixture = (f: Fixture, fixtures: readonly string[], teams: readonly string[]) =>
+  fixtures.includes(f.id) || teams.includes(f.home) || teams.includes(f.away);
 
 /** Rows grouped by matchweek in index order; the live replay is its own group, first. */
 export function groupFixtures(rows: readonly Fixture[]): { key: string; week: number | null; rows: Fixture[] }[] {
@@ -36,13 +42,19 @@ function Row({ f, names }: { f: Fixture; names: Record<string, string | undefine
   const { t, lang } = useT();
   const live = f.status === "live";
   return (
-    <li>
+    <li className="relative">
+      <FavStar
+        kind="fixtures"
+        id={f.id}
+        name={`${names[f.home] ?? f.home} – ${names[f.away] ?? f.away}`}
+        className="absolute right-2 top-2 z-10 h-9 w-9"
+      />
       <Link
         to={`/match/${f.id}`}
         data-fixture={f.id}
         data-status={f.status}
         className={cx(
-          "grid min-h-[56px] grid-cols-[1fr_auto_1fr] items-center gap-x-3 gap-y-1 rounded-xl border px-3 py-2 transition-colors sm:grid-cols-[1fr_auto_1fr_auto]",
+          "grid min-h-[56px] grid-cols-[1fr_auto_1fr] items-center gap-x-3 gap-y-1 rounded-xl border py-2 pl-3 pr-12 transition-colors sm:grid-cols-[1fr_auto_1fr_auto]",
           live ? "border-accent-line bg-accent-soft" : "border-line bg-surface-2 hover:border-line-strong",
         )}
       >
@@ -88,9 +100,18 @@ export default function FixturesPage() {
   const { data, error } = useFixtures();
   const [team, setTeam] = useState("all");
   const [status, setStatus] = useState<StatusFilter>("all");
+  const favs = useFavourites();
+  const [following, setFollowing] = useState(false);
   const groups = useMemo(
-    () => (data ? groupFixtures(filterFixtures(data.fixtures, team, status)) : []),
-    [data, team, status],
+    () =>
+      data
+        ? groupFixtures(
+            filterFixtures(data.fixtures, team, status).filter(
+              (f) => !following || followedFixture(f, favs.fixtures, favs.teams),
+            ),
+          )
+        : [],
+    [data, team, status, following, favs],
   );
   if (error) throw error;
   return (
@@ -115,6 +136,7 @@ export default function FixturesPage() {
                 ))}
               </select>
             </label>
+            <FollowingChip on={following} count={favs.fixtures.length + favs.teams.length} onChange={setFollowing} />
             <Segmented
               label={t("filter_status")}
               name="fixtures-status"

@@ -4,6 +4,8 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router";
 import { TeamBadge } from "../../components/brand/TeamBadge";
+import { FavStar, FollowingChip } from "../../components/ui/fav";
+import { useFavourites } from "../../state/favourites";
 import { useData } from "../../data/context";
 import { num, pct } from "../../lib/format";
 import { useT, type Key } from "../../lib/i18n";
@@ -87,6 +89,8 @@ export default function PlayerDeck() {
   const [team, setTeam] = useState("");
   const [position, setPosition] = useState("");
   const [q, setQ] = useState("");
+  const followed = useFavourites((f) => f.players);
+  const [following, setFollowing] = useState(false);
   const sorted = useMemo(
     () =>
       [...m.ui.players].sort(
@@ -95,7 +99,7 @@ export default function PlayerDeck() {
       ),
     [m],
   );
-  const rows = filterPlayers(sorted, team, position, q);
+  const rows = filterPlayers(sorted, team, position, q).filter((p) => !following || followed.includes(p.id));
   return (
     <div className="flex flex-col gap-flow" data-page="players">
       <h1 className="display text-[28px] font-semibold leading-none text-ink">{t("deck_title")}</h1>
@@ -128,6 +132,9 @@ export default function PlayerDeck() {
             className="h-11 rounded-xl border border-line bg-surface-2 px-3 text-[14px] text-ink placeholder:text-ink-3"
           />
         </label>
+        <span className="pb-1">
+          <FollowingChip on={following} count={followed.length} onChange={setFollowing} />
+        </span>
         <p className="pb-3 text-[12.5px] text-ink-3" aria-live="polite">
           <span className="num font-semibold text-ink-2">{num(rows.length, lang)}</span> {t("deck_count")}
         </p>
@@ -135,7 +142,8 @@ export default function PlayerDeck() {
       {rows.length ? (
         <ul className="grid grid-cols-2 gap-3 sm:gap-flow lg:grid-cols-3 xl:grid-cols-4" data-deck>
           {rows.map((p) => (
-            <li key={p.id}>
+            <li key={p.id} className="relative">
+              <FavStar kind="players" id={p.id} name={p.name} className="absolute right-2.5 top-2.5 z-10" />
               <Link
                 to={`/players/${p.id}`}
                 data-player={p.id}

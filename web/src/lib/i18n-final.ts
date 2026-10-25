@@ -179,6 +179,12 @@ export const FINAL_EN = {
   search_none: "No result for this search.",
   search_hint: "Arrows to move, Enter to open, Escape to close.",
   search_mw: "Matchweek {n}",
+  fav_follow: "Follow {name}",
+  fav_following: "Following",
+  fav_clear: "Clear favourites",
+  fav_note: "Favourites stay in this browser only.",
+  fav_none: "Nothing followed here yet: use the star on a card.",
+  fav_title: "Favourites",
 };
 
 export type FinalKey = keyof typeof FINAL_EN;
@@ -361,6 +367,12 @@ export const FINAL_ES: Record<FinalKey, string> = {
   search_none: "Ningún resultado para esta búsqueda.",
   search_hint: "Flechas para moverse, Intro para abrir, Escape para cerrar.",
   search_mw: "Jornada {n}",
+  fav_follow: "Seguir a {name}",
+  fav_following: "Siguiendo",
+  fav_clear: "Borrar favoritos",
+  fav_note: "Los favoritos se quedan solo en este navegador.",
+  fav_none: "Aún no sigues nada aquí: usa la estrella de una tarjeta.",
+  fav_title: "Favoritos",
 };
 
 export const FINAL_FR: Record<FinalKey, string> = {
@@ -542,4 +554,10 @@ export const FINAL_FR: Record<FinalKey, string> = {
   search_none: "Aucun résultat pour cette recherche.",
   search_hint: "Flèches pour se déplacer, Entrée pour ouvrir, Échap pour fermer.",
   search_mw: "Journée {n}",
+  fav_follow: "Suivre {name}",
+  fav_following: "Suivis",
+  fav_clear: "Effacer les favoris",
+  fav_note: "Les favoris restent uniquement dans ce navigateur.",
+  fav_none: "Rien de suivi ici pour l'instant : utilisez l'étoile d'une carte.",
+  fav_title: "Favoris",
 };

@@ -14,3 +14,4 @@ suite exit 0, `npm run build` pass.
 | Step 6 Players: deck, console, evidence drawer | done | (this commit) | DF/GK/FW panels; drawer with play links (?t=); 5 new Vitest + 1 hub; checker: 4 routes, 3 mutations caught; entry JS 182.3 KB gzip | routes caption and legend deviate (zone routes, no per-pass rows); see PROGRESS |
 | Step 7 Home | done | (this commit) | 211 words below the hero (budget 260), cards <= 29; HomeSections lazy chunk 4.6 KB gzip; 4 Home mutations caught | nav pill over hero not done; hero faces conflict flagged |
 | Step 8 search | done | (this commit) | overlay chunk 2.35 KB gzip; entry 189.2 KB gzip; 6 new Vitest (ranking, keyboard, focus return, language); checker route clean at 4 sizes | – |
+| Step 9 favourites | done | (this commit) | stars on 3 surfaces, Following chip, Clear in Settings; 5 new Vitest; checker clean on teams/players/fixtures/settings | – |

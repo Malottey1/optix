@@ -108,6 +108,13 @@ Item status is in docs/final-ui-progress.md; the audit and design notes in docs/
   DataContext (null until loaded) so the overlay can read it. Checker route "search" (Fixtures with
   the overlay open on "aur").
 
+- Favourites (Step 9): a star toggle button (aria-pressed, named "Follow <name>", never inside the
+  card link) on team cards, player cards and fixture rows; stored under optix.favourites.v1 in
+  localStorage with try/catch on every read and write (blocked storage keeps them for the visit). A
+  "Following" chip on Teams, Players and Fixtures (a fixture counts when starred or when a followed
+  team plays). Settings has a Favourites section with "Clear favourites" and the note that they stay
+  in this browser; no accounts are mentioned.
+
 ### Test changes (final UI)
 
 - tests/test_dashboard.py: the checked Matchup pairs now equal the lane claims the hub shows (display

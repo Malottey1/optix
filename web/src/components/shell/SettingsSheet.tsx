@@ -1,6 +1,7 @@
 import { Link } from "react-router";
 import { Icon } from "../../icons";
 import { LANG_NAMES, useT } from "../../lib/i18n";
+import { clearFavourites, favCount, useFavourites } from "../../state/favourites";
 import { setSetting, useSettings } from "../../state/settings";
 import { LANGS, type Lang } from "../../types/ui";
 import { Segmented } from "../ui/segmented";
@@ -10,6 +11,7 @@ import { Switch } from "../ui/switch";
 export function SettingsSheet({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
   const { t } = useT();
   const s = useSettings();
+  const favs = useFavourites((f) => favCount(f));
   return (
     <Sheet
       open={open}
@@ -87,6 +89,23 @@ export function SettingsSheet({ open, onOpenChange }: { open: boolean; onOpenCha
               ]}
             />
           </div>
+        </div>
+      </section>
+      <section aria-labelledby="set-fav-h" className="mt-6">
+        <h3 id="set-fav-h" className="eyebrow">
+          {t("fav_title")}
+        </h3>
+        <div className="mt-2.5 flex flex-wrap items-center justify-between gap-3">
+          <p className="text-[12.5px] text-ink-3">{t("fav_note")}</p>
+          <button
+            type="button"
+            id="clear-favourites"
+            disabled={favs === 0}
+            onClick={clearFavourites}
+            className="inline-flex h-10 items-center rounded-full border border-line px-4 text-[13px] font-semibold text-ink-2 hover:border-line-strong hover:text-ink disabled:opacity-40"
+          >
+            {t("fav_clear")}
+          </button>
         </div>
       </section>
       <p className="mt-5 text-[12.5px] leading-relaxed text-ink-3">{t("settings_note")}</p>
