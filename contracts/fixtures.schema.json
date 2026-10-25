@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://optix.local/contracts/fixtures.schema.json",
+  "title": "FixtureIndex",
+  "description": "Every match that exists in the data (agents/match_export.py, matches/index.json): the showcase replay first, then the season by matchweek. There are no future fixtures.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["dataset", "teams", "heat", "fixtures"],
+  "properties": {
+    "dataset": { "type": "string" },
+    "teams": { "type": "object", "additionalProperties": { "type": "string" } },
+    "heat": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cols", "rows", "x_edges", "y_edges"],
+      "properties": {
+        "cols": { "const": 24 },
+        "rows": { "const": 16 },
+        "x_edges": { "type": "array", "items": { "type": "number" } },
+        "y_edges": { "type": "array", "items": { "type": "number" } }
+      }
+    },
+    "fixtures": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "status", "matchweek", "date", "kickoff", "home", "away", "score", "insights", "patterns", "matchup"],
+        "properties": {
+          "id": { "type": "string" },
+          "status": { "enum": ["live", "final"] },
+          "matchweek": { "type": "integer" },
+          "date": { "type": "string" },
+          "kickoff": { "type": "string" },
+          "home": { "type": "string" },
+          "away": { "type": "string" },
+          "score": { "type": "array", "items": { "type": "integer" }, "minItems": 2, "maxItems": 2 },
+          "insights": { "type": "integer", "description": "published insights in the full stream" },
+          "patterns": { "type": "integer", "description": "published tactical pattern cards in the full stream" },
+          "matchup": { "type": "boolean", "description": "the stream published a verified lane claim for this fixture" }
+        }
+      }
+    }
+  }
+}

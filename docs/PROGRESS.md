@@ -27,7 +27,36 @@ Item status is in docs/ia-progress.md.
 - Lineup slots: rows by listed position; left-to-right order within a row from the listed `role`
   (left_back ... right_back, *_l before *_r), so nodes never overlap.
 
+- Season matches for the hub are streamed as tools/pattern_diversity.py streams them: the season
+  is its own baseline, in date order, with the novelty history of earlier matches; the showcase
+  exactly as agents.run_match does (season baseline). All languages, template phraser.
+- Match file size (80 KB per file, 3 MB in all): the full stream does not fit. With three languages
+  and two tones the cards alone are about 60 KB per match, and 41 files of the full stream would be
+  about 6.8 MB even with an empty event log. So:
+  - the recap file holds the recap's cards: every momentum swing, pattern finding and lane claim
+    (turning points and the matchup), and at most 2 cards of every other insight type (revised
+    first, then with context, then latest); every verification attempt of each kept card's claim
+    chain is in the file, so no card loses its claims; the full stream's counts per type are kept
+    (`stream_counts`) and the fixtures list shows the full counts;
+  - cards and claims are stored compactly (event ids as numbers, payload points as arrays); the
+    round trip to the insights.jsonl row is exact (tests/test_match_export.py);
+  - the event log is thinned by type to 72 KB per file (so 41 files stay under 3 MB);
+  - the showcase file does not repeat its stream: the live hub plays insights.jsonl and
+    claims.jsonl, as before (`stream: "bundle"`).
+  Result: 41 files, 2.37 MB in all, the largest 70.8 KB; 23.8 s, peak RSS 392 MB.
+- Goals and assists had no engine definition: added `engine.metrics.goals` and `assists`
+  (documented with limits); they add up to the season's 133 goals (111 assisted).
+- Lineups and player summaries go in ui.json (`lineups`, and `shirt`, `goals`, `assists`, `starts`
+  on each player row): ui.json 1,101,296 bytes (limit 1.3 MB). The fixture index is
+  matches/index.json, loaded lazily with the match files.
+- Contracts: contracts/match.schema.json and fixtures.schema.json (Draft 2020-12), TS types
+  generated; json-schema-to-typescript does not read `prefixItems`, so tuple rows are typed
+  `unknown` there and decoded in web/src/data/matches.ts behind a runtime guard.
+
 ### Test changes (IA)
+
+- web/src/components/viz/helpers.test.ts: the PlayerRow fixture gains the new required fields
+  (shirt, goals, assists, starts). No assertion changed.
 
 - tests/test_verifier_full.py, claim-level shot_spam pooled recall (the one exception the brief
   allows): the point floor (recall >= 0.80) is replaced by the interval method for this one check,

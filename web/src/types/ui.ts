@@ -160,6 +160,12 @@ export interface PlayerRow {
   name: string;
   team: string;
   position: string;
+  /** the data's shirt field (players.csv) */
+  shirt: number;
+  /** season goals and assists (engine.metrics.goals / assists) and starts (lineups.csv) */
+  goals: number;
+  assists: number;
+  starts: number;
   involvement: number;
   team_share: number | null;
   passes: number;
@@ -280,6 +286,27 @@ export interface UiData {
   visuals: Visuals;
   azure_status: AzureStatus[];
   patterns?: PatternsSection;
+  lineups: Record<string, Lineup>;
+}
+
+/** One node of the most-used starting XI: listed position and role, line (0 GK .. 3 FW) and slot
+ * (left to right inside the line, of `of`). A list, not a tracked shape. */
+export interface LineupNode {
+  id: string;
+  shirt: number;
+  position: "GK" | "DF" | "MF" | "FW";
+  role: string | null;
+  starts: number;
+  line: number;
+  slot: number;
+  of: number;
+}
+export interface Lineup {
+  xi: LineupNode[];
+  /** DF-MF-FW counts of the listed positions, e.g. "4-3-3" */
+  label: string;
+  matches: number;
+  next_most_starts: number;
 }
 
 /** The tactical pattern catalogue and each team's signature patterns (agents/dashboard_data.py). */

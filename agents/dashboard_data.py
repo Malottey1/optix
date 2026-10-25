@@ -166,7 +166,8 @@ def players_section(season) -> list:
         fw = M.forward_passes_wide_share(ev, tid, pid)
         q = T.pass_quality_ratio(ev, grid, pid, team_id=tid, league_share=league_fwd)
         ch = M.chances_created(ev, season.passes, tid, pid)
-        row = dict(id=pid, name=p["name"], team=season.code(tid), position=p["position"],
+        row = dict(id=pid, name=p["name"], team=season.code(tid), position=p["position"], shirt=int(p["shirt"]),
+                   goals=M.goals(ev, season.shots, pid).value, assists=M.assists(ev, season.shots, pid).value,
                    involvement=inv.value, team_share=_pct(inv.detail["team_share"]),
                    passes=comp.detail["attempted"], pass_completion=_pct(comp.value),
                    forward_passes=fw.value, wide_share=_pct(fw.detail["wide_share"]),
@@ -194,6 +195,58 @@ def players_section(season) -> list:
                 check.update(text=_rendered(c["template_key"], c["params"]))
             row["checks"].append(check)
         out.append(row)
+    return out
+
+
+# ---------- lineups (export layer: listed data, nothing measured) ----------
+
+# left-to-right order inside a line of the lineup pitch (attacker's frame: y = 0 is the left), from
+# the listed role; roles not listed here sit in the middle
+LATERAL = {"left_back": 0, "centre_back_l": 1, "centre_back": 2, "centre_back_r": 3, "right_back": 4,
+           "left_mid": 0, "central_mid_l": 1, "defensive_mid_l": 1, "defensive_mid": 2, "attacking_mid": 2,
+           "central_mid": 2, "central_mid_r": 3, "defensive_mid_r": 3, "right_mid": 4,
+           "left_winger": 0, "striker_l": 1, "striker": 2, "striker_r": 3, "right_winger": 4}
+LINES = ("GK", "DF", "MF", "FW")
+
+
+def _csv(path: Path) -> list:
+    import csv
+    with path.open(newline="", encoding="utf-8") as f:
+        return list(csv.DictReader(f))
+
+
+def starts_by_player(season_dir: Path) -> dict:
+    """player_id -> matches started (lineups.csv starter = 1)."""
+    out: dict = {}
+    for r in _csv(season_dir / "lineups.csv"):
+        if r["starter"] == "1":
+            out[r["player_id"]] = out.get(r["player_id"], 0) + 1
+    return out
+
+
+def lineups_section(season, season_dir: Path) -> dict:
+    """Most-used starting XI per team: the 11 players with the most starts (ties: player id), each
+    with the data's shirt number, listed position (GK/DF/MF/FW) and listed role. line = index in
+    LINES, slot = order inside the line from LATERAL. The label counts listed positions
+    (DF-MF-FW): a description of the list, not a measured or tactical shape."""
+    starts = starts_by_player(season_dir)
+    role = {r["player_id"]: r["role"] for r in _csv(season_dir / "players.csv")}
+    out = {}
+    for tid in sorted(season.teams, key=season.code):
+        squad = [pid for pid, p in season.players.items() if p["team_id"] == tid]
+        xi = sorted(squad, key=lambda pid: (-starts.get(pid, 0), pid))[:11]
+        rows = sorted(({"id": pid, "shirt": int(season.players[pid]["shirt"]), "position": season.players[pid]["position"],
+                        "role": role.get(pid), "starts": starts.get(pid, 0)} for pid in xi),
+                      key=lambda r: (LINES.index(r["position"]), LATERAL.get(r["role"], 2), r["shirt"]))
+        for line in LINES:
+            inline = [r for r in rows if r["position"] == line]
+            for k, r in enumerate(inline):
+                r.update(line=LINES.index(line), slot=k, of=len(inline))
+        count = {line: sum(1 for r in rows if r["position"] == line) for line in LINES}
+        out[season.code(tid)] = dict(xi=rows, label="-".join(str(count[x]) for x in LINES[1:]),
+                                     matches=sum(1 for m in season.matches.values()
+                                                 if tid in (m["home_team_id"], m["away_team_id"])),
+                                     next_most_starts=max((starts.get(p, 0) for p in squad if p not in xi), default=0))
     return out
 
 
@@ -457,16 +510,20 @@ def visuals_section(match_ds, season, match_id, players) -> dict:
 
 # ---------- all ----------
 
-def build(match_ds, season, match_id, insights, attempts, docs_dir: Path = ROOT / "docs") -> dict:
+def build(match_ds, season, match_id, insights, attempts, docs_dir: Path = ROOT / "docs",
+          season_dir: Path | None = None) -> dict:
     ledger, rewrites = ledger_section(insights, attempts)
     teams = teams_section(season)
     players = players_section(season)
+    starts = starts_by_player(season_dir or ROOT / "data" / season.label)
+    for p in players:
+        p["starts"] = starts.get(p["id"], 0)
     ids = [i for ins in insights for i in ins["evidence_event_ids"]]
     ids += [i for p in players for c in p["checks"] for i in c["evidence_event_ids"]]
     ids += [i for h in teams["head_to_head"] if h["claim"] for i in h["claim"]["evidence_event_ids"]]
     return dict(match_id=match_id, season=dict(dataset=season.label, matches=len(season.matches),
                                                teams=len(season.teams)),
-                teams=teams, players=players, ledger=ledger, rewrites=rewrites,
+                teams=teams, players=players, lineups=lineups_section(season, season_dir or ROOT / "data" / season.label), ledger=ledger, rewrites=rewrites,
                 reasons={lang: rule_reasons(lang) for lang in languages()},
                 evidence=evidence_section(ids, (match_ds, season)), measured=measured_section(docs_dir),
                 track=[[e["clock_sec"], e["x_start"], e["y_start"], match_ds.code(e["team_id"])]

@@ -172,3 +172,29 @@ about 800,000 events (800,670 for seed 2026), about 120 MB, about 15 s on a lapt
   and `expected_evidence`: what each plant should leave in the data. For example, shot spam shows only
   while trailing (opponent sitting deep), and a volume passer is his team's top forward passer and in the
   league's top 10% rather than the league leader.
+
+## Dashboard exports derived from the tables (export layer only)
+
+These are listed or counted facts, written by `agents/dashboard_data.py` (ui.json) and
+`agents/match_export.py` (web/public/data/matches/). Nothing here is a measured shape.
+
+- **Squad numbers**: the `shirt` column of players.csv, as is. In every team the most-started XI
+  wears 1-11 with no duplicates in the squad, so no convention is needed.
+- **Most-used starting XI** (`ui.lineups.<code>.xi`): the 11 players with the most starts
+  (lineups.csv `starter` = 1), ties broken by player id. On the dashboard season the 11th player
+  has 10-13 starts and the 12th 4-7 (`next_most_starts`), so the XI is unambiguous.
+- **Lineup layout**: one line per listed position (GK, DF, MF, FW); left to right inside a line by
+  the listed `role` (left_back, centre_back_l, ..., right_winger; `LATERAL` in dashboard_data.py).
+  `role` is read here only to order nodes; no metric reads it.
+- **Formation label** (`ui.lineups.<code>.label`): counts of the XI's listed positions, DF-MF-FW,
+  shown as "4-3-3 by listed positions". teams.csv `formation` is a generator setting and is not read.
+- **Goals and assists** (`ui.players[].goals/assists`): `engine.metrics.goals` (a player's shots with
+  shot_result goal) and `engine.metrics.assists` (goals whose shots-table assist_event_id is an event
+  by the player). The data has no own goals. **Starts**: lineups.csv `starter`.
+- **Heat bins** (`matches/<id>.json` heat): raw counts of on-ball events (the track's event types)
+  per team per half on a 24 x 16 zone-aligned grid in the acting team's attacking frame: 8 columns per
+  third (edges 0, 33.3, 66.7, 100) and 3/3/4/3/3 rows per lane (edges 20, 40, 60, 80), so each bin
+  lies in one of the 15 zones and the zone shares from the bins equal the track's exactly.
+- **Event log** (`matches/<id>.json` events): every event of the match, or, when the file would pass
+  72 KB, the log without the types in `omitted_types` (pressure and possession changes first, then
+  carries and duels, then passes...). Evidence events and turning-point events are always kept.

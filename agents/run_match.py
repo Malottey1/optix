@@ -123,7 +123,7 @@ def main(argv=None):
     (out.parent / "timeline.json").write_text(json.dumps(timeline(ds, a.match), ensure_ascii=False, sort_keys=True),
                                               encoding="utf-8")
     attempts = {x["claim"]["claim_id"]: x for x in stream.attempts()}
-    ui = dashboard_data.build(ds, ds.baseline, a.match, insights, attempts)
+    ui = dashboard_data.build(ds, ds.baseline, a.match, insights, attempts, season_dir=Path(a.season))
     (out.parent / "ui.json").write_text(json.dumps(ui, ensure_ascii=False, sort_keys=True, separators=(",", ":")), encoding="utf-8")
     blocked = sum(1 for x in stream.attempts() if x["claim"]["verification"]["status"] == "blocked")
     print(f"{len(insights)} insights -> {out} ({blocked} blocked attempts revised, "

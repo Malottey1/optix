@@ -163,7 +163,23 @@ export function parseUi(raw: unknown): UiData {
     track: "array",
     visuals: "object",
     azure_status: "array",
+    lineups: "object",
   });
+  for (const [code, lu] of Object.entries(o.lineups as Record<string, unknown>)) {
+    const l = c.fields(lu, `lineups.${code}`, { xi: "array", label: "string", matches: "number" });
+    const xi = l.xi as unknown[];
+    if (xi.length !== 11) c.fail(`lineups.${code}.xi`, `expected 11 players, got ${xi.length}`);
+    xi.forEach((n, i) =>
+      c.fields(n, `lineups.${code}.xi[${i}]`, {
+        id: "string",
+        shirt: "number",
+        position: "string",
+        line: "number",
+        slot: "number",
+        of: "number",
+      }),
+    );
+  }
   const teams = c.fields(o.teams, "teams", {
     teams: "array",
     head_to_head: "array",
@@ -212,6 +228,10 @@ export function parseUi(raw: unknown): UiData {
       forward_passes: "number",
       chances: "number",
       checks: "array",
+      shirt: "number",
+      goals: "number",
+      assists: "number",
+      starts: "number",
     }),
   );
   const ledger = c.fields(o.ledger, "ledger", {

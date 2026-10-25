@@ -301,6 +301,35 @@ def shots_by_xg_band(events, shots, team_id, window=None, state=None, bands=XG_B
                         detail=dict(band_ids=out))
 
 
+def goals(events, shots, player_id) -> MetricResult:
+    """Goals scored by a player: their shots whose shots-table shot_result is "goal".
+
+    Inputs: events (any scope, e.g. the season); shots table; player_id.
+    Value: count. Evidence: the goal events.
+    Known limits: the data has no own goals, so every goal belongs to the shooter; a count says
+    nothing about chance quality (see xg_sum).
+    """
+    ids = tuple(e["event_id"] for e in events if e["event_type"] == "shot" and e["player_id"] == player_id
+                and shots[e["event_id"]]["shot_result"] == "goal")
+    return MetricResult(len(ids), ids, len(ids))
+
+
+def assists(events, shots, player_id) -> MetricResult:
+    """Assists by a player: goals whose shots-table assist_event_id is an event by that player
+    (the pass or carry the data credits as the assist).
+
+    Inputs: events (any scope); shots table; player_id.
+    Value: count. Evidence: the assisting events.
+    Known limits: only the data's own assist link counts (no second assists); an assist count
+    depends on the finisher, see chances_created for the chances a player made.
+    """
+    by_id = {e["event_id"]: e for e in events}
+    ids = tuple(s["assist_event_id"] for e in events if e["event_type"] == "shot"
+                and (s := shots[e["event_id"]])["shot_result"] == "goal" and s["assist_event_id"]
+                and by_id.get(s["assist_event_id"], {}).get("player_id") == player_id)
+    return MetricResult(len(ids), ids, len(ids))
+
+
 # ---------- passing ----------
 
 def forward_passes_wide_share(events, team_id=None, player_id=None, window=None, state=None) -> MetricResult:

@@ -1,0 +1,180 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://optix.local/contracts/match.schema.json",
+  "title": "MatchFile",
+  "description": "One played match for the Match Hub (agents/match_export.py): header, turning points, the recap's verified cards and every attempt of their claims, raw heat bins per team per half, a compact event log and, only when the stream published a verified lane claim, the matchup. Event ids of this match are compacted to their number (m_001_e00936 -> 936); ids from other matches stay strings.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["match_id", "status", "stream", "header", "periods", "duration_sec", "momentum", "turning_points", "insights", "claims", "stream_counts", "heat", "events", "evidence", "players"],
+  "properties": {
+    "match_id": { "type": "string" },
+    "status": { "enum": ["live", "final"], "description": "live: the showcase replay (its stream is the bundle's insights.jsonl); final: a played season match" },
+    "stream": { "enum": ["file", "bundle"] },
+    "header": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["matchweek", "date", "kickoff", "home", "away"],
+      "properties": {
+        "matchweek": { "type": "integer" },
+        "date": { "type": "string" },
+        "kickoff": { "type": "string" },
+        "home": { "$ref": "#/$defs/side" },
+        "away": { "$ref": "#/$defs/side" }
+      }
+    },
+    "periods": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["period", "start_sec", "end_sec"],
+        "properties": { "period": { "type": "integer" }, "start_sec": { "type": "integer" }, "end_sec": { "type": "integer" } }
+      }
+    },
+    "duration_sec": { "type": "integer" },
+    "momentum": { "type": "array", "items": { "type": "array", "prefixItems": [{ "type": "integer" }, { "type": "number" }], "minItems": 2, "maxItems": 2 } },
+    "turning_points": { "type": "array", "items": { "$ref": "#/$defs/turning_point" } },
+    "insights": { "type": "array", "items": { "$ref": "#/$defs/card" } },
+    "claims": { "type": "array", "items": { "$ref": "#/$defs/attempt" } },
+    "stream_counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["insights", "patterns", "types"],
+      "properties": {
+        "insights": { "type": "integer" },
+        "patterns": { "type": "integer" },
+        "types": { "type": "object", "additionalProperties": { "type": "integer" } }
+      }
+    },
+    "heat": { "$ref": "#/$defs/heat" },
+    "events": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cols", "types", "outcomes", "rows", "omitted_types", "total"],
+      "properties": {
+        "cols": { "type": "array", "items": { "type": "string" } },
+        "types": { "type": "array", "items": { "type": "string" } },
+        "outcomes": { "type": "array", "items": { "type": "string" } },
+        "rows": { "type": "array", "items": { "$ref": "#/$defs/log_row" } },
+        "omitted_types": { "type": "array", "items": { "type": "string" }, "description": "event types left out of the log to keep the file small (events that are evidence or turning points are always kept)" },
+        "total": { "type": "integer" }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cols", "rows"],
+      "properties": {
+        "cols": { "type": "array", "items": { "type": "string" } },
+        "rows": { "type": "array", "items": { "type": "array" } }
+      }
+    },
+    "players": { "type": "object", "additionalProperties": { "type": "array", "prefixItems": [{ "type": "string" }, { "type": "string" }, { "type": "string" }], "minItems": 3, "maxItems": 3 } },
+    "matchups": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/matchup" } }
+  },
+  "$defs": {
+    "eid": { "type": ["integer", "string"] },
+    "side": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "name", "goals", "shots", "xg"],
+      "properties": { "code": { "type": "string" }, "name": { "type": "string" }, "goals": { "type": "integer" }, "shots": { "type": "integer" }, "xg": { "type": "number" } }
+    },
+    "turning_point": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "clock_sec", "team"],
+      "properties": {
+        "kind": { "enum": ["goal", "card", "sub", "momentum", "pattern"] },
+        "clock_sec": { "type": "integer" },
+        "team": { "type": "string" },
+        "event_id": { "type": "string" },
+        "player_id": { "type": "string" },
+        "on_player_id": { "type": ["string", "null"] },
+        "card": { "type": "string" },
+        "score": { "type": "array", "items": { "type": "integer" }, "minItems": 2, "maxItems": 2 },
+        "insight_id": { "type": "string" },
+        "claim_id": { "type": "string" },
+        "family": { "type": "string" }
+      }
+    },
+    "card": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "t", "d", "teams", "players", "claim", "chip", "status", "text", "payload"],
+      "description": "An insight without match_id, evidence ids (its claim's attempt holds them) and wall-clock latency; payload points are arrays [event_id, kind, value, x, y, x_end, y_end].",
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "type": "string" },
+        "t": { "type": "integer" },
+        "d": { "type": "integer" },
+        "teams": { "type": "array", "items": { "type": ["string", "null"] }, "minItems": 2, "maxItems": 2 },
+        "players": { "type": "array", "items": { "type": "string" } },
+        "claim": { "type": "string" },
+        "chip": { "type": ["object", "null"] },
+        "status": { "type": "string" },
+        "text": { "type": "object" },
+        "payload": { "type": "object" }
+      }
+    },
+    "attempt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["claim_id", "attempt", "metric", "claim_type", "scope", "subject", "status", "fact_check", "context_check", "rule_ids", "evidence"],
+      "properties": {
+        "claim_id": { "type": "string" },
+        "attempt": { "type": "integer" },
+        "metric": { "type": "string" },
+        "claim_type": { "type": "string" },
+        "scope": { "type": "string" },
+        "subject": { "type": "array", "items": { "type": "string" }, "minItems": 2, "maxItems": 2 },
+        "status": { "type": "string" },
+        "fact_check": { "type": "string" },
+        "context_check": { "type": "string" },
+        "rule_ids": { "type": "array", "items": { "type": "string" } },
+        "amount": { "type": "number" },
+        "unit": { "type": "string" },
+        "baseline": { "type": "number" },
+        "sample_size": { "type": "integer" },
+        "interval": { "type": "object" },
+        "confidence": { "type": "string" },
+        "evidence": { "type": "array", "items": { "$ref": "#/$defs/eid" } },
+        "revision_of": { "type": "string" }
+      }
+    },
+    "heat": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cols", "rows", "x_edges", "y_edges", "teams"],
+      "description": "Raw integer counts of on-ball events (the track's event types) per bin, row-major (row * cols + col), per team code, [first half, second half], in the acting team's attacking frame. The grid is zone-aligned: 8 columns per third, 3/3/4/3/3 rows per lane.",
+      "properties": {
+        "cols": { "const": 24 },
+        "rows": { "const": 16 },
+        "x_edges": { "type": "array", "items": { "type": "number" }, "minItems": 25, "maxItems": 25 },
+        "y_edges": { "type": "array", "items": { "type": "number" }, "minItems": 17, "maxItems": 17 },
+        "teams": { "type": "object", "additionalProperties": { "type": "array", "items": { "type": "array", "items": { "type": "integer", "minimum": 0 }, "minItems": 384, "maxItems": 384 } } }
+      }
+    },
+    "log_row": {
+      "type": "array",
+      "description": "[event_id, clock_sec, team, player_id, type index, outcome index, related_player_id]",
+      "prefixItems": [{ "$ref": "#/$defs/eid" }, { "type": "integer" }, { "type": ["string", "null"] }, { "type": ["string", "null"] }, { "type": "integer" }, { "type": ["integer", "null"] }, { "type": ["string", "null"] }],
+      "minItems": 7,
+      "maxItems": 7
+    },
+    "matchup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["insight_id", "claim_id", "attacker", "defender", "metrics", "confidence", "evidence_event_ids"],
+      "properties": {
+        "insight_id": { "type": "string" },
+        "claim_id": { "type": "string" },
+        "attacker": { "type": "string" },
+        "defender": { "type": "string" },
+        "metrics": { "type": "object" },
+        "confidence": { "type": ["string", "null"] },
+        "evidence_event_ids": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}

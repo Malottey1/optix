@@ -14,6 +14,8 @@ mkdirSync(out, { recursive: true });
 for (const [schema, file] of [
   ["claim.schema.json", "claim.ts"],
   ["insight.schema.json", "insight.ts"],
+  ["match.schema.json", "match.ts"],
+  ["fixtures.schema.json", "fixtures.ts"],
 ]) {
   const ts = await compileFromFile(join(contracts, schema), {
     bannerComment: banner,
