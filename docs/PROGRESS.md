@@ -83,6 +83,23 @@ Item status is in docs/final-ui-progress.md; the audit and design notes in docs/
   settings (sheet open) added; consistency recounts the defence map, the shots-faced map and the
   drawer rows and play links from the players-<code>.json lists; three new mutations.
 
+- Home (Step 7): hero, headline, sub-line and buttons unchanged. Below it, a lazy chunk
+  (HomeSections, which alone loads matches/m_showcase.json): the showcase strip (score from the match
+  file header, goal / card / substitution marks from its turning points, a Live replay chip, Explore
+  Match Hub), three key insights (homePicks: the first revised finding, then the first two passed
+  findings of other types, stream order, sentences of at most 18 words, counters such as recap lines
+  and milestones excluded), tiles (xG race from ui.visuals.shots, momentum from the timeline, a heat
+  thumbnail of the home team's on-ball events in its own attacking frame, never two frames mixed),
+  player spotlight (the showcase scorer with the most season goals), two validated pattern families
+  seen in the showcase stream (no recall figures), five crests, and "Why trust Optix" (three
+  statements, the revised count from the ledger). Page words below the hero: 211 (budget 260, a new
+  data-page-budget that counts nested cards too); cards at most 29 (budget 30).
+- Not done on Home: the nav pill sitting over the hero. The shell header stays a sticky bar above the
+  hero; overlaying it would cover the hero's top on phones and move the first-screen geometry the
+  gate measures. Open issue: the kept hero artwork shows generated faces, which the global rule
+  ("no photographs or generated faces") forbids; the brief also says to keep the hero exactly, so it
+  is unchanged and flagged for a decision.
+
 ### Test changes (final UI)
 
 - tests/test_dashboard.py: the checked Matchup pairs now equal the lane claims the hub shows (display
@@ -98,6 +115,12 @@ Item status is in docs/final-ui-progress.md; the audit and design notes in docs/
   players, per the brief's "pizza against position peers". tools/check_web.pizza() changed the same way.
 - web/src/features/players/players.test.tsx: deck cards are expected to show the two stats of their
   position (computed in the test from the profile) instead of goals and assists for everyone.
+
+- web/src/App.test.tsx (Home): the proof row (attempts / revised / published) is replaced by the
+  brief's "Why trust Optix" strip, so the test now checks the trust strip (three statements, the
+  revised count from the ledger, unchanged in French), the showcase score and marks against
+  m_showcase.json, three key insights with a revised and a passed one, and five crests in Featured
+  teams (was five badges on the page). Hero checks unchanged.
 
 ## Information architecture (branch `ui-visuals-ia`, from 6c3369d = origin/main; local tag `pre-ia`)
 

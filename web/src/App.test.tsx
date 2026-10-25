@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import App from "./App";
+import { MatchFiles } from "./data/matches";
 import { ReplaySource } from "./data/ReplaySource";
 import { SseSource, type EventSourceLike } from "./data/SseSource";
 import { seek, useReplay } from "./state/replay";
@@ -15,6 +16,7 @@ const source = () =>
     "./data/",
     async (url: string) => new Response(readFileSync(join(DATA, url.split("/").pop()!), "utf8")),
   );
+const disk = async (url: string) => new Response(readFileSync(join(DATA, url.replace(/^\.\//, "")), "utf8"));
 const ui = JSON.parse(readFileSync(join(DATA, "ui.json"), "utf8"));
 const insights = readFileSync(join(DATA, "insights.jsonl"), "utf8")
   .split("\n")
@@ -93,16 +95,39 @@ describe("Live stream source", () => {
 });
 
 describe("Home", () => {
-  it("is the default route; the proof row reads the ledger and keeps its numbers in every language", async () => {
+  it("is the default route; the sections read the data and keep their numbers in every language", async () => {
     window.location.hash = "";
-    render(<App source={source()} />);
+    render(<App source={source()} matches={new MatchFiles("./matches/", disk)} />);
     const page = await screen.findByText((_, el) => el?.getAttribute("data-page") === "home", undefined, {
       timeout: 5000,
     });
-    const value = (k: string) => page.querySelector(`[data-proof='${k}'] dd`)?.textContent;
-    expect(value("attempts")).toBe(String(ui.ledger.attempts));
-    expect(value("revised")).toBe(String(ui.ledger.counts.revised));
-    expect(value("published")).toBe(String(ui.ledger.total));
+    // the trust strip: three statements, the revised count read from the ledger
+    const trust = await waitFor(() => {
+      const el = page.querySelector("[data-home='trust']");
+      if (!el) throw new Error("not yet");
+      return el;
+    });
+    expect(trust.querySelectorAll("[data-proof]").length).toBe(3);
+    const revised = () => page.querySelector("[data-proof='revised']")?.textContent ?? "";
+    expect(revised()).toContain(String(ui.ledger.counts.revised));
+    // the showcase strip: the score from the match file
+    const show = JSON.parse(readFileSync(join(DATA, "matches", "m_showcase.json"), "utf8"));
+    const strip = await waitFor(() => {
+      const el = page.querySelector("[data-home='showcase'] [data-score]");
+      if (!el) throw new Error("not yet");
+      return el;
+    });
+    expect(strip.textContent).toContain(`${show.header.home.goals}–${show.header.away.goals}`);
+    expect(page.querySelectorAll("[data-timeline] [data-mark]").length).toBe(
+      show.turning_points.filter((tp: { kind: string }) => ["goal", "card", "sub"].includes(tp.kind)).length,
+    );
+    // three key insights, a mix of revised and passed
+    const statuses = [...page.querySelectorAll("[data-home='insights'] article[data-status]")].map((a) =>
+      a.getAttribute("data-status"),
+    );
+    expect(statuses).toHaveLength(3);
+    expect(statuses).toContain("revised");
+    expect(statuses.some((x) => x !== "revised")).toBe(true);
     const hero = page.querySelector("img[data-hero]") as HTMLImageElement;
     expect(hero.getAttribute("fetchpriority")).toBe("high");
     expect(hero.getAttribute("width")).toBe("1600");
@@ -113,10 +138,10 @@ describe("Home", () => {
     }
     act(() => setSetting("lang", "fr"));
     await waitFor(() => expect(page.querySelector("h1")?.textContent).toMatch(/données/));
-    expect(value("attempts")).toBe(String(ui.ledger.attempts));
+    expect(revised()).toContain(String(ui.ledger.counts.revised));
     act(() => setSetting("lang", "en"));
     expect(page.querySelector("a[href='#/live']")).toBeTruthy();
-    expect(page.querySelectorAll("[data-team-badge]").length).toBe(5);
+    expect(page.querySelectorAll("[data-home='teams'] [data-team-badge]").length).toBe(5);
   });
 });
 

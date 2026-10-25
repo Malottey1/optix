@@ -12,3 +12,4 @@ suite exit 0, `npm run build` pass.
 | Step 4 Matchup redesign | done | (this commit) | shown on 17/41 fixtures (41%) with the confidence display rule; 2 new Vitest; checker compares outlines + rule thresholds | – |
 | Step 5 Style against the league | done | (this commit) | 5 rows, one scale per measure, chips from numbers; style-row consistency check + mutation; boards 167-178 words | – |
 | Step 6 Players: deck, console, evidence drawer | done | (this commit) | DF/GK/FW panels; drawer with play links (?t=); 5 new Vitest + 1 hub; checker: 4 routes, 3 mutations caught; entry JS 182.3 KB gzip | routes caption and legend deviate (zone routes, no per-pass rows); see PROGRESS |
+| Step 7 Home | done | (this commit) | 211 words below the hero (budget 260), cards <= 29; HomeSections lazy chunk 4.6 KB gzip; 4 Home mutations caught | nav pill over hero not done; hero faces conflict flagged |

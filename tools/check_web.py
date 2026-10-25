@@ -175,6 +175,7 @@ WORDS_JS = r"""() => {
   };
   const groups = {};
   const each = new Map();   // budget element -> its words (nearest budget ancestor)
+  const pages = new Map();  // page budget element -> every word inside it, nested budgets included
   let total = 0;
   const walker = document.createTreeWalker(document.querySelector('main') || document.body, NodeFilter.SHOW_TEXT);
   for (let n = walker.nextNode(); n; n = walker.nextNode()) {
@@ -193,10 +194,13 @@ WORDS_JS = r"""() => {
       groups[k] = (groups[k] || 0) + words;
       each.set(g, (each.get(g) || 0) + words);
     }
+    const pb = el.closest('[data-page-budget]');
+    if (pb) pages.set(pb, (pages.get(pb) || 0) + words);
   }
   const label = (g) => g.dataset.team || g.dataset.player || g.dataset.insightId || g.dataset.fixture || g.id ||
     (g.textContent || '').trim().slice(0, 24);
-  const elements = [...each].map(([g, n]) => [g.getAttribute('data-budget'), label(g), n]);
+  const elements = [...each].map(([g, n]) => [g.getAttribute('data-budget'), label(g), n])
+    .concat([...pages].map(([g, n]) => [g.getAttribute('data-page-budget'), 'page', n]));
   return {total, groups, elements};
 }"""
 
@@ -205,7 +209,9 @@ WORDS_JS = r"""() => {
 # counts for that one). Match Hub recap sections are listed by their section id; the event log
 # (budget "log") has none.
 TEXT_BUDGETS = {"card": 30, "team-card": 20, "team-board": 180, "hub-header": 60, "turning": 60, "heat": 60,
-                "cards": 60, "matchup": 60, "lineups": 120}
+                "cards": 60, "matchup": 60, "lineups": 120,
+                # page budgets (data-page-budget): every word inside, nested budgets included
+                "home-page": 260}
 
 
 def budget_problems(words: dict) -> list:
@@ -662,6 +668,7 @@ def check_consistency(browser, base, ref_dir: Path) -> dict:
     if counts != touch["players"][pid][0]:
         problems.append(f"touch map {pid}: bin counts differ from players-heat-{team.lower()}.json")
     problems += position_panel_problems(page, base, ui, mref)
+    problems += home_problems(page, base, ui, ref_dir, mref)
     ctx.close()
     return dict(pairs=pairs, cards=dict(seen), gauges=gauges, player=pid, arrows=arrows,
                 problems=problems + log["problems"])
@@ -725,6 +732,39 @@ def position_panel_problems(page, base, ui, mref: Path) -> list:
     if len(chances) != fw["profile"]["chances"]["total"]:
         problems.append(f"chance drawer {DRAWER_PLAYER}: lists file has {len(chances)}, profile total "
                         f"{fw['profile']['chances']['total']}")
+    return problems
+
+
+def home_problems(page, base, ui, ref_dir: Path, mref: Path) -> list:
+    """Home below the hero: timeline marks against the showcase file's turning points, the xG race
+    totals against the shots (and the header), momentum points against the timeline, the heat
+    thumbnail's total against the file's bins."""
+    problems = []
+    show = json.loads((mref / "m_showcase.json").read_text(encoding="utf-8"))
+    tl = json.loads((ref_dir / "timeline.json").read_text(encoding="utf-8")) if (ref_dir / "timeline.json").is_file() \
+        else json.loads((WEB / "public" / "data" / "timeline.json").read_text(encoding="utf-8"))
+    page.goto("about:blank")
+    _open(page, base, "home")
+    page.wait_for_selector("[data-home=tiles] [data-heat-thumb]", timeout=10000)
+    marks = page.eval_on_selector_all("[data-timeline] [data-mark]", "els => els.map((e) => e.dataset.mark)")
+    want = [tp["kind"] for tp in show["turning_points"] if tp["kind"] in ("goal", "card", "sub")]
+    if marks != want:
+        problems.append(f"home timeline: {len(marks)} marks, showcase file has {len(want)}")
+    totals = dict(page.eval_on_selector_all("[data-xg-race] path[data-team]", """els => els.map((e) => [
+        e.dataset.team, Number(e.dataset.total)])"""))
+    for side in ("home", "away"):
+        code = show["header"][side]["code"]
+        got = round(sum(s[6] for s in ui["visuals"]["shots"] if s[2] == code), 2)
+        if totals.get(code) != got or got != show["header"][side]["xg"]:
+            problems.append(f"home xg race {code}: drawn {totals.get(code)}, shots {got}, header {show['header'][side]['xg']}")
+    n = page.get_attribute("[data-momentum-spark]", "data-points")
+    if int(n or -1) != len(tl["momentum"]):
+        problems.append(f"home momentum: {n} points, timeline has {len(tl['momentum'])}")
+    code = show["header"]["home"]["code"]
+    heat = int(page.get_attribute("[data-heat-thumb]", "data-total") or -1)
+    want_heat = sum(sum(h) for h in show["heat"]["teams"][code])
+    if heat != want_heat:
+        problems.append(f"home heat: {heat} events drawn, showcase file has {want_heat}")
     return problems
 
 
@@ -814,6 +854,32 @@ def _mut_chances(ui, copy):
     _mut_file(copy, f"players-{team.lower()}.json", change)
 
 
+def _mut_home_timeline(ui, copy):
+    def change(f):
+        i = next(i for i, tp in enumerate(f["turning_points"]) if tp["kind"] == "sub")
+        del f["turning_points"][i]
+    _mut_file(copy, "m_showcase.json", change)
+
+
+def _mut_home_xg(ui):
+    code = ui["visuals"]["shots"][0][2]
+    next(s for s in ui["visuals"]["shots"] if s[2] == code)[6] += 0.2
+
+
+def _mut_home_momentum(ui, copy):
+    p = copy / "data" / "timeline.json"
+    tl = json.loads(p.read_text(encoding="utf-8"))
+    tl["momentum"].pop()
+    p.write_text(json.dumps(tl, separators=(",", ":")), encoding="utf-8")
+
+
+def _mut_home_heat(ui, copy):
+    def change(f):
+        code = f["header"]["home"]["code"]
+        f["heat"]["teams"][code][0][150] += 9
+    _mut_file(copy, "m_showcase.json", change)
+
+
 def _mut_pizza(ui):
     for p in ui["players"]:
         p["involvement"] = -p["involvement"]
@@ -828,7 +894,11 @@ MUTATIONS = {"crosshair": (_mut_crosshair, "crosshair", ""), "heat": (_mut_heat,
              "style rows": (_mut_style, "style rows", ""),
              "defence map": (_mut_defence_map, "defence map", ""),
              "shots faced": (_mut_shots_faced, "shots faced", ""),
-             "chance drawer": (_mut_chances, "chance drawer", "play links")}
+             "chance drawer": (_mut_chances, "chance drawer", "play links"),
+             "home timeline": (_mut_home_timeline, "home timeline", ""),
+             "home xg race": (_mut_home_xg, "home xg race", ""),
+             "home heat": (_mut_home_heat, "home heat", ""),
+             "home momentum": (_mut_home_momentum, "home momentum", "")}
 
 
 def mutation_proof(browser, dist: Path, ref_dir: Path, tmp: Path) -> dict:

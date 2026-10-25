@@ -1,17 +1,15 @@
 // #/ Home: what Optix is in one screen. The hero is the audited, cleaned line-up artwork
 // (docs/brand-audit.md); its top half is plain colour bands, so the text sits on a dark panel
-// there (on phones, below the picture), never directly on a bright band. Every number on this page
-// is read from ui.json's verification ledger, nothing is typed in.
+// there (on phones, below the picture), never directly on a bright band. Below the hero
+// (HomeSections, lazy): the showcase strip, key insights, tiles, spotlight, patterns, teams and the
+// trust strip; every number there is read from the data, nothing is typed in.
+import { lazy, Suspense } from "react";
 import { Link } from "react-router";
-import { TeamBadge } from "../../components/brand/TeamBadge";
-import { Glyph } from "../../components/icons";
-import { Icon, type IconName } from "../../icons";
-import { useData } from "../../data/context";
-import { num } from "../../lib/format";
-import { useT, type Key } from "../../lib/i18n";
+import { Icon } from "../../icons";
+import { useT } from "../../lib/i18n";
 
-/** Club order of the hero artwork, left to right. */
-const ORDER = ["AUR", "NTG", "CAL", "VES", "HAR"];
+// below the fold: its own chunk, and the showcase match file loads only there
+const HomeSections = lazy(() => import("./HomeSections"));
 
 const cta =
   "inline-flex h-11 items-center justify-center gap-2 rounded-full px-5 text-[14.5px] font-bold transition-[filter,border-color,color] duration-150";
@@ -77,205 +75,13 @@ function Hero() {
   );
 }
 
-function Clubs() {
-  const m = useData();
-  const { t } = useT();
-  const teams = [...m.ui.teams.teams].sort((a, b) => ORDER.indexOf(a.code) - ORDER.indexOf(b.code));
-  return (
-    <section aria-labelledby="home-clubs" className="rounded-2xl border border-line bg-surface-1 pad elev-1">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 id="home-clubs" className="text-[16px] font-semibold text-ink">
-          {t("home_clubs")}
-        </h2>
-        <Link
-          to="/teams"
-          className="inline-flex items-center gap-1 text-[13px] font-semibold text-accent hover:underline"
-        >
-          {t("home_clubs_link")}
-          <Glyph name="arrow" className="h-4 w-4" />
-        </Link>
-      </div>
-      <ul className="mt-4 grid grid-cols-1 gap-2 min-[430px]:grid-cols-2 md:grid-cols-5">
-        {teams.map((tm) => (
-          <li key={tm.code}>
-            <Link
-              to="/teams"
-              data-team={tm.code}
-              className="flex items-center gap-3 rounded-xl border border-line bg-surface-2 px-3 py-2.5 hover:border-line-strong"
-            >
-              <TeamBadge code={tm.code} size={48} named />
-              <span className="min-w-0">
-                <span className="block truncate text-[14px] font-semibold text-ink">{tm.name}</span>
-                <span className="block text-[12px] font-semibold tracking-[0.08em] text-ink-3">{tm.code}</span>
-              </span>
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </section>
-  );
-}
-
-/* Small line illustrations in the app's own colours (no stock art, no digits). */
-function ArtFacts() {
-  return (
-    <svg viewBox="0 0 120 64" aria-hidden="true" className="h-16 w-[120px]">
-      {[10, 22, 34, 46].map((y, i) => (
-        <g key={y}>
-          <rect x="6" y={y - 4} width={[30, 22, 34, 18][i]} height="7" rx="2" fill="var(--surface-4)" />
-          <rect x="6" y={y - 4} width={[18, 14, 26, 10][i]} height="7" rx="2" fill="var(--accent)" opacity="0.85" />
-        </g>
-      ))}
-      <path
-        d="M50 32h16m-5-5 5 5-5 5"
-        fill="none"
-        stroke="var(--ink-3)"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <rect x="74" y="14" width="40" height="36" rx="8" fill="var(--surface-3)" stroke="var(--line-strong)" />
-      {[24, 32, 40].map((y, i) => (
-        <rect
-          key={y}
-          x="81"
-          y={y - 2}
-          width={[26, 20, 23][i]}
-          height="4"
-          rx="2"
-          fill="var(--ink-2)"
-          opacity={1 - i * 0.2}
-        />
-      ))}
-    </svg>
-  );
-}
-
-function ArtEvidence() {
-  const dots: [number, number][] = [
-    [14, 48],
-    [30, 22],
-    [48, 40],
-    [64, 16],
-  ];
-  return (
-    <svg viewBox="0 0 120 64" aria-hidden="true" className="h-16 w-[120px]">
-      <rect x="78" y="10" width="36" height="44" rx="8" fill="var(--surface-3)" stroke="var(--accent-line)" />
-      <path
-        d="M88 32l5 5 10-11"
-        fill="none"
-        stroke="var(--pass)"
-        strokeWidth="2.6"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      {dots.map(([x, y]) => (
-        <line
-          key={x}
-          x1={x}
-          y1={y}
-          x2="78"
-          y2="32"
-          stroke="var(--line-strong)"
-          strokeWidth="1.4"
-          strokeDasharray="3 3"
-        />
-      ))}
-      {dots.map(([x, y]) => (
-        <circle
-          key={`c${x}`}
-          cx={x}
-          cy={y}
-          r="5"
-          fill="var(--surface-1)"
-          stroke="var(--muted-accent)"
-          strokeWidth="2"
-        />
-      ))}
-    </svg>
-  );
-}
-
-function ArtTranslate() {
-  // Three languages, the same highlighted number slot in each; labels at 11 px so they stay legible.
-  return (
-    <svg viewBox="0 0 132 64" aria-hidden="true" className="h-16 w-[132px]">
-      {[0, 22, 44].map((y, i) => (
-        <g key={y}>
-          <rect x="0" y={y} width="132" height="19" rx="9.5" fill="var(--surface-3)" />
-          <text x="8" y={y + 13.5} fontSize="11" fontWeight="700" fill="var(--ink-3)" fontFamily="var(--font-sans)">
-            {["EN", "ES", "FR"][i]}
-          </text>
-          <rect x="32" y={y + 7.5} width={[30, 40, 35][i]} height="4" rx="2" fill="var(--ink-3)" opacity="0.55" />
-          <rect x={[68, 78, 73][i]} y={y + 4.5} width="24" height="10" rx="3" fill="var(--accent)" />
-        </g>
-      ))}
-    </svg>
-  );
-}
-
-const FEATURES: { art: () => React.JSX.Element; icon: IconName; title: Key; body: Key }[] = [
-  { art: ArtFacts, icon: "trace-to-data", title: "home_f1_title", body: "home_f1_body" },
-  { art: ArtEvidence, icon: "evidence-drawer", title: "home_f2_title", body: "home_f2_body" },
-  { art: ArtTranslate, icon: "verdict-passed", title: "home_f3_title", body: "home_f3_body" },
-];
-
-function Features() {
-  const { t } = useT();
-  return (
-    <section aria-labelledby="home-features">
-      <h2 id="home-features" className="sr-only">
-        {t("home_features")}
-      </h2>
-      <ul className="grid grid-cols-1 gap-flow md:grid-cols-3">
-        {FEATURES.map(({ art: Art, icon, title, body }) => (
-          <li key={title} className="flex flex-col gap-3 rounded-2xl border border-line bg-surface-1 pad elev-1">
-            <Art />
-            <h3 className="flex items-center gap-2 text-[17px] font-bold tracking-tight text-ink">
-              <Icon name={icon} size={20} className="text-accent" />
-              {t(title)}
-            </h3>
-            <p className="text-[14px] leading-relaxed text-ink-2">{t(body)}</p>
-          </li>
-        ))}
-      </ul>
-    </section>
-  );
-}
-
-function Proof() {
-  const m = useData();
-  const { t, lang } = useT();
-  const L = m.ui.ledger;
-  const stats: { key: string; value: number; label: Key }[] = [
-    { key: "attempts", value: L.attempts, label: "home_proof_attempts" },
-    { key: "revised", value: L.counts.revised, label: "home_proof_revised" },
-    { key: "published", value: L.total, label: "home_proof_published" },
-  ];
-  return (
-    <section aria-labelledby="home-proof" className="rounded-2xl border border-line bg-surface-1 pad elev-1">
-      <h2 id="home-proof" className="eyebrow">
-        {t("home_proof")}
-      </h2>
-      <dl className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
-        {stats.map((s) => (
-          <div key={s.key} data-proof={s.key} className="flex flex-col-reverse rounded-xl bg-surface-2 px-4 py-3">
-            <dt className="mt-1.5 text-[13px] text-ink-2">{t(s.label)}</dt>
-            <dd className="display text-[40px] font-bold leading-none text-ink">{num(s.value, lang)}</dd>
-          </div>
-        ))}
-      </dl>
-    </section>
-  );
-}
-
 export default function HomePage() {
   return (
     <div className="flex flex-col gap-flow" data-page="home">
       <Hero />
-      <Proof />
-      <Features />
-      <Clubs />
+      <Suspense fallback={<div className="h-[640px] animate-pulse rounded-2xl bg-surface-2" />}>
+        <HomeSections />
+      </Suspense>
     </div>
   );
 }
