@@ -62,6 +62,18 @@ Item status is in docs/ia-progress.md.
   separable, edge-normalised scatter, so mass is exact) plus a light SVG blur, so it does not read
   as boxes; the bins (data-bin, data-count) and every number shown come from raw counts or the
   mass-preserving smoothing.
+- Match Hub: `#/match/m_showcase` renders the live console directly (it needs only the bundle the
+  app already loads, so old `#/live` links and their tests keep working); other ids load the
+  fixture index and their recap file lazily. Section links are buttons that scroll (hash anchors
+  would change the route). The claim ledger link goes to `#/match/:id/ledger`, a table of every
+  attempt in the file (the Tech page's ledger stays the showcase's).
+- Recap cards: headline = the type or pattern name, one visual (the claim's evidence on a mini
+  pitch when the insight has points, else the claim's value), and the shorter of the two tones'
+  sentences only when it has at most 22 words (else it stays in the evidence drawer); the evidence
+  button is an icon with an accessible name. On screen the cards are capped at 2 per pattern
+  family and per type.
+- Fixtures nav icon: "scrub" (the timeline glyph) from the existing sheet; no new glyph. The Live
+  icon stays on the live replay row and the hub's live chip.
 
 ### Test changes (IA)
 

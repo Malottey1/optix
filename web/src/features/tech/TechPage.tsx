@@ -506,8 +506,8 @@ function VisualGuide() {
         ))}
       </ul>
       <p className="mt-3 text-[12px] text-ink-3">
-        Not drawn (the data cannot support them): anything from player tracking (off-ball runs, space), fitness
-        or GPS speed, per-match player form, and red-card footprints (the showcase match has no red card).
+        Not drawn (the data cannot support them): anything from player tracking (off-ball runs, space), fitness or GPS
+        speed, per-match player form, and red-card footprints (the showcase match has no red card).
       </p>
     </Panel>
   );

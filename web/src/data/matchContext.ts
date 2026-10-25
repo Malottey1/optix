@@ -1,0 +1,35 @@
+// Lazy access to the fixture index and the per-match files from any page (data/matches.ts). The
+// provider lets tests inject a MatchFiles that reads from disk.
+import { createContext, useContext, useEffect, useState } from "react";
+import { type FixtureIndex, type MatchFile, MatchFiles, matchFiles } from "./matches";
+
+export const MatchFilesContext = createContext<MatchFiles>(matchFiles);
+
+type Loaded<T> = { data: T | null; error: Error | null };
+
+function useLoad<T>(load: (() => Promise<T>) | null, key: string): Loaded<T> {
+  const [state, setState] = useState<Loaded<T> & { key: string }>({ data: null, error: null, key: "" });
+  useEffect(() => {
+    if (!load) return;
+    let live = true;
+    load().then(
+      (data) => live && setState({ data, error: null, key }),
+      (error: Error) => live && setState({ data: null, error, key }),
+    );
+    return () => {
+      live = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reload only when the key changes
+  }, [key]);
+  return state.key === key ? state : { data: null, error: null };
+}
+
+export function useFixtures(): Loaded<FixtureIndex> {
+  const src = useContext(MatchFilesContext);
+  return useLoad(() => src.fixtures(), "index");
+}
+
+export function useMatchFile(id: string | null): Loaded<MatchFile> {
+  const src = useContext(MatchFilesContext);
+  return useLoad(id ? () => src.match(id) : null, id ?? "");
+}

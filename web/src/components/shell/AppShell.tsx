@@ -1,25 +1,35 @@
 // App chrome: brand, navigation (top bar on large screens, bottom bar on small ones), settings.
 import { useState, type ReactNode } from "react";
-import { NavLink } from "react-router";
+import { NavLink, useLocation } from "react-router";
 import { cx } from "../../lib/cx";
 import { useT, type Key } from "../../lib/i18n";
 import { Icon, type IconName } from "../../icons";
 import { Logo } from "../icons";
 import { SettingsSheet } from "./SettingsSheet";
 
-export const ROUTES = ["live", "teams", "players", "tech"] as const;
+export const ROUTES = ["fixtures", "teams", "players", "tech"] as const;
 export type Route = (typeof ROUTES)[number];
-const ICON: Record<Route, IconName> = { live: "live", teams: "teams", players: "players", tech: "tech" };
+const ICON: Record<Route, IconName> = { fixtures: "scrub", teams: "teams", players: "players", tech: "tech" };
+/** A nav entry is also active on its sub-routes (a match hub belongs to Fixtures). */
+const ACTIVE_ON: Record<Route, RegExp> = {
+  fixtures: /^\/(fixtures|match)(\/|$)/,
+  teams: /^\/teams(\/|$)/,
+  players: /^\/players(\/|$)/,
+  tech: /^\/tech(\/|$)/,
+};
 
 function NavLinks({ compact }: { compact?: boolean }) {
   const { t } = useT();
+  const { pathname } = useLocation();
   return ROUTES.map((r) => (
     <NavLink
       key={r}
       to={`/${r}`}
       data-route={r}
-      className={({ isActive }) =>
-        cx(
+      aria-current={ACTIVE_ON[r].test(pathname) ? "page" : undefined}
+      className={({ isActive: exact }) => {
+        const isActive = exact || ACTIVE_ON[r].test(pathname);
+        return cx(
           compact
             ? "flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-xl py-1.5 text-[11px] font-semibold"
             : "inline-flex items-center gap-2 rounded-full px-3.5 py-2 text-[13.5px] font-semibold transition-colors",
@@ -28,11 +38,11 @@ function NavLinks({ compact }: { compact?: boolean }) {
               ? "text-accent"
               : "bg-surface-3 text-ink shadow-[inset_0_0_0_1px_var(--line-strong)]"
             : "text-ink-3 hover:text-ink",
-        )
-      }
+        );
+      }}
     >
       <Icon name={ICON[r]} className={compact ? "h-[22px] w-[22px]" : "h-[18px] w-[18px]"} />
-      <span className="truncate">{t(`nav_${r}${compact ? "" : "_long"}` as Key)}</span>
+      <span className="truncate">{t(`nav_${r}` as Key)}</span>
     </NavLink>
   ));
 }

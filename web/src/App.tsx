@@ -1,12 +1,17 @@
-// Loads the match once through a StreamSource, then routes by hash (#/ home, #/live, #/teams,
-// #/players, #/tech; anything else goes home). View options for screenshots and tests: #/live?t=2760&select=ins_0009&lang=es&play=1
+// Loads the showcase bundle once through a StreamSource, then routes by hash (routes.tsx): #/ home,
+// #/fixtures, #/match/:id (Match Hub), #/teams, #/teams/:code, #/players, #/players/:id, #/tech;
+// old deep links redirect (#/live -> the showcase hub). Per-match files load lazily
+// (data/matchContext.ts). View options for screenshots and tests: #/match/m_showcase?t=2760&select=ins_0009&lang=es&play=1
 import { LazyMotion, MotionConfig, domAnimation } from "motion/react";
-import { Suspense, lazy, useEffect, useMemo, useState } from "react";
-import { HashRouter, Navigate, Route, Routes, useLocation } from "react-router";
+import { Suspense, useEffect, useMemo, useState } from "react";
+import { HashRouter, useLocation } from "react-router";
 import { AppShell } from "./components/shell/AppShell";
 import { TooltipProvider } from "./components/ui/tooltip";
 import { Skeleton } from "./components/ui/skeleton";
 import { DataContext } from "./data/context";
+import { MatchFilesContext } from "./data/matchContext";
+import { matchFiles, type MatchFiles } from "./data/matches";
+import { AppRoutes } from "./routes";
 import { buildModel, type MatchModel } from "./data/model";
 import { SseSource, pickSource } from "./data/SseSource";
 import type { StreamSource } from "./data/StreamSource";
@@ -15,12 +20,6 @@ import { endLive, followLive, seek, select, setPlaying, useReplay } from "./stat
 import { motionReduced, setSetting, useSettings } from "./state/settings";
 import { useSource } from "./state/source";
 import { LANGS, type Insight, type Lang, type MatchBundle } from "./types/ui";
-
-const HomePage = lazy(() => import("./features/home/HomePage"));
-const LivePage = lazy(() => import("./features/live/LivePage"));
-const TeamsPage = lazy(() => import("./features/teams/TeamsPage"));
-const PlayersPage = lazy(() => import("./features/players/PlayersPage"));
-const TechPage = lazy(() => import("./features/tech/TechPage"));
 
 function Loading() {
   const { t } = useT();
@@ -71,14 +70,7 @@ function Pages({ model }: { model: MatchModel }) {
   return (
     <DataContext.Provider value={model}>
       <Suspense fallback={<Loading />}>
-        <Routes>
-          <Route index element={<HomePage />} />
-          <Route path="/live" element={<LivePage />} />
-          <Route path="/teams" element={<TeamsPage />} />
-          <Route path="/players" element={<PlayersPage />} />
-          <Route path="/tech" element={<TechPage />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        <AppRoutes />
       </Suspense>
     </DataContext.Provider>
   );
@@ -109,7 +101,7 @@ function startLive(source: SseSource, bundle: MatchBundle, show: (m: MatchModel)
   });
 }
 
-export default function App({ source }: { source?: StreamSource }) {
+export default function App({ source, matches = matchFiles }: { source?: StreamSource; matches?: MatchFiles }) {
   const [state, setState] = useState<{ model: MatchModel | null; error: Error | null }>({ model: null, error: null });
   const reduced = useSettings((s) => motionReduced(s));
   useEffect(() => {
@@ -155,10 +147,12 @@ export default function App({ source }: { source?: StreamSource }) {
     <MotionConfig reducedMotion={reduced ? "always" : "never"}>
       <LazyMotion features={domAnimation} strict>
         <TooltipProvider>
-          <HashRouter>
-            <ScrollTop />
-            <AppShell>{body}</AppShell>
-          </HashRouter>
+          <MatchFilesContext.Provider value={matches}>
+            <HashRouter>
+              <ScrollTop />
+              <AppShell>{body}</AppShell>
+            </HashRouter>
+          </MatchFilesContext.Provider>
         </TooltipProvider>
       </LazyMotion>
     </MotionConfig>
