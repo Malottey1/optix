@@ -31,15 +31,19 @@ export const sideColor = (side: Side) => (side === "home" ? "var(--home)" : "var
 export const PitchLines = memo(function PitchLines({
   thirds = true,
   stripes = true,
+  ground = true,
 }: {
   thirds?: boolean;
   stripes?: boolean;
+  /** false: lines only, to draw on top of a layer (the heat map) */
+  ground?: boolean;
 }) {
   const L = { fill: "none", stroke: "var(--pitch-line)", strokeWidth: 0.35 };
   return (
     <g aria-hidden="true">
-      <rect x="0" y="0" width="105" height="68" fill="var(--pitch)" />
-      {stripes &&
+      {ground && <rect x="0" y="0" width="105" height="68" fill="var(--pitch)" />}
+      {ground &&
+        stripes &&
         Array.from({ length: 6 }, (_, i) => (
           <rect key={i} x={i * 17.5} y="0" width="8.75" height="68" fill="var(--pitch-stripe)" />
         ))}

@@ -33,3 +33,21 @@ describe("club accent tokens", () => {
     for (const code of ["aur", "ntg", "cal", "ves", "har"]) expect(verdicts).not.toContain(token(`team-${code}`));
   });
 });
+
+describe("heat map tokens", () => {
+  const pitch = token("pitch")!;
+  const reserved = ["pass", "revise", "block", "accent", "home", "away", "card-yellow", "card-red", "muted-accent"]
+    .concat(["aur", "ntg", "cal", "ves", "har"].map((c) => `team-${c}`))
+    .map((n) => token(n)!.toLowerCase());
+  for (const name of ["heat-seq", "heat-rise", "heat-fall"]) {
+    it(`${name}: at least 3:1 on the pitch and not a verdict, team or club colour`, () => {
+      const c = token(name);
+      expect(c, `--${name}`).toBeTruthy();
+      expect(contrast(c!, pitch)).toBeGreaterThanOrEqual(3);
+      expect(reserved).not.toContain(c!.toLowerCase());
+    });
+  }
+  it("rise and fall differ in lightness as well as hue (readable without colour vision)", () => {
+    expect(Math.abs(lum(token("heat-rise")!) - lum(token("heat-fall")!))).toBeGreaterThan(0.05);
+  });
+});

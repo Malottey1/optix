@@ -50,6 +50,13 @@
   --card-red: #e5484d;
   --lane-fill: var(--accent);
 
+  /* Heat maps (HeatPitch): a single-hue ramp for volume and a blue/orange diverging pair for change.
+   * Colour-blind safe, at least 3:1 on --pitch, and none is a verdict, team-slot or club colour
+   * (tokens.test.ts). The ramp is drawn as opacity of --heat-seq over the pitch. */
+  --heat-seq: #c4b5fd;
+  --heat-rise: #f08a3c;
+  --heat-fall: #4a8fe7;
+
   --pitch: #0b1a19;
   --pitch-stripe: #0d1f1d;
   --pitch-line: rgba(214, 236, 228, 0.3);

@@ -52,6 +52,16 @@ Item status is in docs/ia-progress.md.
 - Contracts: contracts/match.schema.json and fixtures.schema.json (Draft 2020-12), TS types
   generated; json-schema-to-typescript does not read `prefixItems`, so tuple rows are typed
   `unknown` there and decoded in web/src/data/matches.ts behind a runtime guard.
+- Heat colours: --heat-seq #c4b5fd (single-hue ramp, drawn as opacity over the pitch) for volume;
+  --heat-fall #4a8fe7 / --heat-rise #f08a3c for change. All at least 3:1 on --pitch and none equal
+  to a verdict, team-slot or club token (tokens.test.ts). The old zone grid's purple/green pair is
+  not reused (its green is the verdict green).
+- Heat display: volume = smoothed events per % of the pitch area (bins differ in size: the centre
+  lane's rows are 5 high, the others 6.67, so raw counts would make the centre look cooler); change
+  = second-half density minus first-half density, symmetric scale. Smoothing (sigma 1 bin,
+  separable, edge-normalised scatter, so mass is exact) plus a light SVG blur, so it does not read
+  as boxes; the bins (data-bin, data-count) and every number shown come from raw counts or the
+  mass-preserving smoothing.
 
 ### Test changes (IA)
 

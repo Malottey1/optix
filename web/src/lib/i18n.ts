@@ -135,6 +135,34 @@ const en = {
   home_proof_attempts: "claim drafts checked by the Verifier",
   home_proof_revised: "rewritten after verification",
   home_proof_published: "verified insights published",
+  heat_mode: "Map",
+  heat_volume: "Volume",
+  heat_change: "Change",
+  heat_team: "Team",
+  heat_half: "Half",
+  half_one: "First half",
+  half_two: "Second half",
+  half_both: "Both halves",
+  heat_attacking: "Attacking direction",
+  heat_legend_volume: "On-ball events per % of the pitch",
+  heat_legend_change: "Second half minus first, per % of the pitch",
+  heat_proxy: "Event locations, not tracking.",
+  heat_summary:
+    "{team}: the share of on-ball events rose most in the {rise} ({rv} pts) and fell most in the {fall} ({fv} pts), second half against first.",
+  heat_aria: "Heat map of {team}'s on-ball events, {what}. Attacking left to right.",
+  view_data: "View data",
+  tbl_zone: "Zone",
+  tbl_first_pct: "First half %",
+  tbl_second_pct: "Second half %",
+  tbl_change_pts: "Change (pts)",
+  third_own: "own third",
+  third_middle: "middle third",
+  third_final: "final third",
+  lane_lf: "left flank",
+  lane_lhs: "left half-space",
+  lane_c: "centre",
+  lane_rhs: "right half-space",
+  lane_rf: "right flank",
 };
 
 export type Key = keyof typeof en;
@@ -271,6 +299,34 @@ const es: Record<Key, string> = {
   home_proof_attempts: "borradores de afirmaciones comprobados por el verificador",
   home_proof_revised: "reescritas tras la verificación",
   home_proof_published: "análisis verificados publicados",
+  heat_mode: "Mapa",
+  heat_volume: "Volumen",
+  heat_change: "Cambio",
+  heat_team: "Equipo",
+  heat_half: "Parte",
+  half_one: "Primera parte",
+  half_two: "Segunda parte",
+  half_both: "Ambas partes",
+  heat_attacking: "Sentido del ataque",
+  heat_legend_volume: "Acciones con balón por % del campo",
+  heat_legend_change: "Segunda parte menos primera, por % del campo",
+  heat_proxy: "Ubicación de eventos, no tracking.",
+  heat_summary:
+    "{team}: la proporción de acciones con balón subió más en {rise} ({rv} pts) y bajó más en {fall} ({fv} pts), segunda parte frente a primera.",
+  heat_aria: "Mapa de calor de las acciones con balón de {team}, {what}. Ataque de izquierda a derecha.",
+  view_data: "Ver datos",
+  tbl_zone: "Zona",
+  tbl_first_pct: "Primera parte %",
+  tbl_second_pct: "Segunda parte %",
+  tbl_change_pts: "Cambio (pts)",
+  third_own: "tercio propio",
+  third_middle: "tercio central",
+  third_final: "último tercio",
+  lane_lf: "banda izquierda",
+  lane_lhs: "carril interior izquierdo",
+  lane_c: "centro",
+  lane_rhs: "carril interior derecho",
+  lane_rf: "banda derecha",
 };
 
 const fr: Record<Key, string> = {
@@ -405,6 +461,34 @@ const fr: Record<Key, string> = {
   home_proof_attempts: "brouillons d’affirmations contrôlés par le vérificateur",
   home_proof_revised: "réécrites après vérification",
   home_proof_published: "analyses vérifiées publiées",
+  heat_mode: "Carte",
+  heat_volume: "Volume",
+  heat_change: "Évolution",
+  heat_team: "Équipe",
+  heat_half: "Période",
+  half_one: "Première période",
+  half_two: "Seconde période",
+  half_both: "Les deux périodes",
+  heat_attacking: "Sens de l'attaque",
+  heat_legend_volume: "Actions avec ballon par % du terrain",
+  heat_legend_change: "Seconde période moins première, par % du terrain",
+  heat_proxy: "Lieux des actions, pas de tracking.",
+  heat_summary:
+    "{team} : la part des actions avec ballon a le plus augmenté en {rise} ({rv} pts) et le plus baissé en {fall} ({fv} pts), seconde période face à la première.",
+  heat_aria: "Carte de chaleur des actions avec ballon de {team}, {what}. Attaque de gauche à droite.",
+  view_data: "Voir les données",
+  tbl_zone: "Zone",
+  tbl_first_pct: "Première période %",
+  tbl_second_pct: "Seconde période %",
+  tbl_change_pts: "Évolution (pts)",
+  third_own: "tiers défensif",
+  third_middle: "tiers central",
+  third_final: "dernier tiers",
+  lane_lf: "couloir gauche",
+  lane_lhs: "demi-espace gauche",
+  lane_c: "axe",
+  lane_rhs: "demi-espace droit",
+  lane_rf: "couloir droit",
 };
 
 export const STRINGS: Record<Lang, Record<Key, string>> = { en, es, fr };
@@ -499,7 +583,9 @@ const PATTERNS: Record<Lang, Record<string, string>> = {
 
 /** A pattern family's name; an unknown family degrades to its id in words. */
 export const patternLabel = (family: string | null | undefined, lang: Lang) =>
-  PATTERNS[lang][family ?? ""] ?? PATTERNS.en[family ?? ""] ?? (family ?? "pattern").replace(/^pat_/, "").replace(/_/g, " ");
+  PATTERNS[lang][family ?? ""] ??
+  PATTERNS.en[family ?? ""] ??
+  (family ?? "pattern").replace(/^pat_/, "").replace(/_/g, " ");
 
 export const LANG_NAMES: Record<Lang, string> = { en: "English", es: "Español", fr: "Français" };
 
