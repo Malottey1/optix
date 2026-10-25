@@ -1,12 +1,14 @@
 // The chances panel of the Player Console and its evidence drawer. Figures come from ui.json
 // players[].profile.chances; the drawer's pitch, breakdown and table come from the team's lazy
-// players-<code>.json (one row per key pass: where it started and ended, the kind of situation,
+// players-<code>.json (one row per key pass, drawn like the console's chance map: set piece gold,
+// open play blue, a ring on the shot; where it started and ended, the kind of situation,
 // the pass type, its xA and what the shot it set up became). Each table row's play button opens
 // the Match Hub at that match and clock (#/match/<id>?t=<clock_sec>). Coordinates appear only
 // under "View data".
 import { useState } from "react";
 import { Link } from "react-router";
-import { PitchLines, PX, PY } from "../../components/pitch/Pitch";
+import { PitchLines } from "../../components/pitch/Pitch";
+import { ChanceLegend, ChanceLines } from "../../components/viz/PassMap";
 import { Segmented } from "../../components/ui/segmented";
 import { Sheet } from "../../components/ui/sheet";
 import { chanceRows, matchOfEvent, type ChanceRow, type TeamLists } from "../../data/matches";
@@ -19,13 +21,6 @@ import { Stat, WithLists } from "./PositionPanels";
 
 export type ChanceTab = "all" | "set" | "open";
 const KINDS: ChanceKind[] = ["corner", "free_kick", "throw_in", "set_piece", "open_play"];
-const KIND_COLOR: Record<ChanceKind, string> = {
-  corner: "var(--revise)",
-  free_kick: "var(--away)",
-  throw_in: "var(--home)",
-  set_piece: "var(--muted-accent)",
-  open_play: "var(--accent)",
-};
 const RESULT_KEY: Record<string, Key> = {
   goal: "res_goal",
   saved: "res_saved",
@@ -44,23 +39,7 @@ function ChancePitch({ rows, label }: { rows: readonly ChanceRow[]; label: strin
   return (
     <svg viewBox="-2 -2 109 72" role="img" aria-label={label} className="block h-auto w-full" data-chance-pitch>
       <PitchLines />
-      {rows.map((r) => {
-        const c = KIND_COLOR[r[4]];
-        return (
-          <g key={r[0]} data-chance={r[0]} data-kind={r[4]}>
-            <line x1={r[8] * PX} y1={r[9] * PY} x2={r[10] * PX} y2={r[11] * PY} stroke={c} strokeWidth={0.55} />
-            <circle cx={r[8] * PX} cy={r[9] * PY} r={0.6} fill={c} />
-            <circle
-              cx={r[10] * PX}
-              cy={r[11] * PY}
-              r={1.3}
-              fill={r[7] === "goal" ? c : "var(--surface-1)"}
-              stroke={c}
-              strokeWidth={0.45}
-            />
-          </g>
-        );
-      })}
+      <ChanceLines rows={rows} />
     </svg>
   );
 }
@@ -71,7 +50,6 @@ function DrawerBody({ p, meta, lists }: { p: PlayerRow; meta: ProfilesMeta; list
   const c = p.profile!.chances;
   const all = chanceRows(lists, p.id);
   const rows = chancesOf(all, tab);
-  const kinds = KINDS.filter((k) => all.some((r) => r[4] === k));
   return (
     <div className="flex flex-col gap-4" data-chance-drawer={p.id}>
       <p className="text-[14px] leading-snug text-ink-2" data-role="chance-sentence">
@@ -106,20 +84,7 @@ function DrawerBody({ p, meta, lists }: { p: PlayerRow; meta: ProfilesMeta; list
           className="mb-2"
         />
         <ChancePitch rows={rows} label={`${p.name}: ${t("ch_title")} ${rows.length}`} />
-        <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[12px] text-ink-2" data-legend>
-          {kinds.map((k) => (
-            <li key={k} className="inline-flex items-center gap-1.5">
-              <span className="h-1 w-4 rounded-full" style={{ background: KIND_COLOR[k] }} aria-hidden="true" />
-              {t(`ch_kind_${k}` as Key)}
-            </li>
-          ))}
-          <li className="inline-flex items-center gap-1.5">
-            <svg viewBox="-2 -2 4 4" className="h-3 w-3" aria-hidden="true">
-              <circle r="1.4" fill="var(--surface-1)" stroke="var(--ink-2)" strokeWidth="0.5" />
-            </svg>
-            {t("ch_legend_shot")}
-          </li>
-        </ul>
+        <ChanceLegend rows={rows} />
       </div>
       <section aria-labelledby="ch-breakdown-h">
         <h3 id="ch-breakdown-h" className="mb-1.5 text-[13px] font-semibold text-ink">

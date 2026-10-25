@@ -233,6 +233,8 @@ export interface ChanceSummary {
 }
 export interface PlayerProfile {
   minutes: number;
+  /** minutes rounded half up, as the console shows them */
+  minutes_whole: number;
   starts: number;
   sub_apps: number;
   sub_minutes: number;

@@ -34,6 +34,13 @@
   --away: #ff9a52;
   --away-soft: rgba(255, 154, 82, 0.16);
 
+  /* Pass and chance lines on the Player Console: by pass type, and set piece / open play. */
+  --pass-forward: #a3adc2;
+  --pass-progressive: var(--accent);
+  --pass-key: #b4a2ff;
+  --chance-set-piece: var(--revise);
+  --chance-open-play: #5aa7ff;
+
   /* The floating nav bar: midnight navy, a quieter border, muted slate labels (7.4:1 on --nav). */
   --nav: rgba(11, 18, 32, 0.9);
   --nav-line: #25334a;

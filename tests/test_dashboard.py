@@ -69,7 +69,10 @@ def test_the_visuals_match_the_engine_output(report):
                  for mu in json.loads(p.read_text()).get("matchups", [])
                  if mu.get("confidence") in shown["display_confidence"])
     assert c["pairs"] == claims > 0 and c["cards"].get("crosshairs") and c["cards"].get("shot-blocks"), c
-    assert c["arrows"]["top"] == check_web.TOP_ROUTES < c["arrows"]["all"], c   # both route views checked
+    # both tabs of the pass map checked, one line per listed pass and per chance
+    lists = json.loads((ROOT / "web" / "public" / "data" / "matches" / "players-ntg.json").read_text())
+    want = lists["players"][check_web.CONSOLE_PLAYER]
+    assert c["arrows"] == dict(passes=len(want["passes"]), chances=len(want["chances"])) and want["passes"], c
 
 
 def test_the_live_first_screen_shows_every_live_visual_at_1080p_and_900p(report):

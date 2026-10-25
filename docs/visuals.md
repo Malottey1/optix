@@ -60,23 +60,28 @@ on any number that is neither.
 - **Caveat:** season data, the team's own score state; descriptive, not causal. Axes carry no
   tick numbers on purpose.
 
-### V4 Pass routes (Player Console)
-- **Question:** where do a player's passes go, and are they worth anything?
-- **Fields:** `visuals.routes[player]` = [kind, from_zone, to_zone, passes, sum, hot];
-  `visuals.league_hot_share`; `visuals.zones`.
-- **Formula:** zone = third · 5 + lane (attacker's frame). Width ∝ √passes. Colour on a grey →
-  green sequential scale: forward passes = route pass quality (hot / passes) / league_hot_share
-  (the engine's `pass_quality_ratio` per route, 2 dp; top of scale 2×); chances = xA per chance
-  (sum / passes, 3 dp; top of scale twice the league value). Forward routes need at least 2
-  passes to be drawn; set-piece routes are dashed. League xA per chance = Σ xA / Σ chances over
-  every player's chance routes.
-- **Default view:** only the 8 busiest routes (by passes; ties by start zone, end zone, kind),
-  each bent by 5% of its length and offset 1.1 pitch units to the right of travel, so a route and
-  its reverse never overlap. "Show all routes (N)" draws every drawable route. The caption gives
-  the routes drawn and their passes out of the total; the hidden table always lists every route.
-- **Claims:** the volume passer (thick but grey: many forward passes, rarely central) and the
-  set-piece creators (dashed corner routes).
-- **Caveat:** coarse 3 × 5 zones; season totals.
+### V4 Pass map (Player Console)
+- **Question:** where do a player's most progressive passes go, and which set up a shot?
+- **Fields:** `matches/players-<code>.json` players[id].passes = [event_id, x0, y0, x1, y1, type]
+  (type index into `pass_types`: forward, progressive, key_pass) and players[id].chances (the
+  chance drawer's rows); `players[].profile.chances` for the legend counts.
+- **Formula:** the export keeps the player's 25 completed forward passes (`passes.is_forward`) that
+  gained the most ground (x1 - x0, attacker's frame; ties by event id). Type = key pass if
+  `is_key_pass`, else progressive if `is_progressive`, else forward. One line per pass, 2 px on
+  screen at any size (`vector-effect: non-scaling-stroke`), a start dot and an arrowhead; forward
+  passes drawn first and key passes last, on top. Colours: forward slate, progressive mint, key pass
+  violet, with a three-item legend. One caption line: "Each line is one completed pass. Showing the
+  N most progressive." (N = the lines drawn).
+- **Chances tab:** one line per key pass, set piece gold and open play blue, ending in a ring on the
+  shot it set up (filled for a goal), the same component as the chance evidence drawer; legend
+  "Open-play chance (n)", "Set-piece chance (n)", "Resulting shot".
+- **Replaced:** the zone-to-zone route arrows (width by count, grey → green "central" colour scale,
+  busiest 8 plus "Show all routes"). `visuals.routes` stays in ui.json for the number tracer and
+  the legacy pages; the console no longer draws it.
+- **Claims:** the volume passer (short, mostly forward lines rather than progressive ones) and the
+  set-piece creators (gold chance lines).
+- **Caveat:** a selection, not every pass: the 25 that gained the most ground; season totals;
+  coordinates only in the hidden table.
 
 ### Live layout at 1600 px and wider
 At 1600 px+ (the `wide` breakpoint) the Live Center is a three-column dashboard under the score
@@ -245,11 +250,13 @@ least 1000 px tall. Below 1600 px the layout is unchanged.
   verified claim's lane on every final with a lane claim (and no Matchup section without one) and on
   the live cards; heat bins = the match file's counts; touch map = players-heat counts; lineup nodes
   = the most-used XI with its numbers; shot blocks = the claim window's shots
-  and xG; gauges at full time = the spell totals; arrow count and width order = the pass counts;
-  pizza = an independent percentile computation); the routes are checked in the default view and
-  after "Show all routes"; the mutation proof changes one visual's data in a throwaway copy and
+  and xG; gauges at full time = the spell totals; pass map = the team lists file's passes, line by
+  line (order, type, colour, 2 px, start point, caption count, legend), and the chances tab = its
+  chance rows (colour by set piece, ring per shot, legend counts against the profile);
+  pizza = an independent percentile computation); the mutation proof changes one visual's data in a throwaway copy and
   shows the matching check fails (nine mutations: crosshair, heat, touch map, lineup, shot blocks,
-  gauge, routes, routes default view, pizza; plus the text-budget and lane-wording proofs).
+  gauge, pass map, pass map count, chance map, pizza, and the later ones listed in
+  tools/check_web.py MUTATIONS; plus the text-budget and lane-wording proofs).
   `check_first_screen` asserts every Live visual is whole on the first screen at 1920x1080 and
   1600x900 with no overlapping text. `tests/test_visuals_consistency.py` runs
   the proof in the slow suite.

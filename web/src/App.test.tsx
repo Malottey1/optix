@@ -205,5 +205,5 @@ describe("Tactical patterns on the pages", () => {
       const row = [...rows].find((r) => r.getAttribute("data-family") === f)!;
       expect(row.textContent).toMatch(/off in the stream/);
     }
-  });
+  }, 15000); // seven full renders: over the 5 s default under a parallel run
 });

@@ -1,28 +1,31 @@
 // #/players/:id: the Player Console. Header (initials avatar, name, number, position, team badge,
-// minutes and two position stats), passing routes on the Focus Pitch (top 8, then "Show all routes
-// (N)"), then the position panels (PositionPanels.tsx, ChanceDrawer.tsx): chances and the chance
+// whole minutes and two position stats), the pass map (one thin line per completed pass, the most
+// progressive ones, coloured forward / progressive / key pass) with a chances tab drawn like the
+// chance drawer, then the position panels (PositionPanels.tsx, ChanceDrawer.tsx): chances and the chance
 // evidence drawer for forwards and midfielders, defensive actions, their map and progressive passing
 // for defenders, shots faced, shot stopping and distribution for goalkeepers. The percentile pizza and
 // the same percentiles as diverging bars around the median, the season touch map (HeatPitch on the
 // team's players-heat file), the player's validated patterns with their evidence, and a
 // "Raw / With context" toggle built only from the Verifier's existing player checks (ui.players[].
 // checks: the held-back sentence, the published one and the recomputed figures). With no context
-// claim the toggle is disabled and says so; nothing is invented.
-import { useMemo, useState } from "react";
+// claim the toggle is disabled and says so; nothing is invented. A player with no pattern gets a
+// one-line note, and the position panels move up into the right column instead of an empty card.
+import { useState } from "react";
 import { Link, useParams } from "react-router";
 import { Jersey } from "../../charts/LineupPitch";
 import { HeatPitch } from "../../charts/HeatPitch";
 import { TeamBadge } from "../../components/brand/TeamBadge";
 import { Sheet } from "../../components/ui/sheet";
 import { Segmented } from "../../components/ui/segmented";
-import { PassRoutes, leagueXaPerChance, type RouteMode } from "../../components/viz/PassRoutes";
+import { ChanceMap, PassMap } from "../../components/viz/PassMap";
 import { PercentilePizza, comparisonGroup, pizzaValues } from "../../components/viz/PercentilePizza";
 import { useData } from "../../data/context";
 import { usePlayersHeat } from "../../data/matchContext";
+import { chanceRows, passRows } from "../../data/matches";
 import { eventIcon, Icon, patternIcon } from "../../icons";
 import { clock, num, pct, words } from "../../lib/format";
 import { patternLabel, useT, type Key } from "../../lib/i18n";
-import type { PlayerCheck, PlayerRow } from "../../types/ui";
+import type { PlayerCheck, PlayerRow, ProfilesMeta } from "../../types/ui";
 import { reasonFor, textOf } from "../live/shared";
 import { Avatar } from "../teams/parts";
 import { ChancesPanel } from "./ChanceDrawer";
@@ -266,14 +269,81 @@ function TouchMap({ p }: { p: PlayerRow }) {
   );
 }
 
+/** The position panels: chances (FW, MF), defending (DF), shot stopping (GK), as [lead, ...rest]; the
+ * lead is a short panel so it fits beside the pass map. A player with no pattern gets the lead panel in the console's right column and the rest below. */
+function positionPanels(p: PlayerRow, meta: ProfilesMeta, t: (k: Key) => string): React.ReactNode[] {
+  const prof = p.profile;
+  const pos = p.position;
+  if (prof && (pos === "FW" || pos === "MF"))
+    return [
+      <Block key="chances" id="chances" title={t("ch_title")}>
+        <ChancesPanel p={p} meta={meta} />
+        <div className="mt-3">
+          <NotInData topic="pp_na_lines" />
+        </div>
+      </Block>,
+    ];
+  if (prof?.defence && pos === "DF")
+    return [
+      <Block key="defence" id="defence" title={t("def_title")}>
+        <DefensiveActions p={p} meta={meta} />
+        <div className="mt-3 flex flex-col gap-1">
+          <NotInData topic="pp_na_ground" />
+          <NotInData topic="pp_na_regain" />
+        </div>
+      </Block>,
+      <Block key="defence-map" id="defence-map" title={t("def_map")}>
+        <WithLists code={p.team}>{(l) => <DefenceMap p={p} lists={l} />}</WithLists>
+      </Block>,
+      <Block key="passing" id="passing" title={t("pass_title")}>
+        <PassingExtras p={p} />
+      </Block>,
+    ];
+  if (prof?.keeper && pos === "GK")
+    return [
+      <Block key="keeper" id="keeper" title={t("gk_figures")}>
+        <KeeperFigures p={p} />
+        <div className="mt-3">
+          <NotInData topic="pp_na_save" />
+        </div>
+      </Block>,
+      <Block key="shots-faced" id="shots-faced" title={t("gk_map")}>
+        <WithLists code={p.team}>{(l) => <ShotsFacedMap p={p} lists={l} />}</WithLists>
+      </Block>,
+      <Block key="distribution" id="distribution" title={t("gk_dist")}>
+        <KeeperDistribution p={p} meta={meta} />
+      </Block>,
+    ];
+  return [];
+}
+
+/** The panels below the top row: with a pattern, all of them (lead panel on the left, the others
+ * stacked on the right); without one, those after the lead panel, side by side. */
+function PanelsBelow({ panels, pos, all }: { panels: React.ReactNode[]; pos: string; all: boolean }) {
+  if (!panels.length || (!all && panels.length < 2)) return null;
+  if (all && panels.length === 1) return panels[0];
+  const [lead, ...rest] = panels;
+  return (
+    <div className="grid grid-cols-1 items-start gap-flow xl:grid-cols-2" data-position-panels={pos}>
+      {all ? (
+        <>
+          {lead}
+          <div className="flex min-w-0 flex-col gap-flow">{rest}</div>
+        </>
+      ) : (
+        rest
+      )}
+    </div>
+  );
+}
+
 export default function PlayerConsole() {
   const { id = "" } = useParams();
   const m = useData();
   const { t, lang } = useT();
-  const [mode, setMode] = useState<RouteMode>("fwd");
+  const [mode, setMode] = useState<"fwd" | "chances">("fwd");
   const players = m.ui.players;
   const p = players.find((x) => x.id === id);
-  const leagueXa = useMemo(() => leagueXaPerChance(m.ui.visuals.routes), [m]);
   if (!p)
     return (
       <div data-page="player" className="flex flex-col gap-2">
@@ -283,10 +353,10 @@ export default function PlayerConsole() {
         </Link>
       </div>
     );
-  const routes = m.ui.visuals.routes[p.id];
   const prof = p.profile;
   const meta = m.ui.profiles;
-  const pos = p.position;
+  const hasPatterns = (m.ui.patterns?.players[p.id] ?? []).length > 0;
+  const panels = positionPanels(p, meta, t);
   return (
     <div className="flex flex-col gap-flow" data-page="player" data-player={p.id}>
       <Link to="/players" className="self-start text-[12px] font-semibold text-ink-3 hover:text-ink">
@@ -316,7 +386,7 @@ export default function PlayerConsole() {
             <div className="flex flex-col-reverse">
               <dt className="mt-1">{t("pp_minutes")}</dt>
               <dd className="display num m-0 text-[24px] font-semibold leading-none text-ink sm:text-[30px]">
-                {num(prof.minutes, lang)}
+                {num(prof.minutes_whole, lang)}
               </dd>
             </div>
           )}
@@ -333,7 +403,7 @@ export default function PlayerConsole() {
       <div className="grid grid-cols-1 items-start gap-flow xl:grid-cols-12">
         <div className="min-w-0 xl:col-span-7">
           <Block id="routes" title={t("console_routes")}>
-            <Segmented<RouteMode>
+            <Segmented<"fwd" | "chances">
               label={t("routes_label")}
               name="route-mode"
               value={mode}
@@ -344,77 +414,53 @@ export default function PlayerConsole() {
               ]}
               className="mb-3"
             />
-            {routes ? (
-              <PassRoutes
-                rows={routes}
-                mode={mode}
-                leagueHotShare={m.ui.visuals.league_hot_share}
-                leagueXa={leagueXa}
-                thirdX={m.ui.visuals.zones.third_x}
-                player={p.id}
-              />
-            ) : (
-              <p className="text-[13px] text-ink-3">{t("routes_none")}</p>
-            )}
-            <p className="mt-2 text-[11.5px] text-ink-3" data-role="routes-note">
-              {t("pp_routes_note")}
-            </p>
+            <WithLists code={p.team}>
+              {(l) => {
+                const passes = passRows(l, p.id);
+                const chances = chanceRows(l, p.id);
+                if (mode === "fwd")
+                  return passes.length ? (
+                    <PassMap rows={passes} player={p.id} name={p.name} />
+                  ) : (
+                    <p className="text-[13px] text-ink-3">{t("routes_none")}</p>
+                  );
+                return chances.length ? (
+                  <ChanceMap rows={chances} player={p.id} name={p.name} />
+                ) : (
+                  <p className="text-[13px] text-ink-3">{t("ch_none")}</p>
+                );
+              }}
+            </WithLists>
           </Block>
         </div>
-        <div className="flex min-w-0 flex-col gap-flow xl:col-span-5">
+        <div className="flex min-w-0 flex-col gap-flow xl:col-span-5" data-right-column>
           <Block id="context" title={t("console_context")}>
             <ContextToggle p={p} />
           </Block>
-          <Block id="patterns" title={t("console_patterns")}>
-            <Patterns id={p.id} />
-          </Block>
+          {hasPatterns ? (
+            <Block id="patterns" title={t("console_patterns")}>
+              <Patterns id={p.id} />
+            </Block>
+          ) : (
+            <>
+              <p
+                id="patterns"
+                data-patterns="none"
+                className="flex items-center gap-2 rounded-xl border border-line px-3.5 py-2.5 text-[13px] text-ink-3"
+              >
+                <Icon name="verdict-context" size={16} className="shrink-0" />
+                {t("patterns_none_line")}
+              </p>
+              {panels[0] && (
+                <div className="flex min-w-0 flex-col gap-flow" data-position-panels={p.position}>
+                  {panels[0]}
+                </div>
+              )}
+            </>
+          )}
         </div>
       </div>
-      {prof && (pos === "FW" || pos === "MF") && (
-        <Block id="chances" title={t("ch_title")}>
-          <ChancesPanel p={p} meta={meta} />
-          <div className="mt-3">
-            <NotInData topic="pp_na_lines" />
-          </div>
-        </Block>
-      )}
-      {prof?.defence && pos === "DF" && (
-        <div className="grid grid-cols-1 items-start gap-flow xl:grid-cols-2" data-position-panels="DF">
-          <Block id="defence" title={t("def_title")}>
-            <DefensiveActions p={p} meta={meta} />
-            <div className="mt-3 flex flex-col gap-1">
-              <NotInData topic="pp_na_ground" />
-              <NotInData topic="pp_na_regain" />
-            </div>
-          </Block>
-          <div className="flex min-w-0 flex-col gap-flow">
-            <Block id="defence-map" title={t("def_map")}>
-              <WithLists code={p.team}>{(l) => <DefenceMap p={p} lists={l} />}</WithLists>
-            </Block>
-            <Block id="passing" title={t("pass_title")}>
-              <PassingExtras p={p} />
-            </Block>
-          </div>
-        </div>
-      )}
-      {prof?.keeper && pos === "GK" && (
-        <div className="grid grid-cols-1 items-start gap-flow xl:grid-cols-2" data-position-panels="GK">
-          <Block id="shots-faced" title={t("gk_map")}>
-            <WithLists code={p.team}>{(l) => <ShotsFacedMap p={p} lists={l} />}</WithLists>
-          </Block>
-          <div className="flex min-w-0 flex-col gap-flow">
-            <Block id="keeper" title={t("gk_figures")}>
-              <KeeperFigures p={p} />
-              <div className="mt-3">
-                <NotInData topic="pp_na_save" />
-              </div>
-            </Block>
-            <Block id="distribution" title={t("gk_dist")}>
-              <KeeperDistribution p={p} meta={meta} />
-            </Block>
-          </div>
-        </div>
-      )}
+      <PanelsBelow panels={panels} pos={p.position} all={hasPatterns} />
       <div className="grid grid-cols-1 items-start gap-flow lg:grid-cols-2 xl:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)_minmax(0,1fr)]">
         <Block id="pizza" title={t("console_pizza")}>
           <PercentilePizza p={p} players={players} />

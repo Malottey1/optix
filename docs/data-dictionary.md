@@ -229,7 +229,8 @@ These are listed or counted facts, written by `agents/dashboard_data.py` (ui.jso
   carries and duels, then passes...). Evidence events and turning-point events are always kept.
 - **Player profiles** (`ui.players[].profile`, agents/player_profiles.py, recomputed from the raw CSVs
   in tests/test_player_profiles.py):
-  - minutes = sum of lineups `minutes_played`; starts; substitute appearances and minutes;
+  - minutes = sum of lineups `minutes_played` (1 dp; `minutes_whole` = rounded half up, the figure the
+    console shows); starts; substitute appearances and minutes;
   - **defensive contributions = tackles + interceptions + blocks + clearances**
     (`DEFENSIVE_CONTRIBUTIONS`); also tackles won (outcome success), headed clearances (body_part
     head), fouls, pressures, aerial duels and aerials won;
@@ -245,7 +246,10 @@ These are listed or counted facts, written by `agents/dashboard_data.py` (ui.jso
     corner / free_kick / throw_in / other set piece; xA per chance = mean `passes.xa`, rounded half up.
 - **Team lists** (`matches/players-<code>.json`, contracts/players.schema.json): per player the
   defensive action points (x, y, type, own frame), the key passes (event id, clock, kind, pass type,
-  xA, the assisted shot's result, start and end points) and, for keepers, the shots faced mirrored into
+  xA, the assisted shot's result, start and end points), the pass map's passes (the 25 completed
+  forward passes that gained the most ground, x_end - x_start, ties by event id: event id, start and
+  end points, type index into `pass_types` = forward / progressive / key_pass, key pass first, then
+  progressive) and, for keepers, the shots faced mirrored into
   the keeper's defending frame (x' = 100 - x, y' = 100 - y) with result and xG. Loaded by the console
   only.
 - **Match lineups** (`matches/<id>.json` lineups): both starting XIs, by listed position as on the

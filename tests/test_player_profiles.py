@@ -230,6 +230,37 @@ def p_team(raw, pid):
     return raw["players"][pid]["team_id"][2:].upper()
 
 
+def test_pass_map_lists_are_the_most_progressive_completed_forward_passes(raw, prof):
+    """players-<code>.json passes: per player the 25 completed forward passes that gained the most
+    ground (ties by event id), typed key pass, else progressive, else forward; recomputed from
+    events.csv and passes.csv."""
+    files = {p.stem[-3:].upper(): json.loads(p.read_text()) for p in (DATA / "matches").glob("players-[a-z][a-z][a-z].json")}
+    for f in files.values():
+        assert f["pass_types"] == ["forward", "progressive", "key_pass"]
+    fwd = defaultdict(list)
+    for e in raw["ev"]:
+        if e["event_type"] == "pass" and e["outcome"] == "success" and e["player_id"]:
+            pr = raw["passes"][e["event_id"]]
+            if pr["is_forward"] == "1":
+                fwd[e["player_id"]].append(e)
+    seen = 0
+    for pid in prof:
+        got = files[p_team(raw, pid)]["players"].get(pid, {}).get("passes", [])
+        want = sorted(fwd.get(pid, []), key=lambda e: (-(e["x_end"] - e["x_start"]), e["event_id"]))[:25]
+        assert [r[0] for r in got] == [e["event_id"] for e in want], pid
+        for r, e in zip(got, want):
+            pr = raw["passes"][e["event_id"]]
+            t = 2 if pr["is_key_pass"] == "1" else 1 if pr["is_progressive"] == "1" else 0
+            assert r[1:] == [_r(e["x_start"], 1), _r(e["y_start"], 1), _r(e["x_end"], 1), _r(e["y_end"], 1), t]
+        seen += len(got)
+    assert seen > 0
+
+
+def test_whole_minutes_are_the_minutes_rounded_half_up(prof):
+    for p in prof.values():
+        assert p["minutes_whole"] == math.floor(p["minutes"] + 0.5) and isinstance(p["minutes_whole"], int)
+
+
 def test_defensive_points_count_every_action(raw, prof):
     files = {p.stem[-3:].upper(): json.loads(p.read_text()) for p in (DATA / "matches").glob("players-[a-z][a-z][a-z].json")}
     for pid, p in prof.items():

@@ -2,12 +2,13 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://optix.example/contracts/players.schema.json",
   "title": "TeamLists",
-  "description": "Per team, the Player Console's lazy lists (agents.player_profiles): defensive action points in the player's own frame, key passes with the shot they set up, and the shots each keeper faced in the keeper's defending frame. Season figures are in ui.json players[].profile.",
+  "description": "Per team, the Player Console's lazy lists (agents.player_profiles): defensive action points in the player's own frame, key passes with the shot they set up, the pass map's most progressive completed forward passes, and the shots each keeper faced in the keeper's defending frame. Season figures are in ui.json players[].profile.",
   "type": "object",
   "additionalProperties": false,
   "required": [
     "team",
     "point_types",
+    "pass_types",
     "players"
   ],
   "properties": {
@@ -22,6 +23,16 @@
           "interception",
           "block",
           "clearance"
+        ]
+      }
+    },
+    "pass_types": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "forward",
+          "progressive",
+          "key_pass"
         ]
       }
     },
@@ -118,6 +129,37 @@
             ],
             "items": false,
             "minItems": 14
+          }
+        },
+        "passes": {
+          "type": "array",
+          "maxItems": 25,
+          "items": {
+            "type": "array",
+            "description": "[event_id, x0, y0, x1, y1, type index into pass_types]: the player's most progressive completed forward passes, most ground gained first",
+            "prefixItems": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "integer",
+                "minimum": 0
+              }
+            ],
+            "items": false,
+            "minItems": 6
           }
         },
         "shots_faced": {

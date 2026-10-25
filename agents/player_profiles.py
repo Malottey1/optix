@@ -27,6 +27,11 @@ Definitions (docs/data-dictionary.md, "Dashboard exports derived from the tables
                      the final third (start outside, end inside), completed passes into the box
                      (start outside the box, end inside); line-breaking passes need opponent
                      positions and are not observable
+  pass map           per player the TOP_PASSES completed forward passes (passes.is_forward) that
+                     gained the most ground toward goal (x_end - x_start, attacker's frame; ties by
+                     event id), each typed key pass (is_key_pass), else progressive
+                     (is_progressive), else forward
+  minutes (whole)    minutes rounded half up to a whole number, the figure the console shows
   chances            key passes (passes.is_key_pass) with the assisted shot (shots.assist_event_id):
                      xA = passes.xa (equal to that shot's xg in this data), result = its shot_result;
                      set piece = pass_type corner or play_pattern set_piece (engine.metrics
@@ -45,6 +50,8 @@ DEFENSIVE_CONTRIBUTIONS = DEFENSIVE_TYPES          # tackles + interceptions + b
 MIN_MINUTES = 270                                  # three full matches before a rate or percentile is shown
 LONG_PASS_M = 32.0                                 # a keeper pass at least this long counts as long
 CHANCE_KINDS = ("corner", "free_kick", "throw_in", "set_piece", "open_play")
+PASS_TYPES = ("forward", "progressive", "key_pass")   # the pass map's line types, in this order
+TOP_PASSES = 25                                    # passes on a player's pass map
 POINT_TYPES = DEFENSIVE_TYPES                      # the console map's marker types, in this order
 DEF_RATES = ("tackles", "interceptions", "blocks", "clearances", "fouls", "contributions")
 
@@ -251,6 +258,33 @@ def chances_section(season) -> dict:
     return {pid: [r for _, _, r in sorted(rows, key=lambda x: (x[0], x[1]))] for pid, rows in out.items()}
 
 
+def pass_type_of(p) -> str:
+    """key_pass, else progressive, else forward (the pass map's colour)."""
+    return "key_pass" if p["is_key_pass"] else "progressive" if p["is_progressive"] else "forward"
+
+
+def passes_section(season) -> dict:
+    """player_id -> the TOP_PASSES most progressive completed forward passes: [event_id, x0, y0, x1, y1,
+    type index into PASS_TYPES], most ground gained first (ties by event id)."""
+    out = defaultdict(list)
+    for e in season.events:
+        if e["event_type"] != "pass" or e["outcome"] != "success" or not e["player_id"]:
+            continue
+        p = season.passes.get(e["event_id"])
+        if not p or not p["is_forward"]:
+            continue
+        out[e["player_id"]].append((-(e["x_end"] - e["x_start"]), e["event_id"], [
+            e["event_id"], _r(e["x_start"]), _r(e["y_start"]), _r(e["x_end"]), _r(e["y_end"]),
+            PASS_TYPES.index(pass_type_of(p))]))
+    return {pid: [r for _, _, r in sorted(rows, key=lambda x: (x[0], x[1]))[:TOP_PASSES]] for pid, rows in out.items()}
+
+
+def whole(v: float) -> int:
+    """Half up to a whole number (as the page shows minutes)."""
+    import math
+    return math.floor(v + 0.5)
+
+
 def raw_xa(season) -> dict:
     """player_id -> sum of passes.xa over the player's key passes, in exact ten-thousandths (xa has
     four decimals), so a mean that lands on a half rounds the same way everywhere."""
@@ -297,6 +331,7 @@ def profiles(season, lineups) -> dict:
     ch = chances_section(season)
     xa_raw = raw_xa(season)
     pts = defensive_points(season)
+    pm = passes_section(season)
     rows: dict = {}
     for pid, p in season.players.items():
         m = mins.get(pid)
@@ -308,7 +343,7 @@ def profiles(season, lineups) -> dict:
         p90 = {k: _r(90 * d[k] / m["minutes"], 2) for k in DEF_RATES} if enough else None
         f = faced.get(pid, 0)
         p100 = {k: _r(100 * d[k] / f, 1) for k in DEF_RATES} if enough and f else None
-        row = dict(minutes=m["minutes"], starts=m["starts"], sub_apps=m["sub_apps"], sub_minutes=m["sub_minutes"],
+        row = dict(minutes=m["minutes"], minutes_whole=whole(m["minutes"]), starts=m["starts"], sub_apps=m["sub_apps"], sub_minutes=m["sub_minutes"],
                    passing=dict(x, p90={k: _r(90 * v / m["minutes"], 2) for k, v in x.items()} if enough else None),
                    chances=chance_summary(ch.get(pid, []), xa_raw.get(pid, 0)))
         if pid in gk:          # keepers get the keeper block; the outfield defensive block does not apply
@@ -335,9 +370,9 @@ def profiles(season, lineups) -> dict:
     for tid in sorted(season.teams, key=season.code):
         squad = sorted(pid for pid in rows if season.players[pid]["team_id"] == tid)
         files[season.code(tid)] = dict(
-            team=season.code(tid), point_types=list(POINT_TYPES),
+            team=season.code(tid), point_types=list(POINT_TYPES), pass_types=list(PASS_TYPES),
             players={pid: {k: v for k, v in dict(
-                defence=pts.get(pid), chances=ch.get(pid),
+                defence=pts.get(pid), chances=ch.get(pid), passes=pm.get(pid),
                 shots_faced=gk[pid]["points"] if pid in gk else None).items() if v} for pid in squad})
     return dict(rows=rows, files=files, meta=meta)
 

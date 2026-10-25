@@ -127,7 +127,7 @@ DATA_ATTRS = {
     "team_board": [("button[data-node]", "data-node"), ("[data-signature-patterns]", "data-signature-patterns")],
     "team_sheet": [("#player-sheet a[data-ledger-link]", "href")],
     "players": [("a[data-player]", "href")],
-    "player": [("[data-viz=pass-routes] [data-route]", "data-value"), ("#touch rect[data-bin]", "data-count"),
+    "player": [("[data-viz=pass-map] [data-pass]", "data-pass"), ("#touch rect[data-bin]", "data-count"),
                ("[data-context]", "data-context")],
     "player_df": [("[data-def-rate]", "data-def-rate"), ("[data-points]", "data-count")],
     "player_gk": [("[data-viz=shots-faced] [data-result]", "data-count")],
@@ -644,35 +644,25 @@ def check_consistency(browser, base, ref_dir: Path) -> dict:
     for team, want in stress_totals(ui).items():
         if gauges.get(team) != want:
             problems.append(f"gauge {team}: {gauges.get(team)} s at full time, engine spells add up to {want} s")
-    # V4 and V8 on the Player Console, in the default view (busiest routes) and after "Show all
-    # routes"; the touch map's bins are the player's counts
+    # V4 and V8 on the Player Console: the pass map against the team lists file (one line per pass, in
+    # the draw order, typed and placed as listed, 2 px, the caption's count), the chances tab against
+    # the chance rows (colour by set piece / open play, a ring on each shot, goals filled); the touch
+    # map's bins are the player's counts
     _open(page, base, "player")
-    pid = page.get_attribute("#routes [data-viz=pass-routes] svg", "data-player")
-    rows = ui["visuals"]["routes"].get(pid, [])
-    views = {"top": route_groups(rows, "fwd", TOP_ROUTES), "all": route_groups(rows, "fwd")}
-    arrows = {}
-    for view, want in views.items():
-        if view == "all":
-            if len(views["all"]) <= TOP_ROUTES:
-                problems.append(f"routes {pid}: no toggle to test (only {len(views['all'])} routes)")
-                break
-            page.click("#routes [data-role=route-toggle]")
-            page.wait_for_selector("#routes [data-viz=pass-routes] svg[data-view=all]", timeout=5000)
-        got = page.eval_on_selector_all("#routes [data-viz=pass-routes] [data-route]", """els => els.map((e) => [
-            Number(e.dataset.value), Number(e.querySelector('path, circle').getAttribute('stroke-width'))])""")
-        arrows[view] = len(got)
-        if len(got) != len(want):
-            problems.append(f"routes {pid} ({view}): {len(got)} arrows, data has {len(want)} routes")
-        if sorted(a[0] for a in got) != sorted(r[3] for r in want):
-            problems.append(f"routes {pid} ({view}): pass counts differ from the data")
-        by_n = sorted(got)
-        if any(b[1] < a[1] for a, b in zip(by_n, by_n[1:])):
-            problems.append(f"routes {pid} ({view}): arrow width does not grow with the pass count")
+    page.wait_for_selector("#routes [data-viz=pass-map] [data-pass]", timeout=10000)
+    pid = page.get_attribute("#routes [data-viz=pass-map] svg", "data-player")
+    team = next(p["team"] for p in ui["players"] if p["id"] == pid)
+    lists = _lists(mref, team)
+    problems += pass_map_problems(page, pid, lists)
+    arrows = dict(passes=page.locator("#routes [data-pass]").count())
+    page.get_by_role("radio", name="Chances created").click()
+    page.wait_for_selector("#routes [data-viz=chance-map]", timeout=5000)
+    problems += chance_map_problems(page, pid, lists, _player(ui, pid))
+    arrows["chances"] = page.locator("#routes [data-chance]").count()
     pz = dict(page.eval_on_selector_all("#pizza [data-role=pizza-list] li", """els => els.map((e) => [
         e.dataset.metric, e.dataset.percentile === '' ? null : Number(e.dataset.percentile)])"""))
     if pz != pizza(ui, pid):
         problems.append(f"pizza {pid}: {pz} vs {pizza(ui, pid)}")
-    team = next(p["team"] for p in ui["players"] if p["id"] == pid)
     touch = json.loads((mref / f"players-heat-{team.lower()}.json").read_text(encoding="utf-8"))
     page.wait_for_selector("#touch rect[data-bin]", timeout=10000)
     counts = page.eval_on_selector_all("#touch rect[data-bin]", "els => els.map((e) => Number(e.dataset.count))")
@@ -683,6 +673,64 @@ def check_consistency(browser, base, ref_dir: Path) -> dict:
     ctx.close()
     return dict(pairs=pairs, cards=dict(seen), gauges=gauges, player=pid, arrows=arrows,
                 problems=problems + log["problems"])
+
+
+PASS_COLORS = ("var(--pass-forward)", "var(--pass-progressive)", "var(--pass-key)")
+PASS_MAP_JS = """els => els.map((g) => { const l = g.querySelector('line'), c = g.querySelector('circle');
+  return [g.dataset.pass, g.dataset.type, l.getAttribute('stroke'), l.getAttribute('stroke-width'),
+          Number(c.getAttribute('cx')), Number(c.getAttribute('cy')), g.querySelectorAll('polygon').length]; })"""
+
+
+def pass_map_problems(page, pid: str, lists: dict) -> list:
+    """The pass map against players-<code>.json: ids in draw order (forward, progressive, key pass;
+    stable inside a type), each line's type, colour, 2 px width, start point and arrowhead, and the
+    caption's count."""
+    p = []
+    rows = lists["players"].get(pid, {}).get("passes", [])
+    types = lists["pass_types"]
+    want = sorted(rows, key=lambda r: r[5])
+    got = page.eval_on_selector_all("#routes [data-viz=pass-map] [data-pass]", PASS_MAP_JS)
+    if [g[0] for g in got] != [r[0] for r in want]:
+        p.append(f"pass map {pid}: {len(got)} lines, lists file has {len(rows)} passes (or another order)")
+    by_id = {g[0]: g for g in got}
+    for r in want:
+        g = by_id.get(r[0])
+        if g is None:
+            continue
+        if g[1] != types[r[5]] or g[2] != PASS_COLORS[r[5]] or g[3] != "2" or g[6] != 1:
+            p.append(f"pass map {pid}: {r[0]} drawn as {g[1:4]}, want {types[r[5]]} 2 px with an arrowhead")
+            break
+        if abs(g[4] - js_round(r[1] * 1.05, 2)) > 0.011 or abs(g[5] - js_round(r[2] * 0.68, 2)) > 0.011:
+            p.append(f"pass map {pid}: {r[0]} starts at {g[4:6]}, lists file ({r[1]}, {r[2]})")
+            break
+    cap = page.text_content("#routes [data-viz=pass-map] [data-role=routes-note]") or ""
+    if f"Showing the {len(rows)} most progressive" not in cap:
+        p.append(f"pass map {pid}: caption {cap!r} does not count {len(rows)} passes")
+    legend = page.eval_on_selector_all("#routes [data-legend-type]", "els => els.map((e) => e.dataset.legendType)")
+    if legend != list(types):
+        p.append(f"pass map {pid}: legend {legend}, want {types}")
+    return p
+
+
+def chance_map_problems(page, pid: str, lists: dict, player: dict) -> list:
+    """The chances tab against the chance rows: ids in order, gold set piece / blue open play, one ring
+    per shot (filled for a goal), and the legend's counts against the profile."""
+    p = []
+    rows = lists["players"].get(pid, {}).get("chances", [])
+    got = page.eval_on_selector_all("#routes [data-viz=chance-map] [data-chance]", """els => els.map((g) => [
+        g.dataset.chance, g.querySelector('line').getAttribute('stroke'), g.querySelector('[data-shot]')?.dataset.shot])""")
+    if [g[0] for g in got] != [r[0] for r in rows]:
+        p.append(f"chance map {pid}: {len(got)} lines, lists file has {len(rows)} chances")
+    for g, r in zip(got, rows):
+        colour = "var(--chance-open-play)" if r[4] == "open_play" else "var(--chance-set-piece)"
+        if g[1] != colour or g[2] != ("goal" if r[7] == "goal" else "other"):
+            p.append(f"chance map {pid}: {r[0]} drawn {g[1:]}, want {colour} with a {r[7]} ring")
+            break
+    c = player["profile"]["chances"]
+    legend = page.text_content("#routes [data-legend=chances]") or ""
+    if f"({c['open_play']})" not in legend or f"({c['set_piece']})" not in legend:
+        p.append(f"chance map {pid}: legend {legend!r} vs profile {c['open_play']} open play, {c['set_piece']} set piece")
+    return p
 
 
 def _lists(mref: Path, code: str) -> dict:
@@ -822,18 +870,28 @@ def _mut_gauge(ui):
     s[2] += 30
 
 
-def _mut_routes(ui):
-    for rows in ui["visuals"]["routes"].values():
-        r = next((r for r in rows if r[0] == "fwd" and r[3] >= MIN_ROUTE_PASSES), None)
-        if r:
-            r[3] += 5
+def _console_team(ui) -> str:
+    return _player(ui, CONSOLE_PLAYER)["team"]
 
 
-def _mut_top_route(ui):
-    for rows in ui["visuals"]["routes"].values():
-        fwd = [r for r in rows if r[0] == "fwd"]
-        if fwd:
-            max(fwd, key=lambda r: r[3])[3] += 3
+def _mut_pass_map(ui, copy):
+    def change(f):
+        rows = f["players"][CONSOLE_PLAYER]["passes"]
+        r = next(r for r in rows if r[5] == 1)
+        r[5] = 2                                    # a progressive pass relabelled a key pass
+    _mut_file(copy, f"players-{_console_team(ui).lower()}.json", change)
+
+
+def _mut_pass_map_count(ui, copy):
+    _mut_file(copy, f"players-{_console_team(ui).lower()}.json",
+              lambda f: f["players"][CONSOLE_PLAYER]["passes"].pop())
+
+
+def _mut_chance_map(ui, copy):
+    def change(f):
+        r = f["players"][CONSOLE_PLAYER]["chances"][0]
+        r[4] = "corner" if r[4] == "open_play" else "open_play"
+    _mut_file(copy, f"players-{_console_team(ui).lower()}.json", change)
 
 
 def _mut_style(ui):
@@ -900,8 +958,9 @@ def _mut_pizza(ui):
 MUTATIONS = {"matchup strips": (_mut_crosshair, "matchup ", "page outlines"), "heat": (_mut_heat, "heat", ""),
              "touch map": (_mut_touch, "touch map", ""), "lineup": (_mut_lineup, "lineup", ""),
              "shot blocks": (_mut_shots, "shot blocks", ""),
-             "gauge": (_mut_gauge, "gauge", ""), "routes": (_mut_routes, "routes", "(all)"),
-             "routes default view": (_mut_top_route, "routes", "(top)"), "pizza": (_mut_pizza, "pizza", ""),
+             "gauge": (_mut_gauge, "gauge", ""), "pass map": (_mut_pass_map, "pass map", "drawn as"),
+             "pass map count": (_mut_pass_map_count, "pass map", "lines"),
+             "chance map": (_mut_chance_map, "chance map", ""), "pizza": (_mut_pizza, "pizza", ""),
              "style rows": (_mut_style, "style rows", ""),
              "defence map": (_mut_defence_map, "defence map", ""),
              "shots faced": (_mut_shots_faced, "shots faced", ""),

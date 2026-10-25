@@ -7,7 +7,8 @@ import { MatchFiles } from "../../data/matches";
 import { ReplaySource } from "../../data/ReplaySource";
 import { setSetting } from "../../state/settings";
 import type { PlayerRow } from "../../types/ui";
-import { chanceRows, defPoints, parseTeamLists, shotsFacedRows } from "../../data/matches";
+import { chanceRows, defPoints, parseTeamLists, passRows, shotsFacedRows } from "../../data/matches";
+import { drawOrder } from "../../components/viz/PassMap";
 import { chancesOf, playLink } from "./ChanceDrawer";
 import { divergingValues } from "./PlayerConsole";
 import { defenceRows, pointsByType, shotsByResult } from "./PositionPanels";
@@ -112,16 +113,37 @@ describe("Player Console", () => {
     expect(off.textContent).toMatch(/No context claim/);
   });
 
-  it("shows routes (top eight, then all), the touch map and pattern evidence", async () => {
+  it("shows the pass map (one line per listed pass), the touch map and pattern evidence", async () => {
     const [pid, rows] = Object.entries(
       ui.patterns.players as Record<string, { family: string; evidence: string[] }[]>,
     )[0]!;
+    const pl = players.find((x) => x.id === pid)!;
+    const want = passRows(lists(pl.team), pid);
+    expect(want.length).toBeGreaterThan(0);
     window.location.hash = `#/players/${pid}`;
     render(<App source={source()} matches={matches()} />);
     const p = await page("player");
-    await waitFor(() => expect(p.querySelector("[data-viz='pass-routes']")).toBeTruthy());
-    const showAll = [...p.querySelectorAll("button")].find((b) => /Show all routes/.test(b.textContent ?? ""));
-    if (showAll) expect(showAll.textContent).toMatch(/\(\d+\)/);
+    const map = await waitFor(() => need(p.querySelector("[data-viz='pass-map']") as HTMLElement | null), {
+      timeout: 8000,
+    });
+    // one line per pass in the list, key passes drawn last, every line 2 px with a start dot and a head
+    const lines = [...map.querySelectorAll("[data-pass]")];
+    expect(lines.map((g) => g.getAttribute("data-pass"))).toEqual(drawOrder(want).map((r) => r[0]));
+    for (const g of lines) {
+      expect(g.querySelector("line")!.getAttribute("stroke-width")).toBe("2");
+      expect(g.querySelector("line")!.getAttribute("vector-effect")).toBe("non-scaling-stroke");
+      expect(g.querySelectorAll("circle, polygon").length).toBe(2);
+    }
+    // the one caption line and the three-item legend; no old gradient legend or route toggle
+    expect(map.querySelector("[data-role='routes-note']")!.textContent).toBe(
+      `Each line is one completed pass. Showing the ${want.length} most progressive.`,
+    );
+    expect([...map.querySelectorAll("[data-legend-type]")].map((e) => e.getAttribute("data-legend-type"))).toEqual([
+      "forward",
+      "progressive",
+      "key_pass",
+    ]);
+    expect(p.textContent).not.toMatch(/often central|rarely central|Show all routes/);
     await waitFor(() => expect(p.querySelectorAll("#touch rect[data-bin]").length).toBe(24 * 16), { timeout: 8000 });
     fireEvent.click(p.querySelector(`[data-family='${rows[0]!.family}'] button`)!);
     const sheet = await waitFor(() => need(document.querySelector("#player-evidence") as HTMLElement | null));
@@ -129,6 +151,76 @@ describe("Player Console", () => {
       rows[0]!.evidence,
     );
   });
+
+  it("the chances tab draws each chance like the drawer: gold set piece, blue open play, a ring on the shot", async () => {
+    const pl = players
+      .filter((x) => x.profile && x.profile.chances.set_piece > 0 && x.profile.chances.open_play > 0)
+      .sort((a, b) => b.profile!.chances.total - a.profile!.chances.total)[0]!;
+    const want = chanceRows(lists(pl.team), pl.id);
+    window.location.hash = `#/players/${pl.id}`;
+    render(<App source={source()} matches={matches()} />);
+    const p = await page("player");
+    await waitFor(() => need(p.querySelector("[data-viz='pass-map']")), { timeout: 8000 });
+    fireEvent.click(screen.getByRole("radio", { name: "Chances created" }));
+    const map = await waitFor(() => need(p.querySelector("[data-viz='chance-map']") as HTMLElement | null));
+    const drawn = [...map.querySelectorAll("[data-chance]")];
+    expect(drawn.map((g) => g.getAttribute("data-chance"))).toEqual(want.map((r) => r[0]));
+    for (const [g, r] of drawn.map((g, i) => [g, want[i]!] as const)) {
+      const colour = g.querySelector("line")!.getAttribute("stroke");
+      expect(colour).toBe(r[4] === "open_play" ? "var(--chance-open-play)" : "var(--chance-set-piece)");
+      expect(g.querySelector("[data-shot]")!.getAttribute("data-shot")).toBe(r[7] === "goal" ? "goal" : "other");
+    }
+    const legend = map.querySelector("[data-legend='chances']")!.textContent!;
+    expect(legend).toContain(`Open-play chance (${pl.profile!.chances.open_play})`);
+    expect(legend).toContain(`Set-piece chance (${pl.profile!.chances.set_piece})`);
+    expect(legend).toContain("Resulting shot");
+  });
+
+  it("minutes are whole numbers; the context note reads in plain words", async () => {
+    const pl = players.find((x) => x.profile && !Number.isInteger(x.profile.minutes))!;
+    expect(pl.profile!.minutes_whole).toBe(Math.floor(pl.profile!.minutes + 0.5));
+    window.location.hash = `#/players/${pl.id}`;
+    render(<App source={source()} matches={matches()} />);
+    const p = await page("player");
+    const stats = p.querySelector("[data-console-stats]")!.textContent!;
+    expect(stats).toContain(String(pl.profile!.minutes_whole));
+    expect(stats).not.toContain(String(pl.profile!.minutes));
+    expect(p.textContent).not.toMatch(/lets out/);
+    const withCheck = players.find((x) => x.checks.some((c) => c.fired && c.original))!;
+    cleanup();
+    window.location.hash = `#/players/${withCheck.id}`;
+    render(<App source={source()} matches={matches()} />);
+    const q = await page("player");
+    await waitFor(() => expect(q.textContent).toContain("What the plain total hides"));
+  });
+
+  it("no pattern: a one-line note, and the position panels fill the right column", async () => {
+    const withPat = new Set(Object.keys(ui.patterns.players));
+    const df = players.find((x) => x.position === "DF" && x.profile?.defence && !withPat.has(x.id))!;
+    window.location.hash = `#/players/${df.id}`;
+    render(<App source={source()} matches={matches()} />);
+    const p = await page("player");
+    const right = p.querySelector("[data-right-column]")!;
+    const note = right.querySelector("[data-patterns='none']")!;
+    expect(note.textContent).toBe("No player pattern for this player.");
+    expect(p.querySelector("section#patterns")).toBeNull();
+    // the lead panel moves up; the map and passing panels sit side by side below
+    expect(right.querySelector("[data-position-panels='DF'] #defence")).toBeTruthy();
+    expect(right.querySelector("#defence-map, #passing")).toBeNull();
+    expect(p.querySelector("#defence-map")).toBeTruthy();
+    expect(p.querySelector("#passing")).toBeTruthy();
+    cleanup();
+    // with a pattern the card stays and the panels sit full width below
+    const pid = Object.keys(ui.patterns.players).find((id) => players.find((x) => x.id === id)?.position === "DF");
+    if (pid) {
+      window.location.hash = `#/players/${pid}`;
+      render(<App source={source()} matches={matches()} />);
+      const q = await page("player");
+      expect(q.querySelector("section#patterns")).toBeTruthy();
+      expect(q.querySelector("[data-right-column] [data-position-panels]")).toBeNull();
+      expect(q.querySelector("[data-position-panels='DF']")).toBeTruthy();
+    }
+  }, 15000);
 
   it("console strings follow the language", async () => {
     window.location.hash = `#/players/${players[0]!.id}`;

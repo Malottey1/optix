@@ -126,6 +126,19 @@ Item status is in docs/final-ui-progress.md; the audit and design notes in docs/
   Live feed, scroll margins) moved from 80 to 100 px below the taller bar. The hero still starts
   below the bar; content scrolls behind it.
 
+- Player Console pass map (follow-up brief): the zone-to-zone route arrows (fat strokes, the grey →
+  green "central" scale and its legend, "Show all routes") are replaced by one thin line per pass.
+  The data had no per-pass rows for ordinary passes, so the export (agents/player_profiles.py, not
+  the generator) now writes each player's 25 completed forward passes that gained the most ground
+  into players-<code>.json (`passes`, typed forward / progressive / key pass; +109 KB, match files
+  2.79 MB of 3 MB). Every line is 2 px on screen; nothing is drawn at 3 px, since single passes have
+  no "busiest". The Chances created tab and the chance drawer now share one line component: set
+  piece gold, open play blue, a ring on the shot (filled for a goal); the drawer's per-kind colours
+  became these two (the breakdown still lists each kind). Minutes show as whole numbers from a new
+  `minutes_whole` (rounded half up in the export, so the tracer finds the shown figure). The
+  context note reads "What the plain total hides." A player with no pattern gets a one-line note and
+  the position panels move into the right column. Colours are tokens (--pass-*, --chance-*).
+
 ### Test changes (final UI)
 
 - tests/test_dashboard.py: the checked Matchup pairs now equal the lane claims the hub shows (display
@@ -135,6 +148,17 @@ Item status is in docs/final-ui-progress.md; the audit and design notes in docs/
   moved to Settings, per Step 1); shell.test.tsx checks it is in Settings.
 - web/src/features/hub/hub.test.tsx: the final hub's section order is now insights, turning, lineups,
   heat, (matchup), log (the Step 3 layout); the matchup-only-with-a-claim assertion is unchanged.
+
+- Pass map: players.test.tsx's "routes (top eight, then all)" test now checks the pass map line by
+  line against the lists file (ids in draw order, 2 px, dot and head, caption count, legend); three
+  new tests cover the chances tab, whole minutes plus the context note, and the no-pattern layout.
+  tools/check_web.py replaces the route arrow checks with pass_map_problems and chance_map_problems,
+  and the "routes" / "routes default view" mutations (ui.json visuals.routes, which the console no
+  longer draws) with "pass map", "pass map count" and "chance map" mutations of the lists file;
+  tests/test_dashboard.py asserts both tabs were checked line for line instead of the two route
+  views. tests/test_player_profiles.py adds recomputes of the pass lists and whole minutes. The
+  App.test "Tactical patterns" test (seven full renders) gets an explicit 15 s timeout: it ran
+  1.8 s alone but crossed Vitest's 5 s default in a parallel run; its assertions are unchanged.
 
 - Nav bar: web/src/icons/icons.test.tsx and tests/test_icons.py expect 56 icons (fixtures and search
   added to the navigation group, as docs/icons.md's "Adding an icon" says), and test_icons.py adds

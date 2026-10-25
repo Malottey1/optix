@@ -125,7 +125,7 @@ describe("the floating nav bar and the bottom tab bar", () => {
     render(<App source={source()} matches={new MatchFiles("./matches/", disk)} />);
     await page("tech");
     for (const nav of Object.values(bars())) expect(nav.querySelector("[aria-current]")).toBeNull();
-  });
+  }, 20000);
 
   it("every control in the bar has the 2 px mint focus ring and a 200 ms transition", async () => {
     window.location.hash = "#/players";

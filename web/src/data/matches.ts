@@ -243,6 +243,8 @@ export type ChanceRow = [
 ];
 export type ShotFacedRow = [string, number, number, number, "goal" | "saved" | "blocked" | "off_target", number];
 export type DefPoint = [number, number, number];
+/** One pass on the pass map: [event_id, x0, y0, x1, y1, type index into pass_types]. */
+export type PassRow = [string, number, number, number, number, number];
 
 export function parseTeamLists(raw: unknown, code: string): TeamLists {
   const f = `matches/players-${code.toLowerCase()}.json`;
@@ -253,6 +255,7 @@ export function parseTeamLists(raw: unknown, code: string): TeamLists {
   const rows: [string, number][] = [
     ["defence", 3],
     ["chances", 14],
+    ["passes", 6],
     ["shots_faced", 6],
   ];
   for (const [pid, l] of Object.entries(o.players as Record<string, Record<string, unknown>>))
@@ -268,6 +271,7 @@ export function parseTeamLists(raw: unknown, code: string): TeamLists {
 export const chanceRows = (l: TeamLists, pid: string) => (l.players[pid]?.chances ?? []) as unknown as ChanceRow[];
 export const shotsFacedRows = (l: TeamLists, pid: string) =>
   (l.players[pid]?.shots_faced ?? []) as unknown as ShotFacedRow[];
+export const passRows = (l: TeamLists, pid: string) => (l.players[pid]?.passes ?? []) as unknown as PassRow[];
 export const defPoints = (l: TeamLists, pid: string) => (l.players[pid]?.defence ?? []) as unknown as DefPoint[];
 /** One side's starting XI rows: [player_id, shirt, position, line, slot, of] (shape-checked on load). */
 export type XiRow = [string, number, "GK" | "DF" | "MF" | "FW", number, number, number];

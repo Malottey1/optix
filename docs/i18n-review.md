@@ -6,7 +6,7 @@ French were written without a native speaker and need a review. Rules for any fi
 string (numbers are filled in at runtime from `{placeholders}`), observational wording only (the
 banned-word lists in tools/ apply), keep every `{placeholder}`.
 
-181 keys.
+192 keys.
 
 | Key | English | Español | Français |
 |---|---|---|---|
@@ -63,7 +63,7 @@ banned-word lists in tools/ apply), keep every `{placeholder}`.
 | `pp_na_regain` | Pressure regains | Recuperaciones tras presión | Récupérations après pressing |
 | `pp_na_save` | Save location and post-shot quality | Lugar de la parada y calidad tras el tiro | Lieu de l'arrêt et qualité après le tir |
 | `pp_na_lines` | Line-breaking passes and off-ball runs | Pases que rompen líneas y desmarques sin balón | Passes qui cassent les lignes et appels sans ballon |
-| `pp_routes_note` | Each line is a route between two zones; its width is the number of completed passes on it. | Cada línea es una ruta entre dos zonas; su grosor es el número de pases completados en ella. | Chaque ligne est un circuit entre deux zones ; son épaisseur est le nombre de passes réussies sur ce circuit. |
+| `pp_routes_note` | Each line is one completed pass. Showing the {n} most progressive. | Cada línea es un pase completado. Se muestran los {n} más progresivos. | Chaque ligne est une passe réussie. Les {n} plus progressives sont affichées. |
 | `pp_peers` | Peers: same listed position ({pos}), at least {n} minutes | Pares: misma posición ({pos}), al menos {n} minutos | Pairs : même poste ({pos}), au moins {n} minutes |
 | `def_title` | Defensive actions | Acciones defensivas | Actions défensives |
 | `def_total` | Season total | Total de temporada | Total de la saison |
@@ -134,7 +134,7 @@ banned-word lists in tools/ apply), keep every `{placeholder}`.
 | `ch_sentence` | {name} created {n} chances: {sp} from set pieces and {op} from open play. | {name} creó {n} ocasiones: {sp} a balón parado y {op} en juego abierto. | {name} a créé {n} occasions : {sp} sur coups de pied arrêtés et {op} dans le jeu. |
 | `ch_what` | What this shows: each line runs from where the pass started to where it ended, next to the shot it set up. | Qué muestra: cada línea va de donde empezó el pase a donde terminó, junto al tiro que preparó. | Ce que cela montre : chaque ligne va du départ de la passe à son arrivée, près du tir qu'elle a préparé. |
 | `ch_legend_line` | Pass | Pase | Passe |
-| `ch_legend_shot` | Shot | Tiro | Tir |
+| `ch_legend_shot` | Resulting shot | Tiro resultante | Tir qui suit |
 | `ch_none` | No chances created in the season. | Ninguna ocasión creada en la temporada. | Aucune occasion créée sur la saison. |
 | `pt_short` | Short | Corto | Courte |
 | `pt_long_ball` | Long ball | Balón largo | Ballon long |
@@ -191,12 +191,24 @@ banned-word lists in tools/ apply), keep every `{placeholder}`.
 | `fav_note` | Favourites stay in this browser only. | Los favoritos se quedan solo en este navegador. | Les favoris restent uniquement dans ce navigateur. |
 | `fav_none` | Nothing followed here yet: use the star on a card. | Aún no sigues nada aquí: usa la estrella de una tarjeta. | Rien de suivi ici pour l'instant : utilisez l'étoile d'une carte. |
 | `fav_title` | Favourites | Favoritos | Favoris |
+| `pm_forward` | Forward pass | Pase hacia delante | Passe vers l'avant |
+| `pm_progressive` | Progressive pass | Pase progresivo | Passe progressive |
+| `pm_key` | Key pass | Pase clave | Passe clé |
+| `pm_type` | Pass type | Tipo de pase | Type de passe |
+| `pm_x0` | Start, length | Inicio, largo | Départ, longueur |
+| `pm_y0` | Start, width | Inicio, ancho | Départ, largeur |
+| `pm_x1` | End, length | Final, largo | Arrivée, longueur |
+| `pm_y1` | End, width | Final, ancho | Arrivée, largeur |
+| `ch_leg_op` | Open-play chance ({n}) | Ocasión en juego abierto ({n}) | Occasion dans le jeu ({n}) |
+| `ch_leg_sp` | Set-piece chance ({n}) | Ocasión a balón parado ({n}) | Occasion sur coup de pied arrêté ({n}) |
+| `patterns_none_line` | No player pattern for this player. | Ningún patrón de jugador para este jugador. | Aucun motif de joueur pour ce joueur. |
 
 ## Changed keys in i18n.ts
 
 | Key | English | Español | Français |
 |---|---|---|---|
 | `console_pizza` | Against players in the same position | Frente a jugadores de su misma posición | Face aux joueurs du même poste |
+| `con_context_note` | What the plain total hides. | Lo que el total sin más oculta. | Ce que le total brut cache. |
 
 Earlier in this run `board_lineup_note`, `lane_lift_label` and `ss_axis_x` were shortened for the
 Team Board word budget (all three languages); see docs/PROGRESS.md "Final UI decisions".
