@@ -29,7 +29,13 @@ const fill = (s: string, vars: Record<string, string>) => s.replace(/\{(\w+)\}/g
 export function heatValues(grid: HeatGrid, halves: readonly (readonly number[])[], mode: HeatMode, half: HeatHalf) {
   const [a = [], b = []] = halves;
   const counts =
-    mode === "change" ? b.map((v, i) => v - a[i]!) : half === "1" ? a : half === "2" ? b : a.map((v, i) => v + b[i]!);
+    mode === "change"
+      ? b.map((v, i) => v - a[i]!)
+      : half === "1" || halves.length < 2
+        ? a
+        : half === "2"
+          ? b
+          : a.map((v, i) => v + b[i]!);
   let values: number[];
   if (mode === "change") {
     const d1 = density(grid, a);

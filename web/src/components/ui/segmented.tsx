@@ -10,6 +10,7 @@ export function Segmented<V extends string>({
   name,
   size = "sm",
   className,
+  disabled = false,
 }: {
   label: string;
   value: V;
@@ -18,6 +19,7 @@ export function Segmented<V extends string>({
   name: string;
   size?: "sm" | "md";
   className?: string;
+  disabled?: boolean;
 }) {
   return (
     <TG.Root
@@ -25,6 +27,7 @@ export function Segmented<V extends string>({
       aria-label={label}
       value={value}
       onValueChange={(v) => v && onChange(v as V)}
+      disabled={disabled}
       className={cx("inline-flex shrink-0 rounded-full border border-line bg-surface-2 p-0.5", className)}
     >
       {options.map((o) => (
@@ -34,7 +37,7 @@ export function Segmented<V extends string>({
           data-name={name}
           data-value={o.value}
           className={cx(
-            "rounded-full font-semibold text-ink-2 transition-colors hover:text-ink data-[state=on]:bg-ink data-[state=on]:text-bg",
+            "rounded-full font-semibold text-ink-2 transition-colors hover:text-ink disabled:cursor-not-allowed disabled:opacity-50 data-[state=on]:bg-ink data-[state=on]:text-bg",
             size === "sm" ? "px-2.5 py-1 text-[12px]" : "px-3.5 py-1.5 text-[13px]",
           )}
         >

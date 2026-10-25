@@ -10,7 +10,8 @@ const MatchHub = lazy(() => import("./features/hub/MatchHub"));
 const MatchLedger = lazy(() => import("./features/hub/MatchHub").then((m) => ({ default: m.MatchLedger })));
 const TeamGrid = lazy(() => import("./features/teams/TeamGrid"));
 const TeamBoard = lazy(() => import("./features/teams/TeamBoard"));
-const PlayersPage = lazy(() => import("./features/players/PlayersPage"));
+const PlayerDeck = lazy(() => import("./features/players/PlayerDeck"));
+const PlayerConsole = lazy(() => import("./features/players/PlayerConsole"));
 const TechPage = lazy(() => import("./features/tech/TechPage"));
 
 /** Old path -> new path. The query (t, select, lang, play) is kept. */
@@ -33,7 +34,8 @@ export function AppRoutes() {
       <Route path="/match/:id/ledger" element={<MatchLedger />} />
       <Route path="/teams" element={<TeamGrid />} />
       <Route path="/teams/:code" element={<TeamBoard />} />
-      <Route path="/players" element={<PlayersPage />} />
+      <Route path="/players" element={<PlayerDeck />} />
+      <Route path="/players/:id" element={<PlayerConsole />} />
       <Route path="/tech" element={<TechPage />} />
       {Object.entries(REDIRECTS).map(([from, to]) => (
         <Route key={from} path={from} element={<Redirect to={to} />} />

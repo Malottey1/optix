@@ -188,9 +188,34 @@ export function evidenceRows(file: MatchFile): Record<string, EvidenceRow> {
   return out;
 }
 
+/** players-heat-<code>.json: season touch maps of one team's players on the match files' grid. */
+export interface PlayersHeat extends HeatGridShape {
+  /** player id -> [bins] (one "half": the whole season), raw counts */
+  players: Record<string, number[][]>;
+}
+interface HeatGridShape {
+  cols: number;
+  rows: number;
+  x_edges: number[];
+  y_edges: number[];
+}
+
+export function parsePlayersHeat(raw: unknown, code: string): PlayersHeat {
+  const f = `matches/players-heat-${code.toLowerCase()}.json`;
+  if (kind(raw) !== "object") throw new ShapeError(f, "heat", `expected object, got ${kind(raw)}`);
+  const o = raw as Record<string, unknown>;
+  need(f, o, "heat", { cols: "number", rows: "number", x_edges: "array", y_edges: "array", players: "object" });
+  const cells = (o.cols as number) * (o.rows as number);
+  for (const [pid, bins] of Object.entries(o.players as Record<string, unknown>))
+    if (!Array.isArray(bins) || !Array.isArray(bins[0]) || bins[0].length !== cells)
+      throw new ShapeError(f, `players.${pid}`, `expected [${cells} bins]`);
+  return raw as PlayersHeat;
+}
+
 export class MatchFiles {
   private index?: Promise<FixtureIndex>;
   private files = new Map<string, Promise<MatchFile>>();
+  private heat = new Map<string, Promise<PlayersHeat>>();
 
   constructor(
     private readonly base = "./data/matches/",
@@ -216,6 +241,19 @@ export class MatchFiles {
       p = this.json(`${id}.json`).then((raw) => parseMatchFile(raw, id));
       this.files.set(id, p);
       while (this.files.size > 4) this.files.delete(this.files.keys().next().value!);
+    }
+    return p;
+  }
+
+  /** One team's player touch maps (Player Console). */
+  playersHeat(code: string): Promise<PlayersHeat> {
+    if (!/^[A-Z]{3}$/.test(code)) return Promise.reject(new Error(`unknown team ${code}`));
+    const key = `heat:${code}`;
+    let p = this.heat.get(key);
+    if (!p) {
+      p = this.json(`players-heat-${code.toLowerCase()}.json`).then((raw) => parsePlayersHeat(raw, code));
+      this.heat.set(key, p);
+      while (this.heat.size > 2) this.heat.delete(this.heat.keys().next().value!);
     }
     return p;
   }

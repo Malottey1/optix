@@ -61,4 +61,20 @@ describe("HeatPitch", () => {
     expect(text).toMatch(/rose most in the .* and fell most in the /);
     expect(text).not.toMatch(/because|caused|due to|so that/i);
   });
+
+  it("a season touch map (one bin list, no halves) keeps every count and a finite legend", () => {
+    const heat = read("matches/players-heat-ntg.json");
+    const [pid, bins] = Object.entries(heat.players as Record<string, number[][]>)[0]!;
+    const total = bins[0]!.reduce((a, b) => a + b, 0);
+    const v = heatValues(heat, bins, "volume", "both");
+    expect(v.counts.reduce((a, b) => a + b, 0)).toBe(total);
+    expect(v.values.every(Number.isFinite)).toBe(true);
+    expect(v.scale).toBeGreaterThan(0);
+    const { container } = render(<HeatPitch grid={heat} teams={{ [pid]: bins }} codes={[pid]} compact />);
+    const sum = [...container.querySelectorAll("rect[data-bin]")].reduce(
+      (s, r) => s + Number(r.getAttribute("data-count")),
+      0,
+    );
+    expect(sum).toBe(total);
+  });
 });

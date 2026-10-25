@@ -43,7 +43,9 @@ describe("Team Grid", () => {
 
 describe("Lineup pitch", () => {
   it("lays out eleven nodes per club that never overlap", () => {
-    for (const lu of Object.values(ui.lineups as Record<string, { xi: { line: number; slot: number; of: number }[] }>)) {
+    for (const lu of Object.values(
+      ui.lineups as Record<string, { xi: { line: number; slot: number; of: number }[] }>,
+    )) {
       expect(lu.xi.length).toBe(11);
       const pts = lu.xi.map(nodePos);
       for (let i = 0; i < pts.length; i++)
@@ -66,9 +68,11 @@ describe("Lineup pitch", () => {
     expect(nodes.filter((n) => n.tabIndex === 0).length).toBe(1);
     const xi = ui.lineups.AUR.xi as { id: string; shirt: number; position: string }[];
     const name = (id: string) => ui.players.find((r: { id: string }) => r.id === id).name as string;
-    expect(nodes[0]!.getAttribute("aria-label")).toBe(`${xi[0]!.shirt}, ${name(xi[0]!.id)}, ${
-      { GK: "Goalkeeper", DF: "Defender", MF: "Midfielder", FW: "Forward" }[xi[0]!.position]
-    }`);
+    expect(nodes[0]!.getAttribute("aria-label")).toBe(
+      `${xi[0]!.shirt}, ${name(xi[0]!.id)}, ${
+        { GK: "Goalkeeper", DF: "Defender", MF: "Midfielder", FW: "Forward" }[xi[0]!.position]
+      }`,
+    );
     nodes[0]!.focus();
     fireEvent.keyDown(nodes[0]!, { key: "ArrowRight" });
     expect(document.activeElement).toBe(nodes[1]);

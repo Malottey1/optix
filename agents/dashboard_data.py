@@ -397,6 +397,9 @@ def _recall_rows(path: Path) -> dict:
                     cases_holdout=hold[f]["cases"]) for f in PAT.FAMILIES}
 
 
+PLAYER_PATTERN_EVIDENCE = 12
+
+
 def patterns_section(season, docs_dir: Path) -> dict:
     measured = _recall_rows(docs_dir / "data" / "pattern_recall.json")
     rules = {f: sorted(r for r, fam in PATTERN_RULES.items() if fam == f) for f in PAT.FAMILIES}
@@ -406,6 +409,7 @@ def patterns_section(season, docs_dir: Path) -> dict:
     found = {}                                    # (team, family) -> matches with a finding
     played = {}
     by_player = {}                                # (player, family) -> matches with a finding
+    player_ev = {}                                # (player, family) -> anchor event ids, date order
     for mid, m in season.matches.items():
         for tid in (m["home_team_id"], m["away_team_id"]):
             played[tid] = played.get(tid, 0) + 1
@@ -415,6 +419,7 @@ def patterns_section(season, docs_dir: Path) -> dict:
             for f in fs:
                 if f.player_id:
                     by_player[(f.player_id, f.family)] = by_player.get((f.player_id, f.family), 0) + 1
+                    player_ev.setdefault((f.player_id, f.family), []).extend(f.evidence)
     signature, team_families = {}, {}
     for tid in sorted(season.teams):
         rows, every = [], []
@@ -435,8 +440,10 @@ def patterns_section(season, docs_dir: Path) -> dict:
         team_families[season.code(tid)] = sorted(every, key=lambda r: (-r["share"], r["family"]))
     players = {}
     for (pid, fam), n in sorted(by_player.items()):
+        # evidence: the findings' anchor events, first PLAYER_PATTERN_EVIDENCE in match order
         players.setdefault(pid, []).append(dict(family=fam, icon=PAT.ICONS[fam], matches=n,
-                                                team_played=played[season.players[pid]["team_id"]]))
+                                                team_played=played[season.players[pid]["team_id"]],
+                                                evidence=player_ev[(pid, fam)][:PLAYER_PATTERN_EVIDENCE]))
     return dict(catalogue=catalogue, signature=signature, team_families=team_families, players=players,
                 not_built=[dict(id=i, name=n, icon=ic, status=s) for i, n, ic, s in NOT_BUILT],
                 signature_rule=dict(min_share=_pct(SIGNATURE_SHARE), min_lift=SIGNATURE_LIFT))
@@ -527,6 +534,8 @@ def build(match_ds, season, match_id, insights, attempts, docs_dir: Path = ROOT 
     ids = [i for ins in insights for i in ins["evidence_event_ids"]]
     ids += [i for p in players for c in p["checks"] for i in c["evidence_event_ids"]]
     ids += [i for h in teams["head_to_head"] if h["claim"] for i in h["claim"]["evidence_event_ids"]]
+    patterns = patterns_section(season, docs_dir)
+    ids += [i for rows in patterns["players"].values() for r in rows for i in r["evidence"]]
     return dict(match_id=match_id, season=dict(dataset=season.label, matches=len(season.matches),
                                                teams=len(season.teams)),
                 teams=teams, players=players, lineups=lineups_section(season, season_dir or ROOT / "data" / season.label), ledger=ledger, rewrites=rewrites,
@@ -536,4 +545,4 @@ def build(match_ds, season, match_id, insights, attempts, docs_dir: Path = ROOT 
                        for e in match_events(match_ds)[match_id] if e["event_type"] in TRACK_TYPES],
                 visuals=visuals_section(match_ds, season, match_id, players),
                 azure_status=[{k: r[k] for k in ("id", "name", "tech", "state", "live", "note")} for r in azure_status()],
-                patterns=patterns_section(season, docs_dir))
+                patterns=patterns)

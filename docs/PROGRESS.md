@@ -97,6 +97,24 @@ Item status is in docs/ia-progress.md.
   sheet, including the evidence drawers.
 - Board word count (1440, visible): VES 178, NTG 174, AUR 166, CAL 166; HAR at 390: 172. Budget 180.
 
+- Player Deck (`#/players`): cards show the initials avatar, badge, name, position, goals and
+  assists only; filters by team and position, accent-blind name search; 2 / 3 / 4 columns at
+  390 / 1024 / 1440. Players are ordered by team, then GK-DF-MF-FW, then shirt.
+- Player Console (`#/players/:id`): routes (PassRoutes, top 8 then "Show all routes (N)"), the
+  percentile pizza, diverging bars = the same percentiles minus 50 (so the two visuals cannot
+  disagree), the season touch map from players-heat-<code>.json, and pattern chips.
+- Pattern evidence: `patterns.players[]` rows now carry `evidence`, the findings' anchor event ids
+  (the first 12 in match order), and those ids are added to `ui.evidence`, so a chip opens the
+  events behind it. ui.json 1,133,327 bytes (limit 1.3 MB).
+- Raw / With context: built only from the player's fired Verifier check (the held-back sentence,
+  the published sentence, the rule's reason and the figures already in the player row). Six
+  players have one; for the rest the toggle is disabled with a note. No new claims.
+- The old PlayersPage is kept on disk, unrouted and marked deprecated (no file deletions).
+- HeatPitch with one bin list (a season touch map, no halves) summed a missing second half
+  (NaN, an empty map); fixed in heatValues, with a test.
+- The settings note now says only the Tech Blueprint and some longer chart captions are English
+  only (Team Board, Deck and Console strings are in en/es/fr).
+
 ### Test changes (IA)
 
 - web/src/components/viz/helpers.test.ts: the PlayerRow fixture gains the new required fields
@@ -104,6 +122,11 @@ Item status is in docs/ia-progress.md.
 - web/src/App.test.tsx, "Tactical patterns on the pages": the signature check visited `#/teams`
   (one page with every club); it now visits each `#/teams/<code>` board and asserts the same
   families in the same order, plus that no club has more than the three the board shows.
+- web/src/App.test.tsx, same test, player half: it picked a player in the old `#profile-player`
+  select on `#/players`; it now checks the deck links every player, opens the starved-finisher
+  player's card and finds the same chip on the Player Console.
+- web/src/routes.test.tsx: the mocked page module for `/players` is now PlayerDeck (PlayersPage is
+  unrouted); a `/players/:id` case is added.
 
 - tests/test_verifier_full.py, claim-level shot_spam pooled recall (the one exception the brief
   allows): the point floor (recall >= 0.80) is replaced by the interval method for this one check,

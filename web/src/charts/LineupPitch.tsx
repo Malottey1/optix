@@ -21,7 +21,17 @@ export function nodePos(n: Pick<LineupNode, "line" | "slot" | "of">): { x: numbe
 
 export const surname = (name: string) => name.trim().split(/\s+/).at(-1) ?? name;
 
-export function Jersey({ code, shirt, size = 30, fluid = false }: { code: string; shirt: number; size?: number; fluid?: boolean }) {
+export function Jersey({
+  code,
+  shirt,
+  size = 30,
+  fluid = false,
+}: {
+  code: string;
+  shirt: number;
+  size?: number;
+  fluid?: boolean;
+}) {
   return (
     <svg
       viewBox="0 0 40 40"

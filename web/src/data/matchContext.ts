@@ -1,7 +1,7 @@
 // Lazy access to the fixture index and the per-match files from any page (data/matches.ts). The
 // provider lets tests inject a MatchFiles that reads from disk.
 import { createContext, useContext, useEffect, useState } from "react";
-import { type FixtureIndex, type MatchFile, MatchFiles, matchFiles } from "./matches";
+import { type FixtureIndex, type MatchFile, MatchFiles, type PlayersHeat, matchFiles } from "./matches";
 
 export const MatchFilesContext = createContext<MatchFiles>(matchFiles);
 
@@ -32,4 +32,9 @@ export function useFixtures(): Loaded<FixtureIndex> {
 export function useMatchFile(id: string | null): Loaded<MatchFile> {
   const src = useContext(MatchFilesContext);
   return useLoad(id ? () => src.match(id) : null, id ?? "");
+}
+
+export function usePlayersHeat(code: string | null): Loaded<PlayersHeat> {
+  const src = useContext(MatchFilesContext);
+  return useLoad(code ? () => src.playersHeat(code) : null, code ? `heat:${code}` : "");
 }

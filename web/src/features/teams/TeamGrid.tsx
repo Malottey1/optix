@@ -27,7 +27,8 @@ export default function TeamGrid() {
                 <div className="min-w-0">
                   <h2 className="truncate text-[17px] font-semibold text-ink">{team.name}</h2>
                   <p className="text-[12.5px] text-ink-3">
-                    <span className="num font-semibold text-ink-2">{num(team.matches, lang)}</span> {t("matches_played")}
+                    <span className="num font-semibold text-ink-2">{num(team.matches, lang)}</span>{" "}
+                    {t("matches_played")}
                   </p>
                 </div>
               </div>

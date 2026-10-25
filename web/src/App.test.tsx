@@ -127,14 +127,24 @@ describe("Tactical patterns on the pages", () => {
     const page = await screen.findByText((_, el) => el?.getAttribute("data-page") === "players", undefined, {
       timeout: 5000,
     });
-    const select = (await waitFor(() => page.querySelector("#profile-player"))) as HTMLSelectElement;
-    const options = new Set([...select.options].map((o) => o.value));
+    // the deck links every player to the Player Console, which carries the pattern chips
+    const links = await waitFor(() => {
+      const l = page.querySelectorAll("a[data-player]");
+      expect(l.length).toBe(ui.players.length);
+      return l;
+    });
+    const options = new Set([...links].map((a) => a.getAttribute("data-player")));
     const pid = Object.entries(ui.patterns.players as Record<string, { family: string }[]>).find(
       ([id, rows]) => options.has(id) && rows.some((r) => r.family === "pat_starved_finisher"),
     )![0];
-    fireEvent.change(select, { target: { value: pid } });
+    fireEvent.click(page.querySelector(`a[data-player='${pid}']`)!);
+    const console_ = await screen.findByText((_, el) => el?.getAttribute("data-page") === "player", undefined, {
+      timeout: 5000,
+    });
     await waitFor(() =>
-      expect(page.querySelector(`[data-player-patterns='${pid}'] [data-family='pat_starved_finisher']`)).toBeTruthy(),
+      expect(
+        console_.querySelector(`[data-player-patterns='${pid}'] [data-family='pat_starved_finisher']`),
+      ).toBeTruthy(),
     );
     cleanup();
 

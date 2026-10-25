@@ -315,7 +315,10 @@ export interface PatternsSection {
   signature: Record<string, SignatureRow[]>;
   /** every family found for a team at least once, with signature = passes the signature rule */
   team_families?: Record<string, (SignatureRow & { signature: boolean })[]>;
-  players: Record<string, { family: string; icon: string; matches: number; team_played: number }[]>;
+  players: Record<
+    string,
+    { family: string; icon: string; matches: number; team_played: number; /** anchor event ids */ evidence: string[] }[]
+  >;
   not_built: { id: string | null; name: string; icon: string | null; status: string }[];
   signature_rule: { min_share: number; min_lift: number };
 }

@@ -1,3 +1,6 @@
+// DEPRECATED: replaced by PlayerDeck (#/players) and PlayerConsole (#/players/:id); kept unrouted
+// (no file deletions in the IA rebuild). Its context cards live on as the console's Raw / With
+// context toggle.
 // #/players: involvement, pass quality and chances created per player, season totals from event
 // data only (ui.json, engine/metrics.py, engine/threat.py). No fatigue, GPS, speed or fitness
 // figure exists in the data or on this page. The Verifier's player rules add the context that

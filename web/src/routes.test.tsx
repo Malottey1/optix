@@ -9,7 +9,8 @@ vi.mock("./features/fixtures/FixturesPage", () => ({ default: () => <p>fixtures<
 vi.mock("./features/hub/MatchHub", () => ({ default: () => <p>hub</p>, MatchLedger: () => <p>ledger</p> }));
 vi.mock("./features/teams/TeamGrid", () => ({ default: () => <p>teams</p> }));
 vi.mock("./features/teams/TeamBoard", () => ({ default: () => <p>board</p> }));
-vi.mock("./features/players/PlayersPage", () => ({ default: () => <p>players</p> }));
+vi.mock("./features/players/PlayerDeck", () => ({ default: () => <p>players</p> }));
+vi.mock("./features/players/PlayerConsole", () => ({ default: () => <p>player</p> }));
 vi.mock("./features/tech/TechPage", () => ({ default: () => <p>tech</p> }));
 
 const { AppRoutes } = await import("./routes");
@@ -39,6 +40,7 @@ describe("old deep links", () => {
     ["/live?t=2760&select=ins_0009&lang=es&play=1", "/match/m_showcase?t=2760&select=ins_0009&lang=es&play=1", "hub"],
     ["/teams", "/teams", "teams"],
     ["/players", "/players", "players"],
+    ["/players/AUR_08", "/players/AUR_08", "player"],
     ["/tech", "/tech", "tech"],
     ["/", "/", "home"],
     ["/match", "/fixtures", "fixtures"],

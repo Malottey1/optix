@@ -64,8 +64,21 @@ export function StylePizza({ team }: { team: TeamProfile }) {
   return (
     <figure className="m-0" data-viz="team-pizza" data-team={team.code}>
       <div className="grid grid-cols-1 items-center gap-3 sm:grid-cols-[minmax(0,240px)_1fr]">
-        <svg viewBox="0 0 200 200" className="mx-auto block w-full max-w-[240px]" role="img" aria-label={t("board_style")}>
-          <circle cx="100" cy="100" r={R0 + RING} fill="none" stroke="var(--ink-3)" strokeDasharray="3 3" strokeWidth="1" />
+        <svg
+          viewBox="0 0 200 200"
+          className="mx-auto block w-full max-w-[240px]"
+          role="img"
+          aria-label={t("board_style")}
+        >
+          <circle
+            cx="100"
+            cy="100"
+            r={R0 + RING}
+            fill="none"
+            stroke="var(--ink-3)"
+            strokeDasharray="3 3"
+            strokeWidth="1"
+          />
           {labels.map((l, i) => {
             const r1 = R0 + ratio(l) * RING;
             return (
@@ -93,17 +106,31 @@ export function StylePizza({ team }: { team: TeamProfile }) {
         <table className="w-full border-collapse text-left text-[12px]">
           <thead className="text-ink-3">
             <tr>
-              <th scope="col" className="py-1 pr-2">{t("tbl_measure")}</th>
-              <th scope="col" className="py-1 pr-2 text-right">{t("tbl_value")}</th>
-              <th scope="col" className="py-1 text-right">{t("tbl_league")}</th>
+              <th scope="col" className="py-1 pr-2">
+                {t("tbl_measure")}
+              </th>
+              <th scope="col" className="py-1 pr-2 text-right">
+                {t("tbl_value")}
+              </th>
+              <th scope="col" className="py-1 text-right">
+                {t("tbl_league")}
+              </th>
             </tr>
           </thead>
           <tbody>
             {labels.map((l) => (
               <tr key={l.id} className="border-t border-line">
-                <th scope="row" className="py-1 pr-2 font-normal">{t(`fp_${l.id}` as Key)}</th>
-                <td className="num py-1 pr-2 text-right">{num(l.value, lang)}{l.unit}</td>
-                <td className="num py-1 text-right">{num(l.league, lang)}{l.unit}</td>
+                <th scope="row" className="py-1 pr-2 font-normal">
+                  {t(`fp_${l.id}` as Key)}
+                </th>
+                <td className="num py-1 pr-2 text-right">
+                  {num(l.value, lang)}
+                  {l.unit}
+                </td>
+                <td className="num py-1 text-right">
+                  {num(l.league, lang)}
+                  {l.unit}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -156,7 +183,9 @@ export function LaneLiftStrip({ team, lanes }: { team: TeamProfile; lanes: reado
         })}
         <PitchLines ground={false} />
       </svg>
-      <figcaption className="mt-1.5 text-[12px] text-ink-3">{t("lane_lift_label")} · {t("heat_attacking")} →</figcaption>
+      <figcaption className="mt-1.5 text-[12px] text-ink-3">
+        {t("lane_lift_label")} · {t("heat_attacking")} →
+      </figcaption>
       {soft ? (
         <p className="mt-1.5 text-[13px] text-ink-2" data-soft-lane={soft.lane}>
           {fill(t("soft_lane_note"), {
@@ -174,11 +203,21 @@ export function LaneLiftStrip({ team, lanes }: { team: TeamProfile; lanes: reado
         <table className="w-full min-w-[420px] border-collapse text-left text-[12px]" data-table="lanes">
           <thead className="text-ink-3">
             <tr>
-              <th scope="col" className="py-1 pr-2">{t("tbl_lane")}</th>
-              <th scope="col" className="py-1 pr-2 text-right">{t("tbl_share")}</th>
-              <th scope="col" className="py-1 pr-2 text-right">{t("tbl_league")}</th>
-              <th scope="col" className="py-1 pr-2 text-right">{t("tbl_lift")}</th>
-              <th scope="col" className="py-1 text-right">{t("tbl_completion")}</th>
+              <th scope="col" className="py-1 pr-2">
+                {t("tbl_lane")}
+              </th>
+              <th scope="col" className="py-1 pr-2 text-right">
+                {t("tbl_share")}
+              </th>
+              <th scope="col" className="py-1 pr-2 text-right">
+                {t("tbl_league")}
+              </th>
+              <th scope="col" className="py-1 pr-2 text-right">
+                {t("tbl_lift")}
+              </th>
+              <th scope="col" className="py-1 text-right">
+                {t("tbl_completion")}
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -187,7 +226,9 @@ export function LaneLiftStrip({ team, lanes }: { team: TeamProfile; lanes: reado
               const c = team.completion_conceded[l]!;
               return (
                 <tr key={l} className="border-t border-line">
-                  <th scope="row" className="py-1 pr-2 font-normal">{t(laneKey(lanes, l))}</th>
+                  <th scope="row" className="py-1 pr-2 font-normal">
+                    {t(laneKey(lanes, l))}
+                  </th>
                   <td className="num py-1 pr-2 text-right">{num(a.share, lang)}</td>
                   <td className="num py-1 pr-2 text-right">{num(a.league, lang)}</td>
                   <td className="num py-1 pr-2 text-right">{signed(a.effect, lang)}</td>
@@ -262,7 +303,11 @@ export function SignatureList({
       >
         <ul className="flex flex-col gap-2 text-[13px]" data-all-patterns={code}>
           {all.map((r) => (
-            <li key={r.family} data-family={r.family} className="flex flex-wrap items-center gap-2 border-b border-line pb-2">
+            <li
+              key={r.family}
+              data-family={r.family}
+              className="flex flex-wrap items-center gap-2 border-b border-line pb-2"
+            >
               {line(r)}
               <span className="w-full text-[12px] text-ink-3">
                 <span className="num">{num(r.matches, lang)}</span>/<span className="num">{num(r.played, lang)}</span>{" "}
