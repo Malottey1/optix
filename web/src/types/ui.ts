@@ -177,7 +177,81 @@ export interface PlayerRow {
   chances_open_play: number;
   chances_set_piece: number;
   checks: PlayerCheck[];
+  /** season profile (agents/player_profiles.py); absent for players with no minutes */
+  profile?: PlayerProfile;
 }
+
+export type DefRate = "tackles" | "interceptions" | "blocks" | "clearances" | "fouls" | "contributions";
+/** Outfield defensive actions. p90 / p100 / peer_pctl are null or absent below the minutes floor. */
+export interface DefenceProfile {
+  tackles: number;
+  tackles_won: number;
+  interceptions: number;
+  blocks: number;
+  clearances: number;
+  clearances_head: number;
+  fouls: number;
+  pressures: number;
+  aerials: number;
+  aerials_won: number;
+  contributions: number;
+  entries_faced: number;
+  p90: Record<DefRate, number> | null;
+  p100: Record<DefRate, number> | null;
+  peer_pctl?: Record<DefRate, number>;
+}
+export interface KeeperProfile {
+  shots_faced: number;
+  on_target: number;
+  saves: number;
+  conceded: number;
+  xg_faced: number;
+  save_pct: number | null;
+  conceded_minus_xg: number;
+  clean_sheets: number;
+  matches: number;
+  passes: number;
+  pass_completion: number | null;
+  long_share: number | null;
+  long_m: number;
+  goal_kicks: number;
+}
+export type ChanceKind = "corner" | "free_kick" | "throw_in" | "set_piece" | "open_play";
+export interface ChanceSummary {
+  total: number;
+  set_piece: number;
+  open_play: number;
+  kinds: Record<ChanceKind, number>;
+  xa: number;
+  xa_per: number | null;
+  progressive: number;
+  forward: number;
+}
+export interface PlayerProfile {
+  minutes: number;
+  starts: number;
+  sub_apps: number;
+  sub_minutes: number;
+  passing: {
+    progressive: number;
+    into_final_third: number;
+    into_box: number;
+    p90: { progressive: number; into_final_third: number; into_box: number } | null;
+  };
+  chances: ChanceSummary;
+  defence?: DefenceProfile;
+  keeper?: KeeperProfile;
+}
+export interface ProfilesMeta {
+  min_minutes: number;
+  long_pass_m: number;
+  rates: DefRate[];
+  contributions: string[];
+  peers: Partial<Record<"DF" | "MF" | "FW", { n: number; avg_p90: Record<DefRate, number> | null }>>;
+  league_chances: { total: number; xa_per: number | null };
+}
+/** Search index fixture: [id, matchweek, home code, away code, home goals, away goals]. */
+export type FixtureEntry = [string, number, string, string, number, number];
 
 export type LedgerOutcome = "passed" | "passed_with_context" | "revised" | "blocked";
 export interface LedgerRow {
@@ -287,6 +361,8 @@ export interface UiData {
   azure_status: AzureStatus[];
   patterns?: PatternsSection;
   lineups: Record<string, Lineup>;
+  profiles: ProfilesMeta;
+  fixtures: FixtureEntry[];
 }
 
 /** One node of the most-used starting XI: listed position and role, line (0 GK .. 3 FW) and slot

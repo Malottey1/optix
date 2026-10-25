@@ -272,9 +272,11 @@ def match_sources(data: Path) -> tuple:
                 words.update(_full_id(mid, e) for e in c.get("evidence", []))
             for halves in f["heat"]["teams"].values():
                 nums |= heat_numbers(f["heat"], halves)
-        else:
+        elif p.name.startswith("players-heat-"):
             for bins in f.get("players", {}).values():
                 nums |= heat_numbers(f, bins)
+        # players-<code>.json (defensive points, key passes, shots faced): every number is stored as
+        # shown, so _walk above covers it
     return nums, words
 
 

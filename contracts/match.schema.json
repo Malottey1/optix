@@ -5,7 +5,7 @@
   "description": "One played match for the Match Hub (agents/match_export.py): header, turning points, the recap's verified cards and every attempt of their claims, raw heat bins per team per half, a compact event log and, only when the stream published a verified lane claim, the matchup. Event ids of this match are compacted to their number (m_001_e00936 -> 936); ids from other matches stay strings.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["match_id", "status", "stream", "header", "periods", "duration_sec", "momentum", "turning_points", "insights", "claims", "stream_counts", "heat", "events", "evidence", "players"],
+  "required": ["match_id", "status", "stream", "header", "periods", "duration_sec", "momentum", "turning_points", "insights", "claims", "stream_counts", "heat", "events", "evidence", "players", "lineups"],
   "properties": {
     "match_id": { "type": "string" },
     "status": { "enum": ["live", "final"], "description": "live: the showcase replay (its stream is the bundle's insights.jsonl); final: a played season match" },
@@ -70,9 +70,43 @@
       }
     },
     "players": { "type": "object", "additionalProperties": { "type": "array", "prefixItems": [{ "type": "string" }, { "type": "string" }, { "type": "string" }], "minItems": 3, "maxItems": 3 } },
-    "matchups": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/matchup" } }
+    "matchups": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/matchup" } },
+    "lineups": {
+      "type": "object",
+      "description": "Both starting XIs laid out by listed position (agents.player_profiles.match_lineups). Not a tracked shape; substitutions, cards and goals are in turning_points.",
+      "additionalProperties": false,
+      "required": ["home", "away"],
+      "properties": { "home": { "$ref": "#/$defs/xi" }, "away": { "$ref": "#/$defs/xi" } }
+    }
   },
   "$defs": {
+    "xi": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "xi", "label"],
+      "properties": {
+        "code": { "type": "string" },
+        "label": { "type": "string", "description": "counts of listed positions, DF-MF-FW" },
+        "xi": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "array",
+            "description": "[player_id, shirt, position, line, slot, of]",
+            "prefixItems": [
+              { "type": "string" },
+              { "type": "integer" },
+              { "enum": ["GK", "DF", "MF", "FW"] },
+              { "type": "integer", "minimum": 0, "maximum": 3 },
+              { "type": "integer", "minimum": 0 },
+              { "type": "integer", "minimum": 1 }
+            ],
+            "items": false,
+            "minItems": 6
+          }
+        }
+      }
+    },
     "eid": { "type": ["integer", "string"] },
     "side": {
       "type": "object",

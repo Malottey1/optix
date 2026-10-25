@@ -24,6 +24,12 @@ Each match file holds:
   evidence        rows for evidence ids from other matches (season-scope claims)
   players         id -> [name, shirt, team] for every player named in the file
   matchups        only when the stream published a verified lane claim (matchup_mismatch)
+  lineups         both starting XIs by listed position (agents.player_profiles.match_lineups);
+                  substitutions, cards and goals are in turning_points
+
+Per team, players-heat-<code>.json holds the season touch maps and players-<code>.json the console's
+lazy lists (agents.player_profiles): defensive action points, key passes with the assisted shot,
+and the shots each keeper faced.
 """
 from __future__ import annotations
 
@@ -38,7 +44,8 @@ from engine import metrics as M
 from engine.tables import load, match_events
 from engine.zones import FINAL_THIRD_X, LANE_EDGES, MIDDLE_THIRD_X
 
-from .dashboard_data import TRACK_TYPES
+from .dashboard_data import LATERAL, TRACK_TYPES
+from .player_profiles import lineup_rows, match_lineups, profiles
 from .run_match import timeline
 from .narrative import languages
 from .stream import InsightStream
@@ -296,7 +303,7 @@ def _dumps(obj) -> str:
     return json.dumps(obj, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
 
 
-def match_file(ds, match_id, insights, attempts, status, lookup) -> tuple[dict, str]:
+def match_file(ds, match_id, insights, attempts, status, lookup, lineups=None) -> tuple[dict, str]:
     """The match file as a dict and its exact serialisation. lookup: datasets to find cross-match
     evidence rows in (the match's own, then the season). For the live replay (status "live") the
     stream itself is not repeated: the hub plays it from insights.jsonl and claims.jsonl, the files
@@ -331,6 +338,8 @@ def match_file(ds, match_id, insights, attempts, status, lookup) -> tuple[dict, 
     mu = matchup_section(insights)
     if mu:
         out["matchups"] = mu
+    if lineups is not None:
+        out["lineups"] = match_lineups(ds, match_id, lineups, LATERAL)
     if status == "live":
         out.update(stream="bundle", insights=[], claims=[])
     dropped: list = []
@@ -342,6 +351,7 @@ def match_file(ds, match_id, insights, attempts, status, lookup) -> tuple[dict, 
         used = {r[3] for r in rows} | {r[6] for r in rows} | {r[4] for r in out["evidence"]["rows"]}
         used |= {p for i in insights for p in i["player_ids"]}
         used |= {t.get(k) for t in tps for k in ("player_id", "on_player_id")}
+        used |= {r[0] for side in out.get("lineups", {}).values() for r in side["xi"]}
         out["players"] = {p: names[p] for p in sorted(x for x in used if x and x in names)}
         text = _dumps(out)
         if len(text.encode()) <= FILE_TARGET:
@@ -382,6 +392,7 @@ def export(season_dir: Path, showcase_dir: Path | None, out: Path, log=print, fi
     order = order[:first] if first is not None else order
     history: dict = {}
     rows, sizes = [], {}
+    season_lineups = lineup_rows(season_dir)
 
     def write(mid, data, text):
         (out / f"{mid}.json").write_text(text, encoding="utf-8")
@@ -395,7 +406,7 @@ def export(season_dir: Path, showcase_dir: Path | None, out: Path, log=print, fi
         ins = s.run()
         for i in ins:
             i["clock"]["emitted_latency_ms"] = None
-        data, text = match_file(sc, SHOWCASE, ins, s.attempts(), "live", (sc, season))
+        data, text = match_file(sc, SHOWCASE, ins, s.attempts(), "live", (sc, season), lineup_rows(showcase_dir))
         write(SHOWCASE, data, text)
         log(f"{SHOWCASE}: {len(ins)} insights, {sizes[SHOWCASE]} B, {time.time() - t0:.1f} s, peak RSS {_rss_mb():.0f} MB")
         del s, ins, data, text, sc
@@ -407,7 +418,7 @@ def export(season_dir: Path, showcase_dir: Path | None, out: Path, log=print, fi
             i["clock"]["emitted_latency_ms"] = None
         for tid in (season.matches[mid]["home_team_id"], season.matches[mid]["away_team_id"]):
             history.setdefault(tid, []).append({f: mag for (f, t, _), mag in s.orc.analyst.shown.items() if t == tid})
-        data, text = match_file(season, mid, ins, s.attempts(), "final", (season,))
+        data, text = match_file(season, mid, ins, s.attempts(), "final", (season,), season_lineups)
         write(mid, data, text)
         log(f"{mid}: {len(ins)} insights, {sizes[mid]} B, event log thinned {data['events']['omitted_types'] or 'no'}, "
             f"{time.time() - t0:.1f} s, peak RSS {_rss_mb():.0f} MB")
@@ -423,6 +434,11 @@ def export(season_dir: Path, showcase_dir: Path | None, out: Path, log=print, fi
         ph = _dumps(player_heat(season, tid))
         (out / f"{name}.json").write_text(ph, encoding="utf-8")
         sizes[name] = len(ph.encode())
+    for code, f in profiles(season, season_lineups)["files"].items():
+        name = f"players-{code.lower()}"
+        text_p = _dumps(f)
+        (out / f"{name}.json").write_text(text_p, encoding="utf-8")
+        sizes[name] = len(text_p.encode())
     total = sum(sizes.values())
     log(f"{len(sizes)} match files, {total} B in all (largest {max(sizes.values())} B); index {len(text.encode())} B")
     if total > MAX_DIR_BYTES:

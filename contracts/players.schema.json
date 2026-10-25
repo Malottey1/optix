@@ -1,0 +1,160 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://optix.example/contracts/players.schema.json",
+  "title": "TeamLists",
+  "description": "Per team, the Player Console's lazy lists (agents.player_profiles): defensive action points in the player's own frame, key passes with the shot they set up, and the shots each keeper faced in the keeper's defending frame. Season figures are in ui.json players[].profile.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "team",
+    "point_types",
+    "players"
+  ],
+  "properties": {
+    "team": {
+      "type": "string"
+    },
+    "point_types": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "tackle",
+          "interception",
+          "block",
+          "clearance"
+        ]
+      }
+    },
+    "players": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/lists"
+      }
+    }
+  },
+  "$defs": {
+    "lists": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "defence": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "description": "[x, y, type index]",
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "integer",
+                "minimum": 0
+              }
+            ],
+            "items": false,
+            "minItems": 3
+          }
+        },
+        "chances": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "description": "[event_id, clock_sec, period, minute, kind, pass_type, xA, result, x0, y0, x1, y1, progressive, forward]",
+            "prefixItems": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "enum": [
+                  "corner",
+                  "free_kick",
+                  "throw_in",
+                  "set_piece",
+                  "open_play"
+                ]
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "items": false,
+            "minItems": 14
+          }
+        },
+        "shots_faced": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "description": "[event_id, clock_sec, x, y, result, xG]",
+            "prefixItems": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "enum": [
+                  "goal",
+                  "saved",
+                  "blocked",
+                  "off_target"
+                ]
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "items": false,
+            "minItems": 6
+          }
+        }
+      }
+    }
+  }
+}

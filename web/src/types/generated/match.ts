@@ -70,6 +70,13 @@ export interface MatchFile {
    * @minItems 1
    */
   matchups?: [Matchup, ...Matchup[]];
+  /**
+   * Both starting XIs laid out by listed position (agents.player_profiles.match_lineups). Not a tracked shape; substitutions, cards and goals are in turning_points.
+   */
+  lineups: {
+    home: Xi;
+    away: Xi;
+  };
 }
 export interface Side {
   code: string;
@@ -598,4 +605,15 @@ export interface Matchup {
   metrics: {};
   confidence: string | null;
   evidence_event_ids: string[];
+}
+export interface Xi {
+  code: string;
+  /**
+   * counts of listed positions, DF-MF-FW
+   */
+  label: string;
+  /**
+   * @minItems 1
+   */
+  xi: [never[], ...never[][]];
 }

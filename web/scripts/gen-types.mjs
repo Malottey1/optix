@@ -16,6 +16,7 @@ for (const [schema, file] of [
   ["insight.schema.json", "insight.ts"],
   ["match.schema.json", "match.ts"],
   ["fixtures.schema.json", "fixtures.ts"],
+  ["players.schema.json", "players.ts"],
 ]) {
   const ts = await compileFromFile(join(contracts, schema), {
     bannerComment: banner,

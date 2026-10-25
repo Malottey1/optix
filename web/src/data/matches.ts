@@ -4,6 +4,7 @@
 // computed: the decoding only restores ids and names the export compacted.
 import type { FixtureIndex } from "../types/generated/fixtures";
 import type { Attempt, Card, MatchFile, TurningPoint } from "../types/generated/match";
+import type { TeamLists } from "../types/generated/players";
 import { ShapeError } from "../types/guards";
 import type { EvidenceRow, Insight } from "../types/ui";
 
@@ -63,7 +64,17 @@ export function parseMatchFile(raw: unknown, id: string): MatchFile {
     events: "object",
     evidence: "object",
     players: "object",
+    lineups: "object",
   });
+  for (const side of ["home", "away"] as const) {
+    const l = (o.lineups as Record<string, unknown>)[side] as Record<string, unknown> | undefined;
+    if (kind(l) !== "object") throw new ShapeError(f, `lineups.${side}`, "expected object");
+    need(f, l!, `lineups.${side}`, { code: "string", xi: "array", label: "string" });
+    (l!.xi as unknown[]).forEach((r, i) => {
+      if (!Array.isArray(r) || r.length !== 6 || typeof r[0] !== "string" || typeof r[3] !== "number")
+        throw new ShapeError(f, `lineups.${side}.xi[${i}]`, "expected [id, shirt, position, line, slot, of]");
+    });
+  }
   if (o.match_id !== id) throw new ShapeError(f, "match.match_id", `expected ${id}, got ${String(o.match_id)}`);
   const heat = o.heat as Record<string, unknown>;
   need(f, heat, "heat", { cols: "number", rows: "number", x_edges: "array", y_edges: "array", teams: "object" });
@@ -212,10 +223,60 @@ export function parsePlayersHeat(raw: unknown, code: string): PlayersHeat {
   return raw as PlayersHeat;
 }
 
+/** players-<code>.json (contracts/players.schema.json): the console's lazy lists for one team. */
+export type { TeamLists };
+export type ChanceRow = [
+  string,
+  number,
+  number,
+  number,
+  "corner" | "free_kick" | "throw_in" | "set_piece" | "open_play",
+  string,
+  number,
+  string | null,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+];
+export type ShotFacedRow = [string, number, number, number, "goal" | "saved" | "blocked" | "off_target", number];
+export type DefPoint = [number, number, number];
+
+export function parseTeamLists(raw: unknown, code: string): TeamLists {
+  const f = `matches/players-${code.toLowerCase()}.json`;
+  if (kind(raw) !== "object") throw new ShapeError(f, "lists", `expected object, got ${kind(raw)}`);
+  const o = raw as Record<string, unknown>;
+  need(f, o, "lists", { team: "string", point_types: "array", players: "object" });
+  if (o.team !== code) throw new ShapeError(f, "lists.team", `expected ${code}, got ${String(o.team)}`);
+  const rows: [string, number][] = [
+    ["defence", 3],
+    ["chances", 14],
+    ["shots_faced", 6],
+  ];
+  for (const [pid, l] of Object.entries(o.players as Record<string, Record<string, unknown>>))
+    for (const [k, n] of rows) {
+      const v = l[k];
+      if (v === undefined) continue;
+      if (!Array.isArray(v) || v.some((r) => !Array.isArray(r) || r.length !== n))
+        throw new ShapeError(f, `players.${pid}.${k}`, `expected rows of ${n}`);
+    }
+  return raw as TeamLists;
+}
+
+export const chanceRows = (l: TeamLists, pid: string) => (l.players[pid]?.chances ?? []) as unknown as ChanceRow[];
+export const shotsFacedRows = (l: TeamLists, pid: string) =>
+  (l.players[pid]?.shots_faced ?? []) as unknown as ShotFacedRow[];
+export const defPoints = (l: TeamLists, pid: string) => (l.players[pid]?.defence ?? []) as unknown as DefPoint[];
+/** The match id of a full event id ("m_012_e00306" -> "m_012"). */
+export const matchOfEvent = (eid: string) => eid.replace(/_e\d+$/, "");
+
 export class MatchFiles {
   private index?: Promise<FixtureIndex>;
   private files = new Map<string, Promise<MatchFile>>();
   private heat = new Map<string, Promise<PlayersHeat>>();
+  private lists = new Map<string, Promise<TeamLists>>();
 
   constructor(
     private readonly base = "./data/matches/",
@@ -254,6 +315,18 @@ export class MatchFiles {
       p = this.json(`players-heat-${code.toLowerCase()}.json`).then((raw) => parsePlayersHeat(raw, code));
       this.heat.set(key, p);
       while (this.heat.size > 2) this.heat.delete(this.heat.keys().next().value!);
+    }
+    return p;
+  }
+
+  /** One team's console lists: defensive points, key passes, shots faced (Player Console). */
+  teamLists(code: string): Promise<TeamLists> {
+    if (!/^[A-Z]{3}$/.test(code)) return Promise.reject(new Error(`unknown team ${code}`));
+    let p = this.lists.get(code);
+    if (!p) {
+      p = this.json(`players-${code.toLowerCase()}.json`).then((raw) => parseTeamLists(raw, code));
+      this.lists.set(code, p);
+      while (this.lists.size > 2) this.lists.delete(this.lists.keys().next().value!);
     }
     return p;
   }

@@ -53,6 +53,7 @@ from engine.zones import FINAL_THIRD_X, LANES, MIDDLE_THIRD_X, THIRDS, lane_of, 
 from .analyst import REVISIONS
 from .azure_status import status as azure_status
 from .narrative import languages, number_guard, render, rule_reasons
+from .player_profiles import lineup_rows, profiles
 
 ROOT = Path(__file__).resolve().parent.parent
 REPORTS = ("realism-report.md", "robustness.md", "verifier-recall.md", "pattern-recall.md")
@@ -248,6 +249,21 @@ def lineups_section(season, season_dir: Path) -> dict:
                                                  if tid in (m["home_team_id"], m["away_team_id"])),
                                      next_most_starts=max((starts.get(p, 0) for p in squad if p not in xi), default=0))
     return out
+
+
+def fixtures_index(season, match_ds, match_id) -> list:
+    """The search index's fixtures: [id, matchweek, home code, away code, home goals, away goals],
+    the live replay first, then the season in date order (no per-match file is needed to search)."""
+    rows = []
+    if match_id not in season.matches:
+        m = match_ds.matches[match_id]
+        rows.append([match_id, m["matchweek"], match_ds.code(m["home_team_id"]), match_ds.code(m["away_team_id"]),
+                     m["home_score"], m["away_score"]])
+    for mid in sorted(season.matches, key=lambda k: (season.matches[k]["date"], season.matches[k]["kickoff"], k)):
+        m = season.matches[mid]
+        rows.append([mid, m["matchweek"], season.code(m["home_team_id"]), season.code(m["away_team_id"]),
+                     m["home_score"], m["away_score"]])
+    return rows
 
 
 # ---------- stream: ledger and rewrites ----------
@@ -528,9 +544,13 @@ def build(match_ds, season, match_id, insights, attempts, docs_dir: Path = ROOT 
     ledger, rewrites = ledger_section(insights, attempts)
     teams = teams_section(season)
     players = players_section(season)
-    starts = starts_by_player(season_dir or ROOT / "data" / season.label)
+    sdir = season_dir or ROOT / "data" / season.label
+    starts = starts_by_player(sdir)
+    prof = profiles(season, lineup_rows(sdir))
     for p in players:
         p["starts"] = starts.get(p["id"], 0)
+        if p["id"] in prof["rows"]:
+            p["profile"] = prof["rows"][p["id"]]
     ids = [i for ins in insights for i in ins["evidence_event_ids"]]
     ids += [i for p in players for c in p["checks"] for i in c["evidence_event_ids"]]
     ids += [i for h in teams["head_to_head"] if h["claim"] for i in h["claim"]["evidence_event_ids"]]
@@ -545,4 +565,4 @@ def build(match_ds, season, match_id, insights, attempts, docs_dir: Path = ROOT 
                        for e in match_events(match_ds)[match_id] if e["event_type"] in TRACK_TYPES],
                 visuals=visuals_section(match_ds, season, match_id, players),
                 azure_status=[{k: r[k] for k in ("id", "name", "tech", "state", "live", "note")} for r in azure_status()],
-                patterns=patterns)
+                patterns=patterns, profiles=prof["meta"], fixtures=fixtures_index(season, match_ds, match_id))

@@ -164,6 +164,13 @@ export function parseUi(raw: unknown): UiData {
     visuals: "object",
     azure_status: "array",
     lineups: "object",
+    profiles: "object",
+    fixtures: "array",
+  });
+  c.fields(o.profiles, "profiles", { min_minutes: "number", rates: "array", peers: "object", league_chances: "object" });
+  (o.fixtures as unknown[]).forEach((f, i) => {
+    if (!Array.isArray(f) || f.length !== 6 || typeof f[0] !== "string" || typeof f[2] !== "string")
+      c.fail(`fixtures[${i}]`, "expected [id, matchweek, home, away, home goals, away goals]");
   });
   for (const [code, lu] of Object.entries(o.lineups as Record<string, unknown>)) {
     const l = c.fields(lu, `lineups.${code}`, { xi: "array", label: "string", matches: "number" });
@@ -234,6 +241,33 @@ export function parseUi(raw: unknown): UiData {
       starts: "number",
     }),
   );
+  (o.players as Record<string, unknown>[]).forEach((p, i) => {
+    if (p.profile === undefined) return;
+    const pr = c.fields(p.profile, `players[${i}].profile`, {
+      minutes: "number",
+      starts: "number",
+      passing: "object",
+      chances: "object",
+    });
+    c.fields(pr.chances, `players[${i}].profile.chances`, { total: "number", kinds: "object", xa: "number" });
+    if (pr.defence !== undefined)
+      c.fields(pr.defence, `players[${i}].profile.defence`, {
+        tackles: "number",
+        interceptions: "number",
+        blocks: "number",
+        clearances: "number",
+        contributions: "number",
+        p90: ["object", "null"],
+      });
+    if (pr.keeper !== undefined)
+      c.fields(pr.keeper, `players[${i}].profile.keeper`, {
+        shots_faced: "number",
+        on_target: "number",
+        saves: "number",
+        conceded: "number",
+        xg_faced: "number",
+      });
+  });
   const ledger = c.fields(o.ledger, "ledger", {
     rows: "array",
     counts: "object",
