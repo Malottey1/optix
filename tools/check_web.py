@@ -92,6 +92,51 @@ TAILWIND_JS = """() => {
           hiddenDisplay: hidden, bodyBg: getComputedStyle(document.body).backgroundColor};
 }"""
 
+# Visible words: text a sighted reader sees. Skipped: closed <details> bodies (the summary counts),
+# visually hidden text (sr-only, clipped, zero-size), display:none / visibility:hidden. A word is a
+# whitespace token holding a letter or a digit. Grouped by the nearest [data-budget] ancestor
+# (cards and sections declare their budget group), with the route total.
+WORDS_JS = r"""() => {
+  const hiddenCache = new Map();
+  const hidden = (el) => {
+    if (!el || el === document.body) return false;
+    if (hiddenCache.has(el)) return hiddenCache.get(el);
+    let h = false;
+    const cs = getComputedStyle(el);
+    if (cs.display === 'none' || cs.visibility === 'hidden' || cs.visibility === 'collapse') h = true;
+    else if (el.classList.contains('sr-only')) h = true;
+    else if (cs.position === 'absolute' && (cs.clip === 'rect(0px, 0px, 0px, 0px)' || cs.clipPath === 'inset(50%)')) h = true;
+    else if (el.tagName === 'DETAILS' && false) h = true;
+    else {
+      const d = el.parentElement && el.parentElement.closest('details:not([open])');
+      if (d && !el.closest('summary')) h = true;
+      else h = hidden(el.parentElement);
+    }
+    hiddenCache.set(el, h);
+    return h;
+  };
+  const groups = {};
+  let total = 0;
+  const walker = document.createTreeWalker(document.querySelector('main') || document.body, NodeFilter.SHOW_TEXT);
+  for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+    const el = n.parentElement;
+    if (!el || ['SCRIPT', 'STYLE', 'TITLE', 'OPTION'].includes(el.tagName)) continue;
+    if (el.closest('svg') && el.closest('title, desc')) continue;
+    if (hidden(el)) continue;
+    const r = el.getBoundingClientRect();
+    if (r.width < 2 && r.height < 2) continue;
+    const words = n.textContent.split(/\s+/).filter((w) => /[\p{L}\p{N}]/u.test(w)).length;
+    if (!words) continue;
+    total += words;
+    const g = el.closest('[data-budget]');
+    if (g) {
+      const k = g.getAttribute('data-budget');
+      groups[k] = (groups[k] || 0) + words;
+    }
+  }
+  return {total, groups};
+}"""
+
 AXE_JS = """async () => {
   const r = await axe.run(document, {resultTypes: ['violations']});
   return r.violations.map((v) => ({id: v.id, impact: v.impact, help: v.help,

@@ -9,6 +9,23 @@ Item status is in docs/ia-progress.md.
 - Start point: local `main` is an older commit (189e9f9) that does not contain 6c3369d; origin/main
   and the tip of `ui-visuals-patterns` are both 6c3369d, so the branch starts there.
 - Green start: default suite 451 passed, 2 skipped; `npm run build` passes.
+- Word counts: measured in Chromium on the built site by `WORDS_JS` in tools/check_web.py
+  (text in `main`, skipping hidden, sr-only, clipped and closed-details content), grouped by the
+  nearest `[data-budget]` element. The same function backs the Step 6 text budget.
+- Heat bins: a uniform 24x16 grid cannot reproduce the 15 zones (lane edges at y = 20/40/60/80 and
+  thirds at x = 33.3/66.7 are not uniform-bin edges), and the brief requires the zone shares from
+  the bins to equal the earlier definition exactly. So the grid is zone-aligned: 24 columns = 8 per
+  third (edges 0, 33.3, 66.7, 100, each third cut evenly), 16 rows = 3/3/4/3/3 per lane (the centre
+  lane is 20 wide, so 4 rows of 5; the others 3 rows of 6.67). Bin lookup uses the same comparisons
+  as `zoneOf` (>= for thirds, < for lanes), so every bin sits in exactly one zone. Rendering uses
+  the true geometry; smoothing runs in bin-index space.
+- Most-used XI: the 11 players with the most starts (lineups.csv `starter`), ties broken by
+  player id. On the dashboard season this is unambiguous (the 11th has 10-13 starts, the 12th 4-7).
+- Squad numbers: players.csv has a `shirt` field, used as is (the XI wears 1-11 in every team).
+- Formation label: counts of listed positions in the XI, DF-MF-FW, shown as "4-3-3 by listed
+  positions". The generator's teams.csv `formation` is an input setting and is not read.
+- Lineup slots: rows by listed position; left-to-right order within a row from the listed `role`
+  (left_back ... right_back, *_l before *_r), so nodes never overlap.
 
 ### Test changes (IA)
 
