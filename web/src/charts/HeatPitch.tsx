@@ -146,7 +146,7 @@ export function HeatPitch({
             <rect x="0" y="0" width="105" height="68" />
           </clipPath>
           <filter id={`${uid}-soft`} x="-5%" y="-5%" width="110%" height="110%">
-            <feGaussianBlur stdDeviation="1.1" />
+            <feGaussianBlur stdDeviation="2.4" />
           </filter>
           <marker
             id={`${uid}-arrow`}

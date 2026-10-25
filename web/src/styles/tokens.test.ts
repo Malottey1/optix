@@ -47,6 +47,19 @@ describe("heat map tokens", () => {
       expect(reserved).not.toContain(c!.toLowerCase());
     });
   }
+  it("heat hues sit at least 45 degrees from every verdict hue (a heat cell never reads as a verdict)", () => {
+    const hue = (hex: string) => {
+      const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255) as [number, number, number];
+      const mx = Math.max(r, g, b);
+      const d = mx - Math.min(r, g, b);
+      const h = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
+      return (h * 60 + 360) % 360;
+    };
+    const gap = (a: number, b: number) => Math.min(Math.abs(a - b), 360 - Math.abs(a - b));
+    for (const heat of ["heat-seq", "heat-rise", "heat-fall"])
+      for (const verdict of ["pass", "revise", "block"])
+        expect(gap(hue(token(heat)!), hue(token(verdict)!)), `${heat} vs ${verdict}`).toBeGreaterThanOrEqual(45);
+  });
   it("rise and fall differ in lightness as well as hue (readable without colour vision)", () => {
     expect(Math.abs(lum(token("heat-rise")!) - lum(token("heat-fall")!))).toBeGreaterThan(0.05);
   });

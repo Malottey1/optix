@@ -188,7 +188,7 @@ least 1000 px tall. Below 1600 px the layout is unchanged.
   and xG; gauges at full time = the spell totals; arrow count and width order = the pass counts;
   pizza = an independent percentile computation); the routes are checked in the default view and
   after "Show all routes"; the mutation proof changes one visual's data in a throwaway copy and
-  shows the matching check fails (ten mutations: crosshair, heat, touch map, lineup, shot blocks,
+  shows the matching check fails (nine mutations: crosshair, heat, touch map, lineup, shot blocks,
   gauge, routes, routes default view, pizza; plus the text-budget and lane-wording proofs).
   `check_first_screen` asserts every Live visual is whole on the first screen at 1920x1080 and
   1600x900 with no overlapping text. `tests/test_visuals_consistency.py` runs

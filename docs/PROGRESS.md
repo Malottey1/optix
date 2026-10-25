@@ -53,7 +53,8 @@ Item status is in docs/ia-progress.md.
   generated; json-schema-to-typescript does not read `prefixItems`, so tuple rows are typed
   `unknown` there and decoded in web/src/data/matches.ts behind a runtime guard.
 - Heat colours: --heat-seq #c4b5fd (single-hue ramp, drawn as opacity over the pitch) for volume;
-  --heat-fall #4a8fe7 / --heat-rise #f08a3c for change. All at least 3:1 on --pitch and none equal
+  --heat-fall #4a8fe7 / --heat-rise #e879f9 for change (rise was #f08a3c until the Step 7 screenshot
+  review: an orange between the revise amber and the block red could read as a verdict). All at least 3:1 on --pitch and none equal
   to a verdict, team-slot or club token (tokens.test.ts). The old zone grid's purple/green pair is
   not reused (its green is the verdict green).
 - Heat display: volume = smoothed events per % of the pitch area (bins differ in size: the centre
@@ -149,6 +150,11 @@ Item status is in docs/ia-progress.md.
   Fenren, Goalkeeper"; axe label-content-name-mismatch); jersey numbers are 16/40 of the jersey so
   they render at 11 px or more on a phone.
 - Fixtures: each matchweek group is a panel (rounded-2xl), like the other pages' sections.
+
+- Step 7 screenshot review: the heat map still showed bin edges, so its display blur went from 1.1
+  to 2.4 (SVG only; every shown number comes from the counts and the mass-preserving smoothing, so
+  no number moved), and --heat-rise became magenta #e879f9, with a new token test that every heat
+  hue is at least 45 degrees from each verdict hue. Lineup jerseys at 390 px do not collide.
 
 ### Test changes (IA)
 
