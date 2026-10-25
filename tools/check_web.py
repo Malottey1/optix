@@ -479,8 +479,9 @@ def check_consistency(browser, base, ref_dir: Path) -> dict:
             claims[a["claim"]["claim_id"]] = a["claim"]
     problems = []
     ctx, page, log = _context(browser, *WIDTHS["desktop"])
-    # V1 on the Match Hub: every final with a verified lane claim shows its crosshairs on the claim's
-    # lane, and a final without one has no Matchup section
+    # The Match Hub's Matchup: every final with a verified lane claim at the display confidence
+    # (ui teams.matchup_rule) shows its strips outlined on the claim's lane only, the lane's two season
+    # lifts pass the claim's own thresholds, and a final without one has no Matchup section
     pairs = 0
     mref = match_ref(ref_dir)
     index = json.loads((mref / "index.json").read_text(encoding="utf-8"))
@@ -488,17 +489,25 @@ def check_consistency(browser, base, ref_dir: Path) -> dict:
         if row["status"] != "final":
             continue
         f = json.loads((mref / f"{row['id']}.json").read_text(encoding="utf-8"))
-        want = {f"{mu['attacker']}-{mu['defender']}": mu["metrics"]["lane"] for mu in f.get("matchups", [])}
+        rule = ui["teams"]["matchup_rule"]
+        want = {f"{mu['attacker']}-{mu['defender']}": mu["metrics"]["lane"] for mu in f.get("matchups", [])
+                if mu.get("confidence") in rule["display_confidence"]}
         if not want and row["id"] not in (FINAL_MATCH, "m_007"):
             continue                                  # one final without a claim is enough
         page.goto(f"{base}#/match/{row['id']}")
         page.wait_for_selector(f"[data-page='hub'][data-match='{row['id']}']", timeout=20000)
         page.wait_for_timeout(300)
         got = dict(page.eval_on_selector_all("[data-matchup]", """els => els.map((e) => [e.dataset.matchup,
-            e.querySelector('svg[data-claim-lane]')?.dataset.claimLane ?? null])"""))
+            [...e.querySelectorAll('svg[data-strip] [data-outline]')].map((o) => o.dataset.outline)])"""))
         pairs += len(want)
-        if got != want:
-            problems.append(f"crosshair {row['id']}: page {got}, verified claims {want}")
+        if {k: v for k, v in got.items()} != {k: [l, l] for k, l in want.items()}:
+            problems.append(f"matchup {row['id']}: page outlines {got}, verified claims {want}")
+        h2h = {(h["attacker"], h["defender"]): h for h in ui["teams"]["head_to_head"]}
+        for k, lane in want.items():
+            a, d = k.split("-")
+            l = h2h[(a, d)]["lanes"][lane]
+            if not (l["attack_pp"] > rule["min_attack_pp"] and l["completion_pp"] > rule["min_completion_pp"]):
+                problems.append(f"matchup {row['id']} {k}: lane {lane} lifts {l['attack_pp']}, {l['completion_pp']} fail the rule")
         if row["id"] == FINAL_MATCH:
             # heat: the bins' counts are the file's counts (both halves), team by team
             for code, halves in f["heat"]["teams"].items():
@@ -613,7 +622,7 @@ def _mut_file(copy: Path, name: str, change) -> None:
 
 def _mut_crosshair(ui, copy):
     def change(f):
-        mu = f["matchups"][0]
+        mu = next(m for m in f["matchups"] if m.get("confidence") in ui["teams"]["matchup_rule"]["display_confidence"])
         mu["metrics"]["lane"] = next(l for l in ("left_flank", "center") if l != mu["metrics"]["lane"])
     _mut_file(copy, f"{FINAL_MATCH}.json", change)
 

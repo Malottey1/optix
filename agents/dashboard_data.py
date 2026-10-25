@@ -42,7 +42,7 @@ from engine import patterns as PAT
 from engine import threat as T
 from engine import flow as F
 from engine.claims import build_claim
-from engine.matchup import lane_matchup, matchup_claim
+from engine.matchup import MIN_ATTACK_PP, MIN_COMPLETION_PP, lane_matchup, matchup_claim
 from engine.profiles import soft_lane, team_style_profile
 from engine.rules import PATTERN_RULES
 from engine.style_labels import style_labels
@@ -59,6 +59,9 @@ ROOT = Path(__file__).resolve().parent.parent
 REPORTS = ("realism-report.md", "robustness.md", "verifier-recall.md", "pattern-recall.md")
 TRACK_TYPES = ("pass", "carry", "dribble", "shot", "duel", "tackle", "interception", "clearance", "block",
                "ball_recovery", "save", "claim")
+# display-only: the Match Hub shows a verified lane claim only at these confidence labels (the claim
+# fires on 37 of 41 fixtures, most at "low"); the Verifier and the stream are unchanged
+MATCHUP_DISPLAY_CONFIDENCE = ("medium", "high")
 PLAYER_RULES = (("chances_created", "set_piece_inflation", 4), ("forward_passes", "wide_forward_passes", 15))
 
 
@@ -147,6 +150,8 @@ def teams_section(season) -> dict:
                                         text=_rendered(c["template_key"], c["params"]) if v.status != "blocked" else None)
             h2h.append(row)
     return dict(teams=teams, head_to_head=h2h, lanes=list(LANES),
+                matchup_rule=dict(min_attack_pp=MIN_ATTACK_PP, min_completion_pp=MIN_COMPLETION_PP,
+                                  display_confidence=list(MATCHUP_DISPLAY_CONFIDENCE)),
                 matches=len(season.matches), dataset=season.label)
 
 

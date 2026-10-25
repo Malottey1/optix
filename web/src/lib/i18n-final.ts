@@ -20,6 +20,18 @@ export const FINAL_EN = {
   lu_off: "Off",
   lu_on: "On",
   lu_note: "Starting XIs by listed position. Not a tracked shape.",
+  mu_attacking: "{team} attacking",
+  mu_defending: "{team} defending",
+  mu_sub: "{a}'s final-third entries against {d}'s defending, by channel. Season figures.",
+  mu_att_label: "Share of final-third entries",
+  mu_def_label: "Entry passes completed against them",
+  mu_delta: "Points against the league",
+  mu_sentence:
+    "{a} sent {as}% of final-third entries down the {lane} (league {ls}%); {d}'s opponents completed {cc}% of entry passes there (league {lc}%).",
+  mu_tbl_share: "{team} share %",
+  mu_tbl_comp: "{team} conceded completion %",
+  mu_rule_note:
+    "Shown when the Verifier passed the lane claim at medium or high confidence. Season figures, all matches.",
 };
 
 export type FinalKey = keyof typeof FINAL_EN;
@@ -43,6 +55,18 @@ export const FINAL_ES: Record<FinalKey, string> = {
   lu_off: "Sale",
   lu_on: "Entra",
   lu_note: "Onces iniciales por posición listada. No es una forma medida.",
+  mu_attacking: "{team} en ataque",
+  mu_defending: "{team} en defensa",
+  mu_sub: "Entradas al último tercio de {a} frente a la defensa de {d}, por carril. Cifras de la temporada.",
+  mu_att_label: "Porcentaje de entradas al último tercio",
+  mu_def_label: "Pases de entrada completados en su contra",
+  mu_delta: "Puntos frente a la liga",
+  mu_sentence:
+    "{a} envió el {as}% de sus entradas al último tercio por el {lane} (liga {ls}%); los rivales de {d} completaron el {cc}% de los pases de entrada allí (liga {lc}%).",
+  mu_tbl_share: "{team} porcentaje",
+  mu_tbl_comp: "{team} acierto concedido",
+  mu_rule_note:
+    "Se muestra cuando el Verificador aprobó la afirmación del carril con confianza media o alta. Cifras de la temporada.",
 };
 
 export const FINAL_FR: Record<FinalKey, string> = {
@@ -64,4 +88,16 @@ export const FINAL_FR: Record<FinalKey, string> = {
   lu_off: "Sort",
   lu_on: "Entre",
   lu_note: "Onze de départ par poste listé. Pas une forme mesurée.",
+  mu_attacking: "{team} en attaque",
+  mu_defending: "{team} en défense",
+  mu_sub: "Entrées dans le dernier tiers de {a} face à la défense de {d}, par couloir. Chiffres de la saison.",
+  mu_att_label: "Part des entrées dans le dernier tiers",
+  mu_def_label: "Passes d'entrée réussies contre eux",
+  mu_delta: "Points par rapport à la ligue",
+  mu_sentence:
+    "{a} a envoyé {as} % de ses entrées dans le dernier tiers par le {lane} (ligue {ls} %) ; les adversaires de {d} y ont réussi {cc} % des passes d'entrée (ligue {lc} %).",
+  mu_tbl_share: "{team} part en %",
+  mu_tbl_comp: "{team} réussite concédée en %",
+  mu_rule_note:
+    "Affiché quand le Vérificateur a validé l'affirmation de couloir avec une confiance moyenne ou élevée. Chiffres de la saison.",
 };

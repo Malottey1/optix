@@ -6,7 +6,6 @@
 import { lazy, Suspense, useMemo, useState } from "react";
 import { Link, useParams } from "react-router";
 import { HeatPitch } from "../../charts/HeatPitch";
-import { MismatchCrosshairs } from "../../components/viz/MismatchCrosshairs";
 import { useData } from "../../data/context";
 import { useFixtures, useMatchFile } from "../../data/matchContext";
 import { eventLog, evidenceRows, expandCard, SHOWCASE_ID, xiRows, type MatchFile } from "../../data/matches";
@@ -17,6 +16,7 @@ import { MatchLineups } from "../../charts/MatchLineups";
 import { PlayerSheet } from "../teams/parts";
 import type { LineupNode } from "../../types/ui";
 import { InsightsPanel } from "./InsightsPanel";
+import { Matchup, shownMatchups } from "./MatchupStrips";
 import {
   capCards,
   ClaimTable,
@@ -56,41 +56,6 @@ function LiveFrame() {
   );
 }
 
-function Matchup({ file }: { file: MatchFile }) {
-  const m = useData();
-  const { t } = useT();
-  const blocks = (file.matchups ?? []).flatMap((mu) => {
-    const h = m.ui.teams.head_to_head.find((x) => x.attacker === mu.attacker && x.defender === mu.defender);
-    const d = m.ui.teams.teams.find((x) => x.code === mu.defender);
-    return h && d ? [{ mu, h, d }] : [];
-  });
-  if (!blocks.length) return null;
-  return (
-    <Section id="matchup" title={t("hub_matchup")}>
-      <div data-lane-ok="matchup">
-        <p className="mb-2 text-[12px] text-ink-3">
-          {t("matchup_note")} {t("mx_legend")}
-        </p>
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          {blocks.map(({ mu, h, d }) => (
-            <div key={mu.claim_id} data-matchup={`${mu.attacker}-${mu.defender}`}>
-              <MismatchCrosshairs
-                h={h}
-                defender={d}
-                lanes={m.ui.teams.lanes}
-                compact
-                claimLane={String((mu.metrics as Record<string, unknown>).lane ?? "")}
-                claimId={mu.claim_id}
-                legend={false}
-              />
-            </div>
-          ))}
-        </div>
-      </div>
-    </Section>
-  );
-}
-
 /** The hub's two-column breakpoint: from here the insights panel is a sticky side panel. */
 export const HUB_WIDE = "(min-width: 1100px)";
 
@@ -110,7 +75,7 @@ function FinalRecap({ file }: { file: MatchFile }) {
     ["turning", t("hub_turning")],
     ["lineups", t("hub_lineups")],
     ["heat", t("hub_heat")],
-    ...(file.matchups ? ([["matchup", t("hub_matchup")]] as [string, string][]) : []),
+    ...(shownMatchups(file, m.ui.teams).length ? ([["matchup", t("hub_matchup")]] as [string, string][]) : []),
     ["log", t("hub_log")],
   ];
   const panel = <InsightsPanel file={file} cards={shown} onSelect={setSel} side={wide} />;

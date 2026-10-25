@@ -9,3 +9,4 @@ suite exit 0, `npm run build` pass.
 | Step 1 nav and Settings | done | 903f0ef | nav Home/Fixtures/Teams/Players; Technical details + kits note in Settings; search button hidden until Step 8 | – |
 | Step 2 data export | done | b0cd777 | ui.json 1,225,980 B; matches dir 2,685,162 B (largest 71,409 B); 9 new profile tests pass | pressure regains not exported (no field) |
 | Step 3 Match Hub layout | done | d13fa2d + (this commit) | gap under Heat Maps 2,248 px -> 16 px at 1440; panel sticky, viewport-high, paged 5/10 | check_hub_layout + old-layout proof caught; 4 new Vitest; entry JS 182.85 KB gzip (was 177.0) |
+| Step 4 Matchup redesign | done | (this commit) | shown on 17/41 fixtures (41%) with the confidence display rule; 2 new Vitest; checker compares outlines + rule thresholds | – |

@@ -34,11 +34,26 @@ Item status is in docs/final-ui-progress.md; the audit and design notes in docs/
 - Lineups facing each other: from 640 px one landscape pitch (home left attacking right, away
   mirrored); below 640 px two stacked pitches (labels never collide at 390). Markers: goal, yellow,
   red, substituted off, from the turning points.
+- Matchup (Step 4): the claim is season level (the whole season, the same lane and numbers for every
+  fixture of a pair), so the strips are season figures too, labelled "Season figures", and the
+  sentence states the claim's own values. The right strip shows the defender's conceded entry-pass
+  completion minus the league's, the measure the rule tests (not the share of entries conceded, which
+  the old crosshair showed and which can show no gap on the claim lane). The thresholds are named
+  constants in engine/matchup.py (MIN_ATTACK_PP, MIN_COMPLETION_PP, both 0, behaviour unchanged) and
+  exported as ui teams.matchup_rule; the page and tests read them from there.
+- Matchup display rule: the claim fires on 37 of 41 fixtures (90%). The brief's "three strongest
+  insights by magnitude" has no common magnitude (most claims are counts, xG or shares with no
+  baseline), so the display-only rule uses the claim's own confidence label: shown at medium or high
+  only (MATCHUP_DISPLAY_CONFIDENCE). Result: 17 of 41 fixtures (41%), one direction each; the toggle
+  appears only when two directions qualify. The Verifier and the stream are unchanged.
 - Live replay hub (showcase): its console already has its own two-column frame with the feed; kept
   unchanged, as the brief requires its behaviour to stay the same.
 
 ### Test changes (final UI)
 
+- tests/test_dashboard.py: the checked Matchup pairs now equal the lane claims the hub shows (display
+  confidence medium or high, Step 4's display-only rule) instead of every lane claim; the checker
+  now compares the strips' outlines (both strips, claim lane only) and the rule's thresholds.
 - web/src/features/teams/teams.test.tsx: the kits line is now expected 0 times on the Team Grid (it
   moved to Settings, per Step 1); shell.test.tsx checks it is in Settings.
 - web/src/features/hub/hub.test.tsx: the final hub's section order is now insights, turning, lineups,

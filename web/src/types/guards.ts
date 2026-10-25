@@ -197,6 +197,7 @@ export function parseUi(raw: unknown): UiData {
     head_to_head: "array",
     lanes: "array",
     matches: "number",
+    matchup_rule: "object",
   });
   (teams.teams as unknown[]).forEach((t, i) => {
     const p = `teams.teams[${i}]`;

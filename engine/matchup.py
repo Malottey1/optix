@@ -33,6 +33,10 @@ from .tables import Dataset, baseline_of
 from .zones import LANES, WIDE_LANES
 
 MAX_EVIDENCE = 12
+# a lane is a candidate when both lifts are above these (percentage points); the dashboard reads them
+# from here (ui.json teams.matchup_rule) so its display never retypes them
+MIN_ATTACK_PP = 0.0
+MIN_COMPLETION_PP = 0.0
 
 
 def _pp(v):
@@ -75,7 +79,7 @@ def lane_matchup(ds: Dataset, attacker_id: str, defender_id: str, bracket: str =
             concede_z=z_proportion(c, lg, dfn.value),
             n_attack_lane=ha, n_concede_lane=hc, n_completion_attempts=n)
     candidates = [l for l, v in lanes.items() if v["mismatch_pp"] is not None
-                  and v["attack_pp"] > 0 and v["completion_pp"] > 0]
+                  and v["attack_pp"] > MIN_ATTACK_PP and v["completion_pp"] > MIN_COMPLETION_PP]
     top = None
     if candidates:
         lane = max(candidates, key=lambda l: (lanes[l]["mismatch_pp"], lanes[l]["attack_z"] + lanes[l]["completion_z"]))

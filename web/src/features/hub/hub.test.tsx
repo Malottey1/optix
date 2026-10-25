@@ -10,6 +10,7 @@ import { capCards, layoutMarks } from "./parts";
 import { isPattern, panelMemory, panelPage } from "./InsightsPanel";
 import { facingPos, lineupMarkers } from "../../charts/MatchLineups";
 import { parseMatchFile, xiRows } from "../../data/matches";
+import { shownMatchups } from "./MatchupStrips";
 import type { Insight } from "../../types/ui";
 
 const DATA = join(__dirname, "..", "..", "..", "public", "data");
@@ -204,5 +205,53 @@ describe("Match Hub insights panel and lineups", () => {
     fireEvent.click(node);
     const sheet = await waitFor(() => document.querySelector("#player-sheet") as HTMLElement);
     expect(sheet.querySelector(`a[data-ledger-link='${node.getAttribute("data-node")}']`)).toBeTruthy();
+  });
+});
+
+describe("Matchup", () => {
+  const ui = JSON.parse(readFileSync(join(DATA, "ui.json"), "utf8"));
+  const rule = ui.teams.matchup_rule;
+  it("shows a direction only at the display confidence, and the outlined lane passes the claim's own thresholds", () => {
+    let fixtures = 0;
+    for (const row of index.fixtures as { id: string }[]) {
+      const f = parseMatchFile(JSON.parse(readFileSync(join(DATA, "matches", `${row.id}.json`), "utf8")), row.id);
+      const shown = shownMatchups(f, ui.teams);
+      if (shown.length) fixtures++;
+      for (const { mu, h } of shown) {
+        expect(rule.display_confidence).toContain(mu.confidence);
+        const l = h.lanes[mu.metrics.lane]!;
+        expect(l.attack_pp!).toBeGreaterThan(rule.min_attack_pp);
+        expect(l.completion_pp!).toBeGreaterThan(rule.min_completion_pp);
+        // the season row and the claim carry the same numbers
+        expect([l.attack_share, l.league_share, l.completion, l.league_completion]).toEqual([
+          mu.metrics.attack_share,
+          mu.metrics.league_share,
+          mu.metrics.concede_completion,
+          mu.metrics.league_completion,
+        ]);
+      }
+    }
+    // the display rule keeps the section to well under 60% of fixtures
+    expect(fixtures / index.fixtures.length).toBeLessThan(0.6);
+  });
+
+  it("outlines only the claim lane in both strips, and the sentence states the claim's numbers", async () => {
+    window.location.hash = "#/match/m_001";
+    render(<App source={source()} matches={matches()} />);
+    const p = await page("hub");
+    const box = await waitFor(() => p.querySelector("[data-matchup]") as HTMLElement);
+    const f = parseMatchFile(JSON.parse(readFileSync(join(DATA, "matches", "m_001.json"), "utf8")), "m_001");
+    const { mu } = shownMatchups(f, ui.teams)[0]!;
+    for (const side of ["attack", "defence"]) {
+      const outlines = [...box.querySelectorAll(`svg[data-strip='${side}'] [data-outline]`)];
+      expect(outlines.map((o) => o.getAttribute("data-outline"))).toEqual([mu.metrics.lane]);
+    }
+    const nums = (box.querySelector("[data-matchup-sentence]")!.textContent!.match(/\d+(\.\d+)?/g) ?? []).map(Number);
+    expect(nums).toEqual([
+      mu.metrics.attack_share,
+      mu.metrics.league_share,
+      mu.metrics.concede_completion,
+      mu.metrics.league_completion,
+    ]);
   });
 });

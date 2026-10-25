@@ -63,9 +63,11 @@ def test_in_app_navigation_reaches_every_route(report):
 def test_the_visuals_match_the_engine_output(report):
     c = report["consistency"]
     assert not c["problems"], c["problems"]
-    # every verified lane claim on a final (the Match Hub's Matchup section) was checked
-    claims = sum(len(json.loads(p.read_text()).get("matchups", []))
-                 for p in (ROOT / "web" / "public" / "data" / "matches").glob("m_0*.json"))
+    # every verified lane claim the Match Hub shows (display confidence, ui teams.matchup_rule) was checked
+    shown = json.loads((ROOT / "web" / "public" / "data" / "ui.json").read_text())["teams"]["matchup_rule"]
+    claims = sum(1 for p in (ROOT / "web" / "public" / "data" / "matches").glob("m_0*.json")
+                 for mu in json.loads(p.read_text()).get("matchups", [])
+                 if mu.get("confidence") in shown["display_confidence"])
     assert c["pairs"] == claims > 0 and c["cards"].get("crosshairs") and c["cards"].get("shot-blocks"), c
     assert c["arrows"]["top"] == check_web.TOP_ROUTES < c["arrows"]["all"], c   # both route views checked
 
