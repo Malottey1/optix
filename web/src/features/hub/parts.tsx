@@ -323,15 +323,27 @@ export function EventLog({
   file,
   events,
   onSelect,
+  atClock,
 }: {
   file: MatchFile;
   events: LogEvent[];
   onSelect: (s: Selection) => void;
+  /** open at the first logged event at or after this clock (a replay link, ?t=) */
+  atClock?: number;
 }) {
   const { t, lang } = useT();
   const [type, setType] = useState<string>("all");
-  const [active, setActive] = useState(0);
-  const [top, setTop] = useState(0);
+  // a replay link (?t=) opens at the first logged event at or after its clock
+  const [start] = useState(() =>
+    atClock == null
+      ? 0
+      : Math.max(
+          0,
+          events.findIndex((e) => e.clock_sec >= atClock),
+        ),
+  );
+  const [active, setActive] = useState(start);
+  const [top, setTop] = useState(start * ROW_H);
   const box = useRef<HTMLDivElement>(null);
   const types = useMemo(() => [...new Set(events.map((e) => e.event_type))].sort(), [events]);
   const shown = useMemo(() => (type === "all" ? events : events.filter((e) => e.event_type === type)), [events, type]);
@@ -361,9 +373,14 @@ export function EventLog({
     else return;
     e.preventDefault();
   };
+  useEffect(() => {
+    if (atClock == null) return;
+    if (box.current) box.current.scrollTop = start * ROW_H;
+    document.getElementById("log")?.scrollIntoView({ block: "start" });
+  }, [atClock, start]);
   const omitted = file.events.omitted_types;
   return (
-    <div data-event-log={file.match_id}>
+    <div data-event-log={file.match_id} data-at-clock={atClock ?? undefined}>
       <div role="toolbar" aria-label={t("log_filter")} className="mb-2 flex flex-wrap gap-1.5">
         {["all", ...types].map((ty) => {
           const icon = ty === "all" ? null : eventIcon(ty);

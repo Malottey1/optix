@@ -58,18 +58,23 @@ from tools.check_dashboard import (FOCUSABLE_JS, FORBIDDEN, FRAMES_JS, OVERLAP_J
 ROOT = Path(__file__).resolve().parent.parent
 WEB = ROOT / "web"
 ROUTES = ("home", "fixtures", "hub_live", "hub_final", "teams", "team_board", "team_sheet", "players", "player",
-          "tech")
+          "player_df", "player_gk", "chance_drawer", "settings", "tech")
 # hash path of a route when it is not the route's own name; `live` (the old link, redirected to the
 # showcase hub) stays usable for the Live checks
 SHOWCASE_HUB = "match/m_showcase"
 FINAL_MATCH = "m_001"                    # a final with a verified lane claim (so the Matchup section shows)
 BOARD_TEAM = "AUR"
 CONSOLE_PLAYER = "NTG_07"                # has a fired context check (the Raw / With context toggle)
+CONSOLE_DF = "CAL_05"                    # the defender console (defensive actions, action map)
+CONSOLE_GK = "CAL_01"                    # the goalkeeper console (shots faced, distribution)
+DRAWER_PLAYER = "NTG_11"                 # most chances created: the chance evidence drawer
 PATH = {"home": "", "hub_live": SHOWCASE_HUB, "hub_final": f"match/{FINAL_MATCH}", "team_board": f"teams/{BOARD_TEAM}",
-        "team_sheet": f"teams/{BOARD_TEAM}", "player": f"players/{CONSOLE_PLAYER}"}
+        "team_sheet": f"teams/{BOARD_TEAM}", "player": f"players/{CONSOLE_PLAYER}", "player_df": f"players/{CONSOLE_DF}",
+        "player_gk": f"players/{CONSOLE_GK}", "chance_drawer": f"players/{DRAWER_PLAYER}", "settings": ""}
 # the data-page a route renders when it is not the route's own name
 PAGE = {"hub_live": "live", "hub_final": "hub", "team_board": "team-board", "team_sheet": "team-board",
-        "player": "player"}
+        "player": "player", "player_df": "player", "player_gk": "player", "chance_drawer": "player",
+        "settings": "home"}
 # every route is also checked at the demo-video sizes (all gates, plus a first-screen shot)
 EXTRA_SIZES = {r: {"1080p": (1920, 1080), "900p": (1600, 900)} for r in ROUTES}
 WIDTHS = {"desktop": (1440, 900), "mobile": (390, 844)}
@@ -83,8 +88,22 @@ def _open_sheet(page):
     page.wait_for_timeout(400)
 
 
+def _open_drawer(page):
+    """Player Console with the chance evidence drawer open."""
+    page.locator("[data-open-chances]").click()
+    page.wait_for_selector("#chance-evidence [data-chance-row]", timeout=10000)
+    page.wait_for_timeout(400)
+
+
+def _open_settings(page):
+    """Home with the Settings sheet open."""
+    page.locator("#open-settings").click()
+    page.wait_for_selector("a[data-settings-tech]", timeout=5000)
+    page.wait_for_timeout(400)
+
+
 # what to do on a route after it loads, before the gates run
-ACTIONS = {"team_sheet": _open_sheet}
+ACTIONS = {"team_sheet": _open_sheet, "chance_drawer": _open_drawer, "settings": _open_settings}
 AXE_FAIL = {"serious", "critical"}
 # what each route must expose for tests (selector -> attribute that must be non-empty)
 DATA_ATTRS = {
@@ -100,6 +119,10 @@ DATA_ATTRS = {
     "players": [("a[data-player]", "href")],
     "player": [("[data-viz=pass-routes] [data-route]", "data-value"), ("#touch rect[data-bin]", "data-count"),
                ("[data-context]", "data-context")],
+    "player_df": [("[data-def-rate]", "data-def-rate"), ("[data-points]", "data-count")],
+    "player_gk": [("[data-viz=shots-faced] [data-result]", "data-count")],
+    "chance_drawer": [("#chance-evidence a[data-play]", "href")],
+    "settings": [("a[data-settings-tech]", "href")],
     "tech": [("tr[data-claim-id]", "data-claim-id"), ("[data-azure]", "data-state")],
 }
 
@@ -388,9 +411,10 @@ def style_rows(ui, code) -> dict:
 
 
 def pizza(ui, pid) -> dict:
-    """Displayed percentiles of one player against outfield players with >= 100 passes."""
-    group = [p for p in ui["players"] if p["position"] != "GK" and p["passes"] >= PIZZA_MIN_PASSES]
+    """Displayed percentiles of one player against players of the same listed position with >= 100
+    passes."""
     p = next(x for x in ui["players"] if x["id"] == pid)
+    group = [g for g in ui["players"] if g["position"] == p["position"] and g["passes"] >= PIZZA_MIN_PASSES]
     out = {}
     for k in PIZZA_KEYS:
         v = percentile([g[k] for g in group], p[k])
@@ -637,9 +661,71 @@ def check_consistency(browser, base, ref_dir: Path) -> dict:
     counts = page.eval_on_selector_all("#touch rect[data-bin]", "els => els.map((e) => Number(e.dataset.count))")
     if counts != touch["players"][pid][0]:
         problems.append(f"touch map {pid}: bin counts differ from players-heat-{team.lower()}.json")
+    problems += position_panel_problems(page, base, ui, mref)
     ctx.close()
     return dict(pairs=pairs, cards=dict(seen), gauges=gauges, player=pid, arrows=arrows,
                 problems=problems + log["problems"])
+
+
+def _lists(mref: Path, code: str) -> dict:
+    return json.loads((mref / f"players-{code.lower()}.json").read_text(encoding="utf-8"))
+
+
+def _player(ui, pid):
+    return next(p for p in ui["players"] if p["id"] == pid)
+
+
+def position_panel_problems(page, base, ui, mref: Path) -> list:
+    """The defender map, the keeper shot map and the chance drawer against the team lists file, each
+    recounted here, and their tiles against the profile."""
+    problems = []
+    df = _player(ui, CONSOLE_DF)
+    page.goto("about:blank")                # a fresh document: every console shares data-page
+    _open(page, base, "player_df")
+    page.wait_for_selector("[data-viz=defence-map] [data-points]", timeout=10000)
+    pts = _lists(mref, df["team"])["players"][CONSOLE_DF].get("defence", [])
+    types = _lists(mref, df["team"])["point_types"]
+    drawn = dict(page.eval_on_selector_all("[data-viz=defence-map] [data-points]", """els => els.map((e) => [
+        e.dataset.points, e.querySelectorAll('circle, rect, path').length])"""))
+    for i, k in enumerate(types):
+        want = sum(1 for q in pts if q[2] == i)
+        if drawn.get(k) != want:
+            problems.append(f"defence map {CONSOLE_DF}: {k} {drawn.get(k)} markers, lists file has {want}")
+    rows = dict(page.eval_on_selector_all("[data-def-rate]", """els => els.map((e) => [e.dataset.defRate,
+        Number(e.querySelector('td').textContent)])"""))
+    for r, v in rows.items():
+        if v != df["profile"]["defence"][r]:
+            problems.append(f"defensive actions {CONSOLE_DF}: {r} {v} vs profile {df['profile']['defence'][r]}")
+    gk = _player(ui, CONSOLE_GK)
+    page.goto("about:blank")
+    _open(page, base, "player_gk")
+    page.wait_for_selector("[data-viz=shots-faced] [data-result]", timeout=10000)
+    shots = _lists(mref, gk["team"])["players"][CONSOLE_GK].get("shots_faced", [])
+    got = dict(page.eval_on_selector_all("[data-viz=shots-faced] [data-result]", """els => els.map((e) => [
+        e.dataset.result, e.querySelectorAll('circle').length])"""))
+    for res in ("goal", "saved", "blocked", "off_target"):
+        want = sum(1 for s in shots if s[4] == res)
+        if got.get(res) != want:
+            problems.append(f"shots faced {CONSOLE_GK}: {res} {got.get(res)} markers, lists file has {want}")
+    k = gk["profile"]["keeper"]
+    if got.get("saved") != k["saves"] or got.get("goal") != k["conceded"]:
+        problems.append(f"shots faced {CONSOLE_GK}: saves/goals differ from the keeper profile")
+    fw = _player(ui, DRAWER_PLAYER)
+    page.goto("about:blank")
+    _open(page, base, "chance_drawer")
+    _open_drawer(page)
+    chances = _lists(mref, fw["team"])["players"][DRAWER_PLAYER].get("chances", [])
+    ids = page.eval_on_selector_all("#chance-evidence [data-chance-row]", "els => els.map((e) => e.dataset.chanceRow)")
+    if ids != [c[0] for c in chances]:
+        problems.append(f"chance drawer {DRAWER_PLAYER}: {len(ids)} rows, lists file has {len(chances)}")
+    hrefs = page.eval_on_selector_all("#chance-evidence a[data-play]", "els => els.map((e) => e.getAttribute('href'))")
+    want = [f"#/match/{c[0].rsplit('_e', 1)[0]}?t={c[1]}" for c in chances]
+    if hrefs != want:
+        problems.append(f"chance drawer {DRAWER_PLAYER}: play links differ from the chances' match and clock")
+    if len(chances) != fw["profile"]["chances"]["total"]:
+        problems.append(f"chance drawer {DRAWER_PLAYER}: lists file has {len(chances)}, profile total "
+                        f"{fw['profile']['chances']['total']}")
+    return problems
 
 
 # ---------- mutation proof: each consistency check must fail when its data changes ----------
@@ -705,6 +791,29 @@ def _mut_style(ui):
     lab["value"] = round(lab["value"] + 9.0, 1)
 
 
+def _mut_defence_map(ui, copy):
+    team = _player(ui, CONSOLE_DF)["team"]
+    _mut_file(copy, f"players-{team.lower()}.json", lambda f: f["players"][CONSOLE_DF]["defence"].pop())
+
+
+def _mut_shots_faced(ui, copy):
+    team = _player(ui, CONSOLE_GK)["team"]
+
+    def change(f):
+        row = next(r for r in f["players"][CONSOLE_GK]["shots_faced"] if r[4] == "saved")
+        row[4] = "off_target"
+    _mut_file(copy, f"players-{team.lower()}.json", change)
+
+
+def _mut_chances(ui, copy):
+    team = _player(ui, DRAWER_PLAYER)["team"]
+
+    def change(f):
+        row = f["players"][DRAWER_PLAYER]["chances"][0]
+        row[1] += 60
+    _mut_file(copy, f"players-{team.lower()}.json", change)
+
+
 def _mut_pizza(ui):
     for p in ui["players"]:
         p["involvement"] = -p["involvement"]
@@ -716,7 +825,10 @@ MUTATIONS = {"crosshair": (_mut_crosshair, "crosshair", ""), "heat": (_mut_heat,
              "shot blocks": (_mut_shots, "shot blocks", ""),
              "gauge": (_mut_gauge, "gauge", ""), "routes": (_mut_routes, "routes", "(all)"),
              "routes default view": (_mut_top_route, "routes", "(top)"), "pizza": (_mut_pizza, "pizza", ""),
-             "style rows": (_mut_style, "style rows", "")}
+             "style rows": (_mut_style, "style rows", ""),
+             "defence map": (_mut_defence_map, "defence map", ""),
+             "shots faced": (_mut_shots_faced, "shots faced", ""),
+             "chance drawer": (_mut_chances, "chance drawer", "play links")}
 
 
 def mutation_proof(browser, dist: Path, ref_dir: Path, tmp: Path) -> dict:

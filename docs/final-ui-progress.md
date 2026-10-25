@@ -11,3 +11,4 @@ suite exit 0, `npm run build` pass.
 | Step 3 Match Hub layout | done | d13fa2d + (this commit) | gap under Heat Maps 2,248 px -> 16 px at 1440; panel sticky, viewport-high, paged 5/10 | check_hub_layout + old-layout proof caught; 4 new Vitest; entry JS 182.85 KB gzip (was 177.0) |
 | Step 4 Matchup redesign | done | (this commit) | shown on 17/41 fixtures (41%) with the confidence display rule; 2 new Vitest; checker compares outlines + rule thresholds | – |
 | Step 5 Style against the league | done | (this commit) | 5 rows, one scale per measure, chips from numbers; style-row consistency check + mutation; boards 167-178 words | – |
+| Step 6 Players: deck, console, evidence drawer | done | (this commit) | DF/GK/FW panels; drawer with play links (?t=); 5 new Vitest + 1 hub; checker: 4 routes, 3 mutations caught; entry JS 182.3 KB gzip | routes caption and legend deviate (zone routes, no per-pass rows); see PROGRESS |

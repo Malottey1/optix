@@ -4,7 +4,7 @@
 // Verifier passed a lane claim for this fixture, the event log and a link to the claim ledger.
 // #/match/:id/ledger lists every verification attempt in the file.
 import { lazy, Suspense, useMemo, useState } from "react";
-import { Link, useParams } from "react-router";
+import { Link, useParams, useSearchParams } from "react-router";
 import { HeatPitch } from "../../charts/HeatPitch";
 import { useData } from "../../data/context";
 import { useFixtures, useMatchFile } from "../../data/matchContext";
@@ -63,6 +63,8 @@ function FinalRecap({ file }: { file: MatchFile }) {
   const m = useData();
   const { t } = useT();
   const wide = useMedia(HUB_WIDE);
+  const [params] = useSearchParams();
+  const atClock = params.get("t") != null && /^\d+$/.test(params.get("t")!) ? Number(params.get("t")) : undefined;
   const [sel, setSel] = useState<Selection>(null);
   const [open, setOpen] = useState<{ id: string; code: string } | null>(null);
   const cards = useMemo(() => file.insights.map((c) => expandCard(file, c)), [file]);
@@ -126,7 +128,7 @@ function FinalRecap({ file }: { file: MatchFile }) {
           </Section>
           <Matchup file={file} />
           <Section id="log" title={t("hub_log")} budget="log">
-            <EventLog file={file} events={events} onSelect={setSel} />
+            <EventLog file={file} events={events} onSelect={setSel} atClock={atClock} />
           </Section>
           <Link
             to={`/match/${file.match_id}/ledger`}

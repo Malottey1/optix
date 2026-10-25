@@ -60,6 +60,29 @@ Item status is in docs/final-ui-progress.md; the audit and design notes in docs/
 - Live replay hub (showcase): its console already has its own two-column frame with the feed; kept
   unchanged, as the brief requires its behaviour to stay the same.
 
+- Players (Step 6): deck cards show two stats by position (FW/MF goals and assists, DF tackles and
+  interceptions, GK saves and save rate; goals and assists stand in when a profile part is missing).
+  The console header adds minutes. Position panels: FW/MF chances panel and evidence drawer; DF
+  defensive actions (season total, per ninety, per hundred opposition entries, percentile among
+  same-position players with at least 270 minutes, bars around the peer median), action map with type
+  toggles, progressive passing, the contributions definition once; GK shot-faced map (keeper frame,
+  marker by result, size by xG), shot stopping, distribution. "Not available in event data" notes
+  (ground duels, pressure regains, save location / post-shot quality, line-breaking passes) link to a
+  new Tech "Limits" section (#/tech?s=limits).
+- Passing routes caption: the brief's "Each line is one completed pass. Showing the N most
+  progressive." is not true of this visual (routes group completed passes by start and end zone; the
+  export has no per-pass rows for ordinary passes). The caption says "Each line is a route between two
+  zones; its width is the number of completed passes on it." and keeps the busiest-first default and
+  "Show all routes (N)". The three-item legend (forward / progressive / key pass) is not drawn for the
+  same reason; single passes are listed for chances created in the drawer.
+- Pizza: compared against players of the same listed position with at least 100 passes (was all
+  outfield players); goalkeepers get their own group. Title "Against players in the same position".
+- Chance drawer play button: #/match/<id>?t=<clock_sec>; the final hub opens its event log at the first
+  logged event at or after that clock (logs are thinned, so the exact pass may not be listed).
+- Checker: routes player_df (CAL_05), player_gk (CAL_01), chance_drawer (NTG_11, drawer open) and
+  settings (sheet open) added; consistency recounts the defence map, the shots-faced map and the
+  drawer rows and play links from the players-<code>.json lists; three new mutations.
+
 ### Test changes (final UI)
 
 - tests/test_dashboard.py: the checked Matchup pairs now equal the lane claims the hub shows (display
@@ -69,6 +92,12 @@ Item status is in docs/final-ui-progress.md; the audit and design notes in docs/
   moved to Settings, per Step 1); shell.test.tsx checks it is in Settings.
 - web/src/features/hub/hub.test.tsx: the final hub's section order is now insights, turning, lineups,
   heat, (matchup), log (the Step 3 layout); the matchup-only-with-a-claim assertion is unchanged.
+
+- web/src/components/viz/helpers.test.ts: comparisonGroup now takes the position; the test expects
+  same-position players with enough passes (and a goalkeeper-only group) instead of all outfield
+  players, per the brief's "pizza against position peers". tools/check_web.pizza() changed the same way.
+- web/src/features/players/players.test.tsx: deck cards are expected to show the two stats of their
+  position (computed in the test from the profile) instead of goals and assists for everyone.
 
 ## Information architecture (branch `ui-visuals-ia`, from 6c3369d = origin/main; local tag `pre-ia`)
 

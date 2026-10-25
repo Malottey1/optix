@@ -4,7 +4,8 @@
 // retyped), the tactical pattern catalogue and the Microsoft / Azure status list from ui.json
 // (agents/azure_status.py).
 import { TeamBadge } from "../../components/brand/TeamBadge";
-import { Fragment, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
+import { useSearchParams } from "react-router";
 import { Glyph } from "../../components/icons";
 import { Icon, patternIcon, type IconName } from "../../icons";
 import { Chip, StatusChip, type Status } from "../../components/ui/badge";
@@ -645,7 +646,50 @@ function AzureStatusPanel() {
   );
 }
 
+/** What the event data cannot show (docs/data-dictionary.md, "What the data can and cannot show");
+ * the Player Console's "Not available in event data" notes link here. */
+const LIMITS: [string, string][] = [
+  ["Ground duels", "There is no ground-duel event; a dribble is the carrier's take-on only."],
+  ["Pressure regains", "Pressures are events, but a regain needs a sequence rule that is not exported."],
+  [
+    "Save location and post-shot quality",
+    "Save events sit at a fixed spot and there is no shot-on-target model, so only shot locations and results are drawn.",
+  ],
+  ["Line-breaking passes", "These need opponent positions at the moment of the pass."],
+  ["Off-ball movement and distance covered", "There is no tracking data."],
+  ["Formations", "The app shows listed positions only, never a tracked shape."],
+  [
+    "Single passes on the passing map",
+    "Passing routes group completed passes by start and end zone; single passes are listed only for chances created.",
+  ],
+];
+
+function Limits() {
+  return (
+    <Panel
+      id="limits"
+      title="Limits"
+      subtitle="What the synthetic event data cannot show. Where a panel would need one of these, it says so instead of showing a zero."
+    >
+      <ul className="grid grid-cols-1 gap-2 md:grid-cols-2" data-role="limits">
+        {LIMITS.map(([name, why]) => (
+          <li key={name} className="rounded-xl border border-line bg-surface-2 px-4 py-3">
+            <b className="text-[14px] text-ink">{name}</b>
+            <p className="mt-1 text-[12.5px] leading-snug text-ink-2">{why}</p>
+          </li>
+        ))}
+      </ul>
+    </Panel>
+  );
+}
+
 export default function TechPage() {
+  // #/tech?s=<section id> scrolls to that section (the console's limits links)
+  const [params] = useSearchParams();
+  const section = params.get("s");
+  useEffect(() => {
+    if (section) document.getElementById(section)?.scrollIntoView({ block: "start" });
+  }, [section]);
   return (
     <div className="flex flex-col gap-flow" data-page="tech">
       <header className="max-w-3xl">
@@ -662,6 +706,7 @@ export default function TechPage() {
       <Measured />
       <PatternCatalogue />
       <VisualGuide />
+      <Limits />
       <AzureStatusPanel />
     </div>
   );

@@ -1,13 +1,13 @@
 // #/players: the Player Deck. One card per player (initials avatar, badge, name, position, season
-// goals and assists), each a link to the Player Console. Filters by team and position, search by
+// two stats by position, deckStats), each a link to the Player Console. Filters by team and position, search by
 // name. Four columns at 1440, three at 1024, two at phone width.
 import { useMemo, useState } from "react";
 import { Link } from "react-router";
 import { TeamBadge } from "../../components/brand/TeamBadge";
 import { useData } from "../../data/context";
-import { num } from "../../lib/format";
+import { num, pct } from "../../lib/format";
 import { useT, type Key } from "../../lib/i18n";
-import type { PlayerRow } from "../../types/ui";
+import type { Lang, PlayerRow } from "../../types/ui";
 import { Avatar } from "../teams/parts";
 
 const POSITIONS = ["GK", "DF", "MF", "FW"] as const;
@@ -22,6 +22,29 @@ export function filterPlayers(rows: readonly PlayerRow[], team: string, position
       (!position || p.position === position) &&
       (!needle || fold(p.name).includes(needle)),
   );
+}
+
+/** The two card stats of a position (FW/MF goals and assists, DF tackles and interceptions, GK
+ * saves and save rate), each with its label key and display; the next available stat stands in when
+ * a profile part is missing (goals and assists exist for everyone). Pure, unit-tested. */
+export function deckStats(p: PlayerRow): [Key, (lang: Lang) => string][] {
+  const d = p.profile?.defence;
+  const k = p.profile?.keeper;
+  const ga: [Key, (lang: Lang) => string][] = [
+    ["season_goals", (l) => num(p.goals, l)],
+    ["season_assists", (l) => num(p.assists, l)],
+  ];
+  if (p.position === "DF" && d)
+    return [
+      ["def_tackles", (l) => num(d.tackles, l)],
+      ["def_interceptions", (l) => num(d.interceptions, l)],
+    ];
+  if (p.position === "GK" && k)
+    return [
+      ["gk_saves", (l) => num(k.saves, l)],
+      ["gk_save_pct", (l) => pct(k.save_pct, l)],
+    ];
+  return ga;
 }
 
 const ORDER = { GK: 0, DF: 1, MF: 2, FW: 3 } as Record<string, number>;
@@ -127,19 +150,13 @@ export default function PlayerDeck() {
                   <h2 className="truncate text-[15px] font-semibold text-ink">{p.name}</h2>
                   <p className="text-[12.5px] text-ink-3">{t(`pos_${p.position}` as Key)}</p>
                 </div>
-                <dl className="mt-auto flex gap-4 text-[12px] text-ink-3">
-                  <div className="flex flex-col-reverse">
-                    <dt className="mt-1">{t("season_goals")}</dt>
-                    <dd className="display num m-0 text-[22px] font-semibold leading-none text-ink">
-                      {num(p.goals, lang)}
-                    </dd>
-                  </div>
-                  <div className="flex flex-col-reverse">
-                    <dt className="mt-1">{t("season_assists")}</dt>
-                    <dd className="display num m-0 text-[22px] font-semibold leading-none text-ink">
-                      {num(p.assists, lang)}
-                    </dd>
-                  </div>
+                <dl className="mt-auto flex gap-4 text-[12px] text-ink-3" data-deck-stats={p.position}>
+                  {deckStats(p).map(([k, v]) => (
+                    <div key={k} className="flex flex-col-reverse">
+                      <dt className="mt-1">{t(k)}</dt>
+                      <dd className="display num m-0 text-[22px] font-semibold leading-none text-ink">{v(lang)}</dd>
+                    </div>
+                  ))}
                 </dl>
               </Link>
             </li>

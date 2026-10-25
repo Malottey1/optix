@@ -1,5 +1,8 @@
-// #/players/:id: the Player Console. Header (initials avatar, name, number, position, team badge),
-// passing routes on the Focus Pitch (top 8, then "Show all routes (N)"), the percentile pizza and
+// #/players/:id: the Player Console. Header (initials avatar, name, number, position, team badge,
+// minutes and two position stats), passing routes on the Focus Pitch (top 8, then "Show all routes
+// (N)"), then the position panels (PositionPanels.tsx, ChanceDrawer.tsx): chances and the chance
+// evidence drawer for forwards and midfielders, defensive actions, their map and progressive passing
+// for defenders, shots faced, shot stopping and distribution for goalkeepers. The percentile pizza and
 // the same percentiles as diverging bars around the median, the season touch map (HeatPitch on the
 // team's players-heat file), the player's validated patterns with their evidence, and a
 // "Raw / With context" toggle built only from the Verifier's existing player checks (ui.players[].
@@ -22,6 +25,18 @@ import { patternLabel, useT, type Key } from "../../lib/i18n";
 import type { PlayerCheck, PlayerRow } from "../../types/ui";
 import { reasonFor, textOf } from "../live/shared";
 import { Avatar } from "../teams/parts";
+import { ChancesPanel } from "./ChanceDrawer";
+import { deckStats } from "./PlayerDeck";
+import {
+  DefenceMap,
+  DefensiveActions,
+  KeeperDistribution,
+  KeeperFigures,
+  NotInData,
+  PassingExtras,
+  ShotsFacedMap,
+  WithLists,
+} from "./PositionPanels";
 
 function Block({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
   return (
@@ -36,7 +51,10 @@ function Block({ id, title, children }: { id: string; title: string; children: R
 
 /** Percentile minus 50 per pizza slice (same group, same rounding as the pizza). */
 export function divergingValues(p: PlayerRow, players: readonly PlayerRow[]) {
-  return pizzaValues(p, comparisonGroup(players)).map((v) => ({ ...v, delta: v.pctl == null ? null : v.pctl - 50 }));
+  return pizzaValues(p, comparisonGroup(players, p.position)).map((v) => ({
+    ...v,
+    delta: v.pctl == null ? null : v.pctl - 50,
+  }));
 }
 
 function DivergingBars({ p, players }: { p: PlayerRow; players: readonly PlayerRow[] }) {
@@ -266,6 +284,9 @@ export default function PlayerConsole() {
       </div>
     );
   const routes = m.ui.visuals.routes[p.id];
+  const prof = p.profile;
+  const meta = m.ui.profiles;
+  const pos = p.position;
   return (
     <div className="flex flex-col gap-flow" data-page="player" data-player={p.id}>
       <Link to="/players" className="self-start text-[12px] font-semibold text-ink-3 hover:text-ink">
@@ -290,16 +311,21 @@ export default function PlayerConsole() {
             </Link>
           </p>
         </div>
-        <dl className="flex gap-5 text-[12px] text-ink-3">
-          {(
-            [
-              ["season_goals", p.goals],
-              ["season_assists", p.assists],
-            ] as const
-          ).map(([k, v]) => (
+        <dl className="flex w-full flex-wrap gap-x-5 gap-y-2 text-[12px] text-ink-3 sm:w-auto" data-console-stats>
+          {prof && (
+            <div className="flex flex-col-reverse">
+              <dt className="mt-1">{t("pp_minutes")}</dt>
+              <dd className="display num m-0 text-[24px] font-semibold leading-none text-ink sm:text-[30px]">
+                {num(prof.minutes, lang)}
+              </dd>
+            </div>
+          )}
+          {deckStats(p).map(([k, v]) => (
             <div key={k} className="flex flex-col-reverse">
               <dt className="mt-1">{t(k)}</dt>
-              <dd className="display num m-0 text-[30px] font-semibold leading-none text-ink">{num(v, lang)}</dd>
+              <dd className="display num m-0 text-[24px] font-semibold leading-none text-ink sm:text-[30px]">
+                {v(lang)}
+              </dd>
             </div>
           ))}
         </dl>
@@ -330,6 +356,9 @@ export default function PlayerConsole() {
             ) : (
               <p className="text-[13px] text-ink-3">{t("routes_none")}</p>
             )}
+            <p className="mt-2 text-[11.5px] text-ink-3" data-role="routes-note">
+              {t("pp_routes_note")}
+            </p>
           </Block>
         </div>
         <div className="flex min-w-0 flex-col gap-flow xl:col-span-5">
@@ -341,6 +370,51 @@ export default function PlayerConsole() {
           </Block>
         </div>
       </div>
+      {prof && (pos === "FW" || pos === "MF") && (
+        <Block id="chances" title={t("ch_title")}>
+          <ChancesPanel p={p} meta={meta} />
+          <div className="mt-3">
+            <NotInData topic="pp_na_lines" />
+          </div>
+        </Block>
+      )}
+      {prof?.defence && pos === "DF" && (
+        <div className="grid grid-cols-1 items-start gap-flow xl:grid-cols-2" data-position-panels="DF">
+          <Block id="defence" title={t("def_title")}>
+            <DefensiveActions p={p} meta={meta} />
+            <div className="mt-3 flex flex-col gap-1">
+              <NotInData topic="pp_na_ground" />
+              <NotInData topic="pp_na_regain" />
+            </div>
+          </Block>
+          <div className="flex min-w-0 flex-col gap-flow">
+            <Block id="defence-map" title={t("def_map")}>
+              <WithLists code={p.team}>{(l) => <DefenceMap p={p} lists={l} />}</WithLists>
+            </Block>
+            <Block id="passing" title={t("pass_title")}>
+              <PassingExtras p={p} />
+            </Block>
+          </div>
+        </div>
+      )}
+      {prof?.keeper && pos === "GK" && (
+        <div className="grid grid-cols-1 items-start gap-flow xl:grid-cols-2" data-position-panels="GK">
+          <Block id="shots-faced" title={t("gk_map")}>
+            <WithLists code={p.team}>{(l) => <ShotsFacedMap p={p} lists={l} />}</WithLists>
+          </Block>
+          <div className="flex min-w-0 flex-col gap-flow">
+            <Block id="keeper" title={t("gk_figures")}>
+              <KeeperFigures p={p} />
+              <div className="mt-3">
+                <NotInData topic="pp_na_save" />
+              </div>
+            </Block>
+            <Block id="distribution" title={t("gk_dist")}>
+              <KeeperDistribution p={p} meta={meta} />
+            </Block>
+          </div>
+        </div>
+      )}
       <div className="grid grid-cols-1 items-start gap-flow lg:grid-cols-2 xl:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)_minmax(0,1fr)]">
         <Block id="pizza" title={t("console_pizza")}>
           <PercentilePizza p={p} players={players} />

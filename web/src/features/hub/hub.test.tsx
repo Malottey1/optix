@@ -9,7 +9,7 @@ import { setSetting } from "../../state/settings";
 import { capCards, layoutMarks } from "./parts";
 import { isPattern, panelMemory, panelPage } from "./InsightsPanel";
 import { facingPos, lineupMarkers } from "../../charts/MatchLineups";
-import { parseMatchFile, xiRows } from "../../data/matches";
+import { eventLog, parseMatchFile, xiRows } from "../../data/matches";
 import { shownMatchups } from "./MatchupStrips";
 import type { Insight } from "../../types/ui";
 
@@ -97,6 +97,19 @@ describe("Match Hub, Final", () => {
     fireEvent.keyDown(list, { key: "End" });
     fireEvent.keyDown(list, { key: "Home" });
     await waitFor(() => expect(list.getAttribute("aria-activedescendant")).toBe(first));
+  });
+
+  it("a replay link (?t=) opens the log at the first logged event at or after that clock", async () => {
+    const file = parseMatchFile(JSON.parse(readFileSync(join(DATA, "matches", "m_002.json"), "utf8")), "m_002");
+    const log = eventLog(file);
+    const at = log[Math.floor(log.length / 2)]!.clock_sec - 1;
+    const want = log.find((e) => e.clock_sec >= at)!;
+    window.location.hash = `#/match/m_002?t=${at}`;
+    render(<App source={source()} matches={matches()} />);
+    const p = await page("hub");
+    const list = (await waitFor(() => p.querySelector("[role='listbox']"))) as HTMLElement;
+    expect(p.querySelector("[data-event-log]")!.getAttribute("data-at-clock")).toBe(String(at));
+    expect(list.getAttribute("aria-activedescendant")).toBe(`ev-${want.event_id}`);
   });
 
   it("unknown match ids say so", async () => {

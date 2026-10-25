@@ -1,6 +1,6 @@
 // V8 Radial Percentile Pizza. One slice per involvement, pass-quality or chance metric; each slice's
-// radius is the player's percentile against the comparison group (outfield players with at least
-// MIN_PASSES passes). Slices run clockwise from 12 o'clock in the order of the list beside them; the
+// radius is the player's percentile against the comparison group (players of the same listed
+// position with at least MIN_PASSES passes). Slices run clockwise from 12 o'clock in the order of the list beside them; the
 // list carries the label, the percentile and the raw value, so colour is never the only carrier.
 import { memo } from "react";
 import { num, pct } from "../../lib/format";
@@ -28,9 +28,11 @@ const FILL: Record<Group, string> = {
 };
 const GROUP_NAME: Record<Group, string> = { volume: "volume", quality: "quality", source: "where it comes from" };
 
-/** The comparison group: outfield players with at least MIN_PASSES passes. */
-export const comparisonGroup = (players: readonly PlayerRow[]) =>
-  players.filter((p) => p.position !== "GK" && p.passes >= MIN_PASSES);
+/** The comparison group: players of the same listed position with at least MIN_PASSES passes. */
+export const comparisonGroup = (players: readonly PlayerRow[], position: PlayerRow["position"]) =>
+  players.filter((p) => p.position === position && p.passes >= MIN_PASSES);
+
+const POS_WORD: Record<string, string> = { GK: "goalkeepers", DF: "defenders", MF: "midfielders", FW: "forwards" };
 
 /** Percentiles rounded to whole numbers, as displayed. */
 export function pizzaValues(p: PlayerRow, group: readonly PlayerRow[]) {
@@ -61,7 +63,7 @@ export const PercentilePizza = memo(function PercentilePizza({
   players: readonly PlayerRow[];
 }) {
   const { lang } = useT();
-  const group = comparisonGroup(players);
+  const group = comparisonGroup(players, p.position);
   const vals = pizzaValues(p, group);
   const C = 100;
   const R0 = 14;
@@ -72,9 +74,10 @@ export const PercentilePizza = memo(function PercentilePizza({
       viz="pizza"
       caption={
         <>
-          Percentile against <span className="num">{num(group.length, lang)}</span> outfield players with at least{" "}
-          <span className="num">{num(MIN_PASSES, lang)}</span> passes (season totals; the data has no minutes, so not
-          per ninety).{inGroup ? "" : " This player is outside that group, so read the slices with care."}
+          Percentile against <span className="num">{num(group.length, lang)}</span> {POS_WORD[p.position] ?? "players"}{" "}
+          with at least <span className="num">{num(MIN_PASSES, lang)}</span> passes (season totals; the data has no
+          minutes, so not per ninety).
+          {inGroup ? "" : " This player is outside that group, so read the slices with care."}
         </>
       }
       table={{

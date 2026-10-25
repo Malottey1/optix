@@ -37,9 +37,10 @@ const player = (id: string, involvement: number, passes = 200, position = "MF"):
 });
 
 describe("pizza", () => {
-  it("compares against outfield players with enough passes", () => {
+  it("compares against same-position players with enough passes", () => {
     const ps = [player("a", 10), player("b", 20), player("gk", 99, 400, "GK"), player("few", 99, MIN_PASSES - 1)];
-    expect(comparisonGroup(ps).map((p) => p.id)).toEqual(["a", "b"]);
+    expect(comparisonGroup(ps, ps[0]!.position).map((p) => p.id)).toEqual(["a", "b"]);
+    expect(comparisonGroup(ps, "GK").map((p) => p.id)).toEqual(["gk"]);
   });
   it("rounds percentiles to whole numbers", () => {
     const g = [player("a", 10), player("b", 20), player("c", 30)];
