@@ -137,6 +137,12 @@ Item status is in docs/final-ui-progress.md; the audit and design notes in docs/
   m_showcase.json, three key insights with a revised and a passed one, and five crests in Featured
   teams (was five badges on the page). Hero checks unchanged.
 
+- tools/check_web.py mutation proof: the "crosshair" mutation (swap the displayed lane claim's lane
+  in m_001.json) expected a problem starting "crosshair", but since Step 4 the Match Hub draws the
+  Matchup as lane strips and its check reports "matchup <id>: page outlines ...". The full run showed
+  it "not caught" for that naming reason only; the entry is now "matchup strips" and expects that
+  message. Same mutation, same data change, a check that is at least as strict.
+
 ## Information architecture (branch `ui-visuals-ia`, from 6c3369d = origin/main; local tag `pre-ia`)
 
 Item status is in docs/ia-progress.md.

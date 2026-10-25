@@ -586,8 +586,8 @@ export default function PlayersPage() {
         <p className="eyebrow">Season totals · event data only</p>
         <h1 className="mt-1 text-[28px] font-bold tracking-tight text-ink sm:text-[34px]">Player Deck</h1>
         <p className="mt-2 text-[14.5px] leading-relaxed text-ink-2">
-          Involvement, pass quality and chances created. The data has no minutes played, so these are season totals, not
-          rates per ninety, and no tracking, so there are no distance, speed or fitness figures.
+          Involvement, pass quality and chances created. These are season totals, not rates per ninety, and the data has
+          no tracking, so there are no distance, speed or fitness figures.
         </p>
       </header>
       <Panel

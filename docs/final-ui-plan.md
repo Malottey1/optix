@@ -95,4 +95,17 @@ frame (x' = 100 - x, y' = 100 - y) for the keeper map.
 
 ## 4. Design decisions (filled in as built)
 
-See docs/PROGRESS.md "Final UI decisions" for the running log; the final list is copied here at the end.
+The full reasoning is in docs/PROGRESS.md "Final UI decisions"; per-step numbers are in
+docs/final-ui-progress.md. Summary:
+
+| Step | Built | Not built / deviation |
+|---|---|---|
+| 1 Navigation, Settings | Nav Home, Fixtures, Teams, Players; Technical details and the kits note in Settings | – |
+| 2 Data export | players[].profile (minutes, passing, chances, defence or keeper), profiles meta, fixtures index; players-<code>.json lists; match lineups | pressure regains (no field) |
+| 3 Match Hub | two columns from 1100 px, sticky paged insights panel, facing lineups; gap under heat maps 2,248 px -> 16 px at 1440 | live hub layout unchanged |
+| 4 Matchup | season lane strips, claim lane outlined, thresholds from the engine; shown at medium/high confidence (17 of 41 fixtures) | – |
+| 5 Style against the league | one league scale per measure, number-derived chips, tolerance 3 % | – |
+| 6 Players | position deck stats; DF defensive actions, action map, progressive passing; GK shots faced, shot stopping, distribution; chance evidence drawer with play links (?t=); pizza against position peers; Tech Limits | routes caption and three-item legend (routes are zone groups, no per-pass rows for ordinary passes) |
+| 7 Home | showcase strip, key insights, tiles, spotlight, patterns, teams, trust strip; 211 words below the hero | nav pill over the hero; hero shows generated faces (kept as briefed, flagged) |
+| 8 Search | Ctrl/Cmd+K dialog, grouped accent-blind results, lazy chunk | – |
+| 9 Favourites | stars, Following filter, Clear in Settings, localStorage in try/catch | – |

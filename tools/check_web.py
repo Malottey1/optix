@@ -897,7 +897,7 @@ def _mut_pizza(ui):
 
 
 # name: (mutation, the problem prefix that must appear, text that problem must contain)
-MUTATIONS = {"crosshair": (_mut_crosshair, "crosshair", ""), "heat": (_mut_heat, "heat", ""),
+MUTATIONS = {"matchup strips": (_mut_crosshair, "matchup ", "page outlines"), "heat": (_mut_heat, "heat", ""),
              "touch map": (_mut_touch, "touch map", ""), "lineup": (_mut_lineup, "lineup", ""),
              "shot blocks": (_mut_shots, "shot blocks", ""),
              "gauge": (_mut_gauge, "gauge", ""), "routes": (_mut_routes, "routes", "(all)"),

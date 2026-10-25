@@ -15,3 +15,5 @@ suite exit 0, `npm run build` pass.
 | Step 7 Home | done | (this commit) | 211 words below the hero (budget 260), cards <= 29; HomeSections lazy chunk 4.6 KB gzip; 4 Home mutations caught | nav pill over hero not done; hero faces conflict flagged |
 | Step 8 search | done | (this commit) | overlay chunk 2.35 KB gzip; entry 189.2 KB gzip; 6 new Vitest (ranking, keyboard, focus return, language); checker route clean at 4 sizes | – |
 | Step 9 favourites | done | (this commit) | stars on 3 surfaces, Following chip, Clear in Settings; 5 new Vitest; checker clean on teams/players/fixtures/settings | – |
+| Step 10 docs | done | (this commit) | dashboard.md, visuals.md (V16-V23), i18n-review.md (181 keys), final-ui-plan.md summary, Tech Limits, README to screens-v9 | – |
+| Gates | passed | (this commit) | Python 474 passed / 2 skipped; Vitest 199; check_web all routes x 4 sizes 0 failures, 17/17 mutations; p95 16.8 ms; entry 185.3 KB gzip (+8.3); ui.json 1,226,114 B; matches 2,692,489 B; two identical exports; byte-identity 2026 + 2027; secret scan 0 | 10 curated screenshots committed (repo-size gate), all 62 local |

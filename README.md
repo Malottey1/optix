@@ -15,12 +15,12 @@ Optix is a multi-agent engine that turns synthetic football event data into live
 - **Context check:** is it true but misleading given game state, sample size or metric limits? (For example, high field tilt from a team that is trailing and passing around a deep block.)
 
 <p align="center">
-  <img src="docs/screens-v8/home_desktop.png" alt="The Optix Home page: headline, proof row from the verification ledger, feature cards and the five fictional clubs" width="820" />
+  <img src="docs/screens-v9/home_desktop.png" alt="The Optix Home page: hero, showcase match strip, key insights, xG race, momentum and heat tiles, player spotlight, patterns, the five fictional clubs and why to trust it" width="820" />
 </p>
 
 <p align="center">
-  <img src="docs/screens-v8/hub_final_desktop.png" alt="A Match Hub recap: scoreline, turning points, heat maps and verified pattern cards" width="405" />
-  <img src="docs/screens-v8/team_board_desktop.png" alt="A Team Board: identity chips, the most-used starting eleven on a pitch, style pizza and lane lift" width="405" />
+  <img src="docs/screens-v9/hub_final_desktop.png" alt="A Match Hub recap: scoreline, turning points, lineups facing each other, heat maps, the Matchup lane strips and the insights panel" width="405" />
+  <img src="docs/screens-v9/team_board_desktop.png" alt="A Team Board: identity chips, the most-used starting eleven on a pitch, style against the league and lane lift" width="405" />
 </p>
 
 <sub>Screenshots of Home (`#/`), a Match Hub recap (`#/match/m_001`) and a Team Board (`#/teams/AUR`). Synthetic data. The line-up is illustrative, AI-assisted artwork, audited for maker marks (docs/brand-audit.md); the clubs and players are fictional.</sub>
@@ -87,7 +87,7 @@ python -m engine.report --team AUR --opponent NTG        # style profiles and ma
 python -m agents.personalize --mode casual --lang es --favorite NTG   # personalized feed in the terminal
 python -m data_gen.generate --league full                # 20 teams, 380 matches (data/full, ~15 s)
 cd web && npm run build && npm run preview               # production build in web/dist, served on :4173
-pip install -r requirements-ui.txt && python -m tools.check_web     # headless gates on every route + docs/screens-v8/
+pip install -r requirements-ui.txt && python -m tools.check_web --out docs/screens-v9   # headless gates on every route + screenshots
 ```
 
 What you get: `out/insights.jsonl` (timed insights, contracts/insight.schema.json), `out/claims.jsonl`

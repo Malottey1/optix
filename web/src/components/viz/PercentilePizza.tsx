@@ -75,8 +75,8 @@ export const PercentilePizza = memo(function PercentilePizza({
       caption={
         <>
           Percentile against <span className="num">{num(group.length, lang)}</span> {POS_WORD[p.position] ?? "players"}{" "}
-          with at least <span className="num">{num(MIN_PASSES, lang)}</span> passes (season totals; the data has no
-          minutes, so not per ninety).
+          with at least <span className="num">{num(MIN_PASSES, lang)}</span> passes (season totals, not rates per
+          ninety).
           {inGroup ? "" : " This player is outside that group, so read the slices with care."}
         </>
       }

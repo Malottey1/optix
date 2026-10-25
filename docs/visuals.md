@@ -121,7 +121,8 @@ least 1000 px tall. Below 1600 px the layout is unchanged.
   position with at least 100 passes (n shown; goalkeepers form their own group), rounded to a whole
   number. Slice radius = percentile. Letters A–G link the
   slices to the list with value and percentile.
-- **Caveat:** season totals, not per 90 (the data has no minutes).
+- **Caveat:** season totals, not per 90 (minutes exist since the final UI run; the per-90 rates are
+  on the defender panels, V19).
 
 ### V10 Zone shift (retired from the Team Board; replaced by V12)
 - **Question:** where did each side have the ball in the second half compared with the first?
