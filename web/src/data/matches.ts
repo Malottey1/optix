@@ -269,6 +269,10 @@ export const chanceRows = (l: TeamLists, pid: string) => (l.players[pid]?.chance
 export const shotsFacedRows = (l: TeamLists, pid: string) =>
   (l.players[pid]?.shots_faced ?? []) as unknown as ShotFacedRow[];
 export const defPoints = (l: TeamLists, pid: string) => (l.players[pid]?.defence ?? []) as unknown as DefPoint[];
+/** One side's starting XI rows: [player_id, shirt, position, line, slot, of] (shape-checked on load). */
+export type XiRow = [string, number, "GK" | "DF" | "MF" | "FW", number, number, number];
+export const xiRows = (f: MatchFile, side: "home" | "away") => f.lineups[side].xi as unknown as XiRow[];
+
 /** The match id of a full event id ("m_012_e00306" -> "m_012"). */
 export const matchOfEvent = (eid: string) => eid.replace(/_e\d+$/, "");
 

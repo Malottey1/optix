@@ -167,7 +167,12 @@ export function parseUi(raw: unknown): UiData {
     profiles: "object",
     fixtures: "array",
   });
-  c.fields(o.profiles, "profiles", { min_minutes: "number", rates: "array", peers: "object", league_chances: "object" });
+  c.fields(o.profiles, "profiles", {
+    min_minutes: "number",
+    rates: "array",
+    peers: "object",
+    league_chances: "object",
+  });
   (o.fixtures as unknown[]).forEach((f, i) => {
     if (!Array.isArray(f) || f.length !== 6 || typeof f[0] !== "string" || typeof f[2] !== "string")
       c.fail(`fixtures[${i}]`, "expected [id, matchweek, home, away, home goals, away goals]");

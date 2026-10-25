@@ -9,18 +9,20 @@ import { HeatPitch } from "../../charts/HeatPitch";
 import { MismatchCrosshairs } from "../../components/viz/MismatchCrosshairs";
 import { useData } from "../../data/context";
 import { useFixtures, useMatchFile } from "../../data/matchContext";
-import { eventLog, evidenceRows, expandCard, SHOWCASE_ID, type MatchFile } from "../../data/matches";
+import { eventLog, evidenceRows, expandCard, SHOWCASE_ID, xiRows, type MatchFile } from "../../data/matches";
 import { Icon } from "../../icons";
-import { num } from "../../lib/format";
 import { useT } from "../../lib/i18n";
+import { useMedia } from "../../lib/useMedia";
+import { MatchLineups } from "../../charts/MatchLineups";
+import { PlayerSheet } from "../teams/parts";
+import type { LineupNode } from "../../types/ui";
+import { InsightsPanel } from "./InsightsPanel";
 import {
   capCards,
   ClaimTable,
   EventLog,
-  fill,
   HubDrawer,
   HubHeader,
-  RecapCard,
   Section,
   SectionNav,
   TurningPoints,
@@ -89,21 +91,44 @@ function Matchup({ file }: { file: MatchFile }) {
   );
 }
 
+/** The hub's two-column breakpoint: from here the insights panel is a sticky side panel. */
+export const HUB_WIDE = "(min-width: 1100px)";
+
 function FinalRecap({ file }: { file: MatchFile }) {
-  const { t, lang } = useT();
+  const m = useData();
+  const { t } = useT();
+  const wide = useMedia(HUB_WIDE);
   const [sel, setSel] = useState<Selection>(null);
+  const [open, setOpen] = useState<{ id: string; code: string } | null>(null);
   const cards = useMemo(() => file.insights.map((c) => expandCard(file, c)), [file]);
   const shown = useMemo(() => capCards(cards), [cards]);
   const rows = useMemo(() => evidenceRows(file), [file]);
   const events = useMemo(() => eventLog(file), [file]);
   const codes = [file.header.home.code, file.header.away.code];
   const nav: [string, string][] = [
+    ...(wide ? [] : ([["insights", t("panel_title")]] as [string, string][])),
     ["turning", t("hub_turning")],
+    ["lineups", t("hub_lineups")],
     ["heat", t("hub_heat")],
-    ["cards", t("hub_cards")],
     ...(file.matchups ? ([["matchup", t("hub_matchup")]] as [string, string][]) : []),
     ["log", t("hub_log")],
   ];
+  const panel = <InsightsPanel file={file} cards={shown} onSelect={setSel} side={wide} />;
+  const sheetRow = open
+    ? xiRows(file, file.lineups.home.code === open.code ? "home" : "away").find((r) => r[0] === open.id)
+    : undefined;
+  const node: LineupNode | null = sheetRow
+    ? {
+        id: sheetRow[0],
+        shirt: sheetRow[1],
+        position: sheetRow[2],
+        role: null,
+        starts: 0,
+        line: sheetRow[3],
+        slot: sheetRow[4],
+        of: sheetRow[5],
+      }
+    : null;
   return (
     <div className="flex flex-col gap-flow" data-page="hub" data-hub="final" data-match={file.match_id}>
       <h1 className="sr-only">
@@ -114,14 +139,18 @@ function FinalRecap({ file }: { file: MatchFile }) {
           ← {t("back_fixtures")}
         </Link>
       </div>
-      <HubHeader file={file} nav={<SectionNav items={nav} />} />
-      <Section id="turning" title={t("hub_turning")}>
-        <TurningPoints file={file} onSelect={setSel} />
-      </Section>
-      <div className="grid grid-cols-1 items-start gap-flow lg:grid-cols-12">
-        <div className="min-w-0 lg:col-span-6">
+      <div className="grid grid-cols-1 items-start gap-flow min-[1100px]:grid-cols-[minmax(0,62fr)_minmax(0,38fr)]">
+        <div className="flex min-w-0 flex-col gap-flow" data-hub-column="main">
+          <HubHeader file={file} nav={<SectionNav items={nav} />} />
+          {!wide && panel}
+          <Section id="turning" title={t("hub_turning")}>
+            <TurningPoints file={file} onSelect={setSel} />
+          </Section>
+          <Section id="lineups" title={t("hub_lineups")} budget="lineups">
+            <MatchLineups file={file} onOpen={(id, code) => setOpen({ id, code })} />
+          </Section>
           <Section id="heat" title={t("hub_heat")}>
-            <div className="mx-auto w-full max-w-[600px]">
+            <div className="mx-auto w-full max-w-[640px]">
               <HeatPitch
                 grid={file.heat}
                 teams={file.heat.teams as Record<string, number[][]>}
@@ -130,32 +159,32 @@ function FinalRecap({ file }: { file: MatchFile }) {
               />
             </div>
           </Section>
-        </div>
-        <div className="min-w-0 lg:col-span-6">
-          <Section id="cards" title={t("hub_cards")}>
-            <p className="mb-2 text-[12px] text-ink-3">
-              {fill(t("recap_shown"), { k: num(shown.length, lang), n: num(file.stream_counts.insights, lang) })}
-            </p>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-              {shown.map((ins) => (
-                <RecapCard key={ins.insight_id} file={file} ins={ins} onSelect={setSel} />
-              ))}
-            </div>
+          <Matchup file={file} />
+          <Section id="log" title={t("hub_log")} budget="log">
+            <EventLog file={file} events={events} onSelect={setSel} />
           </Section>
+          <Link
+            to={`/match/${file.match_id}/ledger`}
+            data-ledger-link
+            className="self-start rounded-full border border-line px-4 py-2 text-[13px] font-semibold text-ink-2 hover:border-accent-line hover:text-ink"
+          >
+            {t("hub_ledger")}: {t("hub_ledger_link")} →
+          </Link>
         </div>
+        {wide && (
+          <div className="min-w-0 self-stretch" data-hub-column="side">
+            {panel}
+          </div>
+        )}
       </div>
-      <Matchup file={file} />
-      <Section id="log" title={t("hub_log")} budget="log">
-        <EventLog file={file} events={events} onSelect={setSel} />
-      </Section>
-      <Link
-        to={`/match/${file.match_id}/ledger`}
-        data-ledger-link
-        className="self-start rounded-full border border-line px-4 py-2 text-[13px] font-semibold text-ink-2 hover:border-accent-line hover:text-ink"
-      >
-        {t("hub_ledger")}: {t("hub_ledger_link")} →
-      </Link>
       <HubDrawer file={file} cards={cards} rows={rows} selection={sel} onClose={() => setSel(null)} />
+      <PlayerSheet
+        code={open?.code ?? ""}
+        node={node}
+        player={m.ui.players.find((p) => p.id === open?.id)}
+        name={open ? String(file.players[open.id]?.[0] ?? open.id) : ""}
+        onClose={() => setOpen(null)}
+      />
     </div>
   );
 }

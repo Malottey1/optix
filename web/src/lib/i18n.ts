@@ -642,8 +642,7 @@ const es: Record<Key, string> = {
   con_open: "Juego abierto",
   open_board: "Ficha del equipo",
   of_word: "de",
-  mx_legend:
-    "Arriba: entradas. Abajo: concedidas. Marca: liga. Anillo: carril de la afirmación verificada.",
+  mx_legend: "Arriba: entradas. Abajo: concedidas. Marca: liga. Anillo: carril de la afirmación verificada.",
   ...FINAL_ES,
 };
 
@@ -964,8 +963,7 @@ const fr: Record<Key, string> = {
   con_open: "Jeu ouvert",
   open_board: "Fiche de l'équipe",
   of_word: "sur",
-  mx_legend:
-    "En haut : entrées. En bas : concédées. Trait : ligue. Anneau : couloir de l'affirmation vérifiée.",
+  mx_legend: "En haut : entrées. En bas : concédées. Trait : ligue. Anneau : couloir de l'affirmation vérifiée.",
   ...FINAL_FR,
 };
 
