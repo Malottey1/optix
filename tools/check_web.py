@@ -1166,6 +1166,161 @@ def check_navigation(browser, base) -> dict:
     return out
 
 
+NAV_SIZES = {"1440": WIDTHS["desktop"], "1080p": (1920, 1080), "900p": (1600, 900), "720": (720, 900),
+             "719": (719, 900), "390": WIDTHS["mobile"]}
+NAV_BREAKPOINT = 720          # AppShell NAV_BREAKPOINT: the floating bar from here up, the tab bar below
+NAV_HREFS = ["#/", "#/fixtures", "#/teams", "#/players"]
+NAV_JS = """() => {
+  const vis = (e) => { const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0 && getComputedStyle(e).visibility !== 'hidden'; };
+  const box = (e) => { const r = e.getBoundingClientRect(); return [r.left, r.top, r.width, r.height]; };
+  const bar = document.querySelector('[data-nav-bar]'), tabs = document.querySelector('[data-tab-bar]');
+  const items = (root) => root ? [...root.querySelectorAll('a[data-nav-item]')].filter(vis).map((a) => {
+    const cs = getComputedStyle(a), lab = a.querySelector('span'), ic = a.querySelector('svg');
+    return {href: a.getAttribute('href'), current: a.getAttribute('aria-current'), color: cs.color, box: box(a),
+            font: lab ? [parseFloat(getComputedStyle(lab).fontSize), getComputedStyle(lab).fontWeight] : null,
+            icon: ic ? box(ic).slice(2) : null, transition: cs.transitionDuration}; }) : [];
+  const top = document.querySelector('header nav[aria-label=Main]');
+  const btn = (id) => { const b = document.getElementById(id); return b && vis(b) ? {box: box(b), label: b.getAttribute('aria-label')} : null; };
+  const bs = bar ? getComputedStyle(bar) : null;
+  return {W: innerWidth, H: innerHeight, bar: bar && vis(bar) ? box(bar) : null, radius: bs && bs.borderTopLeftRadius,
+          bg: bs && bs.backgroundColor, page: getComputedStyle(document.body).backgroundColor,
+          top: items(top), tabs: tabs && vis(tabs) ? {box: box(tabs), items: items(tabs)} : null,
+          search: btn('open-search'), settings: btn('open-settings'),
+          tech: [...document.querySelectorAll('nav[aria-label=Main] a')].some((a) => /tech/i.test(a.getAttribute('href') + a.textContent))};
+}"""
+
+
+def _rgb(css: str) -> tuple:
+    v = [float(x) for x in re.findall(r"[\d.]+", css)]
+    return tuple(v[:3]) + ((v[3] if len(v) > 3 else 1.0),)
+
+
+def _contrast(fg: tuple, bg: tuple, page: tuple) -> float:
+    """fg on bg (alpha-blended over the page background)."""
+    a = bg[3]
+    base = tuple(bg[i] * a + page[i] * (1 - a) for i in range(3))
+    l1, l2 = _lum(tuple(int(round(x)) for x in fg[:3])), _lum(tuple(int(round(x)) for x in base))
+    return (max(l1, l2) + 0.05) / (min(l1, l2) + 0.05)
+
+
+def nav_bar_problems(m: dict, active: str) -> list:
+    """The floating bar (width >= NAV_BREAKPOINT) or the bottom tab bar (below it), from NAV_JS."""
+    p, W = [], m["W"]
+    if m["tech"]:
+        p.append("Tech is in the primary nav")
+    for b in ("search", "settings"):
+        if not m[b] or not m[b]["label"]:
+            p.append(f"{b} button missing or unnamed")
+    links = m["top"] if W >= NAV_BREAKPOINT else (m["tabs"] or {}).get("items", [])
+    if [x["href"] for x in links] != NAV_HREFS:
+        p.append(f"nav items {[x['href'] for x in links]}, want {NAV_HREFS}")
+    cur = [x["href"] for x in links if x["current"] == "page"]
+    if cur != [active]:
+        p.append(f"aria-current on {cur}, want [{active!r}]")
+    accent, slate = (55.0, 230.0, 168.0), (148.0, 163.0, 184.0)
+    bg, page = _rgb(m["bg"] or "rgb(0,0,0)"), _rgb(m["page"])
+    for x in links:
+        c = _rgb(x["color"])[:3]
+        want = accent if x["href"] == active else slate
+        if any(abs(a - b) > 1 for a, b in zip(c, want)):
+            p.append(f"{x['href']} colour {x['color']}, want rgb{want}")
+        if _contrast(_rgb(x["color"]), bg, page) < 4.5:
+            p.append(f"{x['href']} text contrast under 4.5:1")
+    if W >= NAV_BREAKPOINT:
+        if not m["bar"]:
+            return p + ["floating bar not visible"]
+        left, top, w, h = m["bar"]
+        if abs(h - 64) > 1 or not 19.5 <= top <= 24.5 or w > 1200.5 or abs(left - (W - left - w)) > 1:
+            p.append(f"floating bar box {[round(v) for v in m['bar']]}: want 64 px tall, 20-24 px from the top, "
+                     f"at most 1200 px wide, centred")
+        if m["radius"] != "24px":
+            p.append(f"bar radius {m['radius']}")
+        if m["tabs"]:
+            p.append("bottom tab bar visible beside the floating bar")
+        for x in links:
+            if x["icon"] != [18, 18] or not x["font"] or not 13 <= x["font"][0] <= 14 or x["font"][1] != "500":
+                p.append(f"{x['href']} icon {x['icon']} label {x['font']}: want 18 px, 13-14 px medium")
+            if x["transition"] != "0.2s":
+                p.append(f"{x['href']} transition {x['transition']}, want 0.2s")
+            if x["box"][1] < top or x["box"][1] + x["box"][3] > top + h:
+                p.append(f"{x['href']} outside the bar")
+        for b in ("search", "settings"):
+            if m[b] and (m[b]["box"][1] < top or m[b]["box"][1] + m[b]["box"][3] > top + h):
+                p.append(f"{b} outside the bar")
+    else:
+        if not m["tabs"]:
+            return p + ["bottom tab bar not visible"]
+        if m["top"]:
+            p.append("top nav links visible beside the tab bar")
+        tl, tt, tw, th = m["tabs"]["box"]
+        if abs(tt + th - m["H"]) > 1:
+            p.append(f"tab bar not at the bottom {[round(v) for v in m['tabs']['box']]}")
+        for x in links:
+            if x["box"][2] < 44 or x["box"][3] < 44:
+                p.append(f"{x['href']} tap target {[round(v) for v in x['box'][2:]]} under 44 px")
+        for b in ("search", "settings"):
+            if m[b]:
+                l, t, w, h = m[b]["box"]
+                if w < 44 or h < 44 or t > 80 or l + w < W - 120:
+                    p.append(f"{b} not a 44 px target in the top corner {[round(v) for v in m[b]['box']]}")
+    return p
+
+
+FOCUS_JS = """() => { const a = document.activeElement; if (!a || !a.matches('a[data-nav-item]')) return null;
+  const cs = getComputedStyle(a); return [cs.outlineStyle, cs.outlineWidth, cs.outlineColor]; }"""
+
+
+def _nav_focus(page, back=False) -> list | None:
+    """Tab from the top of the page to the first nav item (Shift+Tab to the last one when the nav is
+    the bottom tab bar, the end of the Tab order); its focus ring once the 0.2 s transition is over."""
+    page.evaluate("() => { document.activeElement && document.activeElement.blur(); window.scrollTo(0, 0); }")
+    for _ in range(8):
+        page.keyboard.press("Shift+Tab" if back else "Tab")
+        page.wait_for_timeout(300)
+        got = page.evaluate(FOCUS_JS)
+        if got:
+            return got
+    return None
+
+
+def check_nav_bar(browser, base) -> dict:
+    """The floating nav bar at every size (64 px pill 20-24 px from the top, at most 1200 px, centred,
+    radius 24, four items with 18 px icons and 13-14 px medium labels, mint active item with
+    aria-current, slate inactive items at 4.5:1 or more, 0.2 s transitions, a 2 px mint focus ring
+    reached by Tab) and the bottom tab bar below NAV_BREAKPOINT (44 px targets, search and settings
+    in the top corner). Reduced motion turns the transition off. A proof run strips aria-current and
+    the focus ring and must be caught."""
+    out = {}
+    for name, (w, h) in NAV_SIZES.items():
+        ctx, page, log = _context(browser, w, h)
+        problems = []
+        for route, active in (("teams", "#/teams"), ("hub_final", "#/fixtures")):
+            _open(page, base, route)
+            problems += [f"{route}: {x}" for x in nav_bar_problems(page.evaluate(NAV_JS), active)]
+        ring = _nav_focus(page, back=w < NAV_BREAKPOINT)
+        if not ring or ring[0] != "solid" or ring[1] != "2px" or _rgb(ring[2])[:3] != (55.0, 230.0, 168.0):
+            problems.append(f"keyboard focus ring {ring}, want 2px solid mint")
+        out[name] = dict(problems=problems + log["problems"])
+        ctx.close()
+    ctx, page, log = _context(browser, *WIDTHS["desktop"], reduced_motion="reduce")
+    _open(page, base, "teams")
+    durations = {x["transition"] for x in page.evaluate(NAV_JS)["top"]}
+    out["reduced_motion"] = dict(durations=sorted(durations),
+                                 problems=[] if durations == {"0s"} else [f"transition {sorted(durations)} under reduced motion"])
+    ctx.close()
+    ctx, page, log = _context(browser, *WIDTHS["desktop"])
+    _open(page, base, "teams")
+    page.evaluate("() => document.querySelectorAll('[aria-current]').forEach((a) => a.removeAttribute('aria-current'))")
+    page.add_style_tag(content="a[data-nav-item]:focus-visible { outline: none !important; }")
+    hits = nav_bar_problems(page.evaluate(NAV_JS), "#/teams")
+    ring = _nav_focus(page)
+    if not ring or ring[0] != "solid":
+        hits.append("focus ring gone")
+    out["proof"] = dict(caught=len(hits) >= 2, problems=hits[:3])
+    ctx.close()
+    return out
+
+
 def check_robustness(browser, base) -> dict:
     out = {}
     ctx, page, log = _context(browser, *WIDTHS["desktop"])
@@ -1530,6 +1685,7 @@ def run(dist: Path | None = None, screens_dir: Path | None = None, screens: bool
             report["text_budget_proof"] = check_text_budget_proof(browser, base)
             report["consistency"] = check_consistency(browser, base, ref_dir or dist / "data")
             report["navigation"] = check_navigation(browser, base)
+            report["nav_bar"] = check_nav_bar(browser, base)
             report["hub_layout"] = check_hub_layout(browser, base)
             report["language"] = check_language_switch(browser, base, src)
         browser.close()
@@ -1598,6 +1754,12 @@ def failures(report) -> list:
     for wn, v in report.get("navigation", {}).items():
         f += [f"navigation@{wn}: {x}" for x in v["problems"]]
         f += [f"navigation@{wn}: never reached {x}" for x in v["reached"] if x.endswith(":missing")]
+    for k, v in report.get("nav_bar", {}).items():
+        if k == "proof":
+            if not v["caught"]:
+                f.append("nav bar proof: the missing active marker and focus ring were not caught")
+        else:
+            f += [f"nav bar@{k}: {x}" for x in v["problems"]]
     R = report.get("robustness")
     if R is not None:
         f += [f"storage blocked: {x}" for x in R["storage_blocked"]["problems"]]
@@ -1634,7 +1796,7 @@ def failures(report) -> list:
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--dist", default=str(WEB / "dist"))
-    ap.add_argument("--out", default=str(ROOT / "docs" / "screens-v8"), help="screenshot directory")
+    ap.add_argument("--out", default=str(ROOT / "docs" / "screens-v9"), help="screenshot directory")
     ap.add_argument("--no-screens", action="store_true")
     ap.add_argument("--routes", default=",".join(ROUTES))
     ap.add_argument("--json", default=None, help="also write the full report here")
@@ -1663,7 +1825,7 @@ def main(argv=None):
         for k, _, n in r.get("words", {}).get("elements", []):
             top[k] = max(top.get(k, 0), n)
         print(f"words {r['route']:10s} {r['width']:5d}px total={r.get('words', {}).get('total')} max_per_budget={top}")
-    for k in ("hub_layout", "text_budget_proof", "drawer", "consistency", "mutation_proof", "language", "robustness", "frames", "frames_1080p",
+    for k in ("nav_bar", "hub_layout", "text_budget_proof", "drawer", "consistency", "mutation_proof", "language", "robustness", "frames", "frames_1080p",
               "first_screen", "live_stream", "bundle", "image_files", "badges", "hero_contrast"):
         if k in report:
             print(f"{k}:", {x: y for x, y in report[k].items() if x != "_problems"} if isinstance(report[k], dict) else report[k])

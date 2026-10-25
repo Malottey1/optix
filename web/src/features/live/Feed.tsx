@@ -270,7 +270,7 @@ export function Feed({ onEvidence }: { onEvidence: (id: string) => void }) {
     <Panel
       id="feed-panel"
       title={t("stream")}
-      className="flex min-h-0 flex-col lg:max-h-[calc(100vh-6rem)]"
+      className="flex min-h-0 flex-col lg:max-h-[calc(100vh-116px)]"
       bodyClassName="flex min-h-0 flex-1 flex-col"
       actions={
         <span

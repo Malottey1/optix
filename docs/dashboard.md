@@ -108,6 +108,19 @@ note. They are saved in localStorage inside try/catch, so the app works when
 storage is blocked. The tray says that the Tech Blueprint explanations and some longer chart captions
 are English only (the Team Board, Player Deck and Player Console strings are in en / es / fr).
 
+Navigation (web/src/components/shell/AppShell.tsx): from 720 px up (`NAV_BREAKPOINT`) a floating
+bar, a centred pill 64 px tall, 20 px below the top of the page, at most 1200 px wide, radius 24,
+midnight navy (`--nav`, opaque in high contrast) with a `--nav-line` border, a soft shadow and a
+backdrop blur; the strip around it is transparent, so the page scrolls behind it. Left: the wordmark
+and a divider. Centre: Home, Fixtures, Teams, Players, each an 18 px outline icon and a 13.5 px medium
+label. Right: Search and Settings, icon buttons in outlined circles named by `aria-label`. The active
+item is mint on a soft mint fill with a mint outline (not colour alone) and `aria-current="page"`,
+also on its sub-routes (a match hub is Fixtures, a Team Board is Teams); inactive items are slate
+`--nav-ink` (7.4:1). Hover and focus change colour in 200 ms (no transition under reduced motion);
+keyboard focus shows a 2 px mint ring. Below 720 px the four items move to a bottom tab bar (52 px
+targets, a mint bar on the active one) and the pill keeps the wordmark, Search and Settings (44 px)
+in the top corners. Tech is not in the nav: Settings -> Technical details, and `#/tech` still works.
+
 Brand: the header wordmark (inline SVG, `currentColor`) links to Home. Club crests come from `TeamBadge` (web/src/components/brand/TeamBadge.tsx): the crest image from 40 px up, a disc in the club accent with the club code below 40 px, or when the image fails or the code is unknown. When the name or code is shown beside it, the badge is decorative (`alt=""`). Club accents (`--team-*`) are never used to mark a verdict. Image sources, the mark audit and licences: design/ASSETS.md and docs/brand-audit.md.
 
 View options for screenshots and tests: `#/match/m_showcase?t=2760&select=ins_0009&lang=es&play=1` (old
@@ -130,8 +143,13 @@ Routes: home, fixtures, hub_live (`#/match/m_showcase`), hub_final (`#/match/m_0
 (`#/teams/AUR`), team_sheet (the same board with the lineup mini-profile open), players, player
 (`#/players/NTG_07`), player_df (`#/players/CAL_05`), player_gk (`#/players/CAL_01`), chance_drawer
 (`#/players/NTG_11` with the drawer open), settings (Home with the sheet open), search (Fixtures with
-the search dialog open), tech. Each also runs at 1920x1080 and 1600x900.
-It writes `docs/screens-v8/<route>_<desktop|mobile|1080p|900p>.png` (every route is also checked at
+the search dialog open), tech. Each also runs at 1920x1080 and 1600x900. The nav bar check
+(`check_nav_bar`) measures the bar at 1440, 1920x1080, 1600x900, 720, 719 and 390 px: the pill's box,
+radius, items, icon and label sizes, colours and contrast, `aria-current` on Teams and on Fixtures
+(from a match hub), the 0.2 s transition (0 s under reduced motion), the 2 px mint focus ring reached
+with Tab, and below 720 px the bottom tab bar's 44 px targets with Search and Settings in the top
+corner; a proof run without the active marker and the focus ring must fail.
+It writes `docs/screens-v9/<route>_<desktop|mobile|1080p|900p>.png` (every route is also checked at
 1920x1080 and 1600x900; plus
 `badges_24_32.png`), each under 300 KB; lazy images are scrolled into view before a full-page shot.
 It fails on any of:

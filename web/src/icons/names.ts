@@ -1,6 +1,7 @@
-// The 54 icon names of the Optix icon sheet, by group (docs/icons.md).
+// The 56 icon names: the 54 of the Optix icon sheet plus fixtures and search, drawn later for the nav
+// in the same style; by group (docs/icons.md).
 export const ICON_GROUPS = {
-  navigation: ["live", "home", "teams", "players", "tech", "settings"],
+  navigation: ["live", "home", "fixtures", "teams", "players", "tech", "settings", "search"],
   playback: ["play", "pause", "restart", "speed", "scrub"],
   events: [
     "pass",

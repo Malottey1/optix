@@ -35,7 +35,7 @@ export default function LivePage() {
             <RhythmPulse />
           </div>
         </div>
-        <div className="min-w-0 lg:sticky lg:top-20 lg:col-span-4 lg:col-start-9 lg:row-span-2 lg:row-start-1 2xl:col-span-3 2xl:col-start-10 2xl:row-span-1 wide:static wide:col-span-1 wide:col-start-3 wide:row-span-2 wide:row-start-3">
+        <div className="min-w-0 lg:sticky lg:top-[100px] lg:col-span-4 lg:col-start-9 lg:row-span-2 lg:row-start-1 2xl:col-span-3 2xl:col-start-10 2xl:row-span-1 wide:static wide:col-span-1 wide:col-start-3 wide:row-span-2 wide:row-start-3">
           <Feed onEvidence={setDrawer} />
         </div>
         <div className="grid min-w-0 grid-cols-1 items-start gap-flow md:grid-cols-2 lg:col-span-8 lg:col-start-1 lg:row-start-2 2xl:col-span-3 2xl:col-start-7 2xl:row-start-1 2xl:grid-cols-1 wide:contents">

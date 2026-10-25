@@ -123,7 +123,7 @@ export function Section({
     <section
       id={id}
       aria-labelledby={`${id}-h`}
-      className="scroll-mt-20 rounded-2xl border border-line bg-surface-1 pad"
+      className="scroll-mt-[100px] rounded-2xl border border-line bg-surface-1 pad"
       data-budget={budget ?? id}
     >
       <h2 id={`${id}-h`} className="mb-3 text-[15px] font-semibold text-ink">

@@ -115,6 +115,17 @@ Item status is in docs/final-ui-progress.md; the audit and design notes in docs/
   team plays). Settings has a Favourites section with "Clear favourites" and the note that they stay
   in this browser; no accounts are mentioned.
 
+- Floating nav bar: the header is now a floating pill (720 px and up) and a bottom tab bar below
+  720 px (it was 1024 px), per the nav design brief; docs/dashboard.md "Navigation" has the
+  measurements. Two icons were added to the set in the sheet's style, fixtures (a calendar; Fixtures
+  used the scrub icon) and search (moved from the interface glyphs). The nav items are plain Links:
+  NavLink dropped our aria-current on sub-routes, so a match hub never announced Fixtures as the
+  current page. The sub-line beside the wordmark is gone (the brief: wordmark, then a divider), and
+  Search and Settings are icon buttons named by aria-label. The mint is the existing --accent
+  (#37e6a8), not a new #2EE6A6, so the brand keeps one accent. Sticky offsets (hub insights panel,
+  Live feed, scroll margins) moved from 80 to 100 px below the taller bar. The hero still starts
+  below the bar; content scrolls behind it.
+
 ### Test changes (final UI)
 
 - tests/test_dashboard.py: the checked Matchup pairs now equal the lane claims the hub shows (display
@@ -124,6 +135,12 @@ Item status is in docs/final-ui-progress.md; the audit and design notes in docs/
   moved to Settings, per Step 1); shell.test.tsx checks it is in Settings.
 - web/src/features/hub/hub.test.tsx: the final hub's section order is now insights, turning, lineups,
   heat, (matchup), log (the Step 3 layout); the matchup-only-with-a-claim assertion is unchanged.
+
+- Nav bar: web/src/icons/icons.test.tsx and tests/test_icons.py expect 56 icons (fixtures and search
+  added to the navigation group, as docs/icons.md's "Adding an icon" says), and test_icons.py adds
+  the pairs fixtures/scrub and search/metric-xg to the must-differ list. shell.test.tsx gains four
+  nav tests. The checker's default --out is now docs/screens-v9 and it gains check_nav_bar with a
+  proof run. No assertion was loosened.
 
 - web/src/components/viz/helpers.test.ts: comparisonGroup now takes the position; the test expects
   same-position players with enough passes (and a goalkeeper-only group) instead of all outfield

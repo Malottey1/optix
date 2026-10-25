@@ -173,7 +173,7 @@ export function SearchOverlay({ open, onOpenChange }: { open: boolean; onOpenCha
           <Dialog.Title className="sr-only">{t("search_label")}</Dialog.Title>
           <Dialog.Description className="sr-only">{t("search_hint")}</Dialog.Description>
           <div className="flex items-center gap-2 border-b border-line px-4">
-            <Glyph name="search" className="h-5 w-5 text-ink-3" />
+            <Icon name="search" className="h-5 w-5 text-ink-3" />
             <input
               type="search"
               role="combobox"

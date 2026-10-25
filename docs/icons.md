@@ -1,7 +1,7 @@
 # Icons
 
-Optix has one icon set: 54 icons drawn by hand as SVG from the author's design sheet ("OPTIX ICON
-SET"). They live in `web/src/icons/`. The audit of what they replaced is in docs/icons-plan.md. The
+Optix has one icon set: 56 icons drawn by hand as SVG, 54 from the author's design sheet ("OPTIX
+ICON SET") plus fixtures and search, drawn later for the nav in the same style. They live in `web/src/icons/`. The audit of what they replaced is in docs/icons-plan.md. The
 contact sheets are in docs/screens-v5/icons-16.png, icons-24.png and icons-64.png, each on a dark and
 a light background.
 
@@ -17,7 +17,7 @@ import { Icon } from "../../icons";
 
 | Group | Icons |
 |---|---|
-| Navigation | live, home, teams, players, tech, settings |
+| Navigation | live, home, fixtures (a match-day calendar), teams, players, tech, settings, search (a magnifier) |
 | Playback | play, pause, restart, speed, scrub |
 | Event types | pass, shot, goal, tackle, interception, pressure, possession-change, foul, yellow-card, red-card, substitution, corner |
 | Lanes | lane-left-flank, lane-left-half-space, lane-centre, lane-right-half-space, lane-right-flank |
@@ -30,7 +30,7 @@ import { Icon } from "../../icons";
 (types without an icon, such as carry, duel, block or clearance, keep a ring in the evidence chain),
 Team Board style labels, and a team's main attacking lane.
 
-Interface glyphs that are not on the sheet (close, arrow, swap, the Focus Pitch ball marker, cloud)
+Interface glyphs that are not on the sheet (close, arrow, swap, the Focus Pitch ball marker, cloud, star)
 are `Glyph` in `src/components/icons.tsx`. They follow the same drawing rules.
 
 ## Rules
@@ -56,7 +56,7 @@ are `Glyph` in `src/components/icons.tsx`. They follow the same drawing rules.
 ## Checks
 
 - `web/src/icons/icons.test.tsx` (Vitest):
-  - exactly the 54 names, in their groups;
+  - exactly the 56 names, in their groups;
   - every icon is a 24 x 24 outline SVG with the stroke rules;
   - only the allowed paints and tokens;
   - no raster, text or remote reference;
@@ -68,7 +68,8 @@ are `Glyph` in `src/components/icons.tsx`. They follow the same drawing rules.
   - every pair is compared by normalised correlation and the test fails above 0.92, except the
     foul pair;
   - named pairs (live and territorial stress, live and pressure, players and teams, tech and
-    settings, revised and restart, revised and possession change, ...) are asserted below the
+    settings, revised and restart, revised and possession change, fixtures and scrub, search and
+    xG, ...) are asserted below the
     threshold;
   - a mutation (pressure drawn as a copy of live) must be caught.
 - `python -m tools.icon_sheet` writes the contact sheets and prints the most similar pairs.

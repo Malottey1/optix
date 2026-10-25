@@ -1,12 +1,11 @@
-// App chrome: brand, navigation (top bar on large screens, bottom bar on small ones), search
-// (button or Ctrl/Cmd+K), settings.
+// App chrome: brand, navigation (a floating top bar from NAV_BREAKPOINT up, a bottom tab bar below
+// it), search (button or Ctrl/Cmd+K) and settings, both as icon buttons in the bar.
 import { lazy, Suspense, useEffect, useState, type ReactNode } from "react";
-import { NavLink, useLocation } from "react-router";
+import { Link, useLocation } from "react-router";
 import { cx } from "../../lib/cx";
 import { useT, type Key } from "../../lib/i18n";
 import { Icon, type IconName } from "../../icons";
 import { Logo } from "../icons";
-import { Glyph } from "../icons";
 import { SettingsSheet } from "./SettingsSheet";
 
 // its own chunk, loaded the first time search opens
@@ -15,7 +14,7 @@ const SearchOverlay = lazy(() => import("./SearchOverlay").then((m) => ({ defaul
 /** The primary nav. The Tech page is reached from Settings ("Technical details") and from Home. */
 export const ROUTES = ["home", "fixtures", "teams", "players"] as const;
 export type Route = (typeof ROUTES)[number];
-const ICON: Record<Route, IconName> = { home: "home", fixtures: "scrub", teams: "teams", players: "players" };
+const ICON: Record<Route, IconName> = { home: "home", fixtures: "fixtures", teams: "teams", players: "players" };
 /** A nav entry is also active on its sub-routes (a match hub belongs to Fixtures). */
 const ACTIVE_ON: Record<Route, RegExp> = {
   home: /^\/?$/,
@@ -25,34 +24,77 @@ const ACTIVE_ON: Record<Route, RegExp> = {
 };
 const PATH: Record<Route, string> = { home: "/", fixtures: "/fixtures", teams: "/teams", players: "/players" };
 
+/** At this width and up the nav is the floating top bar; below it, the bottom tab bar. */
+export const NAV_BREAKPOINT = 720;
+
+// 200 ms colour changes (none under reduced motion: index.css), and the 2 px accent focus ring
+const ITEM = "transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
+
 function NavLinks({ compact }: { compact?: boolean }) {
   const { t } = useT();
   const { pathname } = useLocation();
-  return ROUTES.map((r) => (
-    <NavLink
-      key={r}
-      to={PATH[r]}
-      end={r === "home"}
-      data-route={r}
-      aria-current={ACTIVE_ON[r].test(pathname) ? "page" : undefined}
-      className={({ isActive: exact }) => {
-        const isActive = exact || ACTIVE_ON[r].test(pathname);
-        return cx(
+  return ROUTES.map((r) => {
+    const isActive = ACTIVE_ON[r].test(pathname);
+    return (
+      // Link, not NavLink: NavLink drops aria-current on the sub-routes ACTIVE_ON adds
+      <Link
+        key={r}
+        to={PATH[r]}
+        data-route={r}
+        data-nav-item={r}
+        aria-current={isActive ? "page" : undefined}
+        className={cx(
+          ITEM,
           compact
-            ? "flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-xl py-1.5 text-[11px] font-semibold"
-            : "inline-flex items-center gap-2 rounded-full px-3.5 py-2 text-[13.5px] font-semibold transition-colors",
+            ? "relative flex min-h-[52px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl text-[11px] font-medium"
+            : "inline-flex h-10 items-center gap-2 rounded-full px-3 text-[13.5px] font-medium min-[860px]:px-3.5",
+          // active: mint on a soft mint fill, plus an outline (compact: a bar on top) so the marker
+          // does not rely on colour alone
           isActive
             ? compact
-              ? "text-accent"
-              : "bg-surface-3 text-ink shadow-[inset_0_0_0_1px_var(--line-strong)]"
-            : "text-ink-3 hover:text-ink",
-        );
-      }}
+              ? "bg-accent-soft text-accent before:absolute before:inset-x-5 before:top-0 before:h-0.5 before:rounded-full before:bg-accent"
+              : "bg-accent-soft text-accent shadow-[inset_0_0_0_1px_var(--accent-line)]"
+            : "text-nav-ink hover:bg-white/[0.06] hover:text-ink",
+        )}
+      >
+        <Icon name={ICON[r]} size={compact ? 22 : 18} />
+        <span className="truncate">{t(`nav_${r}` as Key)}</span>
+      </Link>
+    );
+  });
+}
+
+/** Search and Settings: icon buttons in an outlined circle, named for screen readers. */
+function RoundButton({
+  id,
+  icon,
+  label,
+  onClick,
+  shortcut,
+}: {
+  id: string;
+  icon: IconName;
+  label: string;
+  onClick: () => void;
+  shortcut?: string;
+}) {
+  return (
+    <button
+      id={id}
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      title={label}
+      aria-haspopup="dialog"
+      aria-keyshortcuts={shortcut}
+      className={cx(
+        ITEM,
+        "inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-nav-line min-[720px]:h-10 min-[720px]:w-10 text-nav-ink hover:bg-white/[0.06] hover:text-ink",
+      )}
     >
-      <Icon name={ICON[r]} className={compact ? "h-[22px] w-[22px]" : "h-[18px] w-[18px]"} />
-      <span className="truncate">{t(`nav_${r}` as Key)}</span>
-    </NavLink>
-  ));
+      <Icon name={icon} size={18} />
+    </button>
+  );
 }
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -73,7 +115,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
   return (
-    <div className="min-h-screen pb-24 lg:pb-0">
+    <div className="min-h-screen pb-24 min-[720px]:pb-0">
       <a
         href="#main"
         onClick={(e) => {
@@ -84,52 +126,48 @@ export function AppShell({ children }: { children: ReactNode }) {
       >
         {t("skip")}
       </a>
-      <header className="sticky top-0 z-40 border-b border-line bg-bg/85 backdrop-blur-md">
-        <div className="mx-auto flex h-16 max-w-[1680px] items-center gap-4 px-4 sm:px-6">
-          <NavLink to="/" end data-route="home" className="flex min-w-0 items-center gap-3 rounded-lg">
-            <Logo variant="wordmark" className="h-9 w-auto text-accent" />
-            <span className="sr-only">Optix, {t("nav_home")}</span>
-            <span className="mt-2 hidden min-w-0 truncate border-l border-line pl-3 text-[11.5px] leading-tight text-ink-3 sm:block">
-              {t("brand_sub")}
-            </span>
-          </NavLink>
-          <nav aria-label="Main" className="ml-6 hidden items-center gap-1 lg:flex">
+      {/* the floating bar: the strip around the pill is transparent, so the page shows through */}
+      <header className="pointer-events-none sticky top-0 z-40 px-4 pt-3 sm:px-6 min-[720px]:pt-5">
+        <div
+          data-nav-bar
+          className="pointer-events-auto mx-auto flex h-14 max-w-[1200px] items-center gap-3 rounded-[24px] border border-nav-line bg-nav px-3 pl-4 backdrop-blur-md elev-nav min-[720px]:grid min-[720px]:h-16 min-[720px]:grid-cols-[1fr_auto_1fr] min-[720px]:gap-4 min-[720px]:pl-5"
+        >
+          <div className="flex min-w-0 items-center gap-4">
+            <Link to="/" data-route="home" className={cx(ITEM, "flex shrink-0 items-center rounded-lg")}>
+              <Logo variant="wordmark" className="h-8 w-auto text-accent" />
+              <span className="sr-only">Optix, {t("nav_home")}</span>
+            </Link>
+            <span aria-hidden="true" className="hidden h-6 w-px bg-nav-line min-[720px]:block" />
+          </div>
+          <nav aria-label="Main" className="hidden items-center gap-1.5 min-[720px]:flex min-[1000px]:gap-2">
             <NavLinks />
           </nav>
-          <button
-            id="open-search"
-            type="button"
-            onClick={() => {
-              setSearched(true);
-              setSearching(true);
-            }}
-            aria-haspopup="dialog"
-            aria-keyshortcuts="Control+K Meta+K"
-            className="ml-auto inline-flex h-10 items-center gap-2 rounded-full border border-line px-3.5 text-[13.5px] font-semibold text-ink-2 hover:border-line-strong hover:text-ink"
-          >
-            <Glyph name="search" className="h-[18px] w-[18px]" />
-            <span className="hidden sm:inline">{t("search")}</span>
-            <span className="sr-only sm:hidden">{t("search")}</span>
-          </button>
-          <button
-            id="open-settings"
-            type="button"
-            onClick={() => setOpen(true)}
-            aria-haspopup="dialog"
-            className="inline-flex h-10 items-center gap-2 rounded-full border border-line px-3.5 text-[13.5px] font-semibold text-ink-2 hover:border-line-strong hover:text-ink"
-          >
-            <Icon name="settings" className="h-[18px] w-[18px]" />
-            <span className="hidden sm:inline">{t("settings")}</span>
-            <span className="sr-only sm:hidden">{t("settings")}</span>
-          </button>
+          <div className="ml-auto flex items-center justify-end gap-2">
+            <RoundButton
+              id="open-search"
+              icon="search"
+              label={t("search")}
+              shortcut="Control+K Meta+K"
+              onClick={() => {
+                setSearched(true);
+                setSearching(true);
+              }}
+            />
+            <RoundButton id="open-settings" icon="settings" label={t("settings")} onClick={() => setOpen(true)} />
+          </div>
         </div>
       </header>
-      <main id="main" tabIndex={-1} className="mx-auto max-w-[1680px] px-4 py-5 outline-none sm:px-6 sm:py-6">
+      <main
+        id="main"
+        tabIndex={-1}
+        className="mx-auto max-w-[1680px] px-4 py-5 outline-none sm:px-6 sm:py-6 min-[720px]:pt-4"
+      >
         {children}
       </main>
       <nav
         aria-label="Main"
-        className="fixed inset-x-0 bottom-0 z-40 flex gap-1 border-t border-line bg-bg/95 px-2 pb-[max(env(safe-area-inset-bottom),8px)] pt-1.5 backdrop-blur-md lg:hidden"
+        data-tab-bar
+        className="fixed inset-x-0 bottom-0 z-40 flex gap-1 border-t border-nav-line bg-nav px-2 pb-[max(env(safe-area-inset-bottom),8px)] pt-1.5 backdrop-blur-md min-[720px]:hidden"
       >
         <NavLinks compact />
       </nav>

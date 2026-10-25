@@ -6,7 +6,7 @@ import type { Insight } from "../types/ui";
 import { Icon, ICON_GROUPS, ICON_NAMES, type IconName } from "./index";
 
 const SHEET: Record<string, string[]> = {
-  navigation: ["live", "home", "teams", "players", "tech", "settings"],
+  navigation: ["live", "home", "fixtures", "teams", "players", "tech", "settings", "search"],
   playback: ["play", "pause", "restart", "speed", "scrub"],
   events: [
     "pass",
@@ -62,10 +62,10 @@ const ALLOWED_PAINT = new Set(["none", "currentColor", "var(--card-yellow)", "va
 const html = (name: IconName, title?: string) => renderToStaticMarkup(<Icon name={name} title={title} />);
 
 describe("icon manifest", () => {
-  it("holds exactly the 54 icons of the sheet, in its groups", () => {
+  it("holds exactly the 54 icons of the sheet plus fixtures and search, in their groups", () => {
     expect(ICON_GROUPS).toEqual(SHEET);
-    expect(ICON_NAMES).toHaveLength(54);
-    expect(new Set(ICON_NAMES).size).toBe(54);
+    expect(ICON_NAMES).toHaveLength(56);
+    expect(new Set(ICON_NAMES).size).toBe(56);
   });
 
   it.each(ICON_NAMES)("%s is a 24 x 24 outline svg without raster, text or remote reference", (name) => {

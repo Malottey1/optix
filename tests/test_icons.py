@@ -17,9 +17,10 @@ from tools import icon_sheet  # noqa: E402
 
 PAIRS = [("live", "metric-territorial-stress"), ("live", "pressure"), ("pressure", "metric-territorial-stress"),
          ("players", "teams"), ("tech", "settings"), ("verdict-revised", "restart"),
-         ("verdict-revised", "possession-change")]
+         ("verdict-revised", "possession-change"),
+         ("fixtures", "scrub"), ("search", "metric-xg")]
 EXPECTED = {
-    "live", "home", "teams", "players", "tech", "settings",
+    "live", "home", "fixtures", "teams", "players", "tech", "settings", "search",
     "play", "pause", "restart", "speed", "scrub",
     "pass", "shot", "goal", "tackle", "interception", "pressure", "possession-change", "foul", "yellow-card",
     "red-card", "substitution", "corner",
@@ -43,7 +44,7 @@ def corr(request):
 
 
 def test_the_names_are_the_sheet():
-    assert len(EXPECTED) == 54
+    assert len(EXPECTED) == 56
     assert set(icon_sheet.icon_names()) == EXPECTED
 
 

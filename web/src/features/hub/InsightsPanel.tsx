@@ -98,7 +98,7 @@ export function InsightsPanel({
       data-budget="cards"
       className={cx(
         "flex min-w-0 flex-col rounded-2xl border border-line bg-surface-1",
-        side ? "sticky top-[80px] h-[calc(100vh-96px)]" : "scroll-mt-20",
+        side ? "sticky top-[100px] h-[calc(100vh-116px)]" : "scroll-mt-[100px]",
       )}
     >
       <div className="flex flex-col gap-2.5 border-b border-line px-4 pb-3 pt-4">

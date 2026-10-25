@@ -34,6 +34,12 @@
   --away: #ff9a52;
   --away-soft: rgba(255, 154, 82, 0.16);
 
+  /* The floating nav bar: midnight navy, a quieter border, muted slate labels (7.4:1 on --nav). */
+  --nav: rgba(11, 18, 32, 0.9);
+  --nav-line: #25334a;
+  --nav-ink: #94a3b8;
+  --nav-shadow: 0 10px 28px -14px rgba(0, 0, 0, 0.7), 0 1px 0 rgba(255, 255, 255, 0.03) inset;
+
   /* Club accents for the five fictional clubs. Used only beside a crest or code (TeamBadge mini-mark),
    * never alone and never for a verdict. Each is at least 3:1 on --bg and on --surface-2, and the
    * dark code text on each disc is at least 4.5:1 (tokens.test.ts). NTG red is darker and more
@@ -82,6 +88,9 @@
   --ink: #ffffff;
   --ink-2: #e6ebf4;
   --ink-3: #ccd5e5;
+  --nav: #0b1220;
+  --nav-line: #5d7299;
+  --nav-ink: #ccd5e5;
   --pitch-line: rgba(240, 252, 248, 0.62);
   --pitch-faint: rgba(240, 252, 248, 0.3);
 }

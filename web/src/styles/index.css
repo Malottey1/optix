@@ -36,6 +36,9 @@
   --color-home-soft: var(--home-soft);
   --color-away: var(--away);
   --color-away-soft: var(--away-soft);
+  --color-nav: var(--nav);
+  --color-nav-line: var(--nav-line);
+  --color-nav-ink: var(--nav-ink);
   --font-sans: var(--font-sans);
   --font-display: var(--font-display);
   --font-mono: var(--font-mono);
@@ -88,6 +91,9 @@
 }
 @utility elev-1 {
   box-shadow: var(--shadow-1);
+}
+@utility elev-nav {
+  box-shadow: var(--nav-shadow);
 }
 @utility elev-2 {
   box-shadow: var(--shadow-2);

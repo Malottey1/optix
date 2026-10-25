@@ -3,10 +3,12 @@
 import type { IconName } from "./names";
 import { LiveIcon } from "./glyphs/live";
 import { HomeIcon } from "./glyphs/home";
+import { FixturesIcon } from "./glyphs/fixtures";
 import { TeamsIcon } from "./glyphs/teams";
 import { PlayersIcon } from "./glyphs/players";
 import { TechIcon } from "./glyphs/tech";
 import { SettingsIcon } from "./glyphs/settings";
+import { SearchIcon } from "./glyphs/search";
 import { PlayIcon } from "./glyphs/play";
 import { PauseIcon } from "./glyphs/pause";
 import { RestartIcon } from "./glyphs/restart";
@@ -59,10 +61,12 @@ import { PatternTacticalFoulingIcon } from "./glyphs/pattern-tactical-fouling";
 export const ICONS: Record<IconName, () => React.JSX.Element> = {
   live: LiveIcon,
   home: HomeIcon,
+  fixtures: FixturesIcon,
   teams: TeamsIcon,
   players: PlayersIcon,
   tech: TechIcon,
   settings: SettingsIcon,
+  search: SearchIcon,
   play: PlayIcon,
   pause: PauseIcon,
   restart: RestartIcon,
