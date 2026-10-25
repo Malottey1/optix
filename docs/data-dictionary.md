@@ -127,6 +127,35 @@ top (NTG's right winger's usage and NTG's left winger's corner delivery), so the
 unmistakable version of a trap while the
 season keeps the realistic one. The overrides are listed in `ground_truth.json`.
 
+## What the data can and cannot show
+
+Measured on the dashboard season (data/generated); field names as in the CSVs. "Derived" means
+computed by the export from listed fields, never stored by the generator.
+
+| Topic | Can show? | Field(s) / why not |
+|---|---|---|
+| Tackles, and tackles won | yes | events `tackle`, outcome success / fail |
+| Interceptions | yes | events `interception` |
+| Blocks | yes | events `block` |
+| Clearances, headed clearances | yes | events `clearance`, body_part head / foot |
+| Fouls committed, player fouled | yes | events `foul` (player_id), related_player_id |
+| Cards | yes | events `card`, outcome yellow / second_yellow / red |
+| Pressures | yes | events `pressure` (outcome applied) |
+| Pressure regains | no field | would need a sequence rule; not exported |
+| Aerial duels | yes | events `duel` (all body_part head), outcome success / fail |
+| Ground duels | no | no ground-duel event; `dribble` is the carrier's take-on only |
+| Shots and results | yes | shots.shot_result goal / saved / blocked / off_target; on target = goal + saved |
+| Which keeper faced a shot | derived | shots carry team_id only; a `saved` shot is followed by a `save` event with the keeper's player_id; goals are attributed to the keeper on the pitch at the shot's clock (lineups on_sec / off_sec) |
+| Keeper save location, post-shot quality | no | save events sit at a fixed x; no placement or shot-on-target model |
+| Starters, minutes, substitutions | yes | lineups starter, on_sec, off_sec, minutes_played, sent_off; events `substitution` (player_id off, related_player_id on) |
+| Shirt and listed position | yes | players shirt, position, role |
+| Key passes, xA, the shot they set up | yes | passes.is_key_pass, passes.xa (= the assisted shot's xg), shots.assist_event_id |
+| Progressive, forward passes, pass type | yes | passes.is_progressive, is_forward, pass_type (corner, free_kick, cross, ...) |
+| Passes into the final third / box | derived | events x_start, x_end, y_end (final third x >= 66.7; box x >= 84, 22 <= y <= 78) |
+| Line-breaking passes | **no** | needs opponent positions at the moment of the pass |
+| Formations | **no** | teams.csv formation is a generator input; the app shows listed positions only |
+| Off-ball movement, distance covered | **no** | no tracking data |
+
 ## What is deliberately not in the data
 
 Tracking data (player positions, speeds, distance covered) and anything derived from it. Positions

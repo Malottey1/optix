@@ -1,5 +1,20 @@
 # Progress log
 
+## Final UI (branch `ui-visuals-final-ui`, from a8ab229 = main = ui-visuals-ia; local tag `pre-final-ui`)
+
+Item status is in docs/final-ui-progress.md; the audit and design notes in docs/final-ui-plan.md.
+
+### Final UI decisions
+
+- Start: main and ui-visuals-ia are the same commit (a8ab229). Green start: default suite exit 0,
+  `npm run build` pass.
+- Audit data source: the dashboard season data/generated (40 matches) and data/showcase; facts in
+  docs/final-ui-plan.md section 1 and docs/data-dictionary.md "What the data can and cannot show".
+
+### Test changes (final UI)
+
+(none yet)
+
 ## Information architecture (branch `ui-visuals-ia`, from 6c3369d = origin/main; local tag `pre-ia`)
 
 Item status is in docs/ia-progress.md.
