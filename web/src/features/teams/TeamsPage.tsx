@@ -1,3 +1,5 @@
+// DEPRECATED (information architecture rebuild): no route renders this page any more; #/teams is
+// TeamGrid and #/teams/:code is TeamBoard. Kept for reference, not deleted.
 // #/teams: every team's style fingerprint over the season and a head-to-head lane matchup. All
 // numbers come from ui.json (engine/profiles.py, engine/style_labels.py, engine/matchup.py).
 // Lanes are always named from the attacker's point of view; the defender's own name for the same

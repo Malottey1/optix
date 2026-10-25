@@ -8,7 +8,8 @@ const HomePage = lazy(() => import("./features/home/HomePage"));
 const FixturesPage = lazy(() => import("./features/fixtures/FixturesPage"));
 const MatchHub = lazy(() => import("./features/hub/MatchHub"));
 const MatchLedger = lazy(() => import("./features/hub/MatchHub").then((m) => ({ default: m.MatchLedger })));
-const TeamsPage = lazy(() => import("./features/teams/TeamsPage"));
+const TeamGrid = lazy(() => import("./features/teams/TeamGrid"));
+const TeamBoard = lazy(() => import("./features/teams/TeamBoard"));
 const PlayersPage = lazy(() => import("./features/players/PlayersPage"));
 const TechPage = lazy(() => import("./features/tech/TechPage"));
 
@@ -30,7 +31,8 @@ export function AppRoutes() {
       <Route path="/fixtures" element={<FixturesPage />} />
       <Route path="/match/:id" element={<MatchHub />} />
       <Route path="/match/:id/ledger" element={<MatchLedger />} />
-      <Route path="/teams" element={<TeamsPage />} />
+      <Route path="/teams" element={<TeamGrid />} />
+      <Route path="/teams/:code" element={<TeamBoard />} />
       <Route path="/players" element={<PlayersPage />} />
       <Route path="/tech" element={<TechPage />} />
       {Object.entries(REDIRECTS).map(([from, to]) => (

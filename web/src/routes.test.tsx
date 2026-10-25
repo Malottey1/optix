@@ -7,7 +7,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 vi.mock("./features/home/HomePage", () => ({ default: () => <p>home</p> }));
 vi.mock("./features/fixtures/FixturesPage", () => ({ default: () => <p>fixtures</p> }));
 vi.mock("./features/hub/MatchHub", () => ({ default: () => <p>hub</p>, MatchLedger: () => <p>ledger</p> }));
-vi.mock("./features/teams/TeamsPage", () => ({ default: () => <p>teams</p> }));
+vi.mock("./features/teams/TeamGrid", () => ({ default: () => <p>teams</p> }));
+vi.mock("./features/teams/TeamBoard", () => ({ default: () => <p>board</p> }));
 vi.mock("./features/players/PlayersPage", () => ({ default: () => <p>players</p> }));
 vi.mock("./features/tech/TechPage", () => ({ default: () => <p>tech</p> }));
 
@@ -56,6 +57,7 @@ describe("old deep links", () => {
       ["/fixtures", "fixtures"],
       ["/match/m_001", "hub"],
       ["/match/m_001/ledger", "ledger"],
+      ["/teams/AUR", "board"],
     ]) {
       const r = at(path!);
       await waitFor(() => expect(r.getByText(page!)).toBeTruthy());

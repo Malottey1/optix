@@ -89,7 +89,9 @@ def test_committed_files_fit_the_limits_and_the_schemas():
         assert size <= X.MAX_FILE_BYTES, p.name
         errs = [e.message for e in match_v.iter_errors(json.loads(p.read_text()))]
         assert not errs, (p.name, errs[:3])
-    assert total + (COMMITTED / "index.json").stat().st_size <= X.MAX_DIR_BYTES
+    assert sum(p.stat().st_size for p in COMMITTED.glob("*.json")) <= X.MAX_DIR_BYTES
+    for p in COMMITTED.glob("players-heat-*.json"):
+        assert p.stat().st_size <= X.MAX_FILE_BYTES, p.name
     index = json.loads((COMMITTED / "index.json").read_text())
     assert not list(index_v.iter_errors(index))
     assert {f["id"] + ".json" for f in index["fixtures"]} == {p.name for p in files}
@@ -157,3 +159,12 @@ def test_lineup_is_the_most_started_eleven_with_listed_numbers_and_label(season)
         slots = {(r["line"], r["slot"]) for r in t["xi"]}
         assert len(slots) == 11                                     # one node per slot: nothing overlaps
     assert lu["HAR"]["label"] == "4-4-2" and lu["AUR"]["label"] == "4-3-3"
+
+
+def test_player_touch_maps_count_every_on_ball_event(season):
+    from agents.dashboard_data import TRACK_TYPES as TT
+    for tid in sorted(season.teams)[:2]:
+        f = json.loads((COMMITTED / f"players-heat-{season.code(tid).lower()}.json").read_text())
+        for pid, (bins,) in list(f["players"].items())[:5]:
+            n = sum(1 for e in season.events if e["player_id"] == pid and e["event_type"] in TT and e["x_start"] is not None)
+            assert sum(bins) == n

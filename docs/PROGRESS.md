@@ -75,10 +75,35 @@ Item status is in docs/ia-progress.md.
 - Fixtures nav icon: "scrub" (the timeline glyph) from the existing sheet; no new glyph. The Live
   icon stays on the live replay row and the hub's live chip.
 
+- Team Grid / Board split: `#/teams` is a grid (badge, name, matches, five fingerprint chips);
+  `#/teams/:code` is the board. The old TeamsPage is kept on disk, unrouted and marked deprecated
+  (no file deletions). The H2H lane block, the half-by-half zone grid and the visible lane tables
+  are off the board; lane numbers stay in closed "View data" tables.
+- Style pizza: each slice is the team's value over the league average (ratio, capped at 1.6x so
+  one extreme measure does not hide the rest), the dashed ring = the league. The legend names the
+  five measures only; the direction words are already the header chips.
+- "Where they attack": five lane bands across one pitch, coloured by the team's lift over the
+  league in final-third entries (diverging heat tokens). The soft-side line appears only when the
+  existing soft-lane rule passes for that team; otherwise one quiet line.
+- Signature patterns: up to three on the board with the share of matches and its Wilson 95%
+  interval, which the export now carries (`patterns.signature[].interval`); "Show all" opens a
+  drawer with every family seen for the team (`patterns.team_families`).
+- Player touch maps (for the Player Console) are exported per team as
+  matches/players-heat-<code>.json (16-18 KB each), not one 86 KB file.
+- Game-state slider on the board: StateSwaps gains a `compact` mode (no team picker, one-line
+  caption) and all its labels are in en/es/fr; the full caption stays on the Tech page.
+- Sheets open from plain buttons, so Sheet now remembers the opener on open and returns focus to
+  it on close (Radix alone sends focus to the body without a Dialog.Trigger). Applies to every
+  sheet, including the evidence drawers.
+- Board word count (1440, visible): VES 178, NTG 174, AUR 166, CAL 166; HAR at 390: 172. Budget 180.
+
 ### Test changes (IA)
 
 - web/src/components/viz/helpers.test.ts: the PlayerRow fixture gains the new required fields
   (shirt, goals, assists, starts). No assertion changed.
+- web/src/App.test.tsx, "Tactical patterns on the pages": the signature check visited `#/teams`
+  (one page with every club); it now visits each `#/teams/<code>` board and asserts the same
+  families in the same order, plus that no club has more than the three the board shows.
 
 - tests/test_verifier_full.py, claim-level shot_spam pooled recall (the one exception the brief
   allows): the point floor (recall >= 0.80) is replaced by the interval method for this one check,

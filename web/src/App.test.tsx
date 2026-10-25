@@ -138,18 +138,20 @@ describe("Tactical patterns on the pages", () => {
     );
     cleanup();
 
-    window.location.hash = "#/teams";
-    render(<App source={source()} />);
-    const teams = await screen.findByText((_, el) => el?.getAttribute("data-page") === "teams", undefined, {
-      timeout: 5000,
-    });
+    // one Team Board per club now (#/teams is the grid); the board lists at most three signatures
     for (const [code, rows] of Object.entries(ui.patterns.signature as Record<string, { family: string }[]>)) {
-      const box = await waitFor(() => teams.querySelector(`[data-signature-patterns='${code}']`) as HTMLElement);
+      window.location.hash = `#/teams/${code}`;
+      render(<App source={source()} />);
+      const board = await screen.findByText((_, el) => el?.getAttribute("data-page") === "team-board", undefined, {
+        timeout: 5000,
+      });
+      const box = await waitFor(() => board.querySelector(`[data-signature-patterns='${code}']`) as HTMLElement);
+      expect(rows.length).toBeLessThanOrEqual(3);
       expect([...box.querySelectorAll("[data-family]")].map((e) => e.getAttribute("data-family"))).toEqual(
         rows.map((r) => r.family),
       );
+      cleanup();
     }
-    cleanup();
 
     window.location.hash = "#/tech";
     render(<App source={source()} />);

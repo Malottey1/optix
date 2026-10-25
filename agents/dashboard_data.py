@@ -415,23 +415,29 @@ def patterns_section(season, docs_dir: Path) -> dict:
             for f in fs:
                 if f.player_id:
                     by_player[(f.player_id, f.family)] = by_player.get((f.player_id, f.family), 0) + 1
-    signature = {}
+    signature, team_families = {}, {}
     for tid in sorted(season.teams):
-        rows = []
+        rows, every = [], []
         for f in PAT.FAMILIES:
             n = found.get((tid, f), 0)
             others = sum(v for (t, fam), v in found.items() if fam == f and t != tid)
             others_played = sum(v for t, v in played.items() if t != tid)
             share, league = n / played[tid], others / others_played if others_played else 0.0
+            # Wilson 95% interval of the share of the team's matches with a finding
+            lo, hi = M.wilson_interval(n, played[tid])
+            row = dict(family=f, icon=PAT.ICONS[f], matches=n, played=played[tid], share=_pct(share),
+                       others_share=_pct(league), interval=[_pct(lo), _pct(hi)])
             if share >= SIGNATURE_SHARE and share >= SIGNATURE_LIFT * league:
-                rows.append(dict(family=f, icon=PAT.ICONS[f], matches=n, played=played[tid],
-                                 share=_pct(share), others_share=_pct(league)))
+                rows.append(row)
+            if n:
+                every.append(dict(row, signature=row in rows))
         signature[season.code(tid)] = sorted(rows, key=lambda r: -r["share"])
+        team_families[season.code(tid)] = sorted(every, key=lambda r: (-r["share"], r["family"]))
     players = {}
     for (pid, fam), n in sorted(by_player.items()):
         players.setdefault(pid, []).append(dict(family=fam, icon=PAT.ICONS[fam], matches=n,
                                                 team_played=played[season.players[pid]["team_id"]]))
-    return dict(catalogue=catalogue, signature=signature, players=players,
+    return dict(catalogue=catalogue, signature=signature, team_families=team_families, players=players,
                 not_built=[dict(id=i, name=n, icon=ic, status=s) for i, n, ic, s in NOT_BUILT],
                 signature_rule=dict(min_share=_pct(SIGNATURE_SHARE), min_lift=SIGNATURE_LIFT))
 

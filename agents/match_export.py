@@ -122,6 +122,20 @@ def heat_section(ds, match_id, periods) -> dict:
     return dict(cols=HEAT_COLS, rows=HEAT_ROWS, x_edges=HEAT_X_EDGES, y_edges=HEAT_Y_EDGES, teams=teams)
 
 
+def player_heat(season, team_id) -> dict:
+    """Season touch maps of one team's players: per player, raw counts of their on-ball events
+    (TRACK_TYPES with a location) per heat bin, all matches together, in the attacking frame;
+    players with none are left out. Written as players-heat-<code>.json next to the match files
+    (the Player Console loads its team's file)."""
+    out: dict = {}
+    for e in season.events:
+        pid = e["player_id"]
+        if pid and e["team_id"] == team_id and e["event_type"] in TRACK_TYPES and e["x_start"] is not None:
+            out.setdefault(pid, [0] * (HEAT_COLS * HEAT_ROWS))[heat_bin(e["x_start"], e["y_start"])] += 1
+    return dict(cols=HEAT_COLS, rows=HEAT_ROWS, x_edges=HEAT_X_EDGES, y_edges=HEAT_Y_EDGES,
+                players={p: [out[p]] for p in sorted(out)})
+
+
 def header_section(ds, match_id) -> dict:
     m = ds.matches[match_id]
     evs = match_events(ds)[match_id]
@@ -404,6 +418,11 @@ def export(season_dir: Path, showcase_dir: Path | None, out: Path, log=print, fi
                  fixtures=sorted(rows, key=lambda r: (r["status"] != "live", r["matchweek"], r["date"], r["kickoff"], r["id"])))
     text = _dumps(index)
     (out / "index.json").write_text(text, encoding="utf-8")
+    for tid in sorted(season.teams):
+        name = f"players-heat-{season.code(tid).lower()}"
+        ph = _dumps(player_heat(season, tid))
+        (out / f"{name}.json").write_text(ph, encoding="utf-8")
+        sizes[name] = len(ph.encode())
     total = sum(sizes.values())
     log(f"{len(sizes)} match files, {total} B in all (largest {max(sizes.values())} B); index {len(text.encode())} B")
     if total > MAX_DIR_BYTES:

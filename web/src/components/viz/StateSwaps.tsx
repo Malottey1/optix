@@ -28,8 +28,19 @@ const enough = (s: Record<string, StateMetric>, minN: number) =>
   s.field_tilt!.n >= minN &&
   s.press_intensity!.n >= minN;
 
-export function StateSwaps({ visuals, codes, initial }: { visuals: Visuals; codes: string[]; initial: string }) {
-  const { lang } = useT();
+export function StateSwaps({
+  visuals,
+  codes,
+  initial,
+  compact = false,
+}: {
+  visuals: Visuals;
+  codes: string[];
+  initial: string;
+  /** one team (the Team Board): no team picker and the one-line caption */
+  compact?: boolean;
+}) {
+  const { t, lang } = useT();
   const [sel, setSel] = useState(initial);
   const minN = visuals.state_min_n;
   const pts = codes.map((code) => {
@@ -59,16 +70,16 @@ export function StateSwaps({ visuals, codes, initial }: { visuals: Visuals; code
   return (
     <VizFigure
       viz="state-swaps"
-      caption={
-        <>
-          Ring: trailing. Diamond: leading. The arrow shows how the team's play moves once it goes ahead. Season data,
-          the team's own score state; a state needs at least <span className="num">{num(minN, lang)}</span> observations
-          per metric. Descriptive only: a shift is not a cause.
-        </>
-      }
+      caption={compact ? t("ss_caption") : t("ss_caption_long").replace("{n}", num(minN, lang))}
       table={{
-        caption: "Field tilt and press intensity when trailing and when leading",
-        head: ["Team", "Trailing tilt %", "Trailing press", "Leading tilt %", "Leading press"],
+        caption: t("ss_table"),
+        head: [
+          t("ss_team"),
+          `${t("ss_trailing")} · ${t("ss_tilt")} %`,
+          `${t("ss_trailing")} · ${t("ss_press")}`,
+          `${t("ss_leading")} · ${t("ss_tilt")} %`,
+          `${t("ss_leading")} · ${t("ss_press")}`,
+        ],
         rows: pts.map((p) => [
           p.code,
           p.trailing ? num(tiltPct(p.trailing.x), lang) : "not enough data",
@@ -78,14 +89,16 @@ export function StateSwaps({ visuals, codes, initial }: { visuals: Visuals; code
         ]),
       }}
     >
-      <Segmented
-        label="Highlight a team"
-        name="state-team"
-        value={sel}
-        onChange={setSel}
-        options={codes.map((c) => ({ value: c, label: c }))}
-        className="mb-3"
-      />
+      {!compact && (
+        <Segmented
+          label={t("ss_highlight")}
+          name="state-team"
+          value={sel}
+          onChange={setSel}
+          options={codes.map((c) => ({ value: c, label: c }))}
+          className="mb-3"
+        />
+      )}
       <svg
         viewBox={`0 0 ${W} ${H}`}
         role="img"
@@ -119,7 +132,7 @@ export function StateSwaps({ visuals, codes, initial }: { visuals: Visuals; code
           </g>
         ))}
         <text x={(M.l + W - M.r) / 2} y={H - 6} textAnchor="middle" fontSize="19" fill="var(--ink-2)">
-          Field tilt → more territory
+          {t("ss_axis_x")}
         </text>
         <text
           x={18}
@@ -129,7 +142,7 @@ export function StateSwaps({ visuals, codes, initial }: { visuals: Visuals; code
           fill="var(--ink-2)"
           transform={`rotate(-90 18 ${(M.t + H - M.b) / 2})`}
         >
-          Press intensity →
+          {t("ss_axis_y")}
         </text>
         {pts.map((p) => {
           const on = p.code === sel;
@@ -183,7 +196,7 @@ export function StateSwaps({ visuals, codes, initial }: { visuals: Visuals; code
               fontWeight="700"
               fill="var(--accent)"
             >
-              {cur.code} leading
+              {cur.code} {t("ss_leading")}
             </text>
             <text
               x={labelX(x(cur.trailing.x))}
@@ -192,7 +205,7 @@ export function StateSwaps({ visuals, codes, initial }: { visuals: Visuals; code
               fontSize="19"
               fill="var(--ink-2)"
             >
-              trailing
+              {t("ss_trailing")}
             </text>
           </g>
         )}
@@ -202,15 +215,19 @@ export function StateSwaps({ visuals, codes, initial }: { visuals: Visuals; code
           const p = b === "trailing" ? cur.trailing : cur.leading;
           return [
             <div key={`${b}-t`} className="rounded-lg border border-line bg-surface-2 px-3 py-2">
-              <dt className="text-[11.5px] text-ink-3">{b === "trailing" ? "Trailing" : "Leading"} · tilt</dt>
+              <dt className="text-[11.5px] text-ink-3">
+                {t(b === "trailing" ? "ss_trailing" : "ss_leading")} · {t("ss_tilt")}
+              </dt>
               <dd className="num m-0 text-[17px] font-semibold text-ink">
-                {p ? `${num(tiltPct(p.x), lang)}%` : "not enough data"}
+                {p ? `${num(tiltPct(p.x), lang)}%` : t("ss_not_enough")}
               </dd>
             </div>,
             <div key={`${b}-p`} className="rounded-lg border border-line bg-surface-2 px-3 py-2">
-              <dt className="text-[11.5px] text-ink-3">{b === "trailing" ? "Trailing" : "Leading"} · press</dt>
+              <dt className="text-[11.5px] text-ink-3">
+                {t(b === "trailing" ? "ss_trailing" : "ss_leading")} · {t("ss_press")}
+              </dt>
               <dd className="num m-0 text-[17px] font-semibold text-ink">
-                {p ? num(press3(p.y), lang) : "not enough data"}
+                {p ? num(press3(p.y), lang) : t("ss_not_enough")}
               </dd>
             </div>,
           ];

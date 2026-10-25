@@ -313,6 +313,8 @@ export interface Lineup {
 export interface PatternsSection {
   catalogue: PatternEntry[];
   signature: Record<string, SignatureRow[]>;
+  /** every family found for a team at least once, with signature = passes the signature rule */
+  team_families?: Record<string, (SignatureRow & { signature: boolean })[]>;
   players: Record<string, { family: string; icon: string; matches: number; team_played: number }[]>;
   not_built: { id: string | null; name: string; icon: string | null; status: string }[];
   signature_rule: { min_share: number; min_lift: number };
@@ -340,6 +342,8 @@ export interface SignatureRow {
   played: number;
   share: number;
   others_share: number;
+  /** Wilson 95% interval of share, in % */
+  interval?: [number | null, number | null];
 }
 
 /** One Microsoft / Azure component and its state, derived from repo facts (agents/azure_status.py). */
