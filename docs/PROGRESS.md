@@ -100,6 +100,14 @@ Item status is in docs/final-ui-progress.md; the audit and design notes in docs/
   ("no photographs or generated faces") forbids; the brief also says to keep the hero exactly, so it
   is unchanged and flagged for a decision.
 
+- Search (Step 8): header button and Ctrl/Cmd+K open a Radix dialog (focus trapped, Escape closes,
+  focus returns to the opener), a lazy chunk loaded on first open. Index from ui.json (teams, players,
+  fixtures); every typed word must match, case- and accent-blind; groups teams, players, fixtures;
+  inside a group a code match ranks first, then the start of a name, the start of a word, anywhere;
+  at most 5 / 8 / 6 results per group. The shell now also receives the loaded model through
+  DataContext (null until loaded) so the overlay can read it. Checker route "search" (Fixtures with
+  the overlay open on "aur").
+
 ### Test changes (final UI)
 
 - tests/test_dashboard.py: the checked Matchup pairs now equal the lane claims the hub shows (display

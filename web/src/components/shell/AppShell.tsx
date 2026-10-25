@@ -1,11 +1,16 @@
-// App chrome: brand, navigation (top bar on large screens, bottom bar on small ones), settings.
-import { useState, type ReactNode } from "react";
+// App chrome: brand, navigation (top bar on large screens, bottom bar on small ones), search
+// (button or Ctrl/Cmd+K), settings.
+import { lazy, Suspense, useEffect, useState, type ReactNode } from "react";
 import { NavLink, useLocation } from "react-router";
 import { cx } from "../../lib/cx";
 import { useT, type Key } from "../../lib/i18n";
 import { Icon, type IconName } from "../../icons";
 import { Logo } from "../icons";
+import { Glyph } from "../icons";
 import { SettingsSheet } from "./SettingsSheet";
+
+// its own chunk, loaded the first time search opens
+const SearchOverlay = lazy(() => import("./SearchOverlay").then((m) => ({ default: m.SearchOverlay })));
 
 /** The primary nav. The Tech page is reached from Settings ("Technical details") and from Home. */
 export const ROUTES = ["home", "fixtures", "teams", "players"] as const;
@@ -53,6 +58,20 @@ function NavLinks({ compact }: { compact?: boolean }) {
 export function AppShell({ children }: { children: ReactNode }) {
   const { t } = useT();
   const [open, setOpen] = useState(false);
+  const [searching, setSearching] = useState(false);
+  const [searched, setSearched] = useState(false);
+  // Ctrl/Cmd+K opens search from anywhere
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setSearched(true);
+        setSearching(true);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
   return (
     <div className="min-h-screen pb-24 lg:pb-0">
       <a
@@ -78,11 +97,26 @@ export function AppShell({ children }: { children: ReactNode }) {
             <NavLinks />
           </nav>
           <button
+            id="open-search"
+            type="button"
+            onClick={() => {
+              setSearched(true);
+              setSearching(true);
+            }}
+            aria-haspopup="dialog"
+            aria-keyshortcuts="Control+K Meta+K"
+            className="ml-auto inline-flex h-10 items-center gap-2 rounded-full border border-line px-3.5 text-[13.5px] font-semibold text-ink-2 hover:border-line-strong hover:text-ink"
+          >
+            <Glyph name="search" className="h-[18px] w-[18px]" />
+            <span className="hidden sm:inline">{t("search")}</span>
+            <span className="sr-only sm:hidden">{t("search")}</span>
+          </button>
+          <button
             id="open-settings"
             type="button"
             onClick={() => setOpen(true)}
             aria-haspopup="dialog"
-            className="ml-auto inline-flex h-10 items-center gap-2 rounded-full border border-line px-3.5 text-[13.5px] font-semibold text-ink-2 hover:border-line-strong hover:text-ink"
+            className="inline-flex h-10 items-center gap-2 rounded-full border border-line px-3.5 text-[13.5px] font-semibold text-ink-2 hover:border-line-strong hover:text-ink"
           >
             <Icon name="settings" className="h-[18px] w-[18px]" />
             <span className="hidden sm:inline">{t("settings")}</span>
@@ -100,6 +134,11 @@ export function AppShell({ children }: { children: ReactNode }) {
         <NavLinks compact />
       </nav>
       <SettingsSheet open={open} onOpenChange={setOpen} />
+      {searched && (
+        <Suspense fallback={null}>
+          <SearchOverlay open={searching} onOpenChange={setSearching} />
+        </Suspense>
+      )}
     </div>
   );
 }

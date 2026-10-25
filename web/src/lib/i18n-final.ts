@@ -170,6 +170,15 @@ export const FINAL_EN = {
   hp_pat_direct_transition: "From a regain in the own half to a shot in seconds.",
   hp_pat_press_resistant: "Completes more passes under pressure than team-mates.",
   hp_pat_pressed_presser: "Presses hard, yet its own pressed passes near goal go astray.",
+  search: "Search",
+  search_label: "Search teams, players and fixtures",
+  search_teams: "Teams",
+  search_players: "Players",
+  search_fixtures: "Fixtures",
+  search_count: "{n} results",
+  search_none: "No result for this search.",
+  search_hint: "Arrows to move, Enter to open, Escape to close.",
+  search_mw: "Matchweek {n}",
 };
 
 export type FinalKey = keyof typeof FINAL_EN;
@@ -343,6 +352,15 @@ export const FINAL_ES: Record<FinalKey, string> = {
   hp_pat_direct_transition: "De una recuperación en campo propio a un tiro en segundos.",
   hp_pat_press_resistant: "Completa más pases bajo presión que sus compañeros.",
   hp_pat_pressed_presser: "Presiona mucho, pero sus pases presionados cerca de su portería se pierden.",
+  search: "Buscar",
+  search_label: "Buscar equipos, jugadores y partidos",
+  search_teams: "Equipos",
+  search_players: "Jugadores",
+  search_fixtures: "Partidos",
+  search_count: "{n} resultados",
+  search_none: "Ningún resultado para esta búsqueda.",
+  search_hint: "Flechas para moverse, Intro para abrir, Escape para cerrar.",
+  search_mw: "Jornada {n}",
 };
 
 export const FINAL_FR: Record<FinalKey, string> = {
@@ -515,4 +533,13 @@ export const FINAL_FR: Record<FinalKey, string> = {
   hp_pat_direct_transition: "D'une récupération dans son camp à un tir en quelques secondes.",
   hp_pat_press_resistant: "Réussit plus de passes sous pression que ses coéquipiers.",
   hp_pat_pressed_presser: "Presse fort, mais ses passes sous pression près de son but se perdent.",
+  search: "Rechercher",
+  search_label: "Rechercher équipes, joueurs et matchs",
+  search_teams: "Équipes",
+  search_players: "Joueurs",
+  search_fixtures: "Matchs",
+  search_count: "{n} résultats",
+  search_none: "Aucun résultat pour cette recherche.",
+  search_hint: "Flèches pour se déplacer, Entrée pour ouvrir, Échap pour fermer.",
+  search_mw: "Journée {n}",
 };

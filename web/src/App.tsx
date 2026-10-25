@@ -150,7 +150,10 @@ export default function App({ source, matches = matchFiles }: { source?: StreamS
           <MatchFilesContext.Provider value={matches}>
             <HashRouter>
               <ScrollTop />
-              <AppShell>{body}</AppShell>
+              {/* the shell's search reads the loaded data too (null until it loads) */}
+              <DataContext.Provider value={state.model ?? null}>
+                <AppShell>{body}</AppShell>
+              </DataContext.Provider>
             </HashRouter>
           </MatchFilesContext.Provider>
         </TooltipProvider>

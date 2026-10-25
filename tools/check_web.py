@@ -58,7 +58,7 @@ from tools.check_dashboard import (FOCUSABLE_JS, FORBIDDEN, FRAMES_JS, OVERLAP_J
 ROOT = Path(__file__).resolve().parent.parent
 WEB = ROOT / "web"
 ROUTES = ("home", "fixtures", "hub_live", "hub_final", "teams", "team_board", "team_sheet", "players", "player",
-          "player_df", "player_gk", "chance_drawer", "settings", "tech")
+          "player_df", "player_gk", "chance_drawer", "settings", "search", "tech")
 # hash path of a route when it is not the route's own name; `live` (the old link, redirected to the
 # showcase hub) stays usable for the Live checks
 SHOWCASE_HUB = "match/m_showcase"
@@ -70,11 +70,11 @@ CONSOLE_GK = "CAL_01"                    # the goalkeeper console (shots faced, 
 DRAWER_PLAYER = "NTG_11"                 # most chances created: the chance evidence drawer
 PATH = {"home": "", "hub_live": SHOWCASE_HUB, "hub_final": f"match/{FINAL_MATCH}", "team_board": f"teams/{BOARD_TEAM}",
         "team_sheet": f"teams/{BOARD_TEAM}", "player": f"players/{CONSOLE_PLAYER}", "player_df": f"players/{CONSOLE_DF}",
-        "player_gk": f"players/{CONSOLE_GK}", "chance_drawer": f"players/{DRAWER_PLAYER}", "settings": ""}
+        "player_gk": f"players/{CONSOLE_GK}", "chance_drawer": f"players/{DRAWER_PLAYER}", "settings": "", "search": "fixtures"}
 # the data-page a route renders when it is not the route's own name
 PAGE = {"hub_live": "live", "hub_final": "hub", "team_board": "team-board", "team_sheet": "team-board",
         "player": "player", "player_df": "player", "player_gk": "player", "chance_drawer": "player",
-        "settings": "home"}
+        "settings": "home", "search": "fixtures"}
 # every route is also checked at the demo-video sizes (all gates, plus a first-screen shot)
 EXTRA_SIZES = {r: {"1080p": (1920, 1080), "900p": (1600, 900)} for r in ROUTES}
 WIDTHS = {"desktop": (1440, 900), "mobile": (390, 844)}
@@ -102,8 +102,18 @@ def _open_settings(page):
     page.wait_for_timeout(400)
 
 
+def _open_search(page):
+    """Fixtures with the search overlay open on a query (Ctrl+K)."""
+    page.keyboard.press("Control+k")
+    page.wait_for_selector("[data-search-input]", timeout=5000)
+    page.fill("[data-search-input]", "aur")
+    page.wait_for_selector("[data-search-result]", timeout=5000)
+    page.wait_for_timeout(300)
+
+
 # what to do on a route after it loads, before the gates run
-ACTIONS = {"team_sheet": _open_sheet, "chance_drawer": _open_drawer, "settings": _open_settings}
+ACTIONS = {"team_sheet": _open_sheet, "chance_drawer": _open_drawer, "settings": _open_settings,
+           "search": _open_search}
 AXE_FAIL = {"serious", "critical"}
 # what each route must expose for tests (selector -> attribute that must be non-empty)
 DATA_ATTRS = {
@@ -123,6 +133,7 @@ DATA_ATTRS = {
     "player_gk": [("[data-viz=shots-faced] [data-result]", "data-count")],
     "chance_drawer": [("#chance-evidence a[data-play]", "href")],
     "settings": [("a[data-settings-tech]", "href")],
+    "search": [("[data-search-result]", "data-search-result")],
     "tech": [("tr[data-claim-id]", "data-claim-id"), ("[data-azure]", "data-state")],
 }
 
