@@ -132,7 +132,6 @@ function Strip({
           </li>
         ))}
       </ol>
-      <p className="col-span-2 mt-1 text-[11.5px] text-ink-3">{t("mu_delta")}</p>
     </div>
   );
 }
@@ -174,7 +173,7 @@ export function Matchup({ file }: { file: MatchFile }) {
           )}
         </div>
         <div className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-2 md:grid-cols-[auto_minmax(0,1fr)_minmax(0,1fr)]">
-          <ol className="row-start-2 flex flex-col pb-5 md:row-start-2" aria-hidden="true">
+          <ol className="row-start-2 flex flex-col md:row-start-2" aria-hidden="true">
             {lanes.map((l) => (
               <li
                 key={l}
@@ -209,7 +208,8 @@ export function Matchup({ file }: { file: MatchFile }) {
             <Strip lanes={lanes} value={(l) => h.lanes[l]?.completion_pp ?? null} claimLane={lane} side="defence" />
           </div>
         </div>
-        <p className="mt-3 text-[13.5px] leading-snug text-ink-2" data-matchup-sentence>
+        <p className="mt-1 text-right text-[11.5px] text-ink-3">{t("mu_delta")}</p>
+        <p className="mt-2 text-[13.5px] leading-snug text-ink-2" data-matchup-sentence>
           {sentence}
         </p>
         <details className="mt-2 text-[12px] text-ink-3">

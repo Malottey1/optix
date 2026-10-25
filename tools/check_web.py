@@ -182,7 +182,7 @@ WORDS_JS = r"""() => {
 # counts for that one). Match Hub recap sections are listed by their section id; the event log
 # (budget "log") has none.
 TEXT_BUDGETS = {"card": 30, "team-card": 20, "team-board": 180, "hub-header": 60, "turning": 60, "heat": 60,
-                "cards": 60, "matchup": 60}
+                "cards": 60, "matchup": 60, "lineups": 120}
 
 
 def budget_problems(words: dict) -> list:
@@ -362,6 +362,31 @@ def percentile(values, v):
     return 100 * (sum(1 for x in xs if x < v) + 0.5 * sum(1 for x in xs if x == v)) / len(xs)
 
 
+STYLE_IDS = ("tempo", "press", "directness", "territory", "counter")
+
+
+def style_rows(ui, code) -> dict:
+    """The Team Board's style rows recomputed from ui.json: id -> [value, chip] (StyleRows.tsx rule:
+    highest / lowest of N only for a unique extreme, else about average within tolerance_rel of the
+    league, else above / below)."""
+    tol = ui["teams"]["style_rule"]["tolerance_rel"]
+    teams = ui["teams"]["teams"]
+    team = next(t for t in teams if t["code"] == code)
+    out = {}
+    for sid in STYLE_IDS:
+        l = next((x for x in team["labels"] if x["id"] == sid), None)
+        if not l or l["value"] is None or l["league"] is None:
+            continue
+        vals = [v for t in teams for x in t["labels"] if x["id"] == sid and (v := x["value"]) is not None]
+        hi, lo = max(vals), min(vals)
+        chip = ("highest" if l["value"] == hi and vals.count(hi) == 1 else
+                "lowest" if l["value"] == lo and vals.count(lo) == 1 else
+                "average" if abs(l["value"] - l["league"]) <= tol * abs(l["league"]) else
+                "above" if l["value"] > l["league"] else "below")
+        out[sid] = [l["value"], chip]
+    return out
+
+
 def pizza(ui, pid) -> dict:
     """Displayed percentiles of one player against outfield players with >= 100 passes."""
     group = [p for p in ui["players"] if p["position"] != "GK" and p["passes"] >= PIZZA_MIN_PASSES]
@@ -519,6 +544,12 @@ def check_consistency(browser, base, ref_dir: Path) -> dict:
                     problems.append(f"heat {row['id']} {code}: bin counts differ from the match file")
     # the lineup pitch: the ref's most-used XI with the listed numbers, one node per player
     _open(page, base, "team_board")
+    # Style against the league: each row's value and chip recomputed from ui.json
+    page.wait_for_selector("[data-style-row]", timeout=10000)
+    st = dict(page.eval_on_selector_all("[data-style-row]", """els => els.map((e) => [e.dataset.styleRow,
+        [Number(e.dataset.value), e.dataset.chip]])"""))
+    if st != style_rows(ui, BOARD_TEAM):
+        problems.append(f"style rows {BOARD_TEAM}: page {st} vs {style_rows(ui, BOARD_TEAM)}")
     nodes = page.eval_on_selector_all("[data-lineup] button[data-node]", """els => els.map((e) => [e.dataset.node,
         Number(e.querySelector('svg text').textContent)])""")
     want_xi = [[n["id"], n["shirt"]] for n in ui["lineups"][BOARD_TEAM]["xi"]]
@@ -668,6 +699,12 @@ def _mut_top_route(ui):
             max(fwd, key=lambda r: r[3])[3] += 3
 
 
+def _mut_style(ui):
+    team = next(t for t in ui["teams"]["teams"] if t["code"] == BOARD_TEAM)
+    lab = next(x for x in team["labels"] if x["id"] == "press")
+    lab["value"] = round(lab["value"] + 9.0, 1)
+
+
 def _mut_pizza(ui):
     for p in ui["players"]:
         p["involvement"] = -p["involvement"]
@@ -678,7 +715,8 @@ MUTATIONS = {"crosshair": (_mut_crosshair, "crosshair", ""), "heat": (_mut_heat,
              "touch map": (_mut_touch, "touch map", ""), "lineup": (_mut_lineup, "lineup", ""),
              "shot blocks": (_mut_shots, "shot blocks", ""),
              "gauge": (_mut_gauge, "gauge", ""), "routes": (_mut_routes, "routes", "(all)"),
-             "routes default view": (_mut_top_route, "routes", "(top)"), "pizza": (_mut_pizza, "pizza", "")}
+             "routes default view": (_mut_top_route, "routes", "(top)"), "pizza": (_mut_pizza, "pizza", ""),
+             "style rows": (_mut_style, "style rows", "")}
 
 
 def mutation_proof(browser, dist: Path, ref_dir: Path, tmp: Path) -> dict:

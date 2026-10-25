@@ -46,6 +46,17 @@ Item status is in docs/final-ui-progress.md; the audit and design notes in docs/
   baseline), so the display-only rule uses the claim's own confidence label: shown at medium or high
   only (MATCHUP_DISPLAY_CONFIDENCE). Result: 17 of 41 fixtures (41%), one direction each; the toggle
   appears only when two directions qualify. The Verifier and the stream are unchanged.
+- Style against the league (Step 5): five rows (Tempo, Press, Passing, Territory, Counters) from
+  the existing style labels; each row's two bars on one scale per measure, lowest to highest team
+  in the league; chips from the numbers only: "Highest / Lowest of N" for a unique extreme, else
+  "About average" within 3% of the league value (STYLE_TOLERANCE_REL, exported as ui teams.style_rule),
+  else above / below. Tempo is the engine's seconds between passes (unit in the tooltip and View data).
+  Club accent for the team bar, neutral grey for the league bar. Pizza removed from the board (the
+  component stays for reuse).
+- Word budgets after Step 5: the board copy was trimmed to stay within 180 (lineup note, lane-strip
+  label, shorter chips, "vs" spoken only to screen readers) and the board's compact score-state tiles
+  moved into a closed "View data" (the Tech page keeps them open). Boards: 167-178 words at 1440.
+  Matchup copy trimmed to 60 words (budget 60). New budget: hub lineups at most 120 words (94-96).
 - Live replay hub (showcase): its console already has its own two-column frame with the feed; kept
   unchanged, as the brief requires its behaviour to stay the same.
 

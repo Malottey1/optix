@@ -67,6 +67,31 @@ export function StateSwaps({
     p.trailing && p.leading
       ? `${p.code}: trailing tilt ${num(tiltPct(p.trailing.x), lang)}%, press ${num(press3(p.trailing.y), lang)}; leading tilt ${num(tiltPct(p.leading.x), lang)}%, press ${num(press3(p.leading.y), lang)}`
       : `${p.code}: not enough data in one state`;
+  const values = (
+    <dl className={cx("mt-3 grid grid-cols-2 gap-3 text-[13px] sm:grid-cols-4")} data-role="state-values">
+      {(["trailing", "leading"] as StateName[]).flatMap((b) => {
+        const p = b === "trailing" ? cur.trailing : cur.leading;
+        return [
+          <div key={`${b}-t`} className="rounded-lg border border-line bg-surface-2 px-3 py-2">
+            <dt className="text-[11.5px] text-ink-3">
+              {t(b === "trailing" ? "ss_trailing" : "ss_leading")} · {t("ss_tilt")}
+            </dt>
+            <dd className="num m-0 text-[17px] font-semibold text-ink">
+              {p ? `${num(tiltPct(p.x), lang)}%` : t("ss_not_enough")}
+            </dd>
+          </div>,
+          <div key={`${b}-p`} className="rounded-lg border border-line bg-surface-2 px-3 py-2">
+            <dt className="text-[11.5px] text-ink-3">
+              {t(b === "trailing" ? "ss_trailing" : "ss_leading")} · {t("ss_press")}
+            </dt>
+            <dd className="num m-0 text-[17px] font-semibold text-ink">
+              {p ? num(press3(p.y), lang) : t("ss_not_enough")}
+            </dd>
+          </div>,
+        ];
+      })}
+    </dl>
+  );
   return (
     <VizFigure
       viz="state-swaps"
@@ -210,29 +235,16 @@ export function StateSwaps({
           </g>
         )}
       </svg>
-      <dl className={cx("mt-3 grid grid-cols-2 gap-3 text-[13px] sm:grid-cols-4")} data-role="state-values">
-        {(["trailing", "leading"] as StateName[]).flatMap((b) => {
-          const p = b === "trailing" ? cur.trailing : cur.leading;
-          return [
-            <div key={`${b}-t`} className="rounded-lg border border-line bg-surface-2 px-3 py-2">
-              <dt className="text-[11.5px] text-ink-3">
-                {t(b === "trailing" ? "ss_trailing" : "ss_leading")} · {t("ss_tilt")}
-              </dt>
-              <dd className="num m-0 text-[17px] font-semibold text-ink">
-                {p ? `${num(tiltPct(p.x), lang)}%` : t("ss_not_enough")}
-              </dd>
-            </div>,
-            <div key={`${b}-p`} className="rounded-lg border border-line bg-surface-2 px-3 py-2">
-              <dt className="text-[11.5px] text-ink-3">
-                {t(b === "trailing" ? "ss_trailing" : "ss_leading")} · {t("ss_press")}
-              </dt>
-              <dd className="num m-0 text-[17px] font-semibold text-ink">
-                {p ? num(press3(p.y), lang) : t("ss_not_enough")}
-              </dd>
-            </div>,
-          ];
-        })}
-      </dl>
+      {compact ? (
+        // the Team Board keeps the four values one click away (closed "View data"), so the board
+        // stays within its word budget; the full Tech view shows them open
+        <details className="mt-2 text-[12px] text-ink-3">
+          <summary className="cursor-pointer select-none py-1 font-semibold text-ink-2">{t("view_data")}</summary>
+          {values}
+        </details>
+      ) : (
+        values
+      )}
     </VizFigure>
   );
 }

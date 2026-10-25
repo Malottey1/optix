@@ -10,7 +10,8 @@ import { TeamBadge } from "../../components/brand/TeamBadge";
 import { StateSwaps } from "../../components/viz/StateSwaps";
 import { useData } from "../../data/context";
 import { useT } from "../../lib/i18n";
-import { FingerprintChips, LaneLiftStrip, PlayerSheet, SignatureList, StylePizza } from "./parts";
+import { FingerprintChips, LaneLiftStrip, PlayerSheet, SignatureList } from "./parts";
+import { StyleRows } from "./StyleRows";
 
 function Block({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
   return (
@@ -72,7 +73,7 @@ export default function TeamBoard() {
         </div>
         <div className="flex min-w-0 flex-col gap-flow xl:col-span-5">
           <Block id="style" title={t("board_style")}>
-            <StylePizza team={team} />
+            <StyleRows team={team} teams={m.ui.teams.teams} toleranceRel={m.ui.teams.style_rule.tolerance_rel} />
           </Block>
         </div>
       </div>

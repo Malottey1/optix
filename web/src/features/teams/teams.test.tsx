@@ -111,3 +111,46 @@ describe("Lineup pitch", () => {
     act(() => setSetting("lang", "en"));
   });
 });
+
+describe("Style against the league", () => {
+  it("rows sit on one league scale per measure and the chips follow the numbers", async () => {
+    const { styleRows } = await import("./StyleRows");
+    const teams = ui.teams.teams as { code: string; labels: { id: string; value: number; league: number }[] }[];
+    const tol = ui.teams.style_rule.tolerance_rel as number;
+    for (const team of teams) {
+      const rows = styleRows(teams as never, team as never, tol);
+      expect(rows.map((r) => r.id)).toEqual(["tempo", "press", "directness", "territory", "counter"]);
+      for (const r of rows) {
+        const vals = teams.map((t) => t.labels.find((l) => l.id === r.id)!.value);
+        expect([r.lo, r.hi]).toEqual([Math.min(...vals), Math.max(...vals)]);
+        expect(r.team).toBeCloseTo((r.value - r.lo) / (r.hi - r.lo), 9);
+        const uniq = (v: number) => vals.filter((x) => x === v).length === 1;
+        const want =
+          r.value === r.hi && uniq(r.hi)
+            ? "highest"
+            : r.value === r.lo && uniq(r.lo)
+              ? "lowest"
+              : Math.abs(r.value - r.league) <= tol * Math.abs(r.league)
+                ? "average"
+                : r.value > r.league
+                  ? "above"
+                  : "below";
+        expect(r.chip).toBe(want);
+      }
+    }
+  });
+
+  it("the board renders five rows in the club accent, with no verdict or heat colour", async () => {
+    window.location.hash = "#/teams/AUR";
+    render(<App source={source()} />);
+    const p = await page("team-board");
+    const rows = await waitFor(() => {
+      const r = [...p.querySelectorAll("[data-style-row]")];
+      expect(r.length).toBe(5);
+      return r;
+    });
+    const html = rows.map((r) => r.outerHTML).join("");
+    expect(html).toMatch(/--team-aur/);
+    expect(html).not.toMatch(/--(pass|revise|block|heat-)/);
+  });
+});

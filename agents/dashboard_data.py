@@ -62,6 +62,10 @@ TRACK_TYPES = ("pass", "carry", "dribble", "shot", "duel", "tackle", "intercepti
 # display-only: the Match Hub shows a verified lane claim only at these confidence labels (the claim
 # fires on 37 of 41 fixtures, most at "low"); the Verifier and the stream are unchanged
 MATCHUP_DISPLAY_CONFIDENCE = ("medium", "high")
+# Team Board "Style against the league" chips: within this share of the league average is "About
+# average"; "Highest / Lowest of N" only for a unique top / bottom value (ties fall back to the
+# average comparison)
+STYLE_TOLERANCE_REL = 0.03
 PLAYER_RULES = (("chances_created", "set_piece_inflation", 4), ("forward_passes", "wide_forward_passes", 15))
 
 
@@ -150,6 +154,7 @@ def teams_section(season) -> dict:
                                         text=_rendered(c["template_key"], c["params"]) if v.status != "blocked" else None)
             h2h.append(row)
     return dict(teams=teams, head_to_head=h2h, lanes=list(LANES),
+                style_rule=dict(tolerance_rel=STYLE_TOLERANCE_REL),
                 matchup_rule=dict(min_attack_pp=MIN_ATTACK_PP, min_completion_pp=MIN_COMPLETION_PP,
                                   display_confidence=list(MATCHUP_DISPLAY_CONFIDENCE)),
                 matches=len(season.matches), dataset=season.label)

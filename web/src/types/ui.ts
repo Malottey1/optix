@@ -142,6 +142,8 @@ export interface TeamsSection {
   dataset: string;
   /** the lane claim's own thresholds (engine.matchup) and the hub's display-only confidence rule */
   matchup_rule: { min_attack_pp: number; min_completion_pp: number; display_confidence: string[] };
+  /** Team Board style chips: "About average" within this share of the league average */
+  style_rule: { tolerance_rel: number };
 }
 
 export interface PlayerCheck {
