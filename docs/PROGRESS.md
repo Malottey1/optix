@@ -12,6 +12,22 @@
   test_committed_ui_json_carries_the_same_status was failing on the tip. It was regenerated with
   run_match plus npm run data; only `azure_status` changed (phraser verified live, telemetry built).
 
+- Per-100 rates: the output guard allows the literal "100" only when the claim has a numeric param
+  whose name ends in _100 (`output_guard.allowed_literals`). The template number guard is unchanged.
+  No claim parameter was renamed and no export changed.
+- Prompt p3 added the "<value> per 100" wording. The single live-check re-run (3 calls) was still all
+  rejected, because the model wrote the game state and window seconds as digits ("by 2 or more goals",
+  "3120 seconds"). A 3-call diagnostic batch, counted in the 60-call cache budget, showed this. Prompt p4
+  says context fields are described in words. Only prompt text changed; the guard did not.
+- Phrasing cache: 49 published showcase claims, so all fit under the 60-call cap and none were skipped.
+  Priority order: Fan top cards, revised, pattern, then stream order. `tools/phrase_cache.py` writes
+  only data/phrasing-cache and a report outside the repo. web/public/data stays template-based.
+- data/phrasing-cache is tracked (180 KB, under 300 KB). It holds guard-accepted sentences only and the
+  deployment name, with no endpoint or secret. p2 and p3 entries from earlier runs stay (also guard-accepted).
+- The shell accidentally ran a backticked command inside an unquoted heredoc
+  (`python -m agents.run_match --phraser azure`). It failed at import before doing any work; git status
+  and out/ == web/public/data confirmed nothing changed.
+
 ### Test changes (Azure live)
 
 - tests/test_azure_status.py `test_ci_state_only_after_a_recorded_successful_run`: it now monkeypatches

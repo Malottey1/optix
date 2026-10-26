@@ -52,7 +52,7 @@ COMPONENTS = [
     ("cache", "Phrasing cache", "Local files (data/phrasing-cache)",
      ["data/phrasing-cache/README.md"], ["tests/test_phraser.py"], False,
      "Accepted replies keyed by claim hash, deployment and prompt version; re-guarded on replay. "
-     "Holds no model sentences until a live run writes some."),
+     "Holds guard-accepted model sentences for the showcase claims, used only on the Azure phraser path."),
     ("otel", "Spans for every agent step", "OpenTelemetry",
      ["agents/telemetry.py"], ["tests/test_telemetry.py"], False,
      "Proposal, verdict with rule ids, phraser with guard result, publication; checked with an in-memory exporter."),
@@ -179,10 +179,18 @@ def render(root: Path = ROOT) -> str:
             rec = ci_record(root)
             ev += f", [CI run {rec['run_id']}]({rec['url']}) at `{rec['head_sha'][:7]}`"
         lines.append(f"| {r['name']} | {r['tech']} | **{r['state']}** | {r['live']} | {ev} | {r['note']} |")
-    lines += ["", "Live check: " + ("ran, see docs/azure-live-check.md." if live_check_ran(root / "docs" / "azure-live-check.md")
+    report = root / "docs" / "azure-live-check.md"
+    lines += ["", "Live check: " + ("ran, see docs/azure-live-check.md." if live_check_ran(report)
                                      else "not run (no Azure configuration present); see docs/azure-live-check.md "
-                                          "for the steps."),
-              "", "## Where things are", "",
+                                          "for the steps.")]
+    if live_check_ran(report):
+        lines += ["", "Verified deployment: `gpt-4.1-mini` on a Global Standard deployment in France Central, "
+                      "reached with Microsoft Entra ID. The phrasing cache holds its guard-accepted sentences for the "
+                      "showcase claims (docs/live-phrasing-sample.md); the committed UI data stays template-based."]
+    if not telemetry_exported(report):
+        lines += ["", "Application Insights is not yet verified live: no span has been exported to a real resource "
+                      "(the live check records the export attempt and its outcome)."]
+    lines += ["", "## Where things are", "",
               "- Phrasing layer and guard: `agents/phraser.py`, `agents/output_guard.py` (docs/ARCHITECTURE.md).",
               "- Workflow: `agents/workflow.py`; run with `python -m agents.run_match --engine workflow`.",
               "- Spans and audit: `agents/telemetry.py`, `agents/audit.py` (`python -m agents.audit verify FILE`).",

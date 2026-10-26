@@ -116,3 +116,12 @@ def test_live_check_writes_the_export_record():
     assert "not attempted" in export_line(None)
     assert A.EXPORT_LINE.search(export_line(dict(exported=2, results=["success"])))
     assert not A.EXPORT_LINE.search(export_line(dict(exported=2, results=["success", "failure"])))
+
+
+def test_azure_md_names_the_verified_deployment_and_the_unverified_export(tmp_path):
+    text = A.render()
+    if A.live_check_ran():
+        assert "`gpt-4.1-mini` on a Global Standard deployment in France Central" in text
+    assert ("Application Insights is not yet verified live" in text) == (not A.telemetry_exported())
+    rows = {r["id"]: r for r in A.status()}
+    assert "guard-accepted model sentences" in rows["cache"]["note"]
