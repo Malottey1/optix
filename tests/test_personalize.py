@@ -17,7 +17,7 @@ ROOT = Path(__file__).resolve().parent.parent
 FIX = ROOT / "tests" / "fixtures"
 GOLDEN = json.loads((FIX / "personalize_golden.json").read_text(encoding="utf-8"))
 SO_FAR = json.loads((FIX / "player_so_far_golden.json").read_text(encoding="utf-8"))
-STREAM = [json.loads(x) for x in (ROOT / "out" / "insights.jsonl").read_text(encoding="utf-8").splitlines() if x.strip()]
+STREAM = [json.loads(x) for x in (ROOT / "web" / "public" / "data" / "insights.jsonl").read_text(encoding="utf-8").splitlines() if x.strip()]
 
 
 def test_config_conforms_to_its_schema_and_names_real_icons_and_keys():

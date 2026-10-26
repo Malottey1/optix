@@ -67,6 +67,10 @@
 - web/src/App.test.tsx and web/src/features/hub/hub.test.tsx: a `beforeEach(() => setMode("analyst"))`.
   These suites test Analyst content (pager, chips, matchup, event log, Before / After), and Fan is now the
   default. No assertion changed. Fan view is tested in features/personal/personal.test.tsx.
+- tests/test_personalize.py and tools/personalize_golden.py read the committed stream
+  (web/public/data/insights.jsonl, byte-identical to out/ and the file the TypeScript twin reads)
+  instead of the ignored out/ folder, which CI does not have. Goldens unchanged, no assertion changed.
+  The Dockerfile's web stage also copies contracts/personalization.json, which the web build imports.
 
 ## Final UI (branch `ui-visuals-final-ui`, from a8ab229 = main = ui-visuals-ia; local tag `pre-final-ui`)
 

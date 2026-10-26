@@ -7,6 +7,7 @@ WORKDIR /web
 COPY web/package.json web/package-lock.json ./
 RUN npm ci --ignore-scripts
 COPY web/ ./
+COPY contracts/personalization.json /contracts/personalization.json
 RUN npm run build
 
 FROM python:3.13.7-slim-bookworm AS app

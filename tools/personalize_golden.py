@@ -45,7 +45,7 @@ def _csv(name):
 
 
 def stream_rows() -> list:
-    rows = [json.loads(x) for x in (ROOT / "out" / "insights.jsonl").read_text(encoding="utf-8").splitlines() if x.strip()]
+    rows = [json.loads(x) for x in (ROOT / "web" / "public" / "data" / "insights.jsonl").read_text(encoding="utf-8").splitlines() if x.strip()]
     return [{"insight_id": i["insight_id"], "insight_type": i["insight_type"],
              "clock": {"start_sec": i["clock"]["start_sec"]}, "teams": {"primary": i["teams"]["primary"]},
              "player_ids": i["player_ids"], "evidence_event_ids": i["evidence_event_ids"]} for i in rows]
