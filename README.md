@@ -39,7 +39,7 @@ Fans (second-screen explanations and recaps), broadcasters and studios (trustwor
 | Interpret | Analyst agent: style profiles, matchup vulnerability, xT, momentum |
 | Explain | Narrative agent plus Verifier (fact and context check) |
 | Render | Timed insight stream, dashboard with Focus Pitch |
-| Personalize | Personalization agent: analyst/casual, favorite club, player focus, single metric, language |
+| Personalize | engine/personalize.py and its web twin: Fan or Analyst view, followed clubs and players, one focus metric, language; it filters and ranks verified insights and never changes a number (docs/personalization.md) |
 
 ## Design principles
 

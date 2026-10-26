@@ -300,7 +300,7 @@ export function RecapCard({
         )
       )}
       {sentence && (
-        <p className="text-[13.5px] leading-snug text-ink-2" lang={lang}>
+        <p className="text-[13.5px] leading-snug text-ink-2" lang={lang} data-role="card-sentence">
           {sentence}
         </p>
       )}

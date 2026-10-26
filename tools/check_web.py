@@ -52,13 +52,13 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from contracts import banned
-from tools.check_dashboard import (FOCUSABLE_JS, FORBIDDEN, FRAMES_JS, OVERLAP_JS, _context, _shrink_png, _tab_order,
+from tools.check_dashboard import (FOCUSABLE_JS, FORBIDDEN, FRAMES_JS, OVERLAP_JS, _context as _base_context, _shrink_png, _tab_order,
                                    chromium_path, load_sources, numbers_of, serve, untraced_numbers)
 
 ROOT = Path(__file__).resolve().parent.parent
 WEB = ROOT / "web"
 ROUTES = ("home", "fixtures", "hub_live", "hub_final", "teams", "team_board", "team_sheet", "players", "player",
-          "player_df", "player_gk", "chance_drawer", "settings", "search", "tech")
+          "player_df", "player_gk", "chance_drawer", "settings", "search", "tech", "hub_live_fan", "hub_final_fan")
 # hash path of a route when it is not the route's own name; `live` (the old link, redirected to the
 # showcase hub) stays usable for the Live checks
 SHOWCASE_HUB = "match/m_showcase"
@@ -70,15 +70,36 @@ CONSOLE_GK = "CAL_01"                    # the goalkeeper console (shots faced, 
 DRAWER_PLAYER = "NTG_11"                 # most chances created: the chance evidence drawer
 PATH = {"home": "", "hub_live": SHOWCASE_HUB, "hub_final": f"match/{FINAL_MATCH}", "team_board": f"teams/{BOARD_TEAM}",
         "team_sheet": f"teams/{BOARD_TEAM}", "player": f"players/{CONSOLE_PLAYER}", "player_df": f"players/{CONSOLE_DF}",
-        "player_gk": f"players/{CONSOLE_GK}", "chance_drawer": f"players/{DRAWER_PLAYER}", "settings": "", "search": "fixtures"}
+        "player_gk": f"players/{CONSOLE_GK}", "chance_drawer": f"players/{DRAWER_PLAYER}", "settings": "", "search": "fixtures",
+        "hub_live_fan": SHOWCASE_HUB, "hub_final_fan": f"match/{FINAL_MATCH}"}
 # the data-page a route renders when it is not the route's own name
 PAGE = {"hub_live": "live", "hub_final": "hub", "team_board": "team-board", "team_sheet": "team-board",
         "player": "player", "player_df": "player", "player_gk": "player", "chance_drawer": "player",
-        "settings": "home", "search": "fixtures"}
+        "settings": "home", "search": "fixtures", "hub_live_fan": "live", "hub_final_fan": "hub"}
 # every route is also checked at the demo-video sizes (all gates, plus a first-screen shot)
 EXTRA_SIZES = {r: {"1080p": (1920, 1080), "900p": (1600, 900)} for r in ROUTES}
 WIDTHS = {"desktop": (1440, 900), "mobile": (390, 844)}
-QUERY = {"live": "t=2760", "hub_live": "t=2760"}   # half-time stoppage: the rewritten Perimeter Lock card on top
+QUERY = {"live": "t=2760", "hub_live": "t=2760", "hub_live_fan": "t=2760"}   # half-time stoppage: the rewritten Perimeter Lock card on top
+# The viewer's personalization (web/src/state/view.ts) is preset before any page script runs: Analyst
+# view for every check written for the full hub (each card, chip, pager, matchup and event log), Fan
+# view (the app's default) for the *_fan routes and the personalization checks.
+VIEW_KEY = "optix.view.v1"
+ROUTE_VIEW = {"hub_live_fan": {"mode": "fan"}, "hub_final_fan": {"mode": "fan"}}
+# --lean: every route at 1440 and 390, and 1920x1080 only for Home and the Match Hub
+LEAN_SIZES = {r: {"1080p": (1920, 1080)} for r in ("home", "hub_live", "hub_final", "hub_live_fan", "hub_final_fan")}
+FOCUS_PLAYER = "NTG_10"                  # followed in the live-hub checks (insights via evidence events)
+FOCUS_CLOCK = 2760
+
+
+def _context(browser, w, h, view=None, **extra):
+    """check_dashboard's context with the personalization preset (Analyst view unless `view` says
+    otherwise; "default" stores nothing). Set only when absent, so an in-page switch survives a reload."""
+    ctx, page, log = _base_context(browser, w, h, **extra)
+    v = {"mode": "analyst"} if view is None else view
+    if v != "default":
+        js = json.dumps(json.dumps(v))
+        ctx.add_init_script(f"try{{if(!localStorage.getItem('{VIEW_KEY}'))localStorage.setItem('{VIEW_KEY}',{js})}}catch(e){{}}")
+    return ctx, page, log
 
 
 def _open_sheet(page):
@@ -133,6 +154,8 @@ DATA_ATTRS = {
     "player_gk": [("[data-viz=shots-faced] [data-result]", "data-count")],
     "chance_drawer": [("#chance-evidence a[data-play]", "href")],
     "settings": [("a[data-settings-tech]", "href")],
+    "hub_live_fan": [("[data-verified-tick]", "data-verified-tick"), ("[data-insight-id][data-claim-id]", "data-claim-id")],
+    "hub_final_fan": [("rect[data-bin]", "data-count"), ("[data-verified-tick]", "data-verified-tick")],
     "search": [("[data-search-result]", "data-search-result")],
     "tech": [("tr[data-claim-id]", "data-claim-id"), ("[data-azure]", "data-state")],
 }
@@ -302,6 +325,10 @@ def match_sources(data: Path) -> tuple:
     recomputed here (heat_numbers)."""
     nums, words = set(), set()
     for p in sorted((data / "matches").glob("*.json")):
+        if p.name.startswith("events-"):
+            # the showcase's event file (player focus) is not a source of shown numbers: the counts
+            # the page shows from it are recomputed from data/showcase in personalize_problems
+            continue
         f = json.loads(p.read_text(encoding="utf-8"))
         _walk(f, nums, words)
         mid = f.get("match_id")
@@ -671,6 +698,7 @@ def check_consistency(browser, base, ref_dir: Path) -> dict:
     problems += position_panel_problems(page, base, ui, mref)
     problems += home_problems(page, base, ui, ref_dir, mref)
     ctx.close()
+    problems += personalize_problems(browser, base, ref_dir, ref, mref)
     return dict(pairs=pairs, cards=dict(seen), gauges=gauges, player=pid, arrows=arrows,
                 problems=problems + log["problems"])
 
@@ -829,6 +857,210 @@ def home_problems(page, base, ui, ref_dir: Path, mref: Path) -> list:
 
 # ---------- mutation proof: each consistency check must fail when its data changes ----------
 
+# ---------- personalization (engine/personalize.py, web/src/lib/personalize.ts) ----------
+
+
+def _py_cards(f: dict) -> list:
+    """A played match's compact cards in the shape engine.personalize reads (the card under "_c")."""
+    return [{"insight_id": c["id"], "insight_type": c["type"], "clock": {"start_sec": c["t"]},
+             "teams": {"primary": c["teams"][0]}, "player_ids": c.get("players") or [], "evidence_event_ids": [],
+             "_c": c} for c in f["insights"]]
+
+
+def cap_cards(cards: list, cap: int = 2) -> list:
+    """web/src/features/hub/parts.ts capCards: at most `cap` cards per type (per family for patterns)."""
+    seen: Counter = Counter()
+    out = []
+    for c in cards:
+        k = f"p:{c['_c']['payload'].get('family')}" if c["insight_type"] == "tactical_pattern" else c["insight_type"]
+        seen[k] += 1
+        if seen[k] <= cap:
+            out.append(c)
+    return out
+
+
+def card_sentence(text: dict, lang: str = "en") -> str | None:
+    """web/src/features/hub/parts.ts cardSentence: the shorter English tone, when every language fits."""
+    n = lambda x: len((x or "").split())
+    rd = text["rendered"]
+    tones = sorted((t for t in ("casual", "analyst") if rd.get("en", {}).get(t)), key=lambda t: n(rd["en"][t]))
+    if not tones:
+        return None
+    if any(n(rd[lg].get(tones[0])) > 22 for lg in rd):
+        return None
+    return rd[lang].get(tones[0]) or None
+
+
+def _events_involved(ev: dict) -> dict:
+    c = ev["cols"]
+    n, pl, rel = c.index("n"), c.index("player"), c.index("related")
+    return {f"{ev['match_id']}_e{r[n]:05d}": [ev["players"][r[k]] for k in (pl, rel) if r[k] is not None] for r in ev["rows"]}
+
+
+def _stress_at(spells, t):
+    s = 0
+    for start, end, *_ in spells:
+        if start >= t:
+            break
+        s += min(end, t) - start
+    return s
+
+
+def _mmss(sec):
+    v = int(js_round(max(0, sec)))
+    return f"{v // 60:02d}:{v % 60:02d}"
+
+
+def readout_values(metric: str, tl: dict, v: dict, t: int) -> list:
+    """The focus-metric readout recomputed from the series (components/personal/panels.tsx)."""
+    codes = [tl["home"]["code"], tl["away"]["code"]]
+    opp = {codes[0]: codes[1], codes[1]: codes[0]}
+    if metric == "momentum":
+        pts = [x for x in tl["momentum"] if x[0] <= t]
+        return [pts[-1][1] if pts else 0]
+    if metric == "xg":
+        return [js_round(sum(s[6] for s in v["shots"] if s[2] == c and s[1] <= t), 2) for c in codes]
+    if metric == "rhythm":
+        rows = [x for x in v["rhythm"] if x[2] <= t]
+        return [rows[-1][3] if rows else 0]
+    return [_mmss(_stress_at(v["stress"].get(opp[c], []), t)) for c in codes]
+
+
+def _num_or_str(x: str):
+    try:
+        return float(x)
+    except ValueError:
+        return x
+
+
+def personalize_problems(browser, base, ref_dir: Path, ref: dict, mref: Path) -> list:
+    """Fan view and focus against the engine's output: the Fan hub's cards are engine.personalize's
+    pick with every number of their claim sentence (number trace); following FOCUS_PLAYER keeps exactly
+    the insights whose evidence involves them and the Player so far card equals a recount from
+    data/showcase; each focus-metric readout equals its series at the clock."""
+    from engine.personalize import CONFIG, personalize
+    from tools.personalize_golden import so_far
+    problems = []
+    f = json.loads((mref / f"{FINAL_MATCH}.json").read_text(encoding="utf-8"))
+    want = [c["_c"] for c in personalize(cap_cards(_py_cards(f)), {"mode": "fan"})]
+    ctx, page, log = _context(browser, *WIDTHS["desktop"], view={"mode": "fan"})
+    _open(page, base, "hub_final_fan")
+    got = page.eval_on_selector_all("#insights article[data-insight-id]", """els => els.map((e) => [e.dataset.insightId,
+        e.querySelector('[data-role=card-sentence]')?.textContent ?? '', e.querySelectorAll('[data-verified-tick]').length])""")
+    if [g[0] for g in got] != [c["id"] for c in want]:
+        problems.append(f"fan view {FINAL_MATCH}: cards {[g[0] for g in got]} vs engine.personalize {[c['id'] for c in want]}")
+    for (cid, sent, tick), c in zip(got, want):
+        need, have = numbers_of(card_sentence(c["text"]) or ""), numbers_of(sent)
+        if need != have:
+            problems.append(f"fan view {FINAL_MATCH} card {cid}: number trace {have} vs its claim sentence {need} "
+                            f"(dropped {sorted(set(need) - set(have))})")
+        if tick != 1:
+            problems.append(f"fan view {FINAL_MATCH} card {cid}: no Verified tick")
+    shown = page.evaluate("""() => ['[data-ledger-link]', '#log', '#matchup', '[data-pager]', '[data-family-chips]']
+        .filter((s) => document.querySelector(s))""")
+    if shown:
+        problems.append(f"fan view {FINAL_MATCH}: analyst content shown {shown}")
+    problems += log["problems"]
+    ctx.close()
+
+    ev = json.loads((mref / f"events-{SHOWCASE_HUB.split('/')[-1]}.json").read_text(encoding="utf-8"))
+    involved = _events_involved(ev)
+    stream = [json.loads(x) for x in (ref_dir / "insights.jsonl").read_text(encoding="utf-8").splitlines() if x.strip()]
+    upto = [i for i in stream if i["clock"]["start_sec"] <= FOCUS_CLOCK]
+    want_ids = {i["insight_id"] for i in personalize(upto, {"mode": "analyst", "players": [FOCUS_PLAYER]}, involved)}
+    ctx, page, log = _context(browser, *WIDTHS["desktop"], view={"mode": "analyst", "focus": FOCUS_PLAYER})
+    _open(page, base, "hub_live", f"t={FOCUS_CLOCK}")
+    try:
+        page.wait_for_selector(f"[data-so-far='{FOCUS_PLAYER}'] [data-count=passes]", timeout=10000)
+    except Exception:
+        problems.append(f"player focus {FOCUS_PLAYER}: no Player so far card")
+    page.wait_for_timeout(600)
+    ids = set(page.eval_on_selector_all("#feed article[data-insight-id]", "els => els.map((e) => e.dataset.insightId)"))
+    if ids != want_ids:
+        problems.append(f"player focus {FOCUS_PLAYER}: feed shows {sorted(ids - want_ids)} beyond and misses "
+                        f"{sorted(want_ids - ids)} of engine.personalize")
+    if not page.locator("[data-following]").count():
+        problems.append(f"player focus {FOCUS_PLAYER}: no Following chip")
+    sf = dict(page.eval_on_selector_all(f"[data-so-far='{FOCUS_PLAYER}'] [data-count]",
+                                        "els => els.map((e) => [e.dataset.count, Number(e.dataset.value)])"))
+    recount = so_far(FOCUS_PLAYER, FOCUS_CLOCK)
+    if sf != recount:
+        problems.append(f"player so far {FOCUS_PLAYER}: page {sf} vs recount from data/showcase {recount}")
+    page.click("[data-following-remove]")
+    tl, v = ref["timeline"], ref["ui"]["visuals"]
+    for metric, cfg in CONFIG["metrics"].items():
+        page.click(f"[data-metric-picker] [data-metric={metric}]")
+        page.wait_for_selector(f"[data-metric-readout={metric}]", timeout=5000)
+        page.wait_for_timeout(500)
+        vals = [_num_or_str(x) for x in page.eval_on_selector_all(
+            f"[data-metric-readout={metric}] [data-readout-value]", "els => els.map((e) => e.dataset.readoutValue)")]
+        exp = readout_values(metric, tl, v, FOCUS_CLOCK)
+        if vals != exp:
+            problems.append(f"metric readout {metric}: page {vals} vs series {exp}")
+        types = set(page.eval_on_selector_all("#feed article[data-type]", "els => els.map((e) => e.dataset.type)"))
+        if not types <= set(cfg["families"]):
+            problems.append(f"metric readout {metric}: feed keeps {sorted(types - set(cfg['families']))}")
+    page.click("[data-metric-picker] [data-metric=none]")
+    problems += log["problems"]
+    ctx.close()
+    return problems
+
+
+def check_personalize(browser, base) -> dict:
+    """Personalization only selects: every number Fan view shows is in Analyst view (all pages, both
+    tabs), the in-page mode switch and the language switch change no number."""
+    problems = []
+    ctx, page, log = _context(browser, *WIDTHS["desktop"], view={"mode": "fan"})
+    _open(page, base, "hub_final_fan")
+    fan = numbers_of(page.inner_text("#insights-list"))
+    header = numbers_of(page.inner_text("[data-budget=hub-header]"))
+    _set_lang(page, "es")
+    if sorted(numbers_of(page.inner_text("#insights-list"))) != sorted(fan):
+        problems.append("fan view: the language switch changed a number")
+    _set_lang(page, "en")
+    page.click("[data-hub-controls] [data-name=view-mode][data-value=analyst]")
+    page.wait_for_selector("[data-pager]", timeout=5000)
+    if numbers_of(page.inner_text("[data-budget=hub-header]")) != header:
+        problems.append("hub header: the mode switch changed a number")
+    seen = []
+    for tab in ("insights", "patterns"):
+        b = page.locator(f"[data-tab={tab}]")
+        if b.is_disabled():
+            continue
+        b.click()
+        for _ in range(60):
+            seen += numbers_of(page.inner_text("#insights-list"))
+            nxt = page.locator("[data-pager] > button").last
+            if nxt.is_disabled():
+                break
+            nxt.click()
+            page.wait_for_timeout(60)
+    final_missing = sorted({n for n in fan if n not in seen})
+    if final_missing:
+        problems.append(f"fan view {FINAL_MATCH}: numbers not in Analyst view {final_missing}")
+    problems += log["problems"]
+    ctx.close()
+    ctx, page, log = _context(browser, *WIDTHS["desktop"], view={"mode": "fan"})
+    _open(page, base, "hub_live_fan", f"t={FOCUS_CLOCK}")
+    page.wait_for_timeout(500)
+    live_fan = numbers_of(page.inner_text("#feed"))
+    score = numbers_of(page.inner_text("#score"))
+    n_fan = page.locator("#feed article[data-insight-id]").count()
+    page.click("[data-hub-controls] [data-name=view-mode][data-value=analyst]")
+    page.wait_for_selector("[data-view=analyst]", timeout=5000)
+    page.wait_for_timeout(500)
+    live_missing = sorted({n for n in live_fan if n not in numbers_of(page.inner_text("#feed"))})
+    if live_missing:
+        problems.append(f"fan view live: numbers not in Analyst view {live_missing}")
+    if numbers_of(page.inner_text("#score")) != score:
+        problems.append("live scoreboard: the mode switch changed a number")
+    if not 0 < n_fan <= 5:
+        problems.append(f"fan view live: {n_fan} cards (want 1 to 5)")
+    problems += log["problems"]
+    ctx.close()
+    return dict(fan_numbers=len(fan), analyst_numbers=len(seen), live_fan_cards=n_fan, problems=problems)
+
+
 def _mut_file(copy: Path, name: str, change) -> None:
     p = copy / "data" / "matches" / name
     f = json.loads(p.read_text(encoding="utf-8"))
@@ -954,6 +1186,48 @@ def _mut_pizza(ui):
         p["involvement"] = -p["involvement"]
 
 
+def _mut_fan_number(ui, copy):
+    """Fan view drops a number it should keep: the first Fan card's claim sentence loses its numbers."""
+    from engine.personalize import personalize
+
+    def change(f):
+        for c in personalize(cap_cards(_py_cards(f)), {"mode": "fan"}):
+            if numbers_of(card_sentence(c["_c"]["text"]) or ""):
+                for tones in c["_c"]["text"]["rendered"].values():
+                    for tone, x in tones.items():
+                        tones[tone] = re.sub(r"\d+(?:[.,]\d+)?", "some", x)
+                return
+    _mut_file(copy, f"{FINAL_MATCH}.json", change)
+
+
+def _mut_focus_event(ui, copy):
+    """Player focus shows another player's event: one evidence event of an insight that does not
+    involve FOCUS_PLAYER is reassigned to them in the copy's event file."""
+    from engine.personalize import involves
+    name = f"events-{SHOWCASE_HUB.split('/')[-1]}.json"
+    p = copy / "data" / "matches" / name
+    ev = json.loads(p.read_text(encoding="utf-8"))
+    inv = _events_involved(ev)
+    stream = [json.loads(x) for x in (copy / "data" / "insights.jsonl").read_text(encoding="utf-8").splitlines() if x.strip()]
+    cand = next(i for i in stream if i["clock"]["start_sec"] <= FOCUS_CLOCK and not involves(i, FOCUS_PLAYER, inv)
+                and any(e in inv for e in i["evidence_event_ids"]))
+    n = int(next(e for e in cand["evidence_event_ids"] if e in inv).rsplit("_e", 1)[1])
+    c = ev["cols"]
+    for row in ev["rows"]:
+        if row[c.index("n")] == n:
+            row[c.index("player")] = ev["players"].index(FOCUS_PLAYER)
+    p.write_text(json.dumps(ev, separators=(",", ":")), encoding="utf-8")
+
+
+def _mut_readout(ui, copy):
+    """The momentum value the readout shows at FOCUS_CLOCK is changed in the copy's timeline."""
+    p = copy / "data" / "timeline.json"
+    tl = json.loads(p.read_text(encoding="utf-8"))
+    i = max(k for k, x in enumerate(tl["momentum"]) if x[0] <= FOCUS_CLOCK)
+    tl["momentum"][i][1] = round(tl["momentum"][i][1] + 7.7, 1)
+    p.write_text(json.dumps(tl, separators=(",", ":")), encoding="utf-8")
+
+
 # name: (mutation, the problem prefix that must appear, text that problem must contain)
 MUTATIONS = {"matchup strips": (_mut_crosshair, "matchup ", "page outlines"), "heat": (_mut_heat, "heat", ""),
              "touch map": (_mut_touch, "touch map", ""), "lineup": (_mut_lineup, "lineup", ""),
@@ -968,7 +1242,10 @@ MUTATIONS = {"matchup strips": (_mut_crosshair, "matchup ", "page outlines"), "h
              "home timeline": (_mut_home_timeline, "home timeline", ""),
              "home xg race": (_mut_home_xg, "home xg race", ""),
              "home heat": (_mut_home_heat, "home heat", ""),
-             "home momentum": (_mut_home_momentum, "home momentum", "")}
+             "home momentum": (_mut_home_momentum, "home momentum", ""),
+             "fan view number": (_mut_fan_number, "fan view", "dropped"),
+             "player focus": (_mut_focus_event, "player focus", "feed shows"),
+             "metric readout": (_mut_readout, "metric readout", "momentum")}
 
 
 def mutation_proof(browser, dist: Path, ref_dir: Path, tmp: Path) -> dict:
@@ -1022,7 +1299,7 @@ def _open(page, base, route, query=""):
 
 def check_route(browser, base, route, width_name, src, screens: Path | None, axe_src: str, size=None) -> dict:
     w, h = size or WIDTHS[width_name]
-    ctx, page, log = _context(browser, w, h)
+    ctx, page, log = _context(browser, w, h, view=ROUTE_VIEW.get(route))
     _open(page, base, route, QUERY.get(route, ""))
     if route in ACTIONS:
         ACTIONS[route](page)
@@ -1700,7 +1977,7 @@ def demo_screen(browser, base, screens: Path):
 
 
 def run(dist: Path | None = None, screens_dir: Path | None = None, screens: bool = True, routes=ROUTES,
-        ref_dir: Path | None = None) -> dict:
+        ref_dir: Path | None = None, lean: bool = False) -> dict:
     from playwright.sync_api import sync_playwright
     dist = Path(dist or WEB / "dist")
     src = web_sources(dist)
@@ -1722,11 +1999,11 @@ def run(dist: Path | None = None, screens_dir: Path | None = None, screens: bool
         for route in routes:
             for wn in WIDTHS:
                 report["routes"].append(check_route(browser, base, route, wn, src, shots, axe_src))
-            for wn, size in EXTRA_SIZES.get(route, {}).items():
+            for wn, size in (LEAN_SIZES if lean else EXTRA_SIZES).get(route, {}).items():
                 report["routes"].append(check_route(browser, base, route, wn, src, shots, axe_src, size=size))
         if shots:
             report["screens_1080p"] = screens_1080p(
-                browser, base, shots, [r for r in routes if "1080p" not in EXTRA_SIZES.get(r, {})])
+                browser, base, shots, [r for r in routes if "1080p" not in (LEAN_SIZES if lean else EXTRA_SIZES).get(r, {})])
         report["image_files"] = check_image_files(dist)
         if "home" in routes:
             report["badges"] = check_badges(browser, base, shots)
@@ -1747,6 +2024,7 @@ def run(dist: Path | None = None, screens_dir: Path | None = None, screens: bool
             report["nav_bar"] = check_nav_bar(browser, base)
             report["hub_layout"] = check_hub_layout(browser, base)
             report["language"] = check_language_switch(browser, base, src)
+            report["personalize"] = check_personalize(browser, base)
         browser.close()
     httpd.shutdown()
     report["failures"] = failures(report)
@@ -1813,6 +2091,7 @@ def failures(report) -> list:
     for wn, v in report.get("navigation", {}).items():
         f += [f"navigation@{wn}: {x}" for x in v["problems"]]
         f += [f"navigation@{wn}: never reached {x}" for x in v["reached"] if x.endswith(":missing")]
+    f += [f"personalize: {x}" for x in report.get("personalize", {}).get("problems", [])]
     for k, v in report.get("nav_bar", {}).items():
         if k == "proof":
             if not v["caught"]:
@@ -1860,11 +2139,12 @@ def main(argv=None):
     ap.add_argument("--routes", default=",".join(ROUTES))
     ap.add_argument("--json", default=None, help="also write the full report here")
     ap.add_argument("--ref", default=None, help="engine output the visuals are checked against (default: dist/data)")
+    ap.add_argument("--lean", action="store_true", help="1920x1080 only for Home and the Match Hub (LEAN_SIZES)")
     ap.add_argument("--mutation-proof", action="store_true",
                     help="also show each consistency check fails on a throwaway copy with that visual's data changed")
     a = ap.parse_args(argv)
     report = run(Path(a.dist), Path(a.out), screens=not a.no_screens, routes=tuple(a.routes.split(",")),
-                 ref_dir=Path(a.ref) if a.ref else None)
+                 ref_dir=Path(a.ref) if a.ref else None, lean=a.lean)
     if a.mutation_proof:
         import tempfile
         from playwright.sync_api import sync_playwright
@@ -1884,7 +2164,7 @@ def main(argv=None):
         for k, _, n in r.get("words", {}).get("elements", []):
             top[k] = max(top.get(k, 0), n)
         print(f"words {r['route']:10s} {r['width']:5d}px total={r.get('words', {}).get('total')} max_per_budget={top}")
-    for k in ("nav_bar", "hub_layout", "text_budget_proof", "drawer", "consistency", "mutation_proof", "language", "robustness", "frames", "frames_1080p",
+    for k in ("personalize", "nav_bar", "hub_layout", "text_budget_proof", "drawer", "consistency", "mutation_proof", "language", "robustness", "frames", "frames_1080p",
               "first_screen", "live_stream", "bundle", "image_files", "badges", "hero_contrast"):
         if k in report:
             print(f"{k}:", {x: y for x, y in report[k].items() if x != "_problems"} if isinstance(report[k], dict) else report[k])

@@ -212,3 +212,58 @@ banned-word lists in tools/ apply), keep every `{placeholder}`.
 
 Earlier in this run `board_lineup_note`, `lane_lift_label` and `ss_axis_x` were shortened for the
 Team Board word budget (all three languages); see docs/PROGRESS.md "Final UI decisions".
+
+## Added in the personalization run (48 keys)
+
+Same rules. Glossary labels (`gl_*`) are fan wording for labels, chips and readouts only, never claim sentences.
+
+| Key | English | Español | Français |
+|---|---|---|---|
+| `mode_label` | View | Vista | Vue |
+| `mode_fan` | Fan view | Vista aficionado | Vue supporter |
+| `mode_analyst` | Analyst view | Vista analista | Vue analyste |
+| `mode_note` | Fan view tells the story; Analyst view shows every check. Kept in this browser only. | La vista aficionado cuenta la historia; la vista analista muestra cada comprobación. Solo se guarda en este navegador. | La vue supporter raconte le match ; la vue analyste montre chaque vérification. Gardé dans ce navigateur uniquement. |
+| `v_tick` | Verified | Verificado | Vérifié |
+| `v_tick_open` | Verified: open the evidence for {label} | Verificado: abre la evidencia de {label} | Vérifié : ouvrir les preuves de {label} |
+| `fan_top` | Top picks from {n} checked insights | Lo más destacado de {n} insights comprobados | Les temps forts parmi {n} insights vérifiés |
+| `focus_player` | Focus on this player | Seguir a este jugador | Suivre ce joueur |
+| `focus_on` | Focused | Siguiendo | Suivi |
+| `following` | Following: {name} | Siguiendo: {name} | Suivi : {name} |
+| `following_remove` | Stop following {name} | Dejar de seguir a {name} | Ne plus suivre {name} |
+| `focus_none` | No insight involves this player yet. | Todavía no hay un insight con este jugador. | Aucun insight ne concerne encore ce joueur. |
+| `so_far_title` | Player so far | El jugador hasta ahora | Le joueur jusqu'ici |
+| `so_far_at` | Up to {clock} | Hasta el {clock} | Jusqu'à {clock} |
+| `sf_passes` | Passes | Pases | Passes |
+| `sf_shots` | Shots | Tiros | Tirs |
+| `sf_key` | Key passes | Pases clave | Passes clés |
+| `sf_goals` | Goals | Goles | Buts |
+| `sf_cards` | Cards | Tarjetas | Cartons |
+| `sf_subs` | Substitutions | Cambios | Remplacements |
+| `sf_log_note` | This match's log keeps shots, goals, cards and substitutions; passes are thinned from it. | El registro de este partido conserva tiros, goles, tarjetas y cambios; los pases están reducidos. | Le journal de ce match garde les tirs, buts, cartons et remplacements ; les passes y sont réduites. |
+| `sf_loading` | Loading the event log… | Cargando el registro de eventos… | Chargement du journal des événements… |
+| `metric_focus` | Focus metric | Métrica en foco | Métrique suivie |
+| `metric_none` | None | Ninguna | Aucune |
+| `mt_momentum` | Momentum | Momentum | Momentum |
+| `mt_xg` | xG | xG | xG |
+| `mt_rhythm` | Rhythm | Ritmo | Rythme |
+| `mt_stress` | Territorial stress | Estrés territorial | Stress territorial |
+| `ml_momentum` | The engine's momentum at the clock: above zero leans to {home}, below to {away}. | El momentum del motor en el reloj: por encima de cero se inclina hacia {home}, por debajo hacia {away}. | Le momentum du moteur à l'horloge : au-dessus de zéro il penche vers {home}, en dessous vers {away}. |
+| `ml_xg` | The quality of every shot so far, added up per side. | La calidad de cada tiro hasta ahora, sumada por equipo. | La qualité de chaque tir jusqu'ici, additionnée par équipe. |
+| `ml_rhythm` | Possession changes in the latest minute. | Cambios de posesión en el último minuto. | Changements de possession dans la dernière minute. |
+| `ml_stress` | Time each side has spent under spells of pressure in its own half. | Tiempo que cada equipo ha pasado bajo presión en su propio campo. | Temps passé par chaque équipe sous pression dans son propre camp. |
+| `metric_ref_none` | No league-typical reference for this series. | Sin referencia típica de la liga para esta serie. | Pas de référence typique de la ligue pour cette série. |
+| `metric_feed_none` | No insight of this kind yet. | Todavía no hay un insight de este tipo. | Pas encore d'insight de ce type. |
+| `gl_xg` | Chance quality | Calidad de las ocasiones | Qualité des occasions |
+| `gl_xt` | Threat | Peligro | Menace |
+| `gl_field_tilt` | Territory | Territorio | Territoire |
+| `gl_ppda` | Pressing | Presión | Pressing |
+| `gl_rhythm` | Match rhythm | Ritmo del partido | Rythme du match |
+| `gl_momentum` | Who is on top | Quién domina | Qui domine |
+| `gl_stress` | Pressure in own half | Presión en campo propio | Pression dans son camp |
+| `for_you` | For you | Para ti | Pour vous |
+| `for_you_fixtures` | Your clubs' fixtures | Partidos de tus clubes | Les matchs de vos clubs |
+| `for_you_players` | Your players | Tus jugadores | Vos joueurs |
+| `fy_ga` | {g} goals · {a} assists | {g} goles · {a} asistencias | {g} buts · {a} passes décisives |
+| `fy_apps` | {m} minutes · {p} pass completion | {m} minutos · {p} de pases completados | {m} minutes · {p} de passes réussies |
+| `personalize_stage` | Personalize | Personalizar | Personnaliser |
+| `personalize_note` | Personalize filters, ranks, relabels and hides verified insights for each viewer. It never changes a number or a claim sentence. | Personalizar filtra, ordena, renombra y oculta insights verificados para cada espectador. Nunca cambia un número ni una frase de un claim. | Personnaliser filtre, classe, renomme et masque les insights vérifiés pour chaque spectateur. Cela ne change jamais un nombre ni une phrase d'un claim. |

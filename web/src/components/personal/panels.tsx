@@ -240,7 +240,7 @@ function SoFarCard({
         </span>
       </div>
       {counts ? (
-        <dl className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-6">
+        <dl className="mt-2 grid grid-cols-3 gap-2">
           {ROWS.filter(([k]) => counts[k] !== null).map(([k, label]) => (
             <div
               key={k}

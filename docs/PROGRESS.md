@@ -1,5 +1,38 @@
 # Progress log
 
+## Personalization (branch `ui-visuals-personalize`, from 7a60c6a; local tag `pre-personalize`)
+
+### Personalization decisions
+
+- Untracked files in git status at the start (docs/screens-v9 extras, web/tsconfig.tsbuildinfo) were
+  generated output from earlier runs, not hand changes, so there was no "outside" commit; they stay untracked.
+- Modes are `fan` / `analyst` in the new config. The older agents/personalization.py (casual /
+  analyst, CLI agents.personalize) is left as it was; the service and web use engine/personalize.py.
+- Fan ranking: `fan_priority` (turning-point types first), then clock, then id. Followed clubs go
+  first. The live feed still lists the chosen cards newest first.
+- Player involvement = the insight's `player_ids` or the player / related player of an evidence
+  event. Only the first followed player is used. A followed player not in the match is ignored there.
+- Metric families: momentum → momentum_shift; xG → set_piece_inflation, player_focus; rhythm →
+  rhythm_wave; territorial stress → perimeter_lock. Field tilt, xT and PPDA have no time series, so
+  they are not offered (`not_offered` in the config). Played matches carry only momentum.
+- No league-typical reference exists for these series; the readout states that, not invented.
+- The showcase event file is named `events-m_showcase.json` (not `m_showcase.events.json`), so the
+  match-file globs `m_*.json` in tests/test_match_export.py and their schema checks stay unchanged.
+  It is written by agents/showcase_events.py and by match_export; 65 KB, so matches/ is 2.85 MB of 3 MB.
+  The full season export was not re-run (no other data file changed; data_gen untouched).
+- check_web presets Analyst view for every existing check, because they were written for the full hub.
+  New `hub_live_fan` / `hub_final_fan` routes run every route gate in Fan view. `--lean` keeps 1920x1080
+  for Home and the hubs only, as this run's brief asks.
+- Live wide layout: the view switch, following chip and metric picker sit in the hub's top strip.
+- Entry JS grew about 4 KB gzip, mostly the new en/es/fr strings (Settings shows the view switch).
+  The panels live in the hub, live and Home chunks.
+
+### Test changes (personalize)
+
+- web/src/App.test.tsx and web/src/features/hub/hub.test.tsx: a `beforeEach(() => setMode("analyst"))`.
+  These suites test Analyst content (pager, chips, matchup, event log, Before / After), and Fan is now the
+  default. No assertion changed. Fan view is tested in features/personal/personal.test.tsx.
+
 ## Final UI (branch `ui-visuals-final-ui`, from a8ab229 = main = ui-visuals-ia; local tag `pre-final-ui`)
 
 Item status is in docs/final-ui-progress.md; the audit and design notes in docs/final-ui-plan.md.
