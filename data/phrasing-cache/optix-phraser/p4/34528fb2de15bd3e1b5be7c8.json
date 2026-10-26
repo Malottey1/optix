@@ -1,0 +1,18 @@
+{
+ "claim_hash": "34528fb2de15bd3e1b5be7c8",
+ "claim_id": "clm_m_showcase_fouls_t_aur_0_6023_a1",
+ "model": "optix-phraser",
+ "origin": {
+  "created_at": "2026-10-26T09:43:54+00:00",
+  "deployment": "optix-phraser",
+  "guard": "agents/output_guard.py",
+  "source": "azure-openai"
+ },
+ "prompt_version": "p4",
+ "sentences": {
+  "en": "AUR committed 10 fouls while leading comfortably in the match.",
+  "es": "AUR cometió 10 faltas mientras dominaba cómodamente el partido.",
+  "fr": "AUR a commis 10 fautes en menant largement le match."
+ },
+ "template_key": "fouls.stat"
+}

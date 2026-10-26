@@ -1,0 +1,18 @@
+{
+ "claim_hash": "9fbb1e431d92e7653b474f3e",
+ "claim_id": "clm_m_showcase_xt_added_AUR_03_0_5324_a1",
+ "model": "optix-phraser",
+ "origin": {
+  "created_at": "2026-10-26T09:43:34+00:00",
+  "deployment": "optix-phraser",
+  "guard": "agents/output_guard.py",
+  "source": "azure-openai"
+ },
+ "prompt_version": "p4",
+ "sentences": {
+  "en": "Bodhi Linström added 0.034 expected threat with a pass for AUR while leading comfortably.",
+  "es": "Bodhi Linström añadió 0,034 de amenaza esperada con un pase para AUR mientras lideraba con comodidad.",
+  "fr": "Bodhi Linström a ajouté 0,034 de menace attendue avec une passe pour AUR en menant largement."
+ },
+ "template_key": "xt_added.threat_pass"
+}

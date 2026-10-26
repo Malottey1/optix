@@ -1,0 +1,18 @@
+{
+ "claim_hash": "d154a5e963c84f221d1b473e",
+ "claim_id": "clm_m_showcase_final_third_passes_t_ntg_0_6023_a1",
+ "model": "optix-phraser",
+ "origin": {
+  "created_at": "2026-10-26T09:43:51+00:00",
+  "deployment": "optix-phraser",
+  "guard": "agents/output_guard.py",
+  "source": "azure-openai"
+ },
+ "prompt_version": "p4",
+ "sentences": {
+  "en": "NTG completed 132 final third passes while trailing by multiple goals during the match.",
+  "es": "NTG completó 132 pases en el último tercio mientras perdía por varios goles durante el partido.",
+  "fr": "NTG a réalisé 132 passes dans le dernier tiers du terrain en étant mené de plusieurs buts pendant le match."
+ },
+ "template_key": "f3_volume.stat"
+}

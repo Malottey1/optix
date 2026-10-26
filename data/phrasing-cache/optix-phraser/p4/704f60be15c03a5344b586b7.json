@@ -1,0 +1,18 @@
+{
+ "claim_hash": "704f60be15c03a5344b586b7",
+ "claim_id": "clm_m_showcase_xt_added_NTG_11_0_488_a1",
+ "model": "optix-phraser",
+ "origin": {
+  "created_at": "2026-10-26T09:43:07+00:00",
+  "deployment": "optix-phraser",
+  "guard": "agents/output_guard.py",
+  "source": "azure-openai"
+ },
+ "prompt_version": "p4",
+ "sentences": {
+  "en": "Callum Corzek of NTG added 0.086 expected threat from a pass in the opening phase while the score was level.",
+  "es": "Callum Corzek de NTG añadió 0,086 de amenaza esperada con un pase en la fase inicial con el marcador igualado.",
+  "fr": "Callum Corzek de NTG a ajouté 0,086 de menace attendue sur une passe en début de match alors que le score était à égalité."
+ },
+ "template_key": "xt_added.threat_pass"
+}

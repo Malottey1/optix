@@ -1,0 +1,18 @@
+{
+ "claim_hash": "c8fbdb7b06f740285cd3198a",
+ "claim_id": "clm_m_showcase_ppda_t_aur_0_6023_a2",
+ "model": "optix-phraser",
+ "origin": {
+  "created_at": "2026-10-26T09:42:57+00:00",
+  "deployment": "optix-phraser",
+  "guard": "agents/output_guard.py",
+  "source": "azure-openai"
+ },
+ "prompt_version": "p4",
+ "sentences": {
+  "en": "AUR recorded a PPDA of 27 with a press intensity of 0.049 while leading comfortably.",
+  "es": "AUR registró un PPDA de 27 con una intensidad de presión de 0,049 mientras lideraba con comodidad.",
+  "fr": "AUR a enregistré un PPDA de 27 avec une intensité de pressing de 0,049 en menant largement."
+ },
+ "template_key": "ppda.with_press_intensity"
+}

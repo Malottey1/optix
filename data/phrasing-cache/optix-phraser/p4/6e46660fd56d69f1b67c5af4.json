@@ -1,0 +1,18 @@
+{
+ "claim_hash": "6e46660fd56d69f1b67c5af4",
+ "claim_id": "clm_m_showcase_crosses_t_ntg_0_6023_a1",
+ "model": "optix-phraser",
+ "origin": {
+  "created_at": "2026-10-26T09:43:45+00:00",
+  "deployment": "optix-phraser",
+  "guard": "agents/output_guard.py",
+  "source": "azure-openai"
+ },
+ "prompt_version": "p4",
+ "sentences": {
+  "en": "NTG completed 18 crosses while trailing by multiple goals.",
+  "es": "NTG completó 18 centros mientras iba perdiendo por varios goles.",
+  "fr": "NTG a réalisé 18 centres en étant mené de plusieurs buts."
+ },
+ "template_key": "crosses.stat"
+}

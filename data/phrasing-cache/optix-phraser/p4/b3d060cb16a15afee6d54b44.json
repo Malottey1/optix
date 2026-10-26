@@ -1,0 +1,18 @@
+{
+ "claim_hash": "b3d060cb16a15afee6d54b44",
+ "claim_id": "clm_m_showcase_chances_created_AUR_06_0_6023_a1",
+ "model": "optix-phraser",
+ "origin": {
+  "created_at": "2026-10-26T09:43:41+00:00",
+  "deployment": "optix-phraser",
+  "guard": "agents/output_guard.py",
+  "source": "azure-openai"
+ },
+ "prompt_version": "p4",
+ "sentences": {
+  "en": "Bodhi Quinfen from AUR created 3 chances in open play while leading comfortably.",
+  "es": "Bodhi Quinfen de AUR creó 3 ocasiones en juego abierto mientras lideraba con comodidad.",
+  "fr": "Bodhi Quinfen d'AUR a créé 3 occasions en jeu ouvert en menant largement."
+ },
+ "template_key": "chances_created.stat"
+}

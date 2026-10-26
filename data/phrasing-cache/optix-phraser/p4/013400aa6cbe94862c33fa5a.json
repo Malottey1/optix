@@ -1,0 +1,18 @@
+{
+ "claim_hash": "013400aa6cbe94862c33fa5a",
+ "claim_id": "clm_m_showcase_xt_added_NTG_11_0_2857_a1",
+ "model": "optix-phraser",
+ "origin": {
+  "created_at": "2026-10-26T09:43:15+00:00",
+  "deployment": "optix-phraser",
+  "guard": "agents/output_guard.py",
+  "source": "azure-openai"
+ },
+ "prompt_version": "p4",
+ "sentences": {
+  "en": "Callum Corzek added 0.029 expected threat from a pass for NTG while trailing by two or more goals.",
+  "es": "Callum Corzek añadió 0,029 de amenaza esperada con un pase para NTG mientras iban perdiendo por dos o más goles.",
+  "fr": "Callum Corzek a ajouté 0,029 de menace attendue sur une passe pour NTG alors qu'ils étaient menés de deux buts ou plus."
+ },
+ "template_key": "xt_added.threat_pass"
+}

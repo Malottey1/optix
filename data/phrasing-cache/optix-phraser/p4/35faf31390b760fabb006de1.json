@@ -1,0 +1,18 @@
+{
+ "claim_hash": "35faf31390b760fabb006de1",
+ "claim_id": "clm_m_showcase_forward_passes_NTG_07_0_2883_a2",
+ "model": "optix-phraser",
+ "origin": {
+  "created_at": "2026-10-26T09:42:54+00:00",
+  "deployment": "optix-phraser",
+  "guard": "agents/output_guard.py",
+  "source": "azure-openai"
+ },
+ "prompt_version": "p4",
+ "sentences": {
+  "en": "Bram Drazek of NTG made 22 forward passes with a pass quality ratio of 0 while trailing by two or more goals.",
+  "es": "Bram Drazek de NTG realizó 22 pases hacia adelante con una calidad de pase de 0 mientras iban perdiendo por dos o más goles.",
+  "fr": "Bram Drazek de NTG a effectué 22 passes en avant avec un ratio de qualité de passe de 0 alors que son équipe était menée de deux buts ou plus."
+ },
+ "template_key": "forward_passes.wide_low_threat"
+}

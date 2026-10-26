@@ -1,0 +1,18 @@
+{
+ "claim_hash": "07444ad1ddc237c38277404c",
+ "claim_id": "clm_m_showcase_final_third_losses_t_aur_0_2883_a1",
+ "model": "optix-phraser",
+ "origin": {
+  "created_at": "2026-10-26T09:43:22+00:00",
+  "deployment": "optix-phraser",
+  "guard": "agents/output_guard.py",
+  "source": "azure-openai"
+ },
+ "prompt_version": "p4",
+ "sentences": {
+  "en": "AUR lost the ball 25 times in the final third while leading comfortably.",
+  "es": "AUR perdió el balón 25 veces en el último tercio mientras iba ganando cómodamente.",
+  "fr": "AUR a perdu le ballon 25 fois dans le dernier tiers du terrain en menant largement."
+ },
+ "template_key": "f3_losses.stat"
+}

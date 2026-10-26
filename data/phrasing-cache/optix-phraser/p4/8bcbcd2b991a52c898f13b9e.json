@@ -1,0 +1,18 @@
+{
+ "claim_hash": "8bcbcd2b991a52c898f13b9e",
+ "claim_id": "clm_m_showcase_final_third_losses_t_aur_0_6023_a1",
+ "model": "optix-phraser",
+ "origin": {
+  "created_at": "2026-10-26T09:43:48+00:00",
+  "deployment": "optix-phraser",
+  "guard": "agents/output_guard.py",
+  "source": "azure-openai"
+ },
+ "prompt_version": "p4",
+ "sentences": {
+  "en": "AUR lost possession in the final third 53 times while leading comfortably.",
+  "es": "AUR perdió la posesión en el último tercio 53 veces mientras lideraba cómodamente.",
+  "fr": "AUR a perdu la possession dans le dernier tiers 53 fois en menant largement."
+ },
+ "template_key": "f3_losses.stat"
+}

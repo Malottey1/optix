@@ -1,0 +1,18 @@
+{
+ "claim_hash": "b7a0c94380036a47ee44a835",
+ "claim_id": "clm_m_showcase_xt_added_AUR_10_0_273_a1",
+ "model": "optix-phraser",
+ "origin": {
+  "created_at": "2026-10-26T09:43:06+00:00",
+  "deployment": "optix-phraser",
+  "guard": "agents/output_guard.py",
+  "source": "azure-openai"
+ },
+ "prompt_version": "p4",
+ "sentences": {
+  "en": "Ennis Quinova added 0.055 expected threat from a pass for AUR in the opening minutes while the score was level.",
+  "es": "Ennis Quinova añadió 0,055 de amenaza esperada con un pase para AUR en los primeros minutos con el marcador igualado.",
+  "fr": "Ennis Quinova a ajouté 0,055 de menace attendue sur une passe pour AUR dans les premières minutes alors que le score était à égalité."
+ },
+ "template_key": "xt_added.threat_pass"
+}

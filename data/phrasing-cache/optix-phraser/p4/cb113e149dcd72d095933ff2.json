@@ -1,0 +1,17 @@
+{
+ "claim_hash": "cb113e149dcd72d095933ff2",
+ "claim_id": "clm_m_showcase_field_tilt_t_ntg_900_2700_a2",
+ "model": "optix-phraser",
+ "origin": {
+  "created_at": "2026-10-26T09:42:49+00:00",
+  "deployment": "optix-phraser",
+  "guard": "agents/output_guard.py",
+  "source": "azure-openai"
+ },
+ "prompt_version": "p4",
+ "sentences": {
+  "en": "NTG had 66 percent field tilt with 6 box entries and completed 35 passes in the final third while trailing by two or more goals.",
+  "es": "NTG tuvo un dominio del campo del 66 por ciento con 6 entradas al área y completó 35 pases en el último tercio mientras perdía por dos o más goles."
+ },
+ "template_key": "field_tilt.trailing_vs_deep_block"
+}

@@ -1,0 +1,18 @@
+{
+ "claim_hash": "ba33adb47fd145671378483d",
+ "claim_id": "clm_m_showcase_xg_t_ntg_0_6023_a2",
+ "model": "optix-phraser",
+ "origin": {
+  "created_at": "2026-10-26T09:32:45+00:00",
+  "deployment": "optix-phraser",
+  "guard": "agents/output_guard.py",
+  "source": "azure-openai"
+ },
+ "prompt_version": "p2",
+ "sentences": {
+  "en": "NTG had an xG of 1.03 from 20 shots, with 0.59 xG from set pieces making up 57.7% of their total xG and an xG per shot of 0.051.",
+  "es": "NTG tuvo un xG de 1,03 en 20 tiros, con 0,59 xG de jugadas a balón parado que representaron el 57,7% de su xG total y un xG por tiro de 0,051.",
+  "fr": "NTG a eu un xG de 1,03 sur 20 tirs, avec 0,59 xG provenant des coups de pied arrêtés représentant 57,7 % de leur xG total et un xG par tir de 0,051."
+ },
+ "template_key": "xg.volume_and_set_pieces"
+}

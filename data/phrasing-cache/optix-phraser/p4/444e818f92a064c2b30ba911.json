@@ -1,0 +1,18 @@
+{
+ "claim_hash": "444e818f92a064c2b30ba911",
+ "claim_id": "clm_m_showcase_xt_added_AUR_11_0_1949_a1",
+ "model": "optix-phraser",
+ "origin": {
+  "created_at": "2026-10-26T09:43:14+00:00",
+  "deployment": "optix-phraser",
+  "guard": "agents/output_guard.py",
+  "source": "azure-openai"
+ },
+ "prompt_version": "p4",
+ "sentences": {
+  "en": "Rui Hartoni of AUR added 0.026 expected threat from a pass while leading comfortably in the first part of the match.",
+  "es": "Rui Hartoni de AUR añadió 0,026 de amenaza esperada con un pase mientras lideraba cómodamente en la primera parte del partido.",
+  "fr": "Rui Hartoni d'AUR a ajouté 0,026 de menace attendue sur une passe en menant largement lors du début du match."
+ },
+ "template_key": "xt_added.threat_pass"
+}

@@ -1,0 +1,18 @@
+{
+ "claim_hash": "6b4ef3224e1a8f1f08c00f29",
+ "claim_id": "clm_m_showcase_chances_created_NTG_11_0_6023_a2",
+ "model": "optix-phraser",
+ "origin": {
+  "created_at": "2026-10-26T09:43:00+00:00",
+  "deployment": "optix-phraser",
+  "guard": "agents/output_guard.py",
+  "source": "azure-openai"
+ },
+ "prompt_version": "p4",
+ "sentences": {
+  "en": "Callum Corzek created 8 chances for NTG, including 1 from open play and 7 from set pieces while trailing by multiple goals.",
+  "es": "Callum Corzek creó 8 ocasiones para NTG, incluyendo 1 en juego abierto y 7 en jugadas a balón parado mientras iban perdiendo por varios goles.",
+  "fr": "Callum Corzek a créé 8 occasions pour NTG, dont 1 en jeu ouvert et 7 sur coups de pied arrêtés alors que l'équipe était menée de plusieurs buts."
+ },
+ "template_key": "chances_created.split"
+}

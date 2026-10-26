@@ -1,0 +1,18 @@
+{
+ "claim_hash": "7de90575e7f9d12a1b894642",
+ "claim_id": "clm_m_showcase_field_tilt_t_ntg_4223_6023_a2",
+ "model": "optix-phraser",
+ "origin": {
+  "created_at": "2026-10-26T09:32:42+00:00",
+  "deployment": "optix-phraser",
+  "guard": "agents/output_guard.py",
+  "source": "azure-openai"
+ },
+ "prompt_version": "p2",
+ "sentences": {
+  "en": "NTG had 80% field tilt with 7 shots and 0.043 xG per shot, conceding 4 counter shots with 0.53 counter xG and 71.4% outside shot share while trailing by 4 goals.",
+  "es": "NTG tuvo un 80% de dominio del campo con 7 tiros y 0,043 xG por tiro, concediendo 4 tiros de contraataque con 0,53 xG en contra y 71,4% de tiros desde fuera mientras perdía por 4 goles.",
+  "fr": "NTG a eu 80% d'inclinaison de terrain avec 7 tirs et 0,043 xG par tir, concédant 4 tirs en contre avec 0,53 xG contre et 71,4% de tirs extérieurs tout en étant mené de 4 buts."
+ },
+ "template_key": "field_tilt.low_block_and_counters"
+}

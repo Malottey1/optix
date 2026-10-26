@@ -1,0 +1,18 @@
+{
+ "claim_hash": "899f085ab642ca6bd3cd6881",
+ "claim_id": "clm_m_showcase_chances_created_NTG_09_0_2883_a1",
+ "model": "optix-phraser",
+ "origin": {
+  "created_at": "2026-10-26T09:43:20+00:00",
+  "deployment": "optix-phraser",
+  "guard": "agents/output_guard.py",
+  "source": "azure-openai"
+ },
+ "prompt_version": "p4",
+ "sentences": {
+  "en": "Hugo Pellgard created 3 chances for NTG while trailing by two or more goals.",
+  "es": "Hugo Pellgard creó 3 ocasiones para NTG mientras iban perdiendo por dos o más goles.",
+  "fr": "Hugo Pellgard a créé 3 occasions pour NTG alors que son équipe était menée de deux buts ou plus."
+ },
+ "template_key": "chances_created.stat"
+}

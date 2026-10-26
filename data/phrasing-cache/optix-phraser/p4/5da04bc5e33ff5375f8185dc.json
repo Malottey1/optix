@@ -1,0 +1,18 @@
+{
+ "claim_hash": "5da04bc5e33ff5375f8185dc",
+ "claim_id": "clm_m_showcase_xg_t_aur_0_6023_a1",
+ "model": "optix-phraser",
+ "origin": {
+  "created_at": "2026-10-26T09:43:39+00:00",
+  "deployment": "optix-phraser",
+  "guard": "agents/output_guard.py",
+  "source": "azure-openai"
+ },
+ "prompt_version": "p4",
+ "sentences": {
+  "en": "AUR recorded an xG of 1.81 in the opening phase while leading comfortably.",
+  "es": "AUR registró un xG de 1,81 en la fase inicial mientras lideraba con comodidad.",
+  "fr": "AUR a enregistré un xG de 1,81 lors de la première période en menant largement."
+ },
+ "template_key": "xg.stat"
+}

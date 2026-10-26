@@ -1,0 +1,18 @@
+{
+ "claim_hash": "b8b078f459b06fd0fa3e3a0e",
+ "claim_id": "clm_m_showcase_milestone_count_NTG_07_0_3264_a1",
+ "model": "optix-phraser",
+ "origin": {
+  "created_at": "2026-10-26T09:43:25+00:00",
+  "deployment": "optix-phraser",
+  "guard": "agents/output_guard.py",
+  "source": "azure-openai"
+ },
+ "prompt_version": "p4",
+ "sentences": {
+  "en": "Bram Drazek from NTG completed 50 passes while trailing by two or more goals in the match window.",
+  "es": "Bram Drazek de NTG completó 50 pases mientras su equipo estaba perdiendo por dos o más goles en el periodo del partido.",
+  "fr": "Bram Drazek de NTG a réalisé 50 passes alors que son équipe était menée de deux buts ou plus durant la période du match."
+ },
+ "template_key": "milestone.pass_count"
+}

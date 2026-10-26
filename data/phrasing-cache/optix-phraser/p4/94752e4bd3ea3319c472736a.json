@@ -1,0 +1,18 @@
+{
+ "claim_hash": "94752e4bd3ea3319c472736a",
+ "claim_id": "clm_m_showcase_rhythm_index_t_aur_2700_3600_a1",
+ "model": "optix-phraser",
+ "origin": {
+  "created_at": "2026-10-26T09:43:26+00:00",
+  "deployment": "optix-phraser",
+  "guard": "agents/output_guard.py",
+  "source": "azure-openai"
+ },
+ "prompt_version": "p4",
+ "sentences": {
+  "en": "AUR maintained a rhythm index of 1.6 per minute over a 15-minute period while leading comfortably.",
+  "es": "AUR mantuvo un índice de ritmo de 1,6 por minuto durante un período de 15 minutos mientras lideraba cómodamente.",
+  "fr": "AUR a maintenu un indice de rythme de 1,6 par minute pendant une période de 15 minutes en menant largement."
+ },
+ "template_key": "rhythm.wave"
+}

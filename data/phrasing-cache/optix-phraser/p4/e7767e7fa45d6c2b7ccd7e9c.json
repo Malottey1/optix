@@ -1,0 +1,18 @@
+{
+ "claim_hash": "e7767e7fa45d6c2b7ccd7e9c",
+ "claim_id": "clm_m_showcase_possession_pct_t_aur_0_2883_a2",
+ "model": "optix-phraser",
+ "origin": {
+  "created_at": "2026-10-26T09:42:42+00:00",
+  "deployment": "optix-phraser",
+  "guard": "agents/output_guard.py",
+  "source": "azure-openai"
+ },
+ "prompt_version": "p4",
+ "sentences": {
+  "en": "AUR had 31.1% possession while leading comfortably, completing 4 transition shots with 0.5 expected goals.",
+  "es": "AUR tuvo un 31,1% de posesión mientras lideraba cómodamente, completando 4 tiros en transición con 0,5 goles esperados.",
+  "fr": "AUR a eu 31,1 % de possession en menant largement, réalisant 4 tirs en transition avec 0,5 buts attendus."
+ },
+ "template_key": "possession.shots_after_regains"
+}

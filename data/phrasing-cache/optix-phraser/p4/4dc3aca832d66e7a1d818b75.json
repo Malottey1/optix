@@ -1,0 +1,18 @@
+{
+ "claim_hash": "4dc3aca832d66e7a1d818b75",
+ "claim_id": "clm_m_showcase_milestone_count_NTG_08_0_4847_a1",
+ "model": "optix-phraser",
+ "origin": {
+  "created_at": "2026-10-26T09:43:31+00:00",
+  "deployment": "optix-phraser",
+  "guard": "agents/output_guard.py",
+  "source": "azure-openai"
+ },
+ "prompt_version": "p4",
+ "sentences": {
+  "en": "Kofi Garford from NTG completed 50 passes while trailing by two or more goals.",
+  "es": "Kofi Garford de NTG completó 50 pases mientras su equipo perdía por dos o más goles.",
+  "fr": "Kofi Garford de NTG a réalisé 50 passes alors que son équipe était menée de deux buts ou plus."
+ },
+ "template_key": "milestone.pass_count"
+}

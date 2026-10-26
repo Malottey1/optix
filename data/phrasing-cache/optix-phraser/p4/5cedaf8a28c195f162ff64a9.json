@@ -1,0 +1,18 @@
+{
+ "claim_hash": "5cedaf8a28c195f162ff64a9",
+ "claim_id": "clm_m_showcase_momentum_t_ntg_3120_3720_a1",
+ "model": "optix-phraser",
+ "origin": {
+  "created_at": "2026-10-26T09:42:31+00:00",
+  "deployment": "optix-phraser",
+  "guard": "agents/output_guard.py",
+  "source": "azure-openai"
+ },
+ "prompt_version": "p4",
+ "sentences": {
+  "en": "NTG's momentum increased from 8.7 to 55.9 in the window while trailing by two or more goals.",
+  "es": "El impulso de NTG aumentó de 8,7 a 55,9 en el periodo mientras perdía por dos o más goles.",
+  "fr": "L'élan de NTG est passé de 8,7 à 55,9 pendant la période alors qu'ils étaient menés de deux buts ou plus."
+ },
+ "template_key": "momentum.shift"
+}

@@ -1,0 +1,18 @@
+{
+ "claim_hash": "5308b34aa26d535112c839de",
+ "claim_id": "clm_m_showcase_ppda_t_ntg_0_2883_a2",
+ "model": "optix-phraser",
+ "origin": {
+  "created_at": "2026-10-26T09:42:52+00:00",
+  "deployment": "optix-phraser",
+  "guard": "agents/output_guard.py",
+  "source": "azure-openai"
+ },
+ "prompt_version": "p4",
+ "sentences": {
+  "en": "NTG allowed 71 passes and recorded a PPDA of 71 with a press intensity of 0.087 while trailing by two or more goals.",
+  "es": "NTG permitió 71 pases y registró un PPDA de 71 con una intensidad de presión de 0,087 mientras perdía por dos o más goles.",
+  "fr": "NTG a concédé 71 passes et affiché un PPDA de 71 avec une intensité de pressing de 0,087 en étant mené de deux buts ou plus."
+ },
+ "template_key": "ppda.with_press_intensity"
+}

@@ -1,0 +1,18 @@
+{
+ "claim_hash": "ad9faed3139a027f5f564daf",
+ "claim_id": "clm_m_showcase_xt_added_NTG_10_0_1393_a1",
+ "model": "optix-phraser",
+ "origin": {
+  "created_at": "2026-10-26T09:43:11+00:00",
+  "deployment": "optix-phraser",
+  "guard": "agents/output_guard.py",
+  "source": "azure-openai"
+ },
+ "prompt_version": "p4",
+ "sentences": {
+  "en": "Anders Selelle of NTG added 0.057 expected threat from a pass while trailing by one in the first part of the game.",
+  "es": "Anders Selelle de NTG añadió 0,057 de amenaza esperada con un pase mientras iban perdiendo por uno en la primera parte del partido.",
+  "fr": "Anders Selelle de NTG a ajouté 0,057 de menace attendue sur une passe alors qu'ils étaient menés d'un but en début de match."
+ },
+ "template_key": "xt_added.threat_pass"
+}

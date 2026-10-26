@@ -1,0 +1,18 @@
+{
+ "claim_hash": "2325b301340f616b51779718",
+ "claim_id": "clm_m_showcase_xt_added_AUR_01_0_4105_a1",
+ "model": "optix-phraser",
+ "origin": {
+  "created_at": "2026-10-26T09:43:29+00:00",
+  "deployment": "optix-phraser",
+  "guard": "agents/output_guard.py",
+  "source": "azure-openai"
+ },
+ "prompt_version": "p4",
+ "sentences": {
+  "en": "Kwame Fenren of AUR added 0.034 expected threat from a pass while leading comfortably.",
+  "es": "Kwame Fenren de AUR añadió 0,034 de amenaza esperada con un pase mientras lideraban cómodamente.",
+  "fr": "Kwame Fenren d'AUR a ajouté 0,034 de menace attendue sur une passe en menant largement."
+ },
+ "template_key": "xt_added.threat_pass"
+}

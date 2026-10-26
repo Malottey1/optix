@@ -1,0 +1,17 @@
+{
+ "claim_hash": "c34b1107afd304b88f26c615",
+ "claim_id": "clm_m_showcase_attack_side_share_t_aur_0_2883_a1",
+ "model": "optix-phraser",
+ "origin": {
+  "created_at": "2026-10-26T09:43:21+00:00",
+  "deployment": "optix-phraser",
+  "guard": "agents/output_guard.py",
+  "source": "azure-openai"
+ },
+ "prompt_version": "p4",
+ "sentences": {
+  "en": "AUR attacked down the left side 60.7 percent of the time while leading comfortably in the match window.",
+  "es": "AUR atacó por el lado izquierdo el 60,7 por ciento del tiempo mientras lideraba cómodamente en el periodo del partido."
+ },
+ "template_key": "attack_side.stat"
+}

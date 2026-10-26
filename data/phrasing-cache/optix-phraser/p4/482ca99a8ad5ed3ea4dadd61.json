@@ -1,0 +1,18 @@
+{
+ "claim_hash": "482ca99a8ad5ed3ea4dadd61",
+ "claim_id": "clm_m_showcase_preview_AUR_NTG_a1",
+ "model": "optix-phraser",
+ "origin": {
+  "created_at": "2026-10-26T09:42:33+00:00",
+  "deployment": "optix-phraser",
+  "guard": "agents/output_guard.py",
+  "source": "azure-openai"
+ },
+ "prompt_version": "p4",
+ "sentences": {
+  "en": "AUR attacked the left flank 35.6% of the time this season, above the league average of 21%, with NTG conceding completions at 80.6%, higher than the league completion rate of 68.7%.",
+  "es": "AUR atacó por la banda izquierda el 35,6% de las veces esta temporada, por encima del promedio de la liga del 21%, mientras que NTG concedió completaciones al 80,6%, superior a la tasa de completación de la liga del 68,7%.",
+  "fr": "AUR a attaqué le flanc gauche à 35,6% cette saison, au-dessus de la moyenne de la ligue de 21%, tandis que NTG concédait des réussites à 80,6%, supérieur au taux de réussite de la ligue de 68,7%."
+ },
+ "template_key": "matchup.weak_flank"
+}

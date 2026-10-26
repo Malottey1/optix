@@ -1,0 +1,18 @@
+{
+ "claim_hash": "2536c0e40c180659992987bb",
+ "claim_id": "clm_m_showcase_field_tilt_t_aur_0_900_a1",
+ "model": "optix-phraser",
+ "origin": {
+  "created_at": "2026-10-26T09:43:09+00:00",
+  "deployment": "optix-phraser",
+  "guard": "agents/output_guard.py",
+  "source": "azure-openai"
+ },
+ "prompt_version": "p4",
+ "sentences": {
+  "en": "AUR controlled 70.6% of the field tilt in the first part of the match while the score was level.",
+  "es": "AUR dominó el 70,6% de la inclinación del campo en la primera parte del partido con el marcador igualado.",
+  "fr": "AUR a contrôlé 70,6 % de l'inclinaison du terrain dans la première partie du match alors que le score était à égalité."
+ },
+ "template_key": "field_tilt.stat"
+}

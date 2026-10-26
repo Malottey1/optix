@@ -1,0 +1,18 @@
+{
+ "claim_hash": "cc4f5bdcf7e4a5ee052d8a2e",
+ "claim_id": "clm_m_showcase_ppda_t_ntg_0_6023_a2",
+ "model": "optix-phraser",
+ "origin": {
+  "created_at": "2026-10-26T09:42:59+00:00",
+  "deployment": "optix-phraser",
+  "guard": "agents/output_guard.py",
+  "source": "azure-openai"
+ },
+ "prompt_version": "p4",
+ "sentences": {
+  "en": "NTG had a PPDA of 49.67 and a press intensity of 0.089 while trailing by multiple goals.",
+  "es": "NTG tuvo un PPDA de 49,67 y una intensidad de presión de 0,089 mientras iba perdiendo por varios goles.",
+  "fr": "NTG a eu un PPDA de 49,67 et une intensité de pressing de 0,089 en étant mené de plusieurs buts."
+ },
+ "template_key": "ppda.with_press_intensity"
+}
