@@ -8,6 +8,8 @@ import type { TeamLists } from "../types/generated/players";
 import { ShapeError } from "../types/guards";
 import type { EvidenceRow, Insight } from "../types/ui";
 
+import { parseEventFile, type EventFile } from "./events";
+
 export type { Attempt, Card, FixtureIndex, MatchFile, TurningPoint };
 export type Fixture = FixtureIndex["fixtures"][number];
 
@@ -285,6 +287,7 @@ export class MatchFiles {
   private files = new Map<string, Promise<MatchFile>>();
   private heat = new Map<string, Promise<PlayersHeat>>();
   private lists = new Map<string, Promise<TeamLists>>();
+  private eventFile?: Map<string, Promise<EventFile>>;
 
   constructor(
     private readonly base = "./data/matches/",
@@ -323,6 +326,18 @@ export class MatchFiles {
       p = this.json(`players-heat-${code.toLowerCase()}.json`).then((raw) => parsePlayersHeat(raw, code));
       this.heat.set(key, p);
       while (this.heat.size > 2) this.heat.delete(this.heat.keys().next().value!);
+    }
+    return p;
+  }
+
+  /** The showcase's compact event file (player focus); fetched once, on first use. */
+  events(id: string): Promise<EventFile> {
+    if (!/^m_[a-z0-9_]+$/.test(id)) return Promise.reject(new Error(`unknown match ${id}`));
+    this.eventFile ??= new Map();
+    let p = this.eventFile.get(id);
+    if (!p) {
+      p = this.json(`events-${id}.json`).then((raw) => parseEventFile(raw, id));
+      this.eventFile.set(id, p);
     }
     return p;
   }
