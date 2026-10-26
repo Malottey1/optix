@@ -55,6 +55,7 @@ def test_readme_status_block_is_generated():
 
 def test_ci_state_only_after_a_recorded_successful_run(monkeypatch):
     rows = lambda: {r["id"]: r for r in A.status()}
+    monkeypatch.setattr(A, "live_check_ran", lambda report=A.LIVE_REPORT: False)   # CI alone, no live record
     monkeypatch.setattr(A, "ci_record", lambda root=A.ROOT: None)
     assert rows()["container"]["state"] == A.BUILT and rows()["iac"]["state"] == A.BUILT
     rec = {"run_id": 1, "url": "u", "head_sha": "abcdef0", "jobs": {"docker-build": "failure", "bicep-build": None}}
@@ -75,3 +76,43 @@ def test_ci_record_refuses_an_unfinished_run():
     rec = record_from({"status": "completed", "databaseId": 7, "headSha": "s", "url": "u",
                        "jobs": [{"name": "docker-build", "conclusion": "success"}, {"name": "web", "conclusion": "success"}]})
     assert rec["jobs"] == {"docker-build": "success", "bicep-build": None}
+
+
+LIVE_HEAD = "# Azure live check\n\nRun 2026-10-26: deployment `d`, auth entra-id, 3 model calls (cap 10).\n\n"
+
+
+def _rows(tmp_path, body):
+    (tmp_path / "docs").mkdir(exist_ok=True)
+    (tmp_path / "docs" / "azure-live-check.md").write_text(LIVE_HEAD + body)
+    for f in ("agents/phraser.py", "agents/telemetry.py", "infra/main.bicep"):
+        (tmp_path / f).parent.mkdir(parents=True, exist_ok=True)
+        (tmp_path / f).write_text("")
+    return {r["id"]: r for r in A.status(tmp_path)}
+
+
+def test_in_memory_spans_never_verify_the_telemetry_export(tmp_path):
+    """A live report with model calls and spans captured in memory only: the phraser is verified
+    live, the Application Insights export is not (the old logic said verified live for both)."""
+    r = _rows(tmp_path, "- phraser.call spans captured in memory: 3\n"
+                        "- application insights export: not attempted (APPLICATIONINSIGHTS_CONNECTION_STRING not set)\n")
+    assert r["phraser"]["state"] == A.VERIFIED_LIVE
+    assert r["appinsights"]["state"] == A.BUILT and r["appinsights"]["live"] == "not run"
+    r = _rows(tmp_path, "- phraser.call spans captured: 3\n")          # the old report, no export record
+    assert r["appinsights"]["state"] == A.BUILT
+
+
+def test_telemetry_export_is_verified_only_by_a_successful_recorded_export(tmp_path):
+    ok = "- application insights export: exported 4 spans, connection string set, result success\n"
+    assert _rows(tmp_path, ok)["appinsights"]["state"] == A.VERIFIED_LIVE
+    for bad in ("- application insights export: exported 4 spans, connection string set, result failure\n",
+                "- application insights export: exported 0 spans, connection string set, result success\n"):
+        assert _rows(tmp_path, bad)["appinsights"]["state"] == A.BUILT
+    not_run = "**Not run: no Azure configuration present**\n" + ok
+    assert _rows(tmp_path, not_run)["appinsights"]["state"] == A.BUILT
+
+
+def test_live_check_writes_the_export_record():
+    from tools.azure_live_check import export_line
+    assert "not attempted" in export_line(None)
+    assert A.EXPORT_LINE.search(export_line(dict(exported=2, results=["success"])))
+    assert not A.EXPORT_LINE.search(export_line(dict(exported=2, results=["success", "failure"])))

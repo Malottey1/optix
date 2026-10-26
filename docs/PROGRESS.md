@@ -1,5 +1,24 @@
 # Progress log
 
+## Azure live (branch `ui-visuals-azure-live`, from 83bb967)
+
+### Azure live decisions
+
+- Telemetry export row: "verified live" now needs the live report's machine-read export line
+  (`- application insights export: exported N spans, connection string set, result success`, N > 0).
+  The live check writes that line from a recording wrapper around the Azure Monitor exporter. Spans
+  captured in memory never count. The existing report has no such line, so the row is "built, not verified live".
+- The committed ui.json was stale: it still showed the status from before the live check, and
+  test_committed_ui_json_carries_the_same_status was failing on the tip. It was regenerated with
+  run_match plus npm run data; only `azure_status` changed (phraser verified live, telemetry built).
+
+### Test changes (Azure live)
+
+- tests/test_azure_status.py `test_ci_state_only_after_a_recorded_successful_run`: it now monkeypatches
+  `live_check_ran` to False. The test is about CI alone, and its "phraser stays built" assertion
+  assumed no live report existed; that assertion is unchanged. New tests: in-memory spans never verify
+  the telemetry export, only a successful recorded export does, and the live check writes the record.
+
 ## Personalization (branch `ui-visuals-personalize`, from 7a60c6a; local tag `pre-personalize`)
 
 ### Personalization decisions

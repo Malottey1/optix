@@ -2,7 +2,10 @@
 
 Three states:
   * "verified live"              the live check (docs/azure-live-check.md) ran against Azure and the
-                                 component took part in it;
+                                 component took part in it: model phrasing needs real model calls;
+                                 telemetry export needs the report's export record to show spans
+                                 exported to Application Insights with the connection string set
+                                 (spans captured in memory never count);
   * "verified by tests"          its tests exist in the default suite and exercise the real code
                                  (fakes only where a network service would be);
   * "verified by CI build/lint"  a finished GitHub Actions run built or compiled it successfully, as
@@ -17,6 +20,7 @@ to trace.
 from __future__ import annotations
 
 import argparse
+import re
 import json
 from pathlib import Path
 
@@ -43,7 +47,7 @@ COMPONENTS = [
      "Altered or invented numbers, other teams, talk of future results, wrong decimal separator, over-length, "
      "wrong language and malformed JSON are rejected and replaced by the template, with a fake model client."),
     ("phraser", "Model phrasing client", "Azure OpenAI in Azure AI Foundry, Microsoft Entra ID (DefaultAzureCredential)",
-     ["agents/phraser.py"], [], True,
+     ["agents/phraser.py"], [], "model",
      "Calls a chat deployment with the claim object only; the guard above decides what is kept."),
     ("cache", "Phrasing cache", "Local files (data/phrasing-cache)",
      ["data/phrasing-cache/README.md"], ["tests/test_phraser.py"], False,
@@ -53,7 +57,7 @@ COMPONENTS = [
      ["agents/telemetry.py"], ["tests/test_telemetry.py"], False,
      "Proposal, verdict with rule ids, phraser with guard result, publication; checked with an in-memory exporter."),
     ("appinsights", "Telemetry export", "Azure Monitor / Application Insights",
-     ["agents/telemetry.py", "infra/main.bicep"], [], True,
+     ["agents/telemetry.py", "infra/main.bicep"], [], "export",
      "The exporter is built from APPLICATIONINSIGHTS_CONNECTION_STRING; no span has been sent to a real resource."),
     ("audit", "Audit log", "Append-only JSONL with a hash chain",
      ["agents/audit.py"], ["tests/test_audit.py"], False,
@@ -88,6 +92,20 @@ def live_check_ran(report: Path = LIVE_REPORT) -> bool:
     return "Not run" not in report.read_text(encoding="utf-8")
 
 
+EXPORT_LINE = re.compile(r"^- application insights export: exported (\d+) spans, connection string set, "
+                         r"result success\s*$", re.M)
+
+
+def telemetry_exported(report: Path = LIVE_REPORT) -> bool:
+    """True only when the live report records spans exported to Application Insights, with
+    APPLICATIONINSIGHTS_CONNECTION_STRING set and a successful export. Spans captured in memory
+    by the live check never count."""
+    if not live_check_ran(report):
+        return False
+    m = EXPORT_LINE.search(report.read_text(encoding="utf-8"))
+    return bool(m and int(m.group(1)) > 0)
+
+
 def ci_record(root: Path = ROOT) -> dict | None:
     p = root / "infra" / "ci-verified.json"
     return json.loads(p.read_text(encoding="utf-8")) if p.exists() else None
@@ -100,9 +118,11 @@ def ci_passed(cid: str, root: Path = ROOT) -> bool:
 
 
 def status(root: Path = ROOT) -> list:
-    live = live_check_ran(root / "docs" / "azure-live-check.md")
+    report = root / "docs" / "azure-live-check.md"
+    gates = {"model": live_check_ran(report), "export": telemetry_exported(report)}
     out = []
     for cid, name, tech, files, tests, in_live, note in COMPONENTS:
+        live = bool(in_live) and gates[in_live]
         built = bool(files) and all((root / f).exists() for f in files)
         tested = bool(tests) and all((root / t).exists() for t in tests)
         state = (VERIFIED_LIVE if in_live and live and built else VERIFIED_TESTS if tested and built
