@@ -349,12 +349,15 @@ export function PlayerSheet({
   player,
   name,
   onClose,
+  actions,
 }: {
   code: string;
   node: LineupNode | null;
   player: PlayerRow | undefined;
   name: string;
   onClose: () => void;
+  /** extra controls above the console link (the Match Hub's "Focus on this player") */
+  actions?: React.ReactNode;
 }) {
   const { t, lang } = useT();
   return (
@@ -393,6 +396,7 @@ export function PlayerSheet({
               </div>
             ))}
           </dl>
+          {actions}
           <Link
             to={`/players/${node.id}`}
             data-ledger-link={node.id}

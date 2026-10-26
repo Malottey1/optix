@@ -4,6 +4,7 @@ import { LANG_NAMES, useT } from "../../lib/i18n";
 import { clearFavourites, favCount, useFavourites } from "../../state/favourites";
 import { setSetting, useSettings } from "../../state/settings";
 import { LANGS, type Lang } from "../../types/ui";
+import { ModeToggle } from "../personal/controls";
 import { Segmented } from "../ui/segmented";
 import { Sheet } from "../ui/sheet";
 import { Switch } from "../ui/switch";
@@ -52,6 +53,13 @@ export function SettingsSheet({ open, onOpenChange }: { open: boolean; onOpenCha
         <p className="mt-3 rounded-xl border border-line bg-surface-2 px-3.5 py-3 text-[12.5px] leading-relaxed text-ink-2">
           {t("english_only")}
         </p>
+      </section>
+      <section aria-labelledby="set-view-h" className="mt-6" data-settings-view>
+        <h3 id="set-view-h" className="eyebrow">
+          {t("mode_label")}
+        </h3>
+        <ModeToggle className="mt-2.5 w-full [&>button]:flex-1" />
+        <p className="mt-2 text-[12.5px] leading-relaxed text-ink-3">{t("mode_note")}</p>
       </section>
       <section aria-labelledby="set-display-h" className="mt-6">
         <h3 id="set-display-h" className="eyebrow">

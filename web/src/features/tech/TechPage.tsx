@@ -59,6 +59,11 @@ const STEPS: { icon: IconName; title: string; body: string; tone?: "accent" }[] 
     title: "Insight stream",
     body: "A timed item with a semantic type, its evidence ids and the sentences. The dashboard picks the widget.",
   },
+  {
+    icon: "players",
+    title: "Personalize",
+    body: "Fan or Analyst view, followed clubs and players, one focus metric: it filters, ranks and hides verified insights, and never changes a number or a sentence.",
+  },
 ];
 
 function Pipeline() {
@@ -71,7 +76,7 @@ function Pipeline() {
       title="Pipeline: math first, language second"
       subtitle="The engine computes every number; the Verifier checks the language-free claim object; only then is it written in each language, and a guard re-checks every number in every sentence. A blocked claim goes back to the Analyst, which revises it by rule and submits it again."
     >
-      <ol className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-6" data-chart="pipeline">
+      <ol className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-7" data-chart="pipeline">
         {STEPS.map((s, i) => (
           <li
             key={s.title}

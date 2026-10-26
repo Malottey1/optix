@@ -10,6 +10,7 @@
 // checks: the held-back sentence, the published one and the recomputed figures). With no context
 // claim the toggle is disabled and says so; nothing is invented. A player with no pattern gets a
 // one-line note, and the position panels move up into the right column instead of an empty card.
+import { FocusButton } from "../../components/personal/controls";
 import { useState } from "react";
 import { Link, useParams } from "react-router";
 import { Jersey } from "../../charts/LineupPitch";
@@ -381,6 +382,7 @@ export default function PlayerConsole() {
             </Link>
           </p>
         </div>
+        <FocusButton id={p.id} className="order-last w-full sm:order-none sm:w-auto" />
         <dl className="flex w-full flex-wrap gap-x-5 gap-y-2 text-[12px] text-ink-3 sm:w-auto" data-console-stats>
           {prof && (
             <div className="flex flex-col-reverse">

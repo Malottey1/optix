@@ -2,8 +2,11 @@
 // headline (the stream's casual sentence in the chosen language), an evidence summary, the
 // standard stat a with-context card holds back, and, for rewritten cards, Before / After with the
 // rule's one-sentence reason. "Open evidence" opens the drawer with the exact events.
+// Fan view (state/view.ts): the top cards by lib/personalize.ts, each with headline, visual and a
+// "Verified" tick that opens the same drawer; chips, attempts and Before / After stay in Analyst view.
+// A followed player or a focus metric filters the stream the same way in both views.
 import { AnimatePresence, m as motion } from "motion/react";
-import { memo, useRef, useState } from "react";
+import { memo, useMemo, useRef, useState } from "react";
 import { Glyph } from "../../components/icons";
 import { Icon } from "../../icons";
 import { TeamBadge } from "../../components/brand/TeamBadge";
@@ -13,6 +16,12 @@ import { Segmented } from "../../components/ui/segmented";
 import { Empty } from "../../components/ui/skeleton";
 import { Tip } from "../../components/ui/tooltip";
 import { useData } from "../../data/context";
+import { involvedFromEvents } from "../../data/events";
+import { useEventFile } from "../../data/matchContext";
+import { SHOWCASE_ID } from "../../data/matches";
+import { personalize } from "../../lib/personalize";
+import { useFavourites } from "../../state/favourites";
+import { useView } from "../../state/view";
 import { cx } from "../../lib/cx";
 import { clock, num, words } from "../../lib/format";
 import { useT, type Key } from "../../lib/i18n";
@@ -138,10 +147,12 @@ export const InsightCard = memo(function InsightCard({
   ins,
   selected,
   onEvidence,
+  fan = false,
 }: {
   ins: Insight;
   selected: boolean;
   onEvidence: (id: string) => void;
+  fan?: boolean;
 }) {
   const m = useData();
   const { t, lang } = useT();
@@ -182,11 +193,27 @@ export const InsightCard = memo(function InsightCard({
           <TeamBadge code={ins.teams.primary} size={24} named />
           {ins.teams.primary}
         </span>
-        <Chip>
-          <Icon name={cardChip(m, ins, lang).icon} size={14} />
-          {cardChip(m, ins, lang).label}
-        </Chip>
-        <StatusChip status={status} label={t(STATUS_KEY[status])} className="ml-auto" />
+        {!fan && (
+          <Chip>
+            <Icon name={cardChip(m, ins, lang).icon} size={14} />
+            {cardChip(m, ins, lang).label}
+          </Chip>
+        )}
+        {fan ? (
+          <button
+            type="button"
+            data-verified-tick={ins.insight_id}
+            data-evidence={ins.insight_id}
+            onClick={() => onEvidence(ins.insight_id)}
+            aria-label={t("v_tick_open").replace("{label}", headline)}
+            className="ml-auto inline-flex min-h-[32px] items-center gap-1 rounded-full border border-accent-line bg-accent-soft px-2.5 font-semibold text-accent hover:brightness-110"
+          >
+            <Icon name="verdict-passed" size={14} />
+            {t("v_tick")}
+          </button>
+        ) : (
+          <StatusChip status={status} label={t(STATUS_KEY[status])} className="ml-auto" />
+        )}
       </div>
       <button
         type="button"
@@ -214,41 +241,45 @@ export const InsightCard = memo(function InsightCard({
         </AnimatePresence>
       </button>
       <CardVisual ins={ins} />
-      {rw && <Rewritten ins={ins} view={view} setView={setView} />}
-      {chip?.standard_metric != null && chip.standard_value != null && !rw && (
-        <Tip content={t("standard_note")}>
-          <button
-            type="button"
-            className="mt-2.5 inline-flex max-w-full flex-wrap items-center gap-x-2 gap-y-0.5 rounded-lg border border-dashed border-line-strong px-2.5 py-1 text-left text-[12px] text-ink-3 hover:text-ink-2"
-          >
-            <span className="eyebrow !text-[10.5px]">{t("standard_stat")}</span>
+      {fan ? null : (
+        <>
+          {rw && <Rewritten ins={ins} view={view} setView={setView} />}
+          {chip?.standard_metric != null && chip.standard_value != null && !rw && (
+            <Tip content={t("standard_note")}>
+              <button
+                type="button"
+                className="mt-2.5 inline-flex max-w-full flex-wrap items-center gap-x-2 gap-y-0.5 rounded-lg border border-dashed border-line-strong px-2.5 py-1 text-left text-[12px] text-ink-3 hover:text-ink-2"
+              >
+                <span className="eyebrow !text-[10.5px]">{t("standard_stat")}</span>
+                <span>
+                  {words(chip.standard_metric)}{" "}
+                  <b className="num font-semibold">
+                    {num(chip.standard_value, lang)}
+                    {PCT_METRICS.has(chip.standard_metric) ? "%" : ""}
+                  </b>
+                </span>
+              </button>
+            </Tip>
+          )}
+          <EvidenceSummary ins={ins} />
+          <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-[12px] text-ink-3">
             <span>
-              {words(chip.standard_metric)}{" "}
-              <b className="num font-semibold">
-                {num(chip.standard_value, lang)}
-                {PCT_METRICS.has(chip.standard_metric) ? "%" : ""}
-              </b>
+              <span className="num font-semibold text-ink-2">{num(attempts, lang)}</span>{" "}
+              {attempts === 1 ? t("attempts_one") : t("attempts_many")}
             </span>
-          </button>
-        </Tip>
+            <button
+              type="button"
+              data-evidence={ins.insight_id}
+              onClick={() => onEvidence(ins.insight_id)}
+              className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-line px-3 py-1.5 font-semibold text-ink-2 hover:border-accent-line hover:text-ink"
+            >
+              {t("open_evidence")}
+              <Glyph name="arrow" className="h-3.5 w-3.5" />
+            </button>
+          </div>
+          {evidenceOpen && <EvidenceInline ins={ins} />}
+        </>
       )}
-      <EvidenceSummary ins={ins} />
-      <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-[12px] text-ink-3">
-        <span>
-          <span className="num font-semibold text-ink-2">{num(attempts, lang)}</span>{" "}
-          {attempts === 1 ? t("attempts_one") : t("attempts_many")}
-        </span>
-        <button
-          type="button"
-          data-evidence={ins.insight_id}
-          onClick={() => onEvidence(ins.insight_id)}
-          className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-line px-3 py-1.5 font-semibold text-ink-2 hover:border-accent-line hover:text-ink"
-        >
-          {t("open_evidence")}
-          <Glyph name="arrow" className="h-3.5 w-3.5" />
-        </button>
-      </div>
-      {evidenceOpen && <EvidenceInline ins={ins} />}
     </article>
   );
 });
@@ -262,10 +293,17 @@ export function Feed({ onEvidence }: { onEvidence: (id: string) => void }) {
   const selected = useReplay((s) => s.selected);
   const [filter, setFilter] = useState<Filter>("all");
   const listRef = useRef<HTMLOListElement>(null);
-  const shown = m.insights
-    .slice(0, n)
-    .filter((i) => filter === "all" || statusOf(m, i) !== "published")
-    .reverse();
+  const { mode, metric } = useView();
+  const focus = useView((s) => (s.focus && m.timeline.players[s.focus] ? s.focus : null));
+  const clubs = useFavourites((s) => s.teams);
+  const fan = mode === "fan";
+  // the event file is fetched only while a player is followed
+  const ev = useEventFile(focus ? SHOWCASE_ID : null);
+  const involved = useMemo(() => (ev.data ? involvedFromEvents(ev.data) : {}), [ev.data]);
+  const visible = m.insights.slice(0, n).filter((i) => fan || filter === "all" || statusOf(m, i) !== "published");
+  const picked = personalize(visible, { mode, clubs, players: focus ? [focus] : [], metric }, involved);
+  // newest first in both views (personalize chose and capped; the feed keeps the clock order)
+  const shown = [...picked].reverse().sort((a, b) => b.clock.start_sec - a.clock.start_sec);
   return (
     <Panel
       id="feed-panel"
@@ -281,17 +319,19 @@ export function Feed({ onEvidence }: { onEvidence: (id: string) => void }) {
         </span>
       }
     >
-      <Segmented<Filter>
-        label={t("stream")}
-        name="feed-filter"
-        value={filter}
-        onChange={setFilter}
-        className="self-start"
-        options={[
-          { value: "all", label: t("filter_all") },
-          { value: "checked", label: t("filter_checked") },
-        ]}
-      />
+      {!fan && (
+        <Segmented<Filter>
+          label={t("stream")}
+          name="feed-filter"
+          value={filter}
+          onChange={setFilter}
+          className="self-start"
+          options={[
+            { value: "all", label: t("filter_all") },
+            { value: "checked", label: t("filter_checked") },
+          ]}
+        />
+      )}
       {shown.length ? (
         <ol
           id="feed"
@@ -311,13 +351,15 @@ export function Feed({ onEvidence }: { onEvidence: (id: string) => void }) {
                 transition={{ duration: 0.22 }}
                 data-insight-id={ins.insight_id}
               >
-                <InsightCard ins={ins} selected={selected === ins.insight_id} onEvidence={onEvidence} />
+                <InsightCard ins={ins} selected={selected === ins.insight_id} onEvidence={onEvidence} fan={fan} />
               </motion.li>
             ))}
           </AnimatePresence>
         </ol>
       ) : (
-        <Empty className="mt-3">{t("none_yet")}</Empty>
+        <Empty className="mt-3">
+          {focus && n > 0 ? t("focus_none") : metric && n > 0 ? t("metric_feed_none") : t("none_yet")}
+        </Empty>
       )}
     </Panel>
   );

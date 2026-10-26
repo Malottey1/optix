@@ -10,6 +10,7 @@ import { PitchLines } from "../components/pitch/Pitch";
 import { Icon, type IconName } from "../icons";
 import { clock } from "../lib/format";
 import { useT, type Key } from "../lib/i18n";
+import { useView } from "../state/view";
 import { xiRows, type MatchFile } from "../data/matches";
 import type { Period } from "../types/ui";
 import { Jersey, LINE_X, surname } from "./LineupPitch";
@@ -77,6 +78,7 @@ function XiGroup({
   onOpen: (id: string, code: string) => void;
 }) {
   const { t } = useT();
+  const focus = useView((s) => s.focus);
   const [active, setActive] = useState(0);
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
   const move = (i: number) => {
@@ -109,11 +111,12 @@ function XiGroup({
             tabIndex={i === active ? 0 : -1}
             data-node={id}
             data-side={side}
+            data-focused={focus === id ? "true" : undefined}
             aria-label={`${shirt} ${surname(name)}, ${name}, ${t(`pos_${pos}` as Key)}${mk.length ? `, ${mk.map((m) => m.label).join(", ")}` : ""}`}
             onKeyDown={(e) => onKey(e, i)}
             onFocus={() => setActive(i)}
             onClick={() => onOpen(id, code)}
-            className={`absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center rounded-lg px-0.5 py-0.5 hover:bg-white/5 ${facing ? "w-[10.5%]" : "w-[17%]"}`}
+            className={`absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center rounded-lg px-0.5 py-0.5 hover:bg-white/5 ${facing ? "w-[10.5%]" : "w-[17%]"} ${focus === id ? "bg-accent-soft ring-2 ring-accent" : ""}`}
             style={{ left: `${(p.x / 105) * 100}%`, top: `${(p.y / 68) * 100}%` }}
           >
             <span className={`relative ${facing ? "h-7 w-7 lg:h-9 lg:w-9" : "h-7 w-7 sm:h-9 sm:w-9"}`}>

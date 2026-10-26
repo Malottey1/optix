@@ -6,8 +6,13 @@
 // strip across the top under the scrubber (same time axis), then pitch | Perimeter Lock, gauges,
 // momentum | shot quality over the stream, with every Live visual above the fold at 1600x900 and
 // 1920x1080 (checked by tools/check_web.check_first_screen).
+// Fan view (state/view.ts): the scoreboard, the scrubber, momentum, the stress gauges and the top
+// cards of the feed. A focus metric or a followed player adds its panel above the feed in both views.
 import { useState } from "react";
+import { LiveMetricReadout, LivePlayerSoFar } from "../../components/personal/panels";
+import { useData } from "../../data/context";
 import { useT } from "../../lib/i18n";
+import { useView } from "../../state/view";
 import { EvidenceDrawer } from "./EvidenceDrawer";
 import { Feed } from "./Feed";
 import { RhythmPulse, StressGauges } from "./Flow";
@@ -21,8 +26,38 @@ import { Transport } from "./Transport";
 export default function LivePage() {
   const { t } = useT();
   const [drawer, setDrawer] = useState<string | null>(null);
+  const m = useData();
+  const fan = useView((s) => s.mode === "fan");
+  const metric = useView((s) => s.metric);
+  const focus = useView((s) => (s.focus && m.timeline.players[s.focus] ? s.focus : null));
+  const extras =
+    metric || focus ? (
+      <div className="flex min-w-0 flex-col gap-flow" data-focus-panels>
+        {metric && <LiveMetricReadout metric={metric} />}
+        {focus && <LivePlayerSoFar pid={focus} />}
+      </div>
+    ) : null;
+  if (fan)
+    return (
+      <div className="flex flex-col gap-flow" data-page="live" data-view="fan">
+        <h1 className="sr-only">{t("nav_live_long")}</h1>
+        <Scoreboard />
+        <Transport />
+        <div className="grid grid-cols-1 items-start gap-flow lg:grid-cols-12">
+          <div className="flex min-w-0 flex-col gap-flow lg:col-span-5 lg:col-start-8 lg:row-start-1">
+            {extras}
+            <Feed onEvidence={setDrawer} />
+          </div>
+          <div className="flex min-w-0 flex-col gap-flow lg:col-span-7 lg:col-start-1 lg:row-start-1">
+            <Momentum />
+            <StressGauges />
+          </div>
+        </div>
+        <EvidenceDrawer id={drawer} onClose={() => setDrawer(null)} />
+      </div>
+    );
   return (
-    <div className="flex flex-col gap-flow" data-page="live">
+    <div className="flex flex-col gap-flow" data-page="live" data-view="analyst">
       <h1 className="sr-only">{t("nav_live_long")}</h1>
       <Scoreboard />
       <Transport />
@@ -36,7 +71,14 @@ export default function LivePage() {
           </div>
         </div>
         <div className="min-w-0 lg:sticky lg:top-[100px] lg:col-span-4 lg:col-start-9 lg:row-span-2 lg:row-start-1 2xl:col-span-3 2xl:col-start-10 2xl:row-span-1 wide:static wide:col-span-1 wide:col-start-3 wide:row-span-2 wide:row-start-3">
-          <Feed onEvidence={setDrawer} />
+          {extras ? (
+            <div className="flex min-w-0 flex-col gap-flow">
+              {extras}
+              <Feed onEvidence={setDrawer} />
+            </div>
+          ) : (
+            <Feed onEvidence={setDrawer} />
+          )}
         </div>
         <div className="grid min-w-0 grid-cols-1 items-start gap-flow md:grid-cols-2 lg:col-span-8 lg:col-start-1 lg:row-start-2 2xl:col-span-3 2xl:col-start-7 2xl:row-start-1 2xl:grid-cols-1 wide:contents">
           <div className="min-w-0 wide:col-start-2 wide:row-start-2">

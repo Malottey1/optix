@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import App from "./App";
 import { MatchFiles } from "./data/matches";
 import { ReplaySource } from "./data/ReplaySource";
@@ -9,6 +9,7 @@ import { SseSource, type EventSourceLike } from "./data/SseSource";
 import { seek, useReplay } from "./state/replay";
 import { useSource } from "./state/source";
 import { setSetting } from "./state/settings";
+import { setMode } from "./state/view";
 
 const DATA = join(__dirname, "..", "public", "data");
 const source = () =>
@@ -22,6 +23,10 @@ const insights = readFileSync(join(DATA, "insights.jsonl"), "utf8")
   .split("\n")
   .filter(Boolean)
   .map((l) => JSON.parse(l));
+
+// These suites check the Analyst view (every card, chip, pager, matchup and event log); Fan view,
+// the default, is covered in features/personal/personal.test.tsx.
+beforeEach(() => setMode("analyst"));
 
 afterEach(() => {
   cleanup();

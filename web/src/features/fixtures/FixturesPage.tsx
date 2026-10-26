@@ -38,7 +38,7 @@ export function groupFixtures(rows: readonly Fixture[]): { key: string; week: nu
   return out;
 }
 
-function Row({ f, names }: { f: Fixture; names: Record<string, string | undefined> }) {
+export function FixtureRow({ f, names }: { f: Fixture; names: Record<string, string | undefined> }) {
   const { t, lang } = useT();
   const live = f.status === "live";
   return (
@@ -166,7 +166,7 @@ export default function FixturesPage() {
           </h2>
           <ul className="flex flex-col gap-2">
             {g.rows.map((f) => (
-              <Row key={f.id} f={f} names={data!.teams} />
+              <FixtureRow key={f.id} f={f} names={data!.teams} />
             ))}
           </ul>
         </section>

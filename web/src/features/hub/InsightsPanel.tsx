@@ -46,12 +46,18 @@ export function InsightsPanel({
   cards,
   onSelect,
   side,
+  fan = false,
+  empty,
 }: {
   file: MatchFile;
   cards: Insight[];
   onSelect: (s: Selection) => void;
   /** true: the sticky, viewport-high side panel (1100 px and wider) */
   side: boolean;
+  /** Fan view: the personalized top cards in one list, no tabs, chips or pages */
+  fan?: boolean;
+  /** the one-line note when a player or metric focus leaves no card */
+  empty?: string;
 }) {
   const { t, lang } = useT();
   const nPat = cards.filter(isPattern).length;
@@ -85,6 +91,44 @@ export function InsightsPanel({
     ["insights", t("panel_insights"), cards.length - nPat],
     ["patterns", t("panel_patterns"), nPat],
   ];
+  if (fan)
+    return (
+      <section
+        id="insights"
+        aria-labelledby="insights-h"
+        data-panel={side ? "side" : "section"}
+        data-view="fan"
+        data-budget="cards"
+        className={cx(
+          "flex min-w-0 flex-col rounded-2xl border border-line bg-surface-1",
+          side ? "sticky top-[100px] max-h-[calc(100vh-116px)]" : "scroll-mt-[100px]",
+        )}
+      >
+        <div className="flex items-baseline justify-between gap-2 border-b border-line px-4 pb-3 pt-4">
+          <h2 id="insights-h" className="text-[15px] font-semibold text-ink">
+            {t("panel_title")}
+          </h2>
+          <p className="text-[12px] text-ink-3">{fill(t("fan_top"), { n: num(file.stream_counts.insights, lang) })}</p>
+        </div>
+        <div
+          id="insights-list"
+          tabIndex={0}
+          data-scroll-region
+          className={cx(
+            "flex flex-col gap-3 p-4 outline-none focus-visible:ring-2 focus-visible:ring-accent-line",
+            side && "min-h-0 flex-1 overflow-y-auto",
+          )}
+        >
+          {cards.length ? (
+            cards.map((ins) => <RecapCard key={ins.insight_id} file={file} ins={ins} onSelect={onSelect} fan />)
+          ) : (
+            <p className="text-[13px] text-ink-3" data-focus-empty>
+              {empty}
+            </p>
+          )}
+        </div>
+      </section>
+    );
   const chip = (active: boolean) =>
     cx(
       "inline-flex min-h-[32px] items-center gap-1.5 rounded-full border px-3 text-[12px] font-semibold",
@@ -169,6 +213,11 @@ export function InsightsPanel({
         {v.shown.map((ins) => (
           <RecapCard key={ins.insight_id} file={file} ins={ins} onSelect={onSelect} />
         ))}
+        {!cards.length && empty && (
+          <p className="text-[13px] text-ink-3" data-focus-empty>
+            {empty}
+          </p>
+        )}
       </div>
       <nav
         aria-label={t("panel_pages")}

@@ -23,6 +23,7 @@ import { cardChip, PCT_METRICS, statusOf, textOf } from "../live/shared";
 import { STATUS_KEY } from "../live/Feed";
 import { fill } from "../hub/parts";
 import { Avatar } from "../teams/parts";
+import { ForYou } from "./ForYou";
 
 /** Club order of the hero artwork, left to right. */
 const ORDER = ["AUR", "NTG", "CAL", "VES", "HAR"];
@@ -502,6 +503,7 @@ export default function HomeSections() {
   const picks = homePicks(m);
   return (
     <div className="flex flex-col gap-flow" data-page-budget="home-page">
+      <ForYou />
       {file.data ? (
         <ShowcaseStrip file={file.data} />
       ) : (

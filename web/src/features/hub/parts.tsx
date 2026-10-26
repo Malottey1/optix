@@ -51,7 +51,7 @@ export function playerName(file: MatchFile, id: string | null | undefined): stri
   return id && file.players[id] ? String(file.players[id]![0]) : "";
 }
 
-export function HubHeader({ file, nav }: { file: MatchFile; nav?: ReactNode }) {
+export function HubHeader({ file, nav, fan = false }: { file: MatchFile; nav?: ReactNode; fan?: boolean }) {
   const { t, lang } = useT();
   const h = file.header;
   const side = (s: typeof h.home, align: "left" | "right") => (
@@ -63,8 +63,8 @@ export function HubHeader({ file, nav }: { file: MatchFile; nav?: ReactNode }) {
           <span className="hidden sm:inline">{s.name}</span>
         </div>
         <div className="text-[11.5px] text-ink-3 sm:text-[12px]">
-          <span className="num">{num(s.xg, lang)}</span> xG · <span className="num">{num(s.shots, lang)}</span>{" "}
-          {t("shots")}
+          <span className="num">{num(s.xg, lang)}</span> {fan ? t("gl_xg") : "xG"} ·{" "}
+          <span className="num">{num(s.shots, lang)}</span> {t("shots")}
         </div>
       </div>
     </div>
@@ -249,10 +249,13 @@ export function RecapCard({
   file,
   ins,
   onSelect,
+  fan = false,
 }: {
   file: MatchFile;
   ins: Insight;
   onSelect: (s: Selection) => void;
+  /** Fan view: a "Verified" tick opens the same evidence drawer */
+  fan?: boolean;
 }) {
   const { t, lang } = useT();
   const family = ins.insight_type === "tactical_pattern" ? (ins.payload.family ?? null) : null;
@@ -301,16 +304,30 @@ export function RecapCard({
           {sentence}
         </p>
       )}
-      <button
-        type="button"
-        data-evidence={ins.insight_id}
-        aria-label={`${t("open_evidence")}: ${label}`}
-        title={t("open_evidence")}
-        onClick={() => onSelect({ kind: "card", id: ins.insight_id })}
-        className="mt-auto inline-flex h-9 w-9 items-center justify-center self-end rounded-full border border-line text-ink-2 hover:border-accent-line hover:text-ink"
-      >
-        <Icon name="evidence-drawer" size={18} />
-      </button>
+      {fan ? (
+        <button
+          type="button"
+          data-evidence={ins.insight_id}
+          data-verified-tick={ins.insight_id}
+          aria-label={fill(t("v_tick_open"), { label })}
+          onClick={() => onSelect({ kind: "card", id: ins.insight_id })}
+          className="mt-auto inline-flex min-h-[36px] items-center gap-1.5 self-end rounded-full border border-accent-line bg-accent-soft px-3 text-[12px] font-semibold text-accent hover:brightness-110"
+        >
+          <Icon name="verdict-passed" size={16} />
+          {t("v_tick")}
+        </button>
+      ) : (
+        <button
+          type="button"
+          data-evidence={ins.insight_id}
+          aria-label={`${t("open_evidence")}: ${label}`}
+          title={t("open_evidence")}
+          onClick={() => onSelect({ kind: "card", id: ins.insight_id })}
+          className="mt-auto inline-flex h-9 w-9 items-center justify-center self-end rounded-full border border-line text-ink-2 hover:border-accent-line hover:text-ink"
+        >
+          <Icon name="evidence-drawer" size={18} />
+        </button>
+      )}
     </article>
   );
 }

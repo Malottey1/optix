@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import App from "../../App";
 import { MatchFiles } from "../../data/matches";
 import { ReplaySource } from "../../data/ReplaySource";
@@ -12,6 +12,7 @@ import { facingPos, lineupMarkers } from "../../charts/MatchLineups";
 import { eventLog, parseMatchFile, xiRows } from "../../data/matches";
 import { shownMatchups } from "./MatchupStrips";
 import type { Insight } from "../../types/ui";
+import { setMode } from "../../state/view";
 
 const DATA = join(__dirname, "..", "..", "..", "public", "data");
 const disk = async (url: string) => new Response(readFileSync(join(DATA, url.replace(/^\.\//, "")), "utf8"));
@@ -21,6 +22,10 @@ const index = JSON.parse(readFileSync(join(DATA, "matches", "index.json"), "utf8
 
 const page = (name: string) =>
   screen.findByText((_, el) => el?.getAttribute("data-page") === name, undefined, { timeout: 8000 });
+
+// These suites check the Analyst view (every card, chip, pager, matchup and event log); Fan view,
+// the default, is covered in features/personal/personal.test.tsx.
+beforeEach(() => setMode("analyst"));
 
 afterEach(() => {
   cleanup();
