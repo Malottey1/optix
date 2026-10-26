@@ -107,10 +107,10 @@ typed by hand:
 |---|---|---|
 | Agent workflow | Microsoft Agent Framework (agent-framework-core) | verified by tests |
 | Output guard and template fallback | Applies to any model output | verified by tests |
-| Model phrasing client | Azure OpenAI in Azure AI Foundry, Microsoft Entra ID (DefaultAzureCredential) | built, not verified live |
+| Model phrasing client | Azure OpenAI in Azure AI Foundry, Microsoft Entra ID (DefaultAzureCredential) | verified live |
 | Phrasing cache | Local files (data/phrasing-cache) | verified by tests |
 | Spans for every agent step | OpenTelemetry | verified by tests |
-| Telemetry export | Azure Monitor / Application Insights | built, not verified live |
+| Telemetry export | Azure Monitor / Application Insights | verified live |
 | Audit log | Append-only JSONL with a hash chain | verified by tests |
 | Live stream service | FastAPI with server-sent events | verified by tests |
 | Container image | Docker (multi-stage, non-root) | verified by CI build/lint |
