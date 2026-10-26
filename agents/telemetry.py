@@ -85,19 +85,47 @@ class JsonlSpanExporter:
 
 
 _CONFIGURED = None
+_REGISTERED = None          # the provider this process registered globally (set once)
 
 
-def build_provider(env=None, service_name: str = "optix"):
-    """(TracerProvider, exporter kind) for the environment `env` (default os.environ)."""
+def register_global(provider) -> bool:
+    """Make `provider` the global tracer provider, once per process; True when this call did it.
+    The Azure Monitor exporter reads its Resource from the global provider, so it must be registered
+    before that exporter is built (else "Failed to derive Resource from Tracer Provider")."""
+    global _REGISTERED
+    if _REGISTERED is not None or _trace is None:
+        return False
+    _trace.set_tracer_provider(provider)
+    _REGISTERED = provider
+    return True
+
+
+def shutdown_tracing(provider=None) -> None:
+    """Flush, then shut down, `provider` (default: the one registered globally), so batched spans
+    are handed to the exporter before the process ends."""
+    p = provider if provider is not None else _REGISTERED
+    if p is None:
+        return
+    p.force_flush()
+    p.shutdown()
+
+
+def build_provider(env=None, service_name: str = "optix", wrap=None, register: bool = False):
+    """(TracerProvider, exporter kind) for the environment `env` (default os.environ). The provider
+    carries Resource service.name; `register` installs it globally (once) before any exporter is
+    built; `wrap` wraps the Azure Monitor exporter (the live check records its results this way)."""
     from opentelemetry.sdk.resources import Resource
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExporter, SimpleSpanProcessor
     env = os.environ if env is None else env
     provider = TracerProvider(resource=Resource.create({"service.name": service_name}))
+    if register:
+        register_global(provider)
     conn = env.get("APPLICATIONINSIGHTS_CONNECTION_STRING")
     if conn:
         from azure.monitor.opentelemetry.exporter import AzureMonitorTraceExporter
-        provider.add_span_processor(BatchSpanProcessor(AzureMonitorTraceExporter.from_connection_string(conn)))
+        exporter = AzureMonitorTraceExporter.from_connection_string(conn)
+        provider.add_span_processor(BatchSpanProcessor(wrap(exporter) if wrap else exporter))
         return provider, "azure-monitor"
     if env.get("OPTIX_TRACE_FILE"):
         provider.add_span_processor(SimpleSpanProcessor(JsonlSpanExporter(env["OPTIX_TRACE_FILE"])))
@@ -110,14 +138,17 @@ def build_provider(env=None, service_name: str = "optix"):
 
 def setup_tracing(service_name: str = "optix") -> str:
     """Install the global tracer provider with the exporter the environment asks for; returns which
-    one ("azure-monitor", "jsonl", "console", "none" or "unavailable"). Safe to call more than once."""
+    one ("azure-monitor", "jsonl", "console", "none" or "unavailable"). Safe to call more than once;
+    spans are flushed and the provider shut down at exit."""
     global _CONFIGURED
     if _CONFIGURED is not None:
         return _CONFIGURED
     if _trace is None:
         _CONFIGURED = "unavailable"
         return _CONFIGURED
-    provider, kind = build_provider(service_name=service_name)
-    _trace.set_tracer_provider(provider)
+    import atexit
+    provider, kind = build_provider(service_name=service_name, register=True)
+    if _REGISTERED is provider:
+        atexit.register(shutdown_tracing, provider)
     _CONFIGURED = kind
     return kind

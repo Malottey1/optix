@@ -3,6 +3,8 @@ import json
 import re
 from pathlib import Path
 
+import pytest
+
 from agents import azure_status as A
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -125,3 +127,84 @@ def test_azure_md_names_the_verified_deployment_and_the_unverified_export(tmp_pa
     assert ("Application Insights is not yet verified live" in text) == (not A.telemetry_exported())
     rows = {r["id"]: r for r in A.status()}
     assert "guard-accepted model sentences" in rows["cache"]["note"]
+
+
+class _FakeExporter:
+    def __init__(self, result=None, error=None):
+        self.result, self.error, self.got = result, error, 0
+
+    def export(self, spans):
+        self.got += len(spans)
+        if self.error:
+            raise self.error
+        return self.result
+
+    def shutdown(self):
+        pass
+
+
+def _run_spans(inner, n=3):
+    """n spans through a provider with the recorder behind a BatchSpanProcessor, flushed and shut down."""
+    from opentelemetry.sdk.trace import TracerProvider
+    from opentelemetry.sdk.trace.export import BatchSpanProcessor
+
+    from agents import telemetry
+    from tools.azure_live_check import RecordingExporter
+    rec = RecordingExporter(inner)
+    provider = TracerProvider()
+    provider.add_span_processor(BatchSpanProcessor(rec))
+    for i in range(n):
+        with provider.get_tracer("t").start_as_current_span(f"s{i}"):
+            pass
+    telemetry.shutdown_tracing(provider)
+    return rec.record
+
+
+def test_recorded_export_success_verifies_the_telemetry_row(tmp_path):
+    from opentelemetry.sdk.trace.export import SpanExportResult
+
+    from tools.azure_live_check import export_line
+    rec = _run_spans(_FakeExporter(SpanExportResult.SUCCESS))
+    assert rec["handed"] == rec["exported"] == 3 and rec["errors"] == []
+    r = _rows(tmp_path, export_line(rec) + "\n")["appinsights"]
+    assert r["state"] == A.VERIFIED_LIVE and r["note"].startswith("Spans exported")
+
+
+@pytest.mark.parametrize("inner, err", [
+    ("failure", "SpanExportResult.FAILURE"), ("raise", "ConnectionError")])
+def test_recorded_export_failure_or_exception_is_not_verified_and_names_the_error(tmp_path, inner, err):
+    """The old note said "no span has been sent" whatever the live report recorded; it must now name
+    the error, and a failed or raising export never verifies the row."""
+    from opentelemetry.sdk.trace.export import SpanExportResult
+
+    from tools.azure_live_check import export_line
+    fake = _FakeExporter(SpanExportResult.FAILURE) if inner == "failure" else _FakeExporter(error=ConnectionError("x"))
+    rec = _run_spans(fake)
+    assert rec["handed"] == 3 and rec["exported"] == 0 and rec["errors"] == [err]
+    line = export_line(rec)
+    assert not A.EXPORT_LINE.search(line)
+    r = _rows(tmp_path, line + "\n")["appinsights"]
+    assert r["state"] == A.BUILT and err in r["note"]
+    mixed = dict(handed=4, exported=3, results=["success", "failure"], errors=["SpanExportResult.FAILURE"])
+    assert _rows(tmp_path, export_line(mixed) + "\n")["appinsights"]["state"] == A.BUILT
+
+
+def test_global_provider_is_registered_once_and_before_the_azure_exporter(monkeypatch):
+    """The Azure Monitor exporter reads its Resource from the global provider: it must be registered
+    (exactly once per process) before the exporter is built."""
+    from agents import telemetry
+    calls = []
+    monkeypatch.setattr(telemetry, "_REGISTERED", None)
+    monkeypatch.setattr(telemetry._trace, "set_tracer_provider", lambda p: calls.append(p))
+    import azure.monitor.opentelemetry.exporter as az
+
+    def fake_from(conn):
+        assert telemetry._REGISTERED is not None, "exporter built before the global provider was registered"
+        return _FakeExporter()
+    monkeypatch.setattr(az.AzureMonitorTraceExporter, "from_connection_string", staticmethod(fake_from))
+    env = {"APPLICATIONINSIGHTS_CONNECTION_STRING": "InstrumentationKey=00000000-0000-0000-0000-000000000000"}
+    p1, kind = telemetry.build_provider(env, register=True)
+    p2, _ = telemetry.build_provider(env, register=True)
+    assert kind == "azure-monitor" and calls == [p1] and telemetry._REGISTERED is p1
+    assert p1.resource.attributes["service.name"] == "optix"
+    assert telemetry.register_global(p2) is False and calls == [p1]

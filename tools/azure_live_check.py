@@ -64,7 +64,6 @@ def _claims(n: int = 3):
 
 
 def run_live(max_calls: int = MAX_LIVE_CALLS) -> dict:
-    from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import SimpleSpanProcessor
     from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 
@@ -77,11 +76,9 @@ def run_live(max_calls: int = MAX_LIVE_CALLS) -> dict:
     known, names = known_entities(ds)
     client = AzureChatClient()
     phraser = AzureOpenAIPhraser(client, known, names, cache=PhrasingCache(), max_calls=max_calls)
+    provider, export = tracing()
     exp = InMemorySpanExporter()
-    provider = TracerProvider()
     provider.add_span_processor(SimpleSpanProcessor(exp))
-    export = appinsights_exporter(provider)
-    telemetry.use_provider(provider)
     rows = []
     try:
         agent = NarrativeAgent(lambda *a, **k: None, LANGS, phraser)
@@ -93,26 +90,53 @@ def run_live(max_calls: int = MAX_LIVE_CALLS) -> dict:
                              casual={l: text.rendered[l]["casual"] for l in LANGS}))
     finally:
         telemetry.use_provider(None)
-        provider.force_flush()
+        telemetry.shutdown_tracing(provider)        # force_flush, then shutdown: the batch is exported now
     spans = [s for s in exp.get_finished_spans() if s.name == "phraser.call"]
     return dict(calls=phraser.calls, auth=client.auth, deployment=client.deployment, rows=rows,
                 spans=[dict(s.attributes) for s in spans], export=export.record if export else None)
 
 
+def tracing(env=None):
+    """The run's tracer provider (Resource service.name "optix"), registered globally once, with the
+    Azure Monitor exporter wrapped in a RecordingExporter when APPLICATIONINSIGHTS_CONNECTION_STRING
+    is set; returns (provider, recorder or None)."""
+    from agents import telemetry
+    made = []
+
+    def wrap(inner):
+        made.append(RecordingExporter(inner))
+        return made[0]
+
+    provider, _ = telemetry.build_provider(env, service_name="optix", wrap=wrap, register=True)
+    if telemetry._REGISTERED is not provider:      # a provider was registered earlier in this process
+        telemetry.use_provider(provider)
+    return provider, (made[0] if made else None)
+
+
 class RecordingExporter:
-    """Wraps the Azure Monitor exporter and records what it was asked to export and the outcome, so
-    the report can say whether spans really reached Application Insights."""
+    """Wraps the Azure Monitor exporter and records what it was handed and every outcome, so the
+    report can say whether spans really reached Application Insights. An exception counts as a
+    failure (its class is recorded) and is not re-raised."""
 
     def __init__(self, inner):
         self.inner = inner
-        self.record = dict(exported=0, results=[])
+        self.record = dict(handed=0, exported=0, results=[], errors=[])
 
     def export(self, spans):
-        res = self.inner.export(spans)
-        ok = getattr(res, "name", str(res)) == "SUCCESS"
+        from opentelemetry.sdk.trace.export import SpanExportResult
+        self.record["handed"] += len(spans)
+        try:
+            res = self.inner.export(spans)
+        except Exception as e:
+            self.record["results"].append("failure")
+            self.record["errors"].append(type(e).__name__)
+            return SpanExportResult.FAILURE
+        ok = res == SpanExportResult.SUCCESS
         self.record["results"].append("success" if ok else "failure")
         if ok:
             self.record["exported"] += len(spans)
+        else:
+            self.record["errors"].append(f"SpanExportResult.{getattr(res, 'name', res)}")
         return res
 
     def shutdown(self):
@@ -122,27 +146,18 @@ class RecordingExporter:
         return getattr(self.inner, "force_flush", lambda *a: True)(timeout_millis)
 
 
-def appinsights_exporter(provider):
-    """When APPLICATIONINSIGHTS_CONNECTION_STRING is set, export the run's spans to Application
-    Insights as well (recorded); otherwise None and the report says the export was not attempted."""
-    import os
-    conn = os.environ.get("APPLICATIONINSIGHTS_CONNECTION_STRING")
-    if not conn:
-        return None
-    from azure.monitor.opentelemetry.exporter import AzureMonitorTraceExporter
-    from opentelemetry.sdk.trace.export import SimpleSpanProcessor
-    rec = RecordingExporter(AzureMonitorTraceExporter.from_connection_string(conn))
-    provider.add_span_processor(SimpleSpanProcessor(rec))
-    return rec
-
-
 def export_line(export: dict | None) -> str:
-    """The report's machine-read export record (agents/azure_status.telemetry_exported)."""
+    """The report's machine-read export record (agents/azure_status.telemetry_exported): success
+    only when at least one span was exported and no export failed or raised."""
     if export is None:
         return "- application insights export: not attempted (APPLICATIONINSIGHTS_CONNECTION_STRING not set)"
-    ok = export["results"] and all(x == "success" for x in export["results"])
-    return (f"- application insights export: exported {export['exported']} spans, connection string set, "
-            f"result {'success' if ok else 'failure'}")
+    ok = export["exported"] > 0 and export["results"] and all(x == "success" for x in export["results"])
+    if ok:
+        return (f"- application insights export: exported {export['exported']} spans, connection string set, "
+                "result success")
+    errs = ", ".join(sorted(set(export.get("errors") or []))) or "no span exported"
+    return (f"- application insights export: handed {export.get('handed', export['exported'])} spans, "
+            f"exported {export['exported']}, connection string set, result failure ({errs})")
 
 
 def report(result: dict | None, reasons: list) -> str:

@@ -1,0 +1,18 @@
+{
+ "claim_hash": "4f6b1f2f85d1a9d038724301",
+ "claim_id": "clm_m_showcase_pat_direct_transition_t_aur_0_2883_a1",
+ "model": "optix-phraser",
+ "origin": {
+  "created_at": "2026-10-26T11:33:03+00:00",
+  "deployment": "optix-phraser",
+  "guard": "agents/output_guard.py",
+  "source": "azure-openai"
+ },
+ "prompt_version": "p4",
+ "sentences": {
+  "en": "AUR completed 4 direct transitions against NTG while leading comfortably, with 26 regains and an xG of 0.5, outperforming the league average of 2.6 per 100 and their own rate of 15.4 per 100.",
+  "es": "AUR completó 4 transiciones directas contra NTG mientras lideraba cómodamente, con 26 recuperaciones y un xG de 0,5, superando la media de la liga de 2,6 por cada 100 y su propia tasa de 15,4 por cada 100.",
+  "fr": "AUR a réalisé 4 transitions directes contre NTG en menant largement, avec 26 récupérations et un xG de 0,5, dépassant la moyenne de la ligue de 2,6 pour 100 et leur propre taux de 15,4 pour 100."
+ },
+ "template_key": "pattern.direct_transition"
+}

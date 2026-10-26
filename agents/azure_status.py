@@ -96,6 +96,26 @@ EXPORT_LINE = re.compile(r"^- application insights export: exported (\d+) spans,
                          r"result success\s*$", re.M)
 
 
+EXPORT_FAIL = re.compile(r"^- application insights export: handed (\d+) spans, exported (\d+), connection string set, "
+                         r"result failure \((.*)\)\s*$", re.M)
+
+
+def export_note(report: Path, default: str) -> str:
+    """The telemetry row's note: the exported span count when verified live, the recorded error
+    when the live export failed, else `default`."""
+    if not live_check_ran(report):
+        return default
+    text = report.read_text(encoding="utf-8")
+    m = EXPORT_LINE.search(text)
+    if m and int(m.group(1)) > 0:
+        return ("Spans exported to Application Insights by the live check and every export returned "
+                "SUCCESS; the span count is in docs/azure-live-check.md.")
+    f = EXPORT_FAIL.search(text)
+    if f:
+        return f"The live check's export to Application Insights failed ({f.group(3)}); not verified live."
+    return default
+
+
 def telemetry_exported(report: Path = LIVE_REPORT) -> bool:
     """True only when the live report records spans exported to Application Insights, with
     APPLICATIONINSIGHTS_CONNECTION_STRING set and a successful export. Spans captured in memory
@@ -129,6 +149,8 @@ def status(root: Path = ROOT) -> list:
                  else VERIFIED_CI if built and ci_passed(cid, root) else BUILT if built else NOT_BUILT)
         if state == VERIFIED_CI:
             note = CI_NOTE[cid]
+        if in_live == "export":
+            note = export_note(report, note)
         out.append(dict(id=cid, name=name, tech=tech, state=state, files=files, tests=tests, note=note,
                         live=VERIFIED_LIVE if (in_live and live) else "not run" if in_live else "not applicable"))
     return out
