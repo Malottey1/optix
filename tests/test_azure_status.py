@@ -8,7 +8,7 @@ import pytest
 from agents import azure_status as A
 
 ROOT = Path(__file__).resolve().parent.parent
-STATES = {A.VERIFIED_LIVE, A.VERIFIED_TESTS, A.VERIFIED_CI, A.BUILT, A.NOT_BUILT}
+STATES = {A.VERIFIED_LIVE, A.VERIFIED_TESTS, A.VERIFIED_CI, A.BUILT, A.NOT_BUILT, A.BY_DESIGN}
 
 
 def test_docs_azure_md_is_the_generated_table():
@@ -33,7 +33,9 @@ def test_states_follow_the_facts():
     if not A.live_check_ran():
         assert A.VERIFIED_LIVE not in {r["state"] for r in rows.values()}
         assert rows["phraser"]["state"] == A.BUILT and rows["appinsights"]["state"] == A.BUILT
-    assert rows["eventhubs"]["state"] == A.NOT_BUILT
+    src = rows["source"]
+    assert (src["name"], src["state"], src["live"]) == ("Event source", A.BY_DESIGN, "not applicable")
+    assert "Event Hubs is not part of this submission" in src["note"] and not re.search(r"\d", src["note"])
 
 
 def test_a_live_report_that_says_not_run_never_counts(tmp_path):
@@ -208,3 +210,11 @@ def test_global_provider_is_registered_once_and_before_the_azure_exporter(monkey
     assert kind == "azure-monitor" and calls == [p1] and telemetry._REGISTERED is p1
     assert p1.resource.attributes["service.name"] == "optix"
     assert telemetry.register_global(p2) is False and calls == [p1]
+
+
+def test_the_event_source_is_never_claimed_live(tmp_path):
+    """A file replay is a scope choice: even a successful live report never makes it "verified live"."""
+    ok = "- application insights export: exported 4 spans, connection string set, result success\n"
+    r = _rows(tmp_path, ok)
+    assert r["appinsights"]["state"] == A.VERIFIED_LIVE
+    assert r["source"]["state"] == A.BY_DESIGN and r["source"]["live"] == "not applicable"

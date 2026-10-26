@@ -541,6 +541,7 @@ const STATE_STYLE: Record<AzureStatus["state"], { icon: IconName | null; cls: st
     label: "Built, not verified live",
   },
   "not built": { icon: null, cls: "border-dashed border-line-strong opacity-80", label: "Not built" },
+  "by design (file replay)": { icon: null, cls: "border-line bg-surface-2", label: "By design (file replay)" },
 };
 
 const PATTERN_STATUS: Record<string, Status> = {

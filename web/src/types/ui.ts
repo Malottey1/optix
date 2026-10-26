@@ -436,7 +436,7 @@ export interface AzureStatus {
   id: string;
   name: string;
   tech: string;
-  state: "verified live" | "verified by tests" | "verified by CI build/lint" | "built, not verified live" | "not built";
+  state: "verified live" | "verified by tests" | "verified by CI build/lint" | "built, not verified live" | "not built" | "by design (file replay)";
   live: string;
   note: string;
 }
