@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "default_mode": "fan",
+  "modes": {
+    "fan": { "max_cards": 5, "page_size": 5 },
+    "analyst": { "max_cards": null, "page_size": 5 }
+  },
+  "fan_priority": [
+    "momentum_shift",
+    "matchup_mismatch",
+    "tactical_pattern",
+    "set_piece_inflation",
+    "volume_vs_value",
+    "perimeter_lock",
+    "threat_pass",
+    "player_focus",
+    "rhythm_wave",
+    "milestone",
+    "recap_line"
+  ],
+  "metrics": {
+    "momentum": { "icon": "metric-momentum", "families": ["momentum_shift"], "series": "timeline.momentum", "final": true },
+    "xg": { "icon": "metric-xg", "families": ["set_piece_inflation", "player_focus"], "series": "ui.visuals.shots", "final": false },
+    "rhythm": { "icon": "metric-rhythm", "families": ["rhythm_wave"], "series": "ui.visuals.rhythm", "final": false },
+    "stress": { "icon": "metric-territorial-stress", "families": ["perimeter_lock"], "series": "ui.visuals.stress", "final": false }
+  },
+  "glossary": {
+    "xg": "gl_xg",
+    "xt": "gl_xt",
+    "field_tilt": "gl_field_tilt",
+    "ppda": "gl_ppda",
+    "rhythm": "gl_rhythm",
+    "momentum": "gl_momentum",
+    "stress": "gl_stress"
+  },
+  "not_offered": {
+    "field_tilt": "no time series: only the perimeter_lock insight snapshots carry it",
+    "xt": "no time series: threat_pass insights carry single passes",
+    "ppda": "not computed by the engine for the replay"
+  }
+}

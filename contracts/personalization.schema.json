@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "personalization.schema.json",
+  "title": "Personalization config",
+  "description": "One source of truth for engine/personalize.py and web/src/lib/personalize.ts. Personalization filters, ranks, relabels and hides; it never changes a number or a claim sentence.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "default_mode", "modes", "fan_priority", "metrics", "glossary", "not_offered"],
+  "properties": {
+    "version": { "const": 1 },
+    "default_mode": { "enum": ["fan", "analyst"] },
+    "modes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fan", "analyst"],
+      "properties": {
+        "fan": { "$ref": "#/$defs/mode" },
+        "analyst": { "$ref": "#/$defs/mode" }
+      }
+    },
+    "fan_priority": { "type": "array", "items": { "$ref": "#/$defs/insight_type" }, "uniqueItems": true, "minItems": 1 },
+    "metrics": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["icon", "families", "series", "final"],
+        "properties": {
+          "icon": { "type": "string", "pattern": "^metric-[a-z-]+$" },
+          "families": { "type": "array", "items": { "$ref": "#/$defs/insight_type" }, "uniqueItems": true, "minItems": 1 },
+          "series": { "enum": ["timeline.momentum", "ui.visuals.shots", "ui.visuals.rhythm", "ui.visuals.stress"] },
+          "final": { "type": "boolean", "description": "The series is also in a played match's file (Final hub)." }
+        }
+      }
+    },
+    "glossary": { "type": "object", "additionalProperties": { "type": "string", "pattern": "^gl_[a-z_]+$" } },
+    "not_offered": { "type": "object", "additionalProperties": { "type": "string" } }
+  },
+  "$defs": {
+    "mode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["max_cards", "page_size"],
+      "properties": {
+        "max_cards": { "type": ["integer", "null"], "minimum": 1 },
+        "page_size": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "insight_type": {
+      "enum": ["matchup_mismatch", "perimeter_lock", "threat_pass", "momentum_shift", "turning_point", "rhythm_wave", "volume_vs_value", "set_piece_inflation", "player_focus", "milestone", "red_card_segment", "pounce_sequence", "underperformance_stack", "tactical_pattern", "recap_line"]
+    }
+  }
+}

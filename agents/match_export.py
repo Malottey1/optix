@@ -27,6 +27,7 @@ Each match file holds:
   lineups         both starting XIs by listed position (agents.player_profiles.match_lineups);
                   substitutions, cards and goals are in turning_points
 
+events-m_showcase.json is the showcase's compact event log for player focus (agents/showcase_events.py).
 Per team, players-heat-<code>.json holds the season touch maps and players-<code>.json the console's
 lazy lists (agents.player_profiles): defensive action points, key passes with the assisted shot,
 and the shots each keeper faced.
@@ -44,6 +45,7 @@ from engine import metrics as M
 from engine.tables import load, match_events
 from engine.zones import FINAL_THIRD_X, LANE_EDGES, MIDDLE_THIRD_X
 
+from . import showcase_events
 from .dashboard_data import LATERAL, TRACK_TYPES
 from .player_profiles import lineup_rows, match_lineups, profiles
 from .run_match import timeline
@@ -410,6 +412,9 @@ def export(season_dir: Path, showcase_dir: Path | None, out: Path, log=print, fi
         write(SHOWCASE, data, text)
         log(f"{SHOWCASE}: {len(ins)} insights, {sizes[SHOWCASE]} B, {time.time() - t0:.1f} s, peak RSS {_rss_mb():.0f} MB")
         del s, ins, data, text, sc
+        ev = showcase_events.dumps(showcase_events.build(showcase_dir))
+        (out / f"events-{SHOWCASE}.json").write_text(ev, encoding="utf-8")
+        sizes[f"events-{SHOWCASE}"] = len(ev.encode())
     for mid in order:
         t0 = time.time()
         s = InsightStream(season, mid, history=history, languages=tuple(languages()))

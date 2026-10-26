@@ -1,0 +1,112 @@
+{
+ "cases": [
+  {
+   "clock": 900,
+   "counts": {
+    "cards": 0,
+    "key_passes": 1,
+    "passes": 15,
+    "shots": 0,
+    "subs": 0,
+    "xg": 0
+   },
+   "player": "NTG_10"
+  },
+  {
+   "clock": 2883,
+   "counts": {
+    "cards": 1,
+    "key_passes": 1,
+    "passes": 55,
+    "shots": 2,
+    "subs": 0,
+    "xg": 0.12
+   },
+   "player": "NTG_10"
+  },
+  {
+   "clock": 6000,
+   "counts": {
+    "cards": 1,
+    "key_passes": 1,
+    "passes": 73,
+    "shots": 3,
+    "subs": 1,
+    "xg": 0.31
+   },
+   "player": "NTG_10"
+  },
+  {
+   "clock": 1149,
+   "counts": {
+    "cards": 0,
+    "key_passes": 0,
+    "passes": 10,
+    "shots": 3,
+    "subs": 0,
+    "xg": 0.34
+   },
+   "player": "AUR_09"
+  },
+  {
+   "clock": 6000,
+   "counts": {
+    "cards": 0,
+    "key_passes": 1,
+    "passes": 30,
+    "shots": 7,
+    "subs": 0,
+    "xg": 0.77
+   },
+   "player": "AUR_09"
+  },
+  {
+   "clock": 3000,
+   "counts": {
+    "cards": 0,
+    "key_passes": 1,
+    "passes": 27,
+    "shots": 1,
+    "subs": 0,
+    "xg": 0.1
+   },
+   "player": "AUR_10"
+  },
+  {
+   "clock": 6000,
+   "counts": {
+    "cards": 0,
+    "key_passes": 1,
+    "passes": 36,
+    "shots": 1,
+    "subs": 1,
+    "xg": 0.1
+   },
+   "player": "AUR_10"
+  },
+  {
+   "clock": 3842,
+   "counts": {
+    "cards": 0,
+    "key_passes": 2,
+    "passes": 37,
+    "shots": 1,
+    "subs": 1,
+    "xg": 0.03
+   },
+   "player": "NTG_02"
+  },
+  {
+   "clock": 6000,
+   "counts": {
+    "cards": 0,
+    "key_passes": 2,
+    "passes": 37,
+    "shots": 1,
+    "subs": 1,
+    "xg": 0.03
+   },
+   "player": "NTG_02"
+  }
+ ]
+}

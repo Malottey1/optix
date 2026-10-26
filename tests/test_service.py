@@ -168,3 +168,46 @@ def test_serves_the_built_dashboard_when_present(tmp_path, clock):
             return (await c.get("/")).text, (await c.get("/healthz")).status_code
     html, ok = _run(go())
     assert "Optix" in html and ok == 200
+
+
+def _numbers(o):
+    """Every number in a JSON value, in order (the personalized frames must carry the same ones)."""
+    if isinstance(o, bool):
+        return []
+    if isinstance(o, (int, float)):
+        return [o]
+    if isinstance(o, dict):
+        return [n for k in sorted(o) for n in _numbers(o[k])]
+    if isinstance(o, list):
+        return [n for v in o for n in _numbers(v)]
+    return []
+
+
+def test_personalized_stream_caps_fan_filters_a_player_and_keeps_every_number(app):
+    store = MatchStore(DATA)
+    by_id = {i["insight_id"]: i for i in store.insights}
+    url = f"/api/match/{store.match_id}/stream?speed=600"
+    fan = [d for e, d in _run(_events(app, url + "&mode=fan&lang=es")) if e == "insight"]
+    assert 0 < len(fan) <= 5
+    starts = [d["clock"]["start_sec"] for d in fan]
+    assert starts == sorted(starts)                    # replayed in clock order
+    for d in fan:                                      # the very same objects: same numbers, same text
+        assert d == by_id[d["insight_id"]] and _numbers(d) == _numbers(by_id[d["insight_id"]])
+    assert store.involved, "events-m_showcase.json missing from the data directory"
+    mine = [d for e, d in _run(_events(app, url + "&player=NTG_10")) if e == "insight"]
+    assert mine and all(d == by_id[d["insight_id"]] for d in mine)
+    assert all("NTG_10" in d["player_ids"] or any("NTG_10" in store.involved.get(x, ()) for x in d["evidence_event_ids"])
+               for d in mine)
+    assert len(mine) < len(store.insights)
+
+
+def test_unknown_personalization_values_are_ignored(app):
+    store = MatchStore(DATA)
+    url = f"/api/match/{store.match_id}/stream?speed=600&mode=boss&lang=xx&club=ZZZ&player=nobody&metric=pace"
+    ins = [d for e, d in _run(_events(app, url)) if e == "insight"]
+    assert ins == store.insights
+
+    async def health():
+        async with _client(app) as c:
+            return (await c.get("/healthz")).json()
+    assert _run(health())["status"] == "ok"

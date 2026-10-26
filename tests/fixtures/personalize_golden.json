@@ -1,0 +1,2505 @@
+{
+ "cases": [
+  {
+   "ids": [
+    "ins_0001",
+    "ins_0002",
+    "ins_0003",
+    "ins_0004",
+    "ins_0005",
+    "ins_0006",
+    "ins_0007",
+    "ins_0008",
+    "ins_0009",
+    "ins_0010",
+    "ins_0011",
+    "ins_0012",
+    "ins_0013",
+    "ins_0014",
+    "ins_0015",
+    "ins_0016",
+    "ins_0017",
+    "ins_0018",
+    "ins_0019",
+    "ins_0020",
+    "ins_0021",
+    "ins_0022",
+    "ins_0023",
+    "ins_0024",
+    "ins_0025",
+    "ins_0026",
+    "ins_0027",
+    "ins_0028",
+    "ins_0029",
+    "ins_0030",
+    "ins_0031",
+    "ins_0032",
+    "ins_0033",
+    "ins_0034",
+    "ins_0035",
+    "ins_0036",
+    "ins_0037",
+    "ins_0038",
+    "ins_0039",
+    "ins_0040",
+    "ins_0041",
+    "ins_0042",
+    "ins_0043",
+    "ins_0044",
+    "ins_0045",
+    "ins_0046",
+    "ins_0047",
+    "ins_0048",
+    "ins_0049"
+   ],
+   "profile": {}
+  },
+  {
+   "ids": [
+    "ins_0026",
+    "ins_0001",
+    "ins_0017",
+    "ins_0018",
+    "ins_0021"
+   ],
+   "profile": {
+    "mode": "fan"
+   }
+  },
+  {
+   "ids": [
+    "ins_0001",
+    "ins_0002",
+    "ins_0003",
+    "ins_0004",
+    "ins_0005",
+    "ins_0006",
+    "ins_0007",
+    "ins_0008",
+    "ins_0009",
+    "ins_0010",
+    "ins_0011",
+    "ins_0012",
+    "ins_0013",
+    "ins_0014",
+    "ins_0015",
+    "ins_0016",
+    "ins_0017",
+    "ins_0018",
+    "ins_0019",
+    "ins_0020",
+    "ins_0021",
+    "ins_0022",
+    "ins_0023",
+    "ins_0024",
+    "ins_0025",
+    "ins_0026",
+    "ins_0027",
+    "ins_0028",
+    "ins_0029",
+    "ins_0030",
+    "ins_0031",
+    "ins_0032",
+    "ins_0033",
+    "ins_0034",
+    "ins_0035",
+    "ins_0036",
+    "ins_0037",
+    "ins_0038",
+    "ins_0039",
+    "ins_0040",
+    "ins_0041",
+    "ins_0042",
+    "ins_0043",
+    "ins_0044",
+    "ins_0045",
+    "ins_0046",
+    "ins_0047",
+    "ins_0048",
+    "ins_0049"
+   ],
+   "profile": {
+    "mode": "analyst"
+   }
+  },
+  {
+   "ids": [
+    "ins_0026",
+    "ins_0018",
+    "ins_0021",
+    "ins_0036",
+    "ins_0040"
+   ],
+   "profile": {
+    "clubs": [
+     "NTG"
+    ],
+    "mode": "fan"
+   }
+  },
+  {
+   "ids": [
+    "ins_0001",
+    "ins_0002",
+    "ins_0003",
+    "ins_0004",
+    "ins_0005",
+    "ins_0006",
+    "ins_0007",
+    "ins_0008",
+    "ins_0009",
+    "ins_0013",
+    "ins_0014",
+    "ins_0015",
+    "ins_0016",
+    "ins_0018",
+    "ins_0021",
+    "ins_0010",
+    "ins_0011",
+    "ins_0012",
+    "ins_0017",
+    "ins_0019",
+    "ins_0020",
+    "ins_0022",
+    "ins_0023",
+    "ins_0024",
+    "ins_0025",
+    "ins_0026",
+    "ins_0027",
+    "ins_0028",
+    "ins_0029",
+    "ins_0030",
+    "ins_0031",
+    "ins_0032",
+    "ins_0033",
+    "ins_0034",
+    "ins_0035",
+    "ins_0036",
+    "ins_0040",
+    "ins_0041",
+    "ins_0042",
+    "ins_0043",
+    "ins_0045",
+    "ins_0046",
+    "ins_0048",
+    "ins_0037",
+    "ins_0038",
+    "ins_0039",
+    "ins_0044",
+    "ins_0047",
+    "ins_0049"
+   ],
+   "profile": {
+    "clubs": [
+     "NTG"
+    ],
+    "mode": "analyst"
+   }
+  },
+  {
+   "ids": [
+    "ins_0005",
+    "ins_0008",
+    "ins_0013",
+    "ins_0020",
+    "ins_0021",
+    "ins_0023",
+    "ins_0025",
+    "ins_0026",
+    "ins_0029",
+    "ins_0040",
+    "ins_0045",
+    "ins_0046",
+    "ins_0047",
+    "ins_0048"
+   ],
+   "profile": {
+    "mode": "analyst",
+    "players": [
+     "NTG_10"
+    ]
+   }
+  },
+  {
+   "ids": [
+    "ins_0026",
+    "ins_0021",
+    "ins_0040",
+    "ins_0008",
+    "ins_0029"
+   ],
+   "profile": {
+    "mode": "fan",
+    "players": [
+     "NTG_10"
+    ]
+   }
+  },
+  {
+   "ids": [
+    "ins_0026"
+   ],
+   "profile": {
+    "metric": "momentum",
+    "mode": "analyst"
+   }
+  },
+  {
+   "ids": [
+    "ins_0042",
+    "ins_0012",
+    "ins_0015",
+    "ins_0039"
+   ],
+   "profile": {
+    "metric": "xg",
+    "mode": "fan"
+   }
+  },
+  {
+   "ids": [
+    "ins_0001",
+    "ins_0002",
+    "ins_0003",
+    "ins_0004",
+    "ins_0005",
+    "ins_0006",
+    "ins_0007",
+    "ins_0008",
+    "ins_0009",
+    "ins_0010",
+    "ins_0011",
+    "ins_0012",
+    "ins_0013",
+    "ins_0014",
+    "ins_0015",
+    "ins_0016",
+    "ins_0017",
+    "ins_0018",
+    "ins_0019",
+    "ins_0020",
+    "ins_0021",
+    "ins_0022",
+    "ins_0023",
+    "ins_0024",
+    "ins_0025",
+    "ins_0026",
+    "ins_0027",
+    "ins_0028",
+    "ins_0029",
+    "ins_0030",
+    "ins_0031",
+    "ins_0032",
+    "ins_0033",
+    "ins_0034",
+    "ins_0035",
+    "ins_0036",
+    "ins_0037",
+    "ins_0038",
+    "ins_0039",
+    "ins_0040",
+    "ins_0041",
+    "ins_0042",
+    "ins_0043",
+    "ins_0044",
+    "ins_0045",
+    "ins_0046",
+    "ins_0047",
+    "ins_0048",
+    "ins_0049"
+   ],
+   "profile": {
+    "language": "xx",
+    "metric": "zzz",
+    "mode": "zzz"
+   }
+  },
+  {
+   "ids": [],
+   "profile": {
+    "metric": "xg",
+    "mode": "analyst",
+    "players": [
+     "AUR_10"
+    ]
+   }
+  },
+  {
+   "ids": [
+    "ins_0001",
+    "ins_0017",
+    "ins_0022",
+    "ins_0044",
+    "ins_0002"
+   ],
+   "profile": {
+    "clubs": [
+     "AUR"
+    ],
+    "language": "es",
+    "mode": "fan"
+   }
+  },
+  {
+   "ids": [
+    "ins_0006",
+    "ins_0025",
+    "ins_0033"
+   ],
+   "profile": {
+    "metric": "rhythm",
+    "mode": "analyst"
+   }
+  },
+  {
+   "ids": [
+    "ins_0008",
+    "ins_0029"
+   ],
+   "profile": {
+    "clubs": [
+     "AUR"
+    ],
+    "metric": "stress",
+    "mode": "analyst"
+   }
+  }
+ ],
+ "involved": {
+  "m_showcase_e00001": [
+   "AUR_09"
+  ],
+  "m_showcase_e00002": [
+   "AUR_11"
+  ],
+  "m_showcase_e00003": [
+   "AUR_10"
+  ],
+  "m_showcase_e00004": [
+   "AUR_04"
+  ],
+  "m_showcase_e00006": [
+   "NTG_04"
+  ],
+  "m_showcase_e00007": [
+   "NTG_04"
+  ],
+  "m_showcase_e00010": [
+   "NTG_10"
+  ],
+  "m_showcase_e00011": [
+   "NTG_04"
+  ],
+  "m_showcase_e00019": [
+   "AUR_06"
+  ],
+  "m_showcase_e00021": [
+   "AUR_03"
+  ],
+  "m_showcase_e00023": [
+   "AUR_09"
+  ],
+  "m_showcase_e00025": [
+   "AUR_10"
+  ],
+  "m_showcase_e00028": [
+   "NTG_08"
+  ],
+  "m_showcase_e00030": [
+   "NTG_07"
+  ],
+  "m_showcase_e00031": [
+   "NTG_10"
+  ],
+  "m_showcase_e00034": [
+   "AUR_01"
+  ],
+  "m_showcase_e00037": [
+   "AUR_07"
+  ],
+  "m_showcase_e00041": [
+   "AUR_09"
+  ],
+  "m_showcase_e00043": [
+   "AUR_09"
+  ],
+  "m_showcase_e00045": [
+   "AUR_10"
+  ],
+  "m_showcase_e00047": [
+   "AUR_07"
+  ],
+  "m_showcase_e00049": [
+   "NTG_01"
+  ],
+  "m_showcase_e00053": [
+   "NTG_07"
+  ],
+  "m_showcase_e00057": [
+   "NTG_08"
+  ],
+  "m_showcase_e00065": [
+   "NTG_08"
+  ],
+  "m_showcase_e00067": [
+   "NTG_09"
+  ],
+  "m_showcase_e00069": [
+   "NTG_04"
+  ],
+  "m_showcase_e00073": [
+   "AUR_08"
+  ],
+  "m_showcase_e00075": [
+   "NTG_10"
+  ],
+  "m_showcase_e00076": [
+   "NTG_10"
+  ],
+  "m_showcase_e00077": [
+   "NTG_08"
+  ],
+  "m_showcase_e00079": [
+   "AUR_04"
+  ],
+  "m_showcase_e00081": [
+   "AUR_11"
+  ],
+  "m_showcase_e00082": [
+   "AUR_07"
+  ],
+  "m_showcase_e00093": [
+   "AUR_11"
+  ],
+  "m_showcase_e00095": [
+   "AUR_10"
+  ],
+  "m_showcase_e00096": [
+   "AUR_09"
+  ],
+  "m_showcase_e00098": [
+   "AUR_08"
+  ],
+  "m_showcase_e00101": [
+   "AUR_10"
+  ],
+  "m_showcase_e00102": [
+   "AUR_09"
+  ],
+  "m_showcase_e00103": [
+   "AUR_11"
+  ],
+  "m_showcase_e00104": [
+   "AUR_05"
+  ],
+  "m_showcase_e00107": [
+   "AUR_10"
+  ],
+  "m_showcase_e00115": [
+   "NTG_07"
+  ],
+  "m_showcase_e00117": [
+   "NTG_04"
+  ],
+  "m_showcase_e00121": [
+   "NTG_08"
+  ],
+  "m_showcase_e00122": [
+   "NTG_10"
+  ],
+  "m_showcase_e00123": [
+   "NTG_07"
+  ],
+  "m_showcase_e00124": [
+   "NTG_04"
+  ],
+  "m_showcase_e00127": [
+   "NTG_08"
+  ],
+  "m_showcase_e00131": [
+   "AUR_10"
+  ],
+  "m_showcase_e00135": [
+   "AUR_11"
+  ],
+  "m_showcase_e00137": [
+   "AUR_08"
+  ],
+  "m_showcase_e00140": [
+   "NTG_10"
+  ],
+  "m_showcase_e00141": [
+   "NTG_10"
+  ],
+  "m_showcase_e00146": [
+   "NTG_07"
+  ],
+  "m_showcase_e00148": [
+   "NTG_10"
+  ],
+  "m_showcase_e00150": [
+   "AUR_06"
+  ],
+  "m_showcase_e00155": [
+   "AUR_11"
+  ],
+  "m_showcase_e00157": [
+   "AUR_04"
+  ],
+  "m_showcase_e00161": [
+   "AUR_10"
+  ],
+  "m_showcase_e00175": [
+   "NTG_04"
+  ],
+  "m_showcase_e00179": [
+   "NTG_07"
+  ],
+  "m_showcase_e00182": [
+   "NTG_07"
+  ],
+  "m_showcase_e00183": [
+   "NTG_10"
+  ],
+  "m_showcase_e00184": [
+   "NTG_06"
+  ],
+  "m_showcase_e00186": [
+   "NTG_11"
+  ],
+  "m_showcase_e00189": [
+   "NTG_09"
+  ],
+  "m_showcase_e00192": [
+   "NTG_06"
+  ],
+  "m_showcase_e00196": [
+   "AUR_08"
+  ],
+  "m_showcase_e00203": [
+   "AUR_09"
+  ],
+  "m_showcase_e00207": [
+   "AUR_10",
+   "NTG_05"
+  ],
+  "m_showcase_e00210": [
+   "NTG_04"
+  ],
+  "m_showcase_e00211": [
+   "NTG_10"
+  ],
+  "m_showcase_e00215": [
+   "NTG_04"
+  ],
+  "m_showcase_e00221": [
+   "NTG_04"
+  ],
+  "m_showcase_e00225": [
+   "NTG_04"
+  ],
+  "m_showcase_e00228": [
+   "NTG_07"
+  ],
+  "m_showcase_e00230": [
+   "NTG_08"
+  ],
+  "m_showcase_e00234": [
+   "AUR_11"
+  ],
+  "m_showcase_e00235": [
+   "AUR_08"
+  ],
+  "m_showcase_e00238": [
+   "NTG_04"
+  ],
+  "m_showcase_e00244": [
+   "NTG_04"
+  ],
+  "m_showcase_e00245": [
+   "NTG_10"
+  ],
+  "m_showcase_e00246": [
+   "NTG_07"
+  ],
+  "m_showcase_e00249": [
+   "AUR_11"
+  ],
+  "m_showcase_e00255": [
+   "AUR_04"
+  ],
+  "m_showcase_e00262": [
+   "AUR_11"
+  ],
+  "m_showcase_e00266": [
+   "NTG_01"
+  ],
+  "m_showcase_e00271": [
+   "NTG_08"
+  ],
+  "m_showcase_e00274": [
+   "NTG_04"
+  ],
+  "m_showcase_e00279": [
+   "AUR_10",
+   "NTG_04"
+  ],
+  "m_showcase_e00280": [
+   "NTG_04"
+  ],
+  "m_showcase_e00281": [
+   "NTG_07"
+  ],
+  "m_showcase_e00284": [
+   "NTG_10"
+  ],
+  "m_showcase_e00286": [
+   "NTG_10"
+  ],
+  "m_showcase_e00287": [
+   "NTG_07"
+  ],
+  "m_showcase_e00288": [
+   "NTG_10"
+  ],
+  "m_showcase_e00289": [
+   "NTG_07"
+  ],
+  "m_showcase_e00290": [
+   "NTG_06"
+  ],
+  "m_showcase_e00291": [
+   "NTG_07"
+  ],
+  "m_showcase_e00292": [
+   "NTG_08"
+  ],
+  "m_showcase_e00293": [
+   "NTG_07"
+  ],
+  "m_showcase_e00294": [
+   "NTG_09"
+  ],
+  "m_showcase_e00295": [
+   "NTG_05"
+  ],
+  "m_showcase_e00297": [
+   "NTG_10"
+  ],
+  "m_showcase_e00301": [
+   "NTG_07"
+  ],
+  "m_showcase_e00303": [
+   "NTG_10"
+  ],
+  "m_showcase_e00304": [
+   "NTG_08"
+  ],
+  "m_showcase_e00305": [
+   "NTG_11"
+  ],
+  "m_showcase_e00309": [
+   "NTG_08"
+  ],
+  "m_showcase_e00323": [
+   "AUR_07"
+  ],
+  "m_showcase_e00327": [
+   "NTG_04"
+  ],
+  "m_showcase_e00328": [
+   "NTG_04"
+  ],
+  "m_showcase_e00331": [
+   "NTG_10"
+  ],
+  "m_showcase_e00335": [
+   "NTG_07"
+  ],
+  "m_showcase_e00339": [
+   "AUR_06"
+  ],
+  "m_showcase_e00351": [
+   "AUR_08"
+  ],
+  "m_showcase_e00356": [
+   "NTG_10"
+  ],
+  "m_showcase_e00364": [
+   "NTG_08"
+  ],
+  "m_showcase_e00376": [
+   "AUR_11"
+  ],
+  "m_showcase_e00378": [
+   "AUR_09"
+  ],
+  "m_showcase_e00381": [
+   "NTG_06"
+  ],
+  "m_showcase_e00384": [
+   "NTG_08"
+  ],
+  "m_showcase_e00387": [
+   "NTG_07"
+  ],
+  "m_showcase_e00390": [
+   "AUR_02"
+  ],
+  "m_showcase_e00397": [
+   "AUR_10"
+  ],
+  "m_showcase_e00398": [
+   "AUR_10"
+  ],
+  "m_showcase_e00402": [
+   "AUR_09"
+  ],
+  "m_showcase_e00404": [
+   "NTG_10"
+  ],
+  "m_showcase_e00406": [
+   "NTG_07"
+  ],
+  "m_showcase_e00408": [
+   "NTG_09"
+  ],
+  "m_showcase_e00410": [
+   "NTG_10"
+  ],
+  "m_showcase_e00420": [
+   "AUR_05"
+  ],
+  "m_showcase_e00427": [
+   "NTG_01"
+  ],
+  "m_showcase_e00429": [
+   "NTG_07"
+  ],
+  "m_showcase_e00434": [
+   "NTG_06"
+  ],
+  "m_showcase_e00435": [
+   "NTG_08"
+  ],
+  "m_showcase_e00436": [
+   "NTG_07"
+  ],
+  "m_showcase_e00441": [
+   "NTG_08"
+  ],
+  "m_showcase_e00442": [
+   "NTG_08"
+  ],
+  "m_showcase_e00446": [
+   "NTG_10"
+  ],
+  "m_showcase_e00448": [
+   "NTG_09"
+  ],
+  "m_showcase_e00449": [
+   "NTG_07"
+  ],
+  "m_showcase_e00451": [
+   "NTG_10"
+  ],
+  "m_showcase_e00453": [
+   "NTG_07"
+  ],
+  "m_showcase_e00455": [
+   "NTG_11"
+  ],
+  "m_showcase_e00456": [
+   "NTG_10"
+  ],
+  "m_showcase_e00457": [
+   "NTG_05"
+  ],
+  "m_showcase_e00472": [
+   "NTG_06"
+  ],
+  "m_showcase_e00476": [
+   "AUR_05"
+  ],
+  "m_showcase_e00489": [
+   "AUR_08"
+  ],
+  "m_showcase_e00492": [
+   "NTG_02"
+  ],
+  "m_showcase_e00515": [
+   "AUR_08",
+   "NTG_05"
+  ],
+  "m_showcase_e00520": [
+   "AUR_11"
+  ],
+  "m_showcase_e00546": [
+   "NTG_03"
+  ],
+  "m_showcase_e00555": [
+   "NTG_06"
+  ],
+  "m_showcase_e00556": [
+   "NTG_06"
+  ],
+  "m_showcase_e00560": [
+   "AUR_06"
+  ],
+  "m_showcase_e00561": [
+   "AUR_06"
+  ],
+  "m_showcase_e00563": [
+   "AUR_11"
+  ],
+  "m_showcase_e00564": [
+   "NTG_08"
+  ],
+  "m_showcase_e00565": [
+   "NTG_07"
+  ],
+  "m_showcase_e00572": [
+   "AUR_03"
+  ],
+  "m_showcase_e00581": [
+   "NTG_10"
+  ],
+  "m_showcase_e00596": [
+   "AUR_10",
+   "NTG_05"
+  ],
+  "m_showcase_e00626": [
+   "AUR_11"
+  ],
+  "m_showcase_e00627": [
+   "AUR_11"
+  ],
+  "m_showcase_e00629": [
+   "AUR_10"
+  ],
+  "m_showcase_e00636": [
+   "NTG_06"
+  ],
+  "m_showcase_e00641": [
+   "NTG_08"
+  ],
+  "m_showcase_e00663": [
+   "NTG_02"
+  ],
+  "m_showcase_e00673": [
+   "NTG_06"
+  ],
+  "m_showcase_e00682": [
+   "NTG_07"
+  ],
+  "m_showcase_e00685": [
+   "NTG_08"
+  ],
+  "m_showcase_e00687": [
+   "NTG_09"
+  ],
+  "m_showcase_e00688": [
+   "NTG_02"
+  ],
+  "m_showcase_e00704": [
+   "NTG_01"
+  ],
+  "m_showcase_e00712": [
+   "AUR_03"
+  ],
+  "m_showcase_e00734": [
+   "AUR_05"
+  ],
+  "m_showcase_e00737": [
+   "AUR_09"
+  ],
+  "m_showcase_e00744": [
+   "AUR_11"
+  ],
+  "m_showcase_e00769": [
+   "NTG_07"
+  ],
+  "m_showcase_e00803": [
+   "NTG_03"
+  ],
+  "m_showcase_e00807": [
+   "NTG_11"
+  ],
+  "m_showcase_e00810": [
+   "NTG_09"
+  ],
+  "m_showcase_e00811": [
+   "NTG_10"
+  ],
+  "m_showcase_e00820": [
+   "NTG_10"
+  ],
+  "m_showcase_e00821": [
+   "NTG_05"
+  ],
+  "m_showcase_e00826": [
+   "NTG_02"
+  ],
+  "m_showcase_e00844": [
+   "AUR_06"
+  ],
+  "m_showcase_e00845": [
+   "AUR_06"
+  ],
+  "m_showcase_e00847": [
+   "AUR_09"
+  ],
+  "m_showcase_e00878": [
+   "AUR_10",
+   "NTG_07"
+  ],
+  "m_showcase_e00884": [
+   "NTG_06"
+  ],
+  "m_showcase_e00926": [
+   "NTG_06"
+  ],
+  "m_showcase_e00927": [
+   "NTG_07"
+  ],
+  "m_showcase_e00932": [
+   "NTG_06"
+  ],
+  "m_showcase_e00934": [
+   "NTG_10"
+  ],
+  "m_showcase_e00937": [
+   "NTG_07"
+  ],
+  "m_showcase_e00946": [
+   "NTG_09"
+  ],
+  "m_showcase_e00947": [
+   "NTG_10"
+  ],
+  "m_showcase_e00948": [
+   "NTG_06"
+  ],
+  "m_showcase_e00949": [
+   "NTG_09"
+  ],
+  "m_showcase_e00950": [
+   "NTG_07"
+  ],
+  "m_showcase_e00953": [
+   "NTG_06"
+  ],
+  "m_showcase_e00955": [
+   "NTG_10"
+  ],
+  "m_showcase_e00957": [
+   "AUR_01"
+  ],
+  "m_showcase_e00969": [
+   "NTG_10"
+  ],
+  "m_showcase_e00983": [
+   "NTG_02"
+  ],
+  "m_showcase_e00984": [
+   "NTG_11"
+  ],
+  "m_showcase_e00986": [
+   "NTG_07"
+  ],
+  "m_showcase_e00997": [
+   "NTG_10"
+  ],
+  "m_showcase_e01007": [
+   "NTG_06"
+  ],
+  "m_showcase_e01029": [
+   "NTG_10"
+  ],
+  "m_showcase_e01040": [
+   "NTG_05"
+  ],
+  "m_showcase_e01048": [
+   "AUR_05"
+  ],
+  "m_showcase_e01053": [
+   "NTG_02"
+  ],
+  "m_showcase_e01066": [
+   "AUR_10"
+  ],
+  "m_showcase_e01073": [
+   "NTG_10"
+  ],
+  "m_showcase_e01079": [
+   "AUR_08"
+  ],
+  "m_showcase_e01085": [
+   "NTG_06"
+  ],
+  "m_showcase_e01088": [
+   "NTG_08"
+  ],
+  "m_showcase_e01089": [
+   "NTG_09"
+  ],
+  "m_showcase_e01090": [
+   "NTG_10"
+  ],
+  "m_showcase_e01092": [
+   "NTG_03"
+  ],
+  "m_showcase_e01093": [
+   "NTG_06"
+  ],
+  "m_showcase_e01094": [
+   "NTG_10"
+  ],
+  "m_showcase_e01095": [
+   "NTG_07"
+  ],
+  "m_showcase_e01096": [
+   "NTG_05"
+  ],
+  "m_showcase_e01097": [
+   "NTG_11"
+  ],
+  "m_showcase_e01098": [
+   "NTG_06"
+  ],
+  "m_showcase_e01099": [
+   "NTG_07"
+  ],
+  "m_showcase_e01101": [
+   "AUR_03"
+  ],
+  "m_showcase_e01103": [
+   "NTG_09"
+  ],
+  "m_showcase_e01104": [
+   "AUR_03"
+  ],
+  "m_showcase_e01108": [
+   "AUR_06"
+  ],
+  "m_showcase_e01110": [
+   "NTG_10"
+  ],
+  "m_showcase_e01111": [
+   "NTG_10"
+  ],
+  "m_showcase_e01112": [
+   "AUR_06",
+   "NTG_07"
+  ],
+  "m_showcase_e01113": [
+   "NTG_10"
+  ],
+  "m_showcase_e01117": [
+   "AUR_05"
+  ],
+  "m_showcase_e01123": [
+   "AUR_03"
+  ],
+  "m_showcase_e01126": [
+   "AUR_09"
+  ],
+  "m_showcase_e01204": [
+   "NTG_11"
+  ],
+  "m_showcase_e01226": [
+   "NTG_09"
+  ],
+  "m_showcase_e01230": [
+   "NTG_11"
+  ],
+  "m_showcase_e01232": [
+   "NTG_07"
+  ],
+  "m_showcase_e01289": [
+   "NTG_07"
+  ],
+  "m_showcase_e01291": [
+   "NTG_11"
+  ],
+  "m_showcase_e01293": [
+   "NTG_10"
+  ],
+  "m_showcase_e01305": [
+   "AUR_03",
+   "NTG_02"
+  ],
+  "m_showcase_e01347": [
+   "NTG_02"
+  ],
+  "m_showcase_e01380": [
+   "NTG_16"
+  ],
+  "m_showcase_e01385": [
+   "NTG_11"
+  ],
+  "m_showcase_e01387": [
+   "NTG_08"
+  ],
+  "m_showcase_e01390": [
+   "AUR_01"
+  ],
+  "m_showcase_e01392": [
+   "AUR_07"
+  ],
+  "m_showcase_e01399": [
+   "AUR_11"
+  ],
+  "m_showcase_e01421": [
+   "NTG_09"
+  ],
+  "m_showcase_e01422": [
+   "NTG_04"
+  ],
+  "m_showcase_e01426": [
+   "NTG_09"
+  ],
+  "m_showcase_e01441": [
+   "AUR_29"
+  ],
+  "m_showcase_e01455": [
+   "AUR_08",
+   "NTG_36"
+  ],
+  "m_showcase_e01456": [
+   "NTG_36"
+  ],
+  "m_showcase_e01458": [
+   "NTG_07"
+  ],
+  "m_showcase_e01460": [
+   "NTG_11"
+  ],
+  "m_showcase_e01461": [
+   "NTG_07"
+  ],
+  "m_showcase_e01464": [
+   "AUR_06"
+  ],
+  "m_showcase_e01465": [
+   "AUR_06"
+  ],
+  "m_showcase_e01467": [
+   "AUR_29"
+  ],
+  "m_showcase_e01483": [
+   "NTG_36"
+  ],
+  "m_showcase_e01484": [
+   "NTG_07"
+  ],
+  "m_showcase_e01506": [
+   "NTG_36"
+  ],
+  "m_showcase_e01516": [
+   "NTG_04"
+  ],
+  "m_showcase_e01519": [
+   "NTG_07"
+  ],
+  "m_showcase_e01520": [
+   "NTG_09"
+  ],
+  "m_showcase_e01525": [
+   "NTG_08"
+  ],
+  "m_showcase_e01528": [
+   "AUR_03"
+  ],
+  "m_showcase_e01541": [
+   "NTG_36"
+  ],
+  "m_showcase_e01555": [
+   "AUR_20"
+  ],
+  "m_showcase_e01560": [
+   "NTG_05"
+  ],
+  "m_showcase_e01568": [
+   "NTG_11"
+  ],
+  "m_showcase_e01569": [
+   "NTG_07"
+  ],
+  "m_showcase_e01570": [
+   "NTG_09"
+  ],
+  "m_showcase_e01571": [
+   "NTG_11"
+  ],
+  "m_showcase_e01573": [
+   "NTG_07"
+  ],
+  "m_showcase_e01575": [
+   "NTG_11"
+  ],
+  "m_showcase_e01578": [
+   "AUR_20"
+  ],
+  "m_showcase_e01583": [
+   "NTG_04"
+  ],
+  "m_showcase_e01591": [
+   "NTG_36"
+  ],
+  "m_showcase_e01593": [
+   "AUR_01"
+  ],
+  "m_showcase_e01598": [
+   "NTG_36"
+  ],
+  "m_showcase_e01608": [
+   "AUR_11"
+  ],
+  "m_showcase_e01618": [
+   "AUR_09"
+  ],
+  "m_showcase_e01623": [
+   "NTG_04"
+  ],
+  "m_showcase_e01633": [
+   "AUR_20"
+  ],
+  "m_showcase_e01643": [
+   "AUR_11"
+  ],
+  "m_showcase_e01656": [
+   "AUR_07",
+   "NTG_16"
+  ],
+  "m_showcase_e01671": [
+   "AUR_09"
+  ],
+  "m_showcase_e01674": [
+   "AUR_29"
+  ],
+  "m_showcase_e01684": [
+   "AUR_11"
+  ],
+  "m_showcase_e01761": [
+   "AUR_20"
+  ],
+  "m_showcase_e01764": [
+   "AUR_06"
+  ],
+  "m_showcase_e01774": [
+   "NTG_11"
+  ],
+  "m_showcase_e01777": [
+   "AUR_03"
+  ],
+  "m_showcase_e01778": [
+   "AUR_03"
+  ],
+  "m_showcase_e01780": [
+   "AUR_07"
+  ],
+  "m_showcase_e01794": [
+   "AUR_29"
+  ],
+  "m_showcase_e01797": [
+   "NTG_04"
+  ],
+  "m_showcase_e01815": [
+   "NTG_11"
+  ],
+  "m_showcase_e01852": [
+   "NTG_11"
+  ],
+  "m_showcase_e01875": [
+   "NTG_41"
+  ],
+  "m_showcase_e01917": [
+   "NTG_09"
+  ],
+  "m_showcase_e01970": [
+   "AUR_06",
+   "NTG_05"
+  ],
+  "m_showcase_e01979": [
+   "NTG_20"
+  ]
+ },
+ "stream": [
+  {
+   "clock": {
+    "start_sec": 7
+   },
+   "evidence_event_ids": [
+    "m_002_e00407",
+    "m_002_e00439",
+    "m_002_e00736",
+    "m_002_e00814",
+    "m_003_e00563",
+    "m_003_e00821",
+    "m_003_e01087",
+    "m_003_e01104",
+    "m_004_e00004",
+    "m_004_e00026",
+    "m_004_e00140",
+    "m_004_e00290"
+   ],
+   "insight_id": "ins_0001",
+   "insight_type": "matchup_mismatch",
+   "player_ids": [],
+   "teams": {
+    "primary": "AUR"
+   }
+  },
+  {
+   "clock": {
+    "start_sec": 273
+   },
+   "evidence_event_ids": [
+    "m_showcase_e00101"
+   ],
+   "insight_id": "ins_0002",
+   "insight_type": "threat_pass",
+   "player_ids": [
+    "AUR_10"
+   ],
+   "teams": {
+    "primary": "AUR"
+   }
+  },
+  {
+   "clock": {
+    "start_sec": 488
+   },
+   "evidence_event_ids": [
+    "m_showcase_e00186"
+   ],
+   "insight_id": "ins_0003",
+   "insight_type": "threat_pass",
+   "player_ids": [
+    "NTG_11"
+   ],
+   "teams": {
+    "primary": "NTG"
+   }
+  },
+  {
+   "clock": {
+    "start_sec": 900
+   },
+   "evidence_event_ids": [
+    "m_showcase_e00043",
+    "m_showcase_e00098",
+    "m_showcase_e00101",
+    "m_showcase_e00157",
+    "m_showcase_e00161",
+    "m_showcase_e00323",
+    "m_showcase_e00003",
+    "m_showcase_e00045",
+    "m_showcase_e00082",
+    "m_showcase_e00096",
+    "m_showcase_e00102",
+    "m_showcase_e00103",
+    "m_showcase_e00104",
+    "m_showcase_e00107",
+    "m_showcase_e00135"
+   ],
+   "insight_id": "ins_0004",
+   "insight_type": "recap_line",
+   "player_ids": [],
+   "teams": {
+    "primary": "AUR"
+   }
+  },
+  {
+   "clock": {
+    "start_sec": 1393
+   },
+   "evidence_event_ids": [
+    "m_showcase_e00456"
+   ],
+   "insight_id": "ins_0005",
+   "insight_type": "threat_pass",
+   "player_ids": [
+    "NTG_10"
+   ],
+   "teams": {
+    "primary": "NTG"
+   }
+  },
+  {
+   "clock": {
+    "start_sec": 1802
+   },
+   "evidence_event_ids": [
+    "m_showcase_e00327",
+    "m_showcase_e00339",
+    "m_showcase_e00351",
+    "m_showcase_e00381",
+    "m_showcase_e00390",
+    "m_showcase_e00397",
+    "m_showcase_e00427",
+    "m_showcase_e00441",
+    "m_showcase_e00476",
+    "m_showcase_e00492",
+    "m_showcase_e00520",
+    "m_showcase_e00546",
+    "m_showcase_e00556",
+    "m_showcase_e00560",
+    "m_showcase_e00572"
+   ],
+   "insight_id": "ins_0006",
+   "insight_type": "rhythm_wave",
+   "player_ids": [],
+   "teams": {
+    "primary": "AUR"
+   }
+  },
+  {
+   "clock": {
+    "start_sec": 1949
+   },
+   "evidence_event_ids": [
+    "m_showcase_e00627"
+   ],
+   "insight_id": "ins_0007",
+   "insight_type": "threat_pass",
+   "player_ids": [
+    "AUR_11"
+   ],
+   "teams": {
+    "primary": "AUR"
+   }
+  },
+  {
+   "clock": {
+    "start_sec": 2701
+   },
+   "evidence_event_ids": [
+    "m_showcase_e00408",
+    "m_showcase_e00453",
+    "m_showcase_e00456",
+    "m_showcase_e00457",
+    "m_showcase_e00641",
+    "m_showcase_e00685",
+    "m_showcase_e00807",
+    "m_showcase_e00335",
+    "m_showcase_e00406",
+    "m_showcase_e00434",
+    "m_showcase_e00436",
+    "m_showcase_e00448",
+    "m_showcase_e00449",
+    "m_showcase_e00451",
+    "m_showcase_e00455"
+   ],
+   "insight_id": "ins_0008",
+   "insight_type": "perimeter_lock",
+   "player_ids": [],
+   "teams": {
+    "primary": "NTG"
+   }
+  },
+  {
+   "clock": {
+    "start_sec": 2857
+   },
+   "evidence_event_ids": [
+    "m_showcase_e00984"
+   ],
+   "insight_id": "ins_0009",
+   "insight_type": "threat_pass",
+   "player_ids": [
+    "NTG_11"
+   ],
+   "teams": {
+    "primary": "NTG"
+   }
+  },
+  {
+   "clock": {
+    "start_sec": 2883
+   },
+   "evidence_event_ids": [
+    "m_showcase_e00047",
+    "m_showcase_e00203",
+    "m_showcase_e00235",
+    "m_showcase_e00378",
+    "m_showcase_e00402",
+    "m_showcase_e00563",
+    "m_showcase_e00629",
+    "m_showcase_e00737",
+    "m_showcase_e00847"
+   ],
+   "insight_id": "ins_0010",
+   "insight_type": "recap_line",
+   "player_ids": [],
+   "teams": {
+    "primary": "AUR"
+   }
+  },
+  {
+   "clock": {
+    "start_sec": 2883
+   },
+   "evidence_event_ids": [
+    "m_showcase_e00131",
+    "m_showcase_e00150",
+    "m_showcase_e00207",
+    "m_showcase_e00249",
+    "m_showcase_e00279",
+    "m_showcase_e00515",
+    "m_showcase_e00596",
+    "m_showcase_e00744",
+    "m_showcase_e00878"
+   ],
+   "insight_id": "ins_0011",
+   "insight_type": "recap_line",
+   "player_ids": [],
+   "teams": {
+    "primary": "AUR"
+   }
+  },
+  {
+   "clock": {
+    "start_sec": 2883
+   },
+   "evidence_event_ids": [
+    "m_showcase_e00234",
+    "m_showcase_e00376",
+    "m_showcase_e00627"
+   ],
+   "insight_id": "ins_0012",
+   "insight_type": "player_focus",
+   "player_ids": [
+    "AUR_11"
+   ],
+   "teams": {
+    "primary": "AUR"
+   }
+  },
+  {
+   "clock": {
+    "start_sec": 2883
+   },
+   "evidence_event_ids": [
+    "m_showcase_e00184",
+    "m_showcase_e00410",
+    "m_showcase_e00688",
+    "m_showcase_e00769",
+    "m_showcase_e00811",
+    "m_showcase_e00884",
+    "m_showcase_e00927",
+    "m_showcase_e00986"
+   ],
+   "insight_id": "ins_0013",
+   "insight_type": "recap_line",
+   "player_ids": [],
+   "teams": {
+    "primary": "NTG"
+   }
+  },
+  {
+   "clock": {
+    "start_sec": 2883
+   },
+   "evidence_event_ids": [
+    "m_showcase_e00555"
+   ],
+   "insight_id": "ins_0014",
+   "insight_type": "recap_line",
+   "player_ids": [],
+   "teams": {
+    "primary": "NTG"
+   }
+  },
+  {
+   "clock": {
+    "start_sec": 2883
+   },
+   "evidence_event_ids": [
+    "m_showcase_e00408",
+    "m_showcase_e00687",
+    "m_showcase_e00810"
+   ],
+   "insight_id": "ins_0015",
+   "insight_type": "player_focus",
+   "player_ids": [
+    "NTG_09"
+   ],
+   "teams": {
+    "primary": "NTG"
+   }
+  },
+  {
+   "clock": {
+    "start_sec": 2883
+   },
+   "evidence_event_ids": [
+    "m_showcase_e00030",
+    "m_showcase_e00053",
+    "m_showcase_e00115",
+    "m_showcase_e00146",
+    "m_showcase_e00179",
+    "m_showcase_e00182",
+    "m_showcase_e00228",
+    "m_showcase_e00246",
+    "m_showcase_e00281",
+    "m_showcase_e00301",
+    "m_showcase_e00387",
+    "m_showcase_e00406",
+    "m_showcase_e00429",
+    "m_showcase_e00453",
+    "m_showcase_e00565"
+   ],
+   "insight_id": "ins_0016",
+   "insight_type": "volume_vs_value",
+   "player_ids": [
+    "NTG_07"
+   ],
+   "teams": {
+    "primary": "NTG"
+   }
+  },
+  {
+   "clock": {
+    "start_sec": 2883
+   },
+   "evidence_event_ids": [
+    "m_showcase_e00560",
+    "m_showcase_e00563",
+    "m_showcase_e00626",
+    "m_showcase_e00629",
+    "m_showcase_e00734",
+    "m_showcase_e00737",
+    "m_showcase_e00844",
+    "m_showcase_e00847"
+   ],
+   "insight_id": "ins_0017",
+   "insight_type": "tactical_pattern",
+   "player_ids": [],
+   "teams": {
+    "primary": "AUR"
+   }
+  },
+  {
+   "clock": {
+    "start_sec": 2883
+   },
+   "evidence_event_ids": [
+    "m_showcase_e00280",
+    "m_showcase_e00294",
+    "m_showcase_e00937",
+    "m_showcase_e00953"
+   ],
+   "insight_id": "ins_0018",
+   "insight_type": "tactical_pattern",
+   "player_ids": [],
+   "teams": {
+    "primary": "NTG"
+   }
+  },
+  {
+   "clock": {
+    "start_sec": 2883
+   },
+   "evidence_event_ids": [
+    "m_showcase_e00002",
+    "m_showcase_e00021",
+    "m_showcase_e00081",
+    "m_showcase_e00093",
+    "m_showcase_e00095",
+    "m_showcase_e00137",
+    "m_showcase_e00155",
+    "m_showcase_e00196",
+    "m_showcase_e00255",
+    "m_showcase_e00262",
+    "m_showcase_e00376",
+    "m_showcase_e00398",
+    "m_showcase_e00420",
+    "m_showcase_e00489",
+    "m_showcase_e00712"
+   ],
+   "insight_id": "ins_0019",
+   "insight_type": "recap_line",
+   "player_ids": [],
+   "teams": {
+    "primary": "AUR"
+   }
+  },
+  {
+   "clock": {
+    "start_sec": 2883
+   },
+   "evidence_event_ids": [
+    "m_showcase_e00006",
+    "m_showcase_e00049",
+    "m_showcase_e00075",
+    "m_showcase_e00140",
+    "m_showcase_e00266",
+    "m_showcase_e00327",
+    "m_showcase_e00381",
+    "m_showcase_e00427",
+    "m_showcase_e00492",
+    "m_showcase_e00546",
+    "m_showcase_e00581",
+    "m_showcase_e00636",
+    "m_showcase_e00663",
+    "m_showcase_e00673",
+    "m_showcase_e00704"
+   ],
+   "insight_id": "ins_0020",
+   "insight_type": "recap_line",
+   "player_ids": [],
+   "teams": {
+    "primary": "AUR"
+   }
+  },
+  {
+   "clock": {
+    "start_sec": 2883
+   },
+   "evidence_event_ids": [
+    "m_showcase_e00067",
+    "m_showcase_e00069",
+    "m_showcase_e00186",
+    "m_showcase_e00189",
+    "m_showcase_e00291",
+    "m_showcase_e00294",
+    "m_showcase_e00295",
+    "m_showcase_e00297",
+    "m_showcase_e00305",
+    "m_showcase_e00309",
+    "m_showcase_e00335",
+    "m_showcase_e00406",
+    "m_showcase_e00408",
+    "m_showcase_e00434",
+    "m_showcase_e00436"
+   ],
+   "insight_id": "ins_0021",
+   "insight_type": "tactical_pattern",
+   "player_ids": [],
+   "teams": {
+    "primary": "NTG"
+   }
+  },
+  {
+   "clock": {
+    "start_sec": 2883
+   },
+   "evidence_event_ids": [
+    "m_showcase_e00001",
+    "m_showcase_e00002",
+    "m_showcase_e00003",
+    "m_showcase_e00004",
+    "m_showcase_e00019",
+    "m_showcase_e00021",
+    "m_showcase_e00023",
+    "m_showcase_e00025",
+    "m_showcase_e00034",
+    "m_showcase_e00037",
+    "m_showcase_e00041",
+    "m_showcase_e00043",
+    "m_showcase_e00045",
+    "m_showcase_e00073",
+    "m_showcase_e00079"
+   ],
+   "insight_id": "ins_0022",
+   "insight_type": "tactical_pattern",
+   "player_ids": [],
+   "teams": {
+    "primary": "AUR"
+   }
+  },
+  {
+   "clock": {
+    "start_sec": 3104
+   },
+   "evidence_event_ids": [
+    "m_showcase_e00010",
+    "m_showcase_e00076",
+    "m_showcase_e00122",
+    "m_showcase_e00141",
+    "m_showcase_e00148",
+    "m_showcase_e00183",
+    "m_showcase_e00211",
+    "m_showcase_e00245",
+    "m_showcase_e00284",
+    "m_showcase_e00286",
+    "m_showcase_e00288",
+    "m_showcase_e00297",
+    "m_showcase_e00303",
+    "m_showcase_e00331",
+    "m_showcase_e00356"
+   ],
+   "insight_id": "ins_0023",
+   "insight_type": "milestone",
+   "player_ids": [
+    "NTG_10"
+   ],
+   "teams": {
+    "primary": "NTG"
+   }
+  },
+  {
+   "clock": {
+    "start_sec": 3264
+   },
+   "evidence_event_ids": [
+    "m_showcase_e00030",
+    "m_showcase_e00053",
+    "m_showcase_e00115",
+    "m_showcase_e00123",
+    "m_showcase_e00146",
+    "m_showcase_e00179",
+    "m_showcase_e00182",
+    "m_showcase_e00228",
+    "m_showcase_e00246",
+    "m_showcase_e00281",
+    "m_showcase_e00287",
+    "m_showcase_e00289",
+    "m_showcase_e00291",
+    "m_showcase_e00293",
+    "m_showcase_e00301"
+   ],
+   "insight_id": "ins_0024",
+   "insight_type": "milestone",
+   "player_ids": [
+    "NTG_07"
+   ],
+   "teams": {
+    "primary": "NTG"
+   }
+  },
+  {
+   "clock": {
+    "start_sec": 3610
+   },
+   "evidence_event_ids": [
+    "m_showcase_e00957",
+    "m_showcase_e00969",
+    "m_showcase_e01007",
+    "m_showcase_e01029",
+    "m_showcase_e01040",
+    "m_showcase_e01048",
+    "m_showcase_e01053",
+    "m_showcase_e01066",
+    "m_showcase_e01073",
+    "m_showcase_e01079",
+    "m_showcase_e01085",
+    "m_showcase_e01101",
+    "m_showcase_e01110",
+    "m_showcase_e01117",
+    "m_showcase_e01123"
+   ],
+   "insight_id": "ins_0025",
+   "insight_type": "rhythm_wave",
+   "player_ids": [],
+   "teams": {
+    "primary": "AUR"
+   }
+  },
+  {
+   "clock": {
+    "start_sec": 3720
+   },
+   "evidence_event_ids": [
+    "m_showcase_e01088",
+    "m_showcase_e01089",
+    "m_showcase_e01090",
+    "m_showcase_e01092",
+    "m_showcase_e01093",
+    "m_showcase_e01094",
+    "m_showcase_e01095",
+    "m_showcase_e01096",
+    "m_showcase_e01097",
+    "m_showcase_e01098",
+    "m_showcase_e01099",
+    "m_showcase_e01104",
+    "m_showcase_e01108",
+    "m_showcase_e01111",
+    "m_showcase_e01113"
+   ],
+   "insight_id": "ins_0026",
+   "insight_type": "momentum_shift",
+   "player_ids": [],
+   "teams": {
+    "primary": "NTG"
+   }
+  },
+  {
+   "clock": {
+    "start_sec": 4093
+   },
+   "evidence_event_ids": [
+    "m_showcase_e01385"
+   ],
+   "insight_id": "ins_0027",
+   "insight_type": "threat_pass",
+   "player_ids": [
+    "NTG_11"
+   ],
+   "teams": {
+    "primary": "NTG"
+   }
+  },
+  {
+   "clock": {
+    "start_sec": 4105
+   },
+   "evidence_event_ids": [
+    "m_showcase_e01390"
+   ],
+   "insight_id": "ins_0028",
+   "insight_type": "threat_pass",
+   "player_ids": [
+    "AUR_01"
+   ],
+   "teams": {
+    "primary": "AUR"
+   }
+  },
+  {
+   "clock": {
+    "start_sec": 4504
+   },
+   "evidence_event_ids": [
+    "m_showcase_e00984",
+    "m_showcase_e01204",
+    "m_showcase_e01230",
+    "m_showcase_e01291",
+    "m_showcase_e01385",
+    "m_showcase_e01421",
+    "m_showcase_e01422",
+    "m_showcase_e00932",
+    "m_showcase_e00934",
+    "m_showcase_e00937",
+    "m_showcase_e00946",
+    "m_showcase_e00947",
+    "m_showcase_e00948",
+    "m_showcase_e00949",
+    "m_showcase_e00950"
+   ],
+   "insight_id": "ins_0029",
+   "insight_type": "perimeter_lock",
+   "player_ids": [],
+   "teams": {
+    "primary": "NTG"
+   }
+  },
+  {
+   "clock": {
+    "start_sec": 4847
+   },
+   "evidence_event_ids": [
+    "m_showcase_e00028",
+    "m_showcase_e00057",
+    "m_showcase_e00065",
+    "m_showcase_e00077",
+    "m_showcase_e00121",
+    "m_showcase_e00127",
+    "m_showcase_e00230",
+    "m_showcase_e00271",
+    "m_showcase_e00292",
+    "m_showcase_e00304",
+    "m_showcase_e00309",
+    "m_showcase_e00364",
+    "m_showcase_e00384",
+    "m_showcase_e00435",
+    "m_showcase_e00442"
+   ],
+   "insight_id": "ins_0030",
+   "insight_type": "milestone",
+   "player_ids": [
+    "NTG_08"
+   ],
+   "teams": {
+    "primary": "NTG"
+   }
+  },
+  {
+   "clock": {
+    "start_sec": 5317
+   },
+   "evidence_event_ids": [
+    "m_showcase_e01774"
+   ],
+   "insight_id": "ins_0031",
+   "insight_type": "threat_pass",
+   "player_ids": [
+    "NTG_11"
+   ],
+   "teams": {
+    "primary": "NTG"
+   }
+  },
+  {
+   "clock": {
+    "start_sec": 5324
+   },
+   "evidence_event_ids": [
+    "m_showcase_e01778"
+   ],
+   "insight_id": "ins_0032",
+   "insight_type": "threat_pass",
+   "player_ids": [
+    "AUR_03"
+   ],
+   "teams": {
+    "primary": "AUR"
+   }
+  },
+  {
+   "clock": {
+    "start_sec": 5413
+   },
+   "evidence_event_ids": [
+    "m_showcase_e01516",
+    "m_showcase_e01525",
+    "m_showcase_e01528",
+    "m_showcase_e01541",
+    "m_showcase_e01555",
+    "m_showcase_e01560",
+    "m_showcase_e01578",
+    "m_showcase_e01583",
+    "m_showcase_e01593",
+    "m_showcase_e01598",
+    "m_showcase_e01608",
+    "m_showcase_e01618",
+    "m_showcase_e01623",
+    "m_showcase_e01633",
+    "m_showcase_e01643"
+   ],
+   "insight_id": "ins_0033",
+   "insight_type": "rhythm_wave",
+   "player_ids": [],
+   "teams": {
+    "primary": "AUR"
+   }
+  },
+  {
+   "clock": {
+    "start_sec": 5502
+   },
+   "evidence_event_ids": [
+    "m_showcase_e00030",
+    "m_showcase_e00053",
+    "m_showcase_e00115",
+    "m_showcase_e00123",
+    "m_showcase_e00146",
+    "m_showcase_e00179",
+    "m_showcase_e00182",
+    "m_showcase_e00228",
+    "m_showcase_e00246",
+    "m_showcase_e00281",
+    "m_showcase_e00287",
+    "m_showcase_e00289",
+    "m_showcase_e00291",
+    "m_showcase_e00293",
+    "m_showcase_e00301"
+   ],
+   "insight_id": "ins_0034",
+   "insight_type": "milestone",
+   "player_ids": [
+    "NTG_07"
+   ],
+   "teams": {
+    "primary": "NTG"
+   }
+  },
+  {
+   "clock": {
+    "start_sec": 5595
+   },
+   "evidence_event_ids": [
+    "m_showcase_e00007",
+    "m_showcase_e00011",
+    "m_showcase_e00069",
+    "m_showcase_e00117",
+    "m_showcase_e00124",
+    "m_showcase_e00175",
+    "m_showcase_e00210",
+    "m_showcase_e00215",
+    "m_showcase_e00221",
+    "m_showcase_e00225",
+    "m_showcase_e00238",
+    "m_showcase_e00244",
+    "m_showcase_e00274",
+    "m_showcase_e00280",
+    "m_showcase_e00328"
+   ],
+   "insight_id": "ins_0035",
+   "insight_type": "milestone",
+   "player_ids": [
+    "NTG_04"
+   ],
+   "teams": {
+    "primary": "NTG"
+   }
+  },
+  {
+   "clock": {
+    "start_sec": 6023
+   },
+   "evidence_event_ids": [
+    "m_showcase_e01571",
+    "m_showcase_e01575",
+    "m_showcase_e01774",
+    "m_showcase_e01815",
+    "m_showcase_e01875",
+    "m_showcase_e01917",
+    "m_showcase_e01979",
+    "m_showcase_e01456",
+    "m_showcase_e01458",
+    "m_showcase_e01460",
+    "m_showcase_e01483",
+    "m_showcase_e01484",
+    "m_showcase_e01519",
+    "m_showcase_e01568",
+    "m_showcase_e01569"
+   ],
+   "insight_id": "ins_0036",
+   "insight_type": "tactical_pattern",
+   "player_ids": [],
+   "teams": {
+    "primary": "NTG"
+   }
+  },
+  {
+   "clock": {
+    "start_sec": 6023
+   },
+   "evidence_event_ids": [
+    "m_showcase_e00047",
+    "m_showcase_e00203",
+    "m_showcase_e00235",
+    "m_showcase_e00378",
+    "m_showcase_e00402",
+    "m_showcase_e00563",
+    "m_showcase_e00629",
+    "m_showcase_e00737",
+    "m_showcase_e00847",
+    "m_showcase_e01126",
+    "m_showcase_e01392",
+    "m_showcase_e01441",
+    "m_showcase_e01467",
+    "m_showcase_e01674",
+    "m_showcase_e01764"
+   ],
+   "insight_id": "ins_0037",
+   "insight_type": "recap_line",
+   "player_ids": [],
+   "teams": {
+    "primary": "AUR"
+   }
+  },
+  {
+   "clock": {
+    "start_sec": 6023
+   },
+   "evidence_event_ids": [
+    "m_showcase_e00131",
+    "m_showcase_e00150",
+    "m_showcase_e00207",
+    "m_showcase_e00249",
+    "m_showcase_e00279",
+    "m_showcase_e00515",
+    "m_showcase_e00596",
+    "m_showcase_e00744",
+    "m_showcase_e00878",
+    "m_showcase_e01112",
+    "m_showcase_e01399",
+    "m_showcase_e01656",
+    "m_showcase_e01684",
+    "m_showcase_e01794",
+    "m_showcase_e01970"
+   ],
+   "insight_id": "ins_0038",
+   "insight_type": "recap_line",
+   "player_ids": [],
+   "teams": {
+    "primary": "AUR"
+   }
+  },
+  {
+   "clock": {
+    "start_sec": 6023
+   },
+   "evidence_event_ids": [
+    "m_showcase_e00561",
+    "m_showcase_e00845",
+    "m_showcase_e01465"
+   ],
+   "insight_id": "ins_0039",
+   "insight_type": "player_focus",
+   "player_ids": [
+    "AUR_06"
+   ],
+   "teams": {
+    "primary": "AUR"
+   }
+  },
+  {
+   "clock": {
+    "start_sec": 6023
+   },
+   "evidence_event_ids": [
+    "m_showcase_e00184",
+    "m_showcase_e00410",
+    "m_showcase_e00688",
+    "m_showcase_e00769",
+    "m_showcase_e00811",
+    "m_showcase_e00884",
+    "m_showcase_e00927",
+    "m_showcase_e00986",
+    "m_showcase_e01232",
+    "m_showcase_e01289",
+    "m_showcase_e01293",
+    "m_showcase_e01387",
+    "m_showcase_e01426",
+    "m_showcase_e01461",
+    "m_showcase_e01573"
+   ],
+   "insight_id": "ins_0040",
+   "insight_type": "tactical_pattern",
+   "player_ids": [],
+   "teams": {
+    "primary": "NTG"
+   }
+  },
+  {
+   "clock": {
+    "start_sec": 6023
+   },
+   "evidence_event_ids": [
+    "m_showcase_e00555",
+    "m_showcase_e01103",
+    "m_showcase_e01797"
+   ],
+   "insight_id": "ins_0041",
+   "insight_type": "recap_line",
+   "player_ids": [],
+   "teams": {
+    "primary": "NTG"
+   }
+  },
+  {
+   "clock": {
+    "start_sec": 6023
+   },
+   "evidence_event_ids": [
+    "m_showcase_e00984",
+    "m_showcase_e01230",
+    "m_showcase_e01291",
+    "m_showcase_e01385",
+    "m_showcase_e01460",
+    "m_showcase_e01571",
+    "m_showcase_e01815",
+    "m_showcase_e01852"
+   ],
+   "insight_id": "ins_0042",
+   "insight_type": "set_piece_inflation",
+   "player_ids": [
+    "NTG_11"
+   ],
+   "teams": {
+    "primary": "NTG"
+   }
+  },
+  {
+   "clock": {
+    "start_sec": 6023
+   },
+   "evidence_event_ids": [
+    "m_showcase_e00030",
+    "m_showcase_e00053",
+    "m_showcase_e00115",
+    "m_showcase_e00146",
+    "m_showcase_e00179",
+    "m_showcase_e00182",
+    "m_showcase_e00228",
+    "m_showcase_e00246",
+    "m_showcase_e00281",
+    "m_showcase_e00301",
+    "m_showcase_e00387",
+    "m_showcase_e00406",
+    "m_showcase_e00429",
+    "m_showcase_e00453",
+    "m_showcase_e00565"
+   ],
+   "insight_id": "ins_0043",
+   "insight_type": "volume_vs_value",
+   "player_ids": [
+    "NTG_07"
+   ],
+   "teams": {
+    "primary": "NTG"
+   }
+  },
+  {
+   "clock": {
+    "start_sec": 6023
+   },
+   "evidence_event_ids": [
+    "m_showcase_e00560",
+    "m_showcase_e00563",
+    "m_showcase_e00626",
+    "m_showcase_e00629",
+    "m_showcase_e00734",
+    "m_showcase_e00737",
+    "m_showcase_e00844",
+    "m_showcase_e00847",
+    "m_showcase_e01123",
+    "m_showcase_e01126",
+    "m_showcase_e01464",
+    "m_showcase_e01467",
+    "m_showcase_e01671",
+    "m_showcase_e01674",
+    "m_showcase_e01761",
+    "m_showcase_e01764",
+    "m_showcase_e01777",
+    "m_showcase_e01780"
+   ],
+   "insight_id": "ins_0044",
+   "insight_type": "tactical_pattern",
+   "player_ids": [],
+   "teams": {
+    "primary": "AUR"
+   }
+  },
+  {
+   "clock": {
+    "start_sec": 6023
+   },
+   "evidence_event_ids": [
+    "m_showcase_e00030",
+    "m_showcase_e00183",
+    "m_showcase_e00192",
+    "m_showcase_e00290",
+    "m_showcase_e00293",
+    "m_showcase_e00331",
+    "m_showcase_e00404",
+    "m_showcase_e00435",
+    "m_showcase_e00446",
+    "m_showcase_e00472",
+    "m_showcase_e00564",
+    "m_showcase_e00682",
+    "m_showcase_e00803",
+    "m_showcase_e00820",
+    "m_showcase_e00926"
+   ],
+   "insight_id": "ins_0045",
+   "insight_type": "recap_line",
+   "player_ids": [],
+   "teams": {
+    "primary": "NTG"
+   }
+  },
+  {
+   "clock": {
+    "start_sec": 6023
+   },
+   "evidence_event_ids": [
+    "m_showcase_e00031",
+    "m_showcase_e00408",
+    "m_showcase_e00821",
+    "m_showcase_e00826",
+    "m_showcase_e00955",
+    "m_showcase_e00983",
+    "m_showcase_e00997",
+    "m_showcase_e01204",
+    "m_showcase_e01226",
+    "m_showcase_e01347",
+    "m_showcase_e01380",
+    "m_showcase_e01506",
+    "m_showcase_e01520",
+    "m_showcase_e01570",
+    "m_showcase_e01591"
+   ],
+   "insight_id": "ins_0046",
+   "insight_type": "recap_line",
+   "player_ids": [],
+   "teams": {
+    "primary": "NTG"
+   }
+  },
+  {
+   "clock": {
+    "start_sec": 6023
+   },
+   "evidence_event_ids": [
+    "m_showcase_e00006",
+    "m_showcase_e00049",
+    "m_showcase_e00075",
+    "m_showcase_e00140",
+    "m_showcase_e00266",
+    "m_showcase_e00327",
+    "m_showcase_e00381",
+    "m_showcase_e00427",
+    "m_showcase_e00492",
+    "m_showcase_e00546",
+    "m_showcase_e00581",
+    "m_showcase_e00636",
+    "m_showcase_e00663",
+    "m_showcase_e00673",
+    "m_showcase_e00704"
+   ],
+   "insight_id": "ins_0047",
+   "insight_type": "recap_line",
+   "player_ids": [],
+   "teams": {
+    "primary": "AUR"
+   }
+  },
+  {
+   "clock": {
+    "start_sec": 6023
+   },
+   "evidence_event_ids": [
+    "m_showcase_e00067",
+    "m_showcase_e00069",
+    "m_showcase_e00186",
+    "m_showcase_e00189",
+    "m_showcase_e00291",
+    "m_showcase_e00294",
+    "m_showcase_e00295",
+    "m_showcase_e00297",
+    "m_showcase_e00305",
+    "m_showcase_e00309",
+    "m_showcase_e00335",
+    "m_showcase_e00406",
+    "m_showcase_e00408",
+    "m_showcase_e00434",
+    "m_showcase_e00436"
+   ],
+   "insight_id": "ins_0048",
+   "insight_type": "recap_line",
+   "player_ids": [],
+   "teams": {
+    "primary": "NTG"
+   }
+  },
+  {
+   "clock": {
+    "start_sec": 6023
+   },
+   "evidence_event_ids": [
+    "m_showcase_e00207",
+    "m_showcase_e00279",
+    "m_showcase_e00515",
+    "m_showcase_e00596",
+    "m_showcase_e00878",
+    "m_showcase_e01112",
+    "m_showcase_e01305",
+    "m_showcase_e01455",
+    "m_showcase_e01656",
+    "m_showcase_e01970"
+   ],
+   "insight_id": "ins_0049",
+   "insight_type": "recap_line",
+   "player_ids": [],
+   "teams": {
+    "primary": "AUR"
+   }
+  }
+ ]
+}
