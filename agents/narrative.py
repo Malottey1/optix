@@ -69,13 +69,16 @@ def numeric_params(params: dict) -> dict:
     return {k: v for k, v in params.items() if isinstance(v, (int, float)) and not isinstance(v, bool)}
 
 
-def number_guard(text: str, params: dict, language: str = "en") -> list:
-    """Problems with the numbers in `text`: a numeric param missing, or a number that is not a param."""
+def number_guard(text: str, params: dict, language: str = "en", literals: tuple = ()) -> list:
+    """Problems with the numbers in `text`: a numeric param missing, or a number that is not a param.
+    `literals`: extra numbers allowed in the text (the output guard's per-100 exception); the
+    templates pass none."""
     nums = numeric_params(params)
     found = NUMBER.findall(text)
     problems = [f"param {k}={fmt(v, language)} missing" for k, v in nums.items()
                 if fmt(v, language) not in found and fmt(abs(v), language) not in found]
-    allowed = {fmt(v, language) for v in nums.values()} | {fmt(abs(v), language) for v in nums.values()}
+    allowed = ({fmt(v, language) for v in nums.values()} | {fmt(abs(v), language) for v in nums.values()}
+               | set(literals))
     problems += [f"number {n} is not a param" for n in found if n not in allowed and n.lstrip("-") not in allowed]
     return problems
 

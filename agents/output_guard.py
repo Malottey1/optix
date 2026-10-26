@@ -5,7 +5,8 @@ template sentence for that claim and language.
 Checks, per language:
   * numbers: exactly the existing number guard (agents/narrative.number_guard): every numeric param
     of the claim appears, written in the language's own form (decimal comma in es/fr), and no other
-    number appears;
+    number appears, except "100" when the claim has a rate-per-hundred param (name ending in _100),
+    so "15.4 per 100" reads naturally (allowed_literals);
   * entities: no team or player outside the claim (a known name or code that is not one of the
     claim's own is rejected);
   * forbidden language: predictions, betting and outcome talk in en/es/fr;
@@ -87,6 +88,14 @@ def claim_entities(claim: dict, names: dict) -> set:
     return out
 
 
+def allowed_literals(params: dict) -> tuple:
+    """Numbers a model sentence may write beyond the params: "100" only when a numeric param is a
+    rate per hundred (its name ends in _100), so "15.4 per 100" passes; nothing else."""
+    rate = any(k.endswith("_100") and isinstance(v, (int, float)) and not isinstance(v, bool)
+               for k, v in params.items())
+    return ("100",) if rate else ()
+
+
 def check(text: str, claim: dict, language: str, known_entities: set, names: dict | None = None) -> list:
     """Problems with one model-written sentence (empty list = accepted)."""
     if not isinstance(text, str):
@@ -97,7 +106,7 @@ def check(text: str, claim: dict, language: str, known_entities: set, names: dic
         problems.append(f"length {len(t)} outside {MIN_LEN}-{MAX_LEN}")
     if "\n" in t:
         problems.append("more than one line")
-    problems += [f"numbers: {p}" for p in number_guard(t, claim["params"], language)]
+    problems += [f"numbers: {p}" for p in number_guard(t, claim["params"], language, allowed_literals(claim["params"]))]
     allowed = claim_entities(claim, names or {})
     for ent in sorted(known_entities - allowed, key=len, reverse=True):
         if re.search(rf"(?<![\w]){re.escape(ent)}(?![\w])", t):

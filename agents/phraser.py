@@ -29,7 +29,7 @@ from .narrative import fmt, render
 
 ROOT = Path(__file__).resolve().parent.parent
 CACHE_DIR = ROOT / "data" / "phrasing-cache"
-PROMPT_VERSION = "p2"            # p2: the observational-wording rule
+PROMPT_VERSION = "p4"            # p2: observational wording; p3: rates "<value> per 100"; p4: context fields in words
 MAX_CALLS = 60                      # hard cap of model calls per process run
 TEMPERATURE = 0.2
 
@@ -38,6 +38,10 @@ You receive a VERIFIED claim object (JSON). Rules, all mandatory:
 - Use ONLY the facts in the claim. Do not add, compute, round, estimate or change any number.
 - Every number in the claim's "params" must appear exactly as given in "numbers" for that language
   (same digits, same decimal separator); write no other number, no ordinal and no year.
+- A param whose name ends in _100 is a rate per hundred: quote it as the value followed by "per 100"
+  with 100 in digits (English "15.4 per 100", Spanish "15,4 por cada 100", French "15,4 pour 100").
+- game_state, window, zone and scope are context, not figures: describe them in words without any digit
+  (for example "while leading comfortably", "in the second half"); never write seconds or a goal margin.
 - Mention only the teams and players named in the claim.
 - Describe the past and present only: no predictions, no outcomes, no betting language.
 - Say only what was recorded (played, completed, switched, won back, conceded). Never say why a
@@ -126,6 +130,8 @@ class AzureOpenAIPhraser:
         self.client, self.known, self.names = client, set(known_entities), dict(names)
         self.cache = cache if cache is not None else PhrasingCache()
         self.max_calls, self.calls, self.offline = max_calls, 0, offline
+        # every model sentence the guard rejected: (claim_id, language, text, problems), for reports
+        self.rejected: list = []
         # the cache key: the client's model, or (offline) the deployment whose cached replies to replay
         self.model = client.model if client else (model or "offline")
 
@@ -168,6 +174,8 @@ class AzureOpenAIPhraser:
             problems = output_guard.check(text, claim, lang, self.known, self.names)
             if problems:
                 out.guard_rejected[lang] = problems
+                if src == "model":
+                    self.rejected.append((claim["claim_id"], lang, text, problems))
                 continue
             out.rendered[lang]["casual"] = text.strip()
             out.source[lang] = src
@@ -190,6 +198,7 @@ class AzureChatClient:
         self.endpoint = endpoint or os.environ["AZURE_OPENAI_ENDPOINT"]
         self.deployment = deployment or os.environ["AZURE_OPENAI_DEPLOYMENT"]
         self.model = self.deployment
+        self.tokens = {"prompt": 0, "completion": 0}
         version = api_version or os.environ.get("AZURE_OPENAI_API_VERSION", "2024-10-21")
         key = os.environ.get("AZURE_OPENAI_API_KEY")
         if key:
@@ -206,6 +215,10 @@ class AzureChatClient:
             model=self.deployment, temperature=TEMPERATURE, max_tokens=600,
             response_format={"type": "json_object"},
             messages=[{"role": "system", "content": system}, {"role": "user", "content": user}])
+        u = getattr(r, "usage", None)
+        if u is not None:                            # token counts, for the run's cost estimate
+            self.tokens["prompt"] += getattr(u, "prompt_tokens", 0) or 0
+            self.tokens["completion"] += getattr(u, "completion_tokens", 0) or 0
         return r.choices[0].message.content or ""
 
 

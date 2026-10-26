@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from agents import output_guard
-from agents.narrative import fmt, numeric_params, render
+from agents.narrative import fmt, number_guard, numeric_params, render
 from agents.phraser import (AzureOpenAIPhraser, PhrasingCache, TemplatePhraser, claim_hash, known_entities,
                             model_input, variant_seed)
 from agents.stream import InsightStream
@@ -243,3 +243,27 @@ def test_every_template_reads_as_its_own_language():
                 if "side_label" in fields:
                     vals["side_label"] = next(iter(labels(lang)["side"].values()))
                 assert output_guard.language_of(tmpl.format_map(vals)) == lang, (lang, key, tone)
+
+
+def _direct_transition():
+    rows = [json.loads(x) for x in (ROOT / "web/public/data/claims.jsonl").read_text(encoding="utf-8").splitlines() if x.strip()]
+    return next(r["claim"] for r in rows if r["claim"]["template_key"] == "pattern.direct_transition")
+
+
+def test_per_100_exception_allows_only_the_literal_100_for_a_rate_param():
+    from agents.output_guard import allowed_literals, check
+    c = _direct_transition()
+    p = c["params"]
+    assert any(k.endswith("_100") for k in p) and allowed_literals(p) == ("100",)
+    assert allowed_literals({"shots": 7, "xg": 0.5}) == ()
+    assert allowed_literals({"note_100": "x"}) == ()                 # a string param is no rate
+    nums = {"en": ", ".join(fmt(v) for v in p.values() if isinstance(v, (int, float)) and not isinstance(v, bool))}
+    base = f"From their own half to a shot: the figures were {nums['en']}"
+    ok = check(f"{base}, that is {fmt(p['per_100'])} per 100.", c, "en", set())
+    assert not [x for x in ok if x.startswith("numbers")], ok
+    bad = check(f"{base}, that is {fmt(p['per_100'])} per 200.", c, "en", set())
+    assert "numbers: number 200 is not a param" in bad
+    # without a _100 param the literal stays forbidden, and the template guard never allows it
+    q = {k: v for k, v in p.items() if k != "per_100"}
+    assert any("number 100 is not a param" in x for x in number_guard("4 of 26, 15.4 per 100", q, "en"))
+    assert any("number 100 is not a param" in x for x in number_guard("15.4 per 100", p, "en"))
