@@ -14,6 +14,10 @@ Optix is a multi-agent engine that turns synthetic football event data into live
 - **Fact check:** does the event log support the claim?
 - **Context check:** is it true but misleading given game state, sample size or metric limits? (For example, high field tilt from a team that is trailing and passing around a deep block.)
 
+**Links:** [Live demo](https://optixweb13588.z28.web.core.windows.net/) · [Code](https://github.com/Malottey1/optix) · [Video](https://youtu.be/fuooZS_4-Xs)
+
+The live demo is an Azure Storage static website in France Central. It serves the replay UI with the committed, template-based data. Live model phrasing (FastAPI plus Azure OpenAI with Microsoft Entra ID) runs from this repo and is not exposed publicly. See [docs/HOSTING.md](docs/HOSTING.md).
+
 <p align="center">
   <img src="docs/screens-v9/home_desktop.png" alt="The Optix Home page: hero, showcase match strip, key insights, xG race, momentum and heat tiles, player spotlight, patterns, the five fictional clubs and why to trust it" width="820" />
 </p>
